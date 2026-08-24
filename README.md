@@ -36,13 +36,19 @@ The specification will document the behavior of the v3 parser family, which has
 not been released yet. Until then, the reference implementation is the only
 authority on what the syntax means.
 
-Planned contents:
+Contents:
 
-| Path | Purpose |
-| --- | --- |
-| `SPEC.md` | The specification: grammar, escaping, whitespace, resolution order, modifier semantics, fallback chain, error behavior |
-| `conformance/` | Implementation-independent fixtures — message, payload, expected output |
-| `site/` | Source of the format's public site |
+| Path | State | Purpose |
+| --- | --- | --- |
+| [`SPEC.md`](./SPEC.md) | Working draft | The specification: grammar, escaping, whitespace, resolution order, modifier semantics, fallback chain, error behavior |
+| `conformance/` | Planned | Implementation-independent fixtures — message, payload, expected output |
+| `site/` | Planned | Source of the format's public site |
+
+[`SPEC.md`](./SPEC.md) is a working draft. Its Appendix A lists every point
+where the reference implementation diverges from it, each with a proposed
+ruling that has not yet been accepted. Until those rulings are settled and the
+reference parser's v3 line is released, Appendix A — not the body of the
+document — describes what implementations actually do.
 
 The machine-readable identifier for the format is `curly-message`; versioned
 references use `curly-message-1`, and so on.
