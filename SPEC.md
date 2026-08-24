@@ -1,0 +1,761 @@
+# Curly Message Format
+
+**Version 1 — Working Draft**
+
+| | |
+| --- | --- |
+| Format name | Curly Message Format |
+| Machine-readable identifier | `curly-message` |
+| Versioned identifier | `curly-message-1` |
+| Status | Working Draft — not normative |
+
+> **This draft is not yet normative.** It describes the intended version 1 of
+> the format. It is written against the v3 reference parser, which has not been
+> merged or released. Nothing in this document may be treated as settled until
+> that merge lands and this notice is removed.
+>
+> Appendix A records every point where the current reference implementation
+> diverges from this document. Each divergence carries a **proposed** ruling
+> awaiting sign-off. Until those rulings are accepted, Appendix A — not the body
+> of this document — describes what implementations actually do.
+
+## 1. Scope
+
+This document specifies the Curly Message Format: a syntax for translatable
+messages in which values are substituted into double-curly placeholders, and a
+placeholder may carry a modifier, a list of options and a fallback.
+
+It specifies the message syntax and the result of resolving a message against a
+payload. It does not specify a host API, a file format for message catalogues, a
+key-namespacing scheme, or how an implementation reports diagnostics.
+
+The format is deliberately small. It has no plural categories, no gender
+selection and no nested argument syntax. Formatting that depends on a locale is
+delegated to the host platform's internationalization facilities.
+
+## 2. Conformance
+
+The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHOULD**, **SHOULD NOT**
+and **MAY** are to be interpreted as described in RFC 2119.
+
+An implementation conforms to this specification at one or more levels:
+
+| Level | Sections | Requirement |
+| --- | --- | --- |
+| **Core** | 4-10, 11.1, 11.4, 12, 13, 14 | Grammar, escaping, whitespace, resolution, the fallback chain, the comparison modifiers, nesting and its limits, security properties and error behavior. |
+| **Intl** | 11.2 | The locale-dependent formatting modifiers `number`, `date`, `ago` and `currency`. |
+| **Extensions** | 11.3 | Host-defined modifiers. |
+
+Core is REQUIRED. An implementation MUST report which levels it satisfies. An
+implementation that does not satisfy Intl MUST treat the formatting modifier
+names as unknown modifiers (section 11.4), not as ordinary option keys.
+
+Conformance is tested by the fixtures published as `@curly-message/conformance`,
+which target a stated version of this document.
+
+## 3. Terminology
+
+**message**
+: A string that may contain placeholders.
+
+**payload**
+: A mapping from string keys to values, supplied by the caller, from which
+  placeholder values are resolved.
+
+**props**
+: Caller-supplied formatting options for the formatting modifiers, grouped by
+  modifier name. Distinct from the payload: the payload carries data, props
+  carry presentation options.
+
+**locale**
+: A language tag identifying the target language, used by the formatting
+  modifiers.
+
+**key** (of a message)
+: The catalogue identifier under which a message was requested. Used by the
+  fallback chain (section 10) when no message exists.
+
+**placeholder**
+: A `{{ … }}` construct within a message.
+
+**selector**
+: The leading segment of a placeholder: a payload key and an optional modifier.
+
+**option**
+: A `key:value` pair within a placeholder, offered to the modifier for
+  selection.
+
+**inline default**
+: The option-shaped segment whose key is `default`. It is not an option; it is
+  the placeholder's own fallback.
+
+**absent**
+: A value is absent when the payload has no own entry for the key. A value that
+  is present but empty, zero or false is **not** absent (section 9.2).
+
+## 4. Data model
+
+Resolving a message takes four inputs — a message, a payload, props and a locale
+— and produces a string.
+
+A payload value MAY be of any host type. Wherever this specification requires a
+value to be treated as text, the implementation MUST convert it using the host's
+ordinary string conversion. Wherever a value is compared numerically, the
+implementation MUST convert it using the host's ordinary numeric conversion, and
+a conversion that does not yield a number MUST be treated as a failed
+comparison, never as an error.
+
+An implementation MUST return a string, including when the message it was given
+was not one.
+
+## 5. Interpolation model
+
+A message is resolved by repeated passes. Each pass replaces every placeholder
+in the current text with its resolved value (section 9). The output of a pass
+becomes the input of the next, so a value that itself contains a placeholder is
+resolved in turn.
+
+The process stops when a pass produces text containing no placeholders, or when
+a limit in section 13 is reached.
+
+Escape sequences (section 7) are removed **once**, from the final text, after
+the last pass. An escape sequence introduced by a payload value is therefore
+still an escape sequence when the next pass runs, and a value containing `\{\{`
+does not become a placeholder.
+
+## 6. Grammar
+
+The grammar is given in ISO/IEC 14977 EBNF. It is defined over Unicode code
+points.
+
+```ebnf
+message        = { escape | literal-char | placeholder } ;
+
+placeholder    = "{{" , ws , selector , { ";" , segment } , [ ";" , ws ] , "}}" ;
+
+selector       = ws , key , ws , [ ":" , ws , modifier-name , ws ] ;
+
+segment        = default-segment | option ;
+
+default-segment= ws , "default" , ws , ":" , value ;
+
+option         = ws , option-key , ws , [ ":" , value ] ;
+
+key            = text-unit , { text-unit } ;
+option-key     = text-unit , { text-unit } ;
+value          = { escape | value-char } ;
+
+modifier-name  = lower-alpha , { alnum } ;
+
+text-unit      = escape | text-char ;
+
+escape         = "\" , ( ":" | ";" | "{" | "}" ) ;
+
+(* character classes *)
+line-term      = ? U+000A | U+000D | U+2028 | U+2029 ? ;
+ws             = { ? any Unicode whitespace except line-term ? } ;
+text-char      = ? any code point except ":" ";" "\" line-term,
+                   and not starting the sequence "{{" or "}}" ? ;
+value-char     = ? any code point except ";" "\" line-term,
+                   and not starting the sequence "}}" ? ;
+literal-char   = ? any code point not starting the sequence "{{" ? ;
+lower-alpha    = "a" … "z" ;
+alnum          = "a" … "z" | "A" … "Z" | "0" … "9" ;
+```
+
+Notes on the grammar, all normative:
+
+1. **A placeholder MUST NOT contain a line terminator.** A `{{ … }}` construct
+   spanning a line terminator is literal text. Whether a substring is a
+   placeholder MUST NOT depend on any other part of the message; the grammar is
+   decidable on the substring alone. (Appendix A.10.)
+
+2. **A key MAY contain a colon or a semicolon only as an escape sequence**
+   (`\:`, `\;`). A key MAY otherwise contain any character, including spaces,
+   dots, digits and non-ASCII text. Keys are compared by exact code-point
+   equality after unescaping.
+
+3. **The selector's colon is the first unescaped colon in the first segment.**
+   Everything before it is the key; everything after it, up to the segment's
+   end, is the modifier name.
+
+4. **An option's colon is the first unescaped colon in the segment.**
+   Everything after it, up to the segment's end, is the value. A value MAY
+   therefore contain unescaped colons. (Appendix A.7.)
+
+5. **A value MUST NOT contain an unescaped semicolon**, which ends the segment.
+
+6. `{{` and `}}` are recognized greedily as delimiters. To write either as
+   literal text, escape at least one brace of the pair: `\{\{`, `\{{`, `{\{`.
+
+## 7. Escaping
+
+A backslash followed by `:`, `;`, `{` or `}` is an escape sequence denoting that
+character literally. A backslash followed by anything else is an ordinary
+backslash and denotes itself.
+
+Escaping is defined at the level of the message **string**, not at the level of
+the file that carries it. A message stored in JSON must additionally satisfy
+JSON's own escaping rules, so a single format-level backslash is written as two
+characters in a JSON source file:
+
+| Intent | In the message string | In a JSON catalogue |
+| --- | --- | --- |
+| literal `:` | `\:` | `"\\:"` |
+| literal `;` | `\;` | `"\\;"` |
+| literal `{{` | `\{\{` | `"\\{\\{"` |
+| literal `\` | `\` | `"\\"` |
+
+There is no escape sequence for a backslash, and none is needed: a backslash
+denotes itself unless it precedes `:`, `;`, `{` or `}`. A literal backslash in
+front of one of those characters is therefore written by escaping the character
+alone — `\\:` yields `\:`.
+
+Implementations MUST remove escape sequences exactly once, from the final text,
+after interpolation has finished (section 5). Implementations MUST NOT remove
+them from intermediate results.
+
+## 8. Whitespace
+
+Within a placeholder:
+
+- Whitespace surrounding the **key** is not significant.
+- Whitespace surrounding the **modifier name** is not significant.
+- Whitespace surrounding an **option key** is not significant.
+- Whitespace **leading** an option value or an inline default value is not
+  significant.
+- Whitespace **trailing** an option value or an inline default value **is**
+  significant and is preserved in the output, up to the terminating `;` or `}}`.
+
+An option value that consists only of whitespace is treated as empty
+(section 9.4), so `x:` and `x: ` are equivalent. (Appendix A.4.)
+
+Consequently `{{value}}`, `{{value;}}`, `{{ value }}` and `{{ value; }}` are
+equivalent.
+
+## 9. Resolution
+
+A placeholder resolves in the following order.
+
+### 9.1 Parse
+
+Split the placeholder into its selector and segments per section 6. A
+placeholder that does not parse resolves to the fallback chain (section 10) and
+MUST NOT be used to look up any payload key. In particular, `{{}}`, `{{ }}` and
+`{{{}}` MUST NOT resolve the payload keys `""`, `"null"` or `"undefined"`.
+
+### 9.2 Look up the value
+
+Look up the key in the payload.
+
+The lookup MUST consider only the payload's **own** entries. Members inherited
+from a prototype, class or base mapping MUST NOT resolve. In a host where
+mappings inherit members, `constructor`, `toString` and `__proto__` are
+therefore absent unless the payload carries them as own entries. This is a
+security requirement, not an optimization (section 14).
+
+A value is **absent** only when there is no own entry for the key. A value of
+zero, empty string, `false` or the host's null MUST be treated as present.
+(Appendix A.8.)
+
+### 9.3 Determine the inline default
+
+The inline default is the value of the first segment whose key is exactly
+`default`, compared case-sensitively. (Appendix A.1.)
+
+If the placeholder has no inline default, the inline default is the payload's
+own `default` entry, if any. `default` is a reserved payload key: it is the
+fallback for every placeholder in the message that resolves to no value, and
+`{{default}}` reads that same fallback rather than a placeholder of its own.
+
+An inline `default:` takes precedence over the payload's `default`.
+
+If neither exists, the inline default is the empty string.
+
+### 9.4 Collect the options
+
+Every segment other than the inline default is an option, in source order.
+
+- `key:value` yields that key and value.
+- `key` alone, and `key:` with an empty or whitespace-only value, both yield the
+  key as **both** key and value. (Appendix A.4.)
+- Where two options share a key, the first MUST win.
+
+The reserved key `default` MUST NOT appear among the options.
+
+### 9.5 Select the result
+
+- If the placeholder has **no modifier and no options**, it is a *plain
+  substitution*: the result is the value, or the inline default if the value is
+  absent.
+- Otherwise it is a *selection*: the result is produced by the modifier
+  (section 11), which is `eq` when no modifier is named.
+
+A selection with no options is a message error (section 14.2): the author named
+a modifier but gave it nothing to select from. (Appendix A.9.)
+
+## 10. The fallback chain
+
+A placeholder that resolves to no value takes, in order:
+
+1. the inline `default:` of that placeholder;
+2. the payload's own `default` entry;
+3. the empty string.
+
+A **message** that does not exist takes, in order:
+
+1. the payload's own `default` entry, if present;
+2. the message's key, echoed verbatim.
+
+A message that exists resolves normally, even when it is empty. An own `default`
+entry that is present but zero, empty or false counts as present.
+(Appendix A.8.)
+
+## 11. Modifiers
+
+A modifier receives the value, the options, the inline default, the locale and
+the props, and returns text.
+
+Modifier names are **case-sensitive**. `eq` is a modifier; `EQ` is not.
+(Appendix A.2.)
+
+### 11.1 Comparison modifiers (Core)
+
+| Name | Selects the first option whose key |
+| --- | --- |
+| `eq` | equals the value, compared as text, case-insensitively |
+| `ne` | differs from the value, compared as text, case-insensitively |
+| `lt` | is greater than the value, comparing numerically |
+| `lte` | equals the value as text, otherwise as `lt` |
+| `gt` | is less than the value, comparing numerically |
+| `gte` | equals the value as text, otherwise as `gt` |
+
+`lt` and `lte` MUST consider options in ascending key order; `gt` and `gte` in
+descending key order. Ordering is by numeric value of the key; an option whose
+key is not numeric MUST NOT be selected by a numeric comparison. Implementations
+MUST NOT reorder the caller's option list observably.
+
+If no option is selected, the result is the fallback chain (section 10).
+
+`ne` has no special handling for an absent value: like every other modifier, an
+absent value takes the fallback chain. (Appendix A.3.)
+
+### 11.2 Formatting modifiers (Intl)
+
+These delegate to the host's internationalization facilities and require a
+locale. If no locale is available, the result MUST be the empty string.
+
+| Name | Input | Formats as |
+| --- | --- | --- |
+| `number` | a number | a locale-formatted number, at most 2 fraction digits by default |
+| `date` | milliseconds since the Unix epoch | a locale-formatted date |
+| `ago` | a **signed millisecond delta relative to now** — negative is past | a locale-formatted relative time |
+| `currency` | a number, multiplied by a `ratio` option defaulting to 1 | a locale-formatted currency amount |
+
+Formatting options are read from props under the modifier's own name, layered
+over implementation-configured defaults, which are layered over the defaults
+above.
+
+`ago` selects a unit automatically unless one is named. Because the output of
+these modifiers depends on the host's locale data, conformance fixtures for this
+level MUST assert the formatting request — the operation, its options and its
+input — rather than a literal output string.
+
+A formatting modifier that cannot format its input MUST NOT raise; it resolves
+to the fallback chain and SHOULD report the failure. (Appendix A.12.)
+
+### 11.3 Host-defined modifiers (Extensions)
+
+A host MAY register additional modifiers. A host-defined modifier MUST NOT
+replace a modifier named in this specification.
+
+To keep host-defined names from colliding with future versions of this format,
+a host-defined modifier name SHOULD begin with `x-`. All names matching
+`[a-z][a-zA-Z0-9]*` without that prefix are reserved for this specification.
+
+A host-defined modifier that raises MUST be contained: the placeholder resolves
+to the fallback chain and the failure SHOULD be reported. (Appendix A.12.)
+
+### 11.4 Unknown modifiers
+
+A modifier name that is neither specified nor registered is a **message error**
+(section 14.2). The placeholder resolves to the fallback chain.
+
+Implementations MUST NOT silently treat an unknown modifier as `eq`. A message
+written today as `{{n:plural}}` must not render as an equality selection now and
+silently change meaning when a later version of this format defines `plural`.
+(Appendix A.2.)
+
+## 12. Nesting
+
+A value, an option value, an inline default or a payload `default` MAY itself
+contain placeholders; they are resolved on the following pass (section 5).
+
+Nesting is bounded by section 13.
+
+## 13. Limits
+
+Interpolation is bounded, because a payload is frequently attacker-influenced
+and a self-referential or self-multiplying value would otherwise not terminate.
+
+An implementation MUST enforce both of the following:
+
+- **A pass limit.** At least **10** passes MUST be performed before stopping.
+- **An output limit.** At least **100 000** characters of output MUST be
+  permitted. A pass whose output would exceed the limit MUST be discarded
+  whole; the result is the last text that stayed within the limit.
+
+On reaching either limit the implementation MUST return the last settled text
+with its placeholders unresolved, MUST NOT raise, and SHOULD report that a limit
+was reached.
+
+A report SHOULD identify the unresolved text. Because that text is derived from
+the payload, a report MUST bound its length and MUST NOT emit line terminators
+from it, so that payload content cannot forge additional log lines.
+
+These are minima. An implementation MAY permit more, and MUST document what it
+permits.
+
+## 14. Security properties and error behavior
+
+### 14.1 Security properties
+
+A conforming implementation MUST provide both of the following. They are
+requirements, not permissions.
+
+**Own-property lookup.** Placeholder resolution MUST NOT reach inherited
+members (section 9.2). Without this, a message containing `{{constructor}}` or
+`{{__proto__}}` discloses host internals, and in hosts with mutable prototypes a
+polluted prototype changes the rendering of messages that never referenced it.
+
+**Bounded interpolation.** The limits in section 13 MUST bound the work an
+attacker-supplied payload can force. Without them, a payload value of
+`'{{value}}{{value}}'` grows geometrically.
+
+Neither property may be disabled by configuration.
+
+### 14.2 Message errors
+
+A *message error* is a defect in the message: an unknown modifier (11.4), a
+selection with no options (9.5), a modifier that cannot process its input
+(11.2, 11.3).
+
+On a message error an implementation MUST resolve the placeholder to the
+fallback chain (section 10), MUST NOT raise, and SHOULD report the error.
+
+Rendering must not fail because one translation is wrong. A single malformed
+message must not take down the page that contains it.
+
+### 14.3 Reports
+
+This specification does not prescribe a reporting channel. Reports SHOULD
+identify the message key and the placeholder. Section 13's bounds on report
+content apply to every report that includes payload-derived text.
+
+## Appendix A: rulings on known divergences
+
+Every entry records a behavior of the reference implementation that this
+document does not describe, and the ruling proposed to resolve it. **The
+rulings are proposals awaiting sign-off.** Until they are accepted, this
+appendix describes what implementations actually do and the body of this
+document describes only where they are headed.
+
+Observed behavior was verified by executing the v3 parser sources at
+`sveltekit-i18n/parsers` PR #10, head `aa1cc9d`. Entries A.1-A.6 correspond to
+the six divergences already catalogued before this draft; A.7-A.12 were found
+while writing it.
+
+Every ruling is a breaking change to the reference implementation and none is a
+breaking change to a released package: the neutral implementation
+`@curly-message/parser` is new, and `@sveltekit-i18n/parser-curly` has never
+been released under that name. No migration note is owed to any user.
+
+---
+
+### A.1 `default:` is matched case-insensitively, but read case-sensitively
+
+**Observed.** The inline-default scan is case-insensitive, while the payload
+lookup and the option filter are case-sensitive.
+
+```
+{{v; DEFAULT:D}}      payload {}                 ->  "D"      (parsed as an inline default)
+{{v}}                 payload { DEFAULT: 'PD' }  ->  ""       (not read as the payload default)
+{{v; DEFAULT:D}}      payload { v: 'DEFAULT' }   ->  "D"      (also kept as an eq option)
+```
+
+`DEFAULT:D` occupies both roles at once: it sets the inline default *and*
+survives the option filter, which strips only the exact string `default`. Where
+both spellings appear, the first in source order wins:
+
+```
+{{v; DEFAULT:UPPER; default:LOWER}}  ->  "UPPER"
+{{v; default:LOWER; DEFAULT:UPPER}}  ->  "LOWER"
+```
+
+**Ruling (proposed).** `default` is reserved in lowercase only, compared
+case-sensitively everywhere. `DEFAULT:x` becomes an ordinary option.
+
+Keys, option keys and payload keys are case-sensitive throughout the format; one
+case-insensitive position is an inconsistency, and its side effect — a segment
+that is simultaneously a fallback and an option — cannot be expressed in the
+grammar.
+
+---
+
+### A.2 An unknown modifier silently becomes `eq`
+
+**Observed.** Any name that is not a registered modifier falls back to `eq`,
+with no diagnostic. Modifier lookup is case-sensitive, so case variants fall
+back too, silently changing meaning:
+
+```
+{{v:plural; 1:one; default:many}}  payload { v: 1 }  ->  "one"   (eq matched key 1)
+{{v:gt;     1:ONE; default:D}}     payload { v: 1 }  ->  "D"     (gt: 1 is not > 1)
+{{v:GT;     1:ONE; default:D}}     payload { v: 1 }  ->  "ONE"   (unknown -> eq)
+```
+
+**Ruling (proposed).** An unknown modifier is a message error (section 14.2).
+The placeholder resolves to the fallback chain; the error is reported. Names
+matching `[a-z][a-zA-Z0-9]*` are reserved for this specification, and
+host-defined modifiers should carry an `x-` prefix (section 11.3).
+
+This is the most consequential ruling in this appendix, and the reason is
+forward compatibility rather than diagnostics. Every message written today as
+`{{n:plural}}` renders as an equality selection. If a later version of this
+format defines `plural`, all of them change meaning at once — with no error at
+any point, before or after. The same collision exists between host-defined
+modifiers and future specified names, which is what the `x-` prefix separates.
+
+---
+
+### A.3 `ne` bypasses the fallback and compares against the text `undefined`
+
+**Observed.** `ne` is the only modifier for which an absent value does not take
+the inline default. It proceeds to compare, and an absent value converts to the
+text `"undefined"`:
+
+```
+{{v:ne; 10:V2; default:D}}         payload {}  ->  "V2"   (10 differs from "undefined")
+{{v:eq; 10:V2; default:D}}         payload {}  ->  "D"
+{{v:ne; undefined:U; default:D}}   payload {}  ->  "D"    (the option key matches the text)
+```
+
+**Ruling (proposed).** Remove the special case. An absent value takes the
+fallback chain under every modifier, `ne` included.
+
+The behavior is an artifact of one implementation's absent-value spelling, not a
+decision about the format. It is also not portable: the text `"undefined"` is a
+JavaScript spelling, and an implementation in a language whose absent value
+converts to `None`, `nil` or `null` cannot reproduce it without special-casing a
+foreign language's vocabulary.
+
+---
+
+### A.4 Valueless options are whitespace-sensitive
+
+**Observed.** An option with no value, or with an empty value, yields its key as
+its own value. An option whose value is whitespace is dropped instead:
+
+```
+{{v:ne; z; default:DEF}}                payload {}          ->  "z"
+{{v; 1:; 5:FIVE; default:DEF}}          payload { v: 1 }    ->  "1"
+{{v; x: ; 5:FIVE; default:DEF}}         payload { v: 'x' }  ->  "DEF"   (one space after the colon)
+```
+
+**Ruling (proposed).** Keep the shorthand: `z`, `z:` and `z:` followed by
+whitespace are all equivalent to `z:z` (section 9.4).
+
+The shorthand is useful and already relied upon. The whitespace sensitivity is
+not: the difference between `x:` and `x: ` is invisible in every editor a
+translator uses, and no message can depend on it deliberately.
+
+---
+
+### A.5 The canonical escape form is undefined
+
+**Observed.** The runtime consumes a single backslash. The reference README
+documents "double backslash", which is the JSON encoding of a single one. Both
+descriptions are current, and they describe different layers.
+
+**Ruling (proposed).** Escaping is defined at the level of the message string
+(section 7). JSON encoding is a property of the catalogue file, documented as a
+note with a conversion table, not as part of the format.
+
+---
+
+### A.6 The interpolation limits are undocumented
+
+**Observed.** Interpolation stops after 10 passes, and discards a pass whose
+output would exceed 100 000 characters. Both report through `console.warn` and
+return the last settled text. Verified:
+
+```
+chain of 10 references   ->  fully resolved, no report
+chain of 11 references   ->  "{{v11}}", one report
+self-multiplying value   ->  27 968 characters, one report
+```
+
+The output limit discards the offending pass whole rather than truncating to the
+limit, so the result is the last text that stayed within it — not a 100 000
+character prefix.
+
+**Ruling (proposed).** Specify both as normative minima (section 13), not as
+implementation details.
+
+They are a denial-of-service bound on attacker-influenced payloads, which makes
+them a property of the format: a message that renders on one conforming
+implementation must not hang another. Stating them as minima leaves
+implementations free to be more generous while guaranteeing a floor.
+
+---
+
+### A.7 An option value is truncated at its last unescaped colon
+
+**Observed.** An option segment is split on every unescaped colon; the key is
+the first field and the value is the **last**. Everything between is discarded:
+
+```
+{{v; a:http://x; default:D}}    payload { v: 'a' }  ->  "//x"
+{{v; a:10:30;    default:D}}    payload { v: 'a' }  ->  "30"
+{{v; a:b:c:d;    default:D}}    payload { v: 'a' }  ->  "d"
+{{v; a:10\:30;   default:D}}    payload { v: 'a' }  ->  "10:30"   (escaped: correct)
+```
+
+Inline defaults are not affected — `{{v; default:10:30}}` yields `10:30` — so
+the two constructs disagree about the same character.
+
+**Ruling (proposed).** Only the first unescaped colon separates an option key
+from its value; the value runs to the end of the segment (section 6, note 4).
+
+This silently corrupts URLs, clock times, ratios and Windows paths in
+translated text. No message can rely on the current behavior deliberately, and
+the inconsistency with inline defaults shows it was never intended.
+
+---
+
+### A.8 Falsy values are treated as absent
+
+**Observed.** Several places test truthiness where they mean presence, so zero,
+empty string and `false` behave as though the key were missing:
+
+```
+{{v:number; default:99}}   payload { v: 0 }         ->  "99"       (expected "0")
+{{v:currency; default:7}}  payload { v: 0 }, currency USD  ->  "$7.00"  (expected "$0.00")
+message undefined          payload { default: 0 }   ->  the key    (expected "0")
+message undefined          payload { default: '' }  ->  the key    (expected "")
+```
+
+**Ruling (proposed).** Only an absent key triggers a fallback. Zero, empty
+string and `false` are values (sections 9.2 and 10).
+
+A count of zero is the most common numeric case in translated text — "0 items",
+"0 unread" — and it is exactly the case this turns into the default. The bug is
+invisible in testing precisely because the default is usually a plausible
+string.
+
+---
+
+### A.9 Naming `eq` changes the result of an otherwise identical placeholder
+
+**Observed.** A placeholder with no modifier and no options substitutes its
+value. Naming the default modifier, or adding a non-matching option, produces
+the empty string instead:
+
+```
+{{v}}         payload { v: 'RAW' }  ->  "RAW"
+{{v:eq}}      payload { v: 'RAW' }  ->  ""
+{{v; a:A}}    payload { v: 'RAW' }  ->  ""
+```
+
+**Ruling (proposed).** Keep the two behaviors, but name them: plain
+substitution and selection are distinct constructs (section 9.5). A selection
+with no options at all is a message error, since a modifier with nothing to
+select from cannot have been intended.
+
+Once named, the difference is coherent rather than surprising: `{{v}}` asks for
+a value, `{{v:eq; …}}` asks which option matches it. The error covers the one
+case that is never deliberate.
+
+---
+
+### A.10 A placeholder containing a line terminator is context-dependent
+
+**Observed.** The scanner that decides whether to run a pass rejects line
+terminators; the pattern that replaces placeholders accepts them as padding. A
+placeholder spanning a newline is therefore inert on its own, and resolves when
+some other placeholder in the same message triggers a pass:
+
+```
+"{{\nv\n}}"            payload { v: 'HIT' }             ->  "{{\nv\n}}"   (literal)
+"{{a}} {{\nv\n}}"      payload { a: 'A', v: 'HIT' }     ->  "A HIT"       (resolved)
+```
+
+The same holds for carriage return, U+2028 and U+2029. A line terminator inside
+the key rather than around it stays literal in both cases.
+
+**Ruling (proposed).** A placeholder must not contain a line terminator, in any
+position. Such a construct is literal text unconditionally (section 6, note 1).
+
+Whether a substring is a placeholder must be decidable from that substring
+alone. The current behavior makes it depend on the rest of the message, which no
+static tool can honor — and a static grammar is a prerequisite for extracting a
+message's parameters at build time.
+
+---
+
+### A.11 A non-string message is returned unchanged
+
+**Observed.** A message that is not a string and contains no placeholders is
+returned as it arrived, so the parser's declared string return type is not
+always honored:
+
+```
+parse(42)    ->  42     (the number, not "42")
+parse(null)  ->  null
+```
+
+**Ruling (proposed).** An implementation must return a string (section 4).
+
+This one is an implementation defect rather than a question about the format,
+recorded here so it is not lost.
+
+---
+
+### A.12 Formatting and host-defined modifiers raise
+
+**Observed.** The formatting modifiers propagate host errors, and host-defined
+modifiers propagate their own. A single misconfigured placeholder aborts
+rendering of the whole message:
+
+```
+{{v:currency}}   with no currency code       ->  raises TypeError
+{{v:currency}}   with an invalid code        ->  raises RangeError
+{{v:date}}       with an invalid option      ->  raises RangeError
+{{v:x-boom}}     whose modifier raises       ->  raises
+```
+
+**Ruling (proposed).** A modifier that cannot produce a result resolves to the
+fallback chain and reports; it must not raise (sections 11.2, 11.3, 14.2).
+
+The reference implementation's sibling ICU parser was made fail-soft for exactly
+this reason. Failing soft is more important here, not less: currency and date
+options come from the caller at render time, so the failure surfaces in
+production on a code path a translator never exercised.
+
+## Appendix B: relationship to the reference implementation
+
+`@curly-message/parser` is the reference implementation of this specification.
+`@sveltekit-i18n/parser-curly` re-exports it as an adapter for
+`@sveltekit-i18n/base`.
+
+The format is specified independently of both. An implementation in any language
+that satisfies section 2 conforms, whether or not it shares code with either
+package.
+
+The published `@sveltekit-i18n/parser-default` 1.x line predates this
+specification. Where it differs, this document governs and the 1.x behavior is
+informative only.
+
+## License
+
+This specification is published under the MIT License. See [LICENSE](./LICENSE).
