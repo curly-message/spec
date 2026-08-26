@@ -641,6 +641,7 @@ empty string and `false` behave as though the key were missing:
 ```
 {{v:number; default:99}}   payload { v: 0 }         ->  "99"       (expected "0")
 {{v:currency; default:7}}  payload { v: 0 }, currency USD  ->  "$7.00"  (expected "$0.00")
+{{v}}                      payload { default: 0 }   ->  ""         (expected "0")
 message undefined          payload { default: 0 }   ->  the key    (expected "0")
 message undefined          payload { default: '' }  ->  the key    (expected "")
 ```
