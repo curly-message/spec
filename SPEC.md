@@ -362,7 +362,7 @@ level MUST assert the formatting request — the operation, its options and its
 input — rather than a literal output string.
 
 A formatting modifier that cannot format its input MUST NOT raise; it resolves
-to the fallback chain and SHOULD report the failure. (Appendix A.12.)
+to the fallback chain and SHOULD report the failure. (Appendix A.12, A.13.)
 
 ### 11.3 Host-defined modifiers (Extensions)
 
@@ -462,7 +462,7 @@ document describes only where they are headed.
 
 Observed behavior was verified by executing the v3 parser sources at
 `sveltekit-i18n/parsers` PR #10, head `aa1cc9d`. Entries A.1-A.6 correspond to
-the six divergences already catalogued before this draft; A.7-A.12 were found
+the six divergences already catalogued before this draft; the rest were found
 while writing it.
 
 Every ruling is a breaking change to the reference implementation and none is a
@@ -742,6 +742,38 @@ The reference implementation's sibling ICU parser was made fail-soft for exactly
 this reason. Failing soft is more important here, not less: currency and date
 options come from the caller at render time, so the failure surfaces in
 production on a code path a translator never exercised.
+
+---
+
+### A.13 A value that cannot be converted is formatted anyway
+
+**Observed.** No formatting modifier tests whether its input is a number.
+`number`, `date` and `ago` compute `+value || +default`, so a value that
+converts to `NaN` is discarded as falsy and the declared default is converted
+in its place — or zero, where none is declared. `currency` selects with
+`value || default` instead, so a value that is not empty is multiplied by the
+ratio and formatted whatever it is:
+
+```
+{{v:number}}               payload { v: 'nope' }  ->  "0"      (expected "")
+{{v:number; default:n/a}}  payload { v: 'nope' }  ->  "NaN"    (expected "n/a")
+{{v:ago}}                  payload { v: 'nope' }  ->  "now"    (expected "")
+{{v:currency}}             payload { v: 'nope' }, currency USD  ->  "$NaN"  (expected "")
+```
+
+The divergence hides wherever the declared default is itself a number:
+`{{v:number; default:5}}` over the same payload renders `"5"`, which is what
+the fallback chain would have produced anyway. Where the default is not a
+number, `date` and `ago` raise rather than render, and those are A.12 cases.
+
+**Ruling (proposed).** A value a modifier cannot convert is a value it cannot
+format: the placeholder resolves to the fallback chain and yields the default
+itself, never a number computed from it (sections 10 and 11.2).
+
+This is the case A.12 does not reach. A.12 records the options that make a
+formatter raise; here the formatter succeeds, and the message renders a count
+of zero, an epoch date or a default read as a number — none of which a caller
+can tell apart from a real value.
 
 ## Appendix B: relationship to the reference implementation
 
