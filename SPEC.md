@@ -290,7 +290,9 @@ Notes on the grammar, all normative:
    for it. Wherever this document says whitespace it means this class: in the
    escapable characters of section 7, in the significance rules of section 8,
    and in the blank text of section 11.2, which is a payload value, not message
-   text.
+   text. The class names `line-term` rather than repeating its four code points,
+   so every line terminator is a member, and an amendment to `line-term` is an
+   amendment to this class that reaches all three sections just named.
 
 9. **No production requires whitespace.** The grammar admits it wherever it
    admits text, and admits it only as text: the spaces in `{{ value; }}` derive
