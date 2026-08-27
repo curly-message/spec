@@ -204,6 +204,11 @@ literal-char   = ? any code point at such a position ? ;
 
 (* character classes *)
 line-term      = ? U+000A | U+000D | U+2028 | U+2029 ? ;
+whitespace     = ? line-term | U+0009 | U+000B | U+000C | U+0020 |
+                   U+00A0 | U+1680 | U+2000 | U+2001 | U+2002 |
+                   U+2003 | U+2004 | U+2005 | U+2006 | U+2007 |
+                   U+2008 | U+2009 | U+200A | U+202F | U+205F |
+                   U+3000 | U+FEFF ? ;
 any-char       = ? any code point ? ;
 inner-char     = ? any code point except line-term ? ;
 text-char      = ? any code point except ":" ";" "\" line-term,
@@ -279,10 +284,19 @@ Notes on the grammar, all normative:
    resolves to, so a pass over the same text always yields the same
    placeholders.
 
-8. **The grammar admits whitespace wherever it admits text.** It carries no
-   whitespace production of its own. Section 8 decides which whitespace a
-   placeholder's parts keep, and section 7 decides which of it an escape
-   sequence makes text.
+8. **The whitespace class is fixed by this document.** It is the twenty-five
+   code points enumerated above, and it is neither a host language's whitespace
+   class nor a Unicode property; an implementation MUST NOT substitute either
+   for it. Wherever this document says whitespace it means this class: in the
+   escapable characters of section 7, in the significance rules of section 8,
+   and in the blank text of section 11.2, which is a payload value, not message
+   text.
+
+9. **No production requires whitespace.** The grammar admits it wherever it
+   admits text, and admits it only as text: the spaces in `{{ value; }}` derive
+   as `text-unit`, which is what leaves that placeholder one derivation
+   (note 7). Section 8 decides which whitespace a placeholder's parts keep, and
+   section 7 decides which of it an escape sequence makes text.
 
 ## 7. Escaping
 
@@ -295,15 +309,16 @@ message has no character to cancel and denotes itself likewise.
 The rule is uniform across the whole message string: a backslash consumes the
 character after it wherever it appears, and the same characters are escapable
 everywhere. A position decides reach, not membership — a line terminator is
-escapable like any other whitespace, but an escape sequence that carries one is
-never inside a placeholder (section 6, note 1).
+escapable like any other member of `whitespace`, but an escape sequence that
+carries one is never inside a placeholder (section 6, note 1).
 
 The characters that carry structural meaning are `:`, `;`, `{`, `}`, `\` and
-whitespace. So `\:`, `\;`, `\{` and `\}` write those characters as text, `\\`
-writes a single backslash, and an escaped space writes a space that the
-insignificance rules of section 8 will not take. Whitespace here includes the
-line terminators, so `\` before one is an escape sequence like any other —
-though none carries a line terminator into a placeholder (section 6, note 1).
+the members of `whitespace` (section 6). So `\:`, `\;`, `\{` and `\}` write
+those characters as text, `\\` writes a single backslash, and an escaped space
+writes a space that the insignificance rules of section 8 will not take. Every
+member of `whitespace` escapes that way, the line terminators among them, so
+`\` before one is an escape sequence like any other — though none carries a
+line terminator into a placeholder (section 6, note 1).
 
 Escaping is defined at the level of the message **string**, not at the level of
 the file that carries it. A message stored in JSON must additionally satisfy
@@ -337,6 +352,10 @@ Within a placeholder:
 - Whitespace surrounding an **option key** is not significant.
 - Whitespace surrounding an **option value** or an **inline default value** is
   not significant. Whitespace inside one is.
+
+These rules take the members of `whitespace` (section 6), and nothing else. A
+code point outside the class is ordinary text: a key padded with one is a
+different key, and an option value that holds only one is not empty.
 
 Whitespace that an escape sequence claims is text, not padding: it belongs to
 the key, the option key or the value it appears in, and the rules above do not
@@ -517,11 +536,13 @@ locale. If no locale is available, the result MUST be the empty string.
 as text (section 4), `date` also accepts text the host's own date parsing
 understands; that is what keeps a value authored as a date instance formattable.
 
-Text that is empty or consists only of whitespace is **not** a number, whatever
-the host's numeric conversion makes of it, and is not a date either. No
-formatting modifier can format it, so the placeholder MUST take the fallback
-chain (section 10). This governs formatting alone: a numeric comparison
-(section 11.1) converts blank text like any other text.
+Text that is empty or consists only of `whitespace` (section 6) is **not** a
+number, whatever the host's numeric conversion makes of it, and is not a date
+either. No formatting modifier can format it, so the placeholder MUST take the
+fallback chain (section 10). The class is the one section 8 applies to message
+text, applied here to a payload value: an implementation MUST NOT substitute
+its host's own notion of a blank string. This governs formatting alone: a
+numeric comparison (section 11.1) converts blank text like any other text.
 
 Formatting options are read from props under the modifier's own name, layered
 over implementation-configured defaults, which are layered over the defaults
@@ -772,6 +793,10 @@ not: the difference between `x:` and `x: ` is invisible in every editor a
 translator uses, and no message can depend on it deliberately. Reading them both
 as empty is what keeps the colon worth writing — an author who types one has
 said what the value is, and an author who wants the key back leaves it out.
+
+`whitespace` (section 6) also holds code points a translator does type on
+purpose — U+00A0 and U+3000 among them — and the rule trims those as well: an
+author who means one as the value escapes it (section 7).
 
 ---
 
