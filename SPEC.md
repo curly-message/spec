@@ -182,57 +182,60 @@ points.
 ```ebnf
 message        = { escape | literal-char | placeholder } ;
 
-placeholder    = "{{" , ws , selector , { ";" , segment } , [ ";" , ws ] , "}}" ;
+placeholder    = "{{" , selector , { ";" , segment } , "}}" ;
 
-selector       = ws , key , ws , [ ":" , ws , modifier-name , ws ] ;
+selector       = key , [ ":" , modifier-name ] ;
+segment        = option-key , [ ":" , value ] ;
 
-segment        = default-segment | option ;
-
-default-segment= ws , "default" , ws , ":" , value ;
-
-option         = ws , option-key , ws , [ ":" , value ] ;
-
-key            = text-unit , { text-unit } ;
-option-key     = text-unit , { text-unit } ;
-value          = { inner-escape | value-char } ;
-
-modifier-name  = lower-alpha , { alnum | "-" } ;
+key            = { text-unit } ;
+option-key     = { text-unit } ;
+modifier-name  = { value-unit } ;
+value          = { value-unit } ;
 
 text-unit      = inner-escape | text-char ;
+value-unit     = inner-escape | value-char ;
 
-escape         = "\" , ( escapable | line-term ) ;
-inner-escape   = "\" , escapable ;
-escapable      = ":" | ";" | "{" | "}" | "\" | ws-char ;
+escape         = "\" , any-char ;
+inner-escape   = "\" , inner-char ;
+
+(* A code point stands for itself at any position where no complete escape and
+   no complete placeholder begins; see note 7. *)
+literal-char   = ? any code point at such a position ? ;
 
 (* character classes *)
 line-term      = ? U+000A | U+000D | U+2028 | U+2029 ? ;
-ws-char        = ? any Unicode whitespace except line-term ? ;
-ws             = { ws-char } ;
+any-char       = ? any code point ? ;
+inner-char     = ? any code point except line-term ? ;
 text-char      = ? any code point except ":" ";" "\" line-term,
                    and not starting the sequence "{{" or "}}" ? ;
 value-char     = ? any code point except ";" "\" line-term,
-                   and not starting the sequence "}}" ? ;
-literal-char   = ? any code point not starting the sequence "{{" ? ;
-lower-alpha    = "a" … "z" ;
-alnum          = "a" … "z" | "A" … "Z" | "0" … "9" ;
+                   and not starting the sequence "{{" or "}}" ? ;
 ```
 
 Notes on the grammar, all normative:
 
 1. **A placeholder MUST NOT contain a line terminator.** A `{{ … }}` construct
    spanning a line terminator is literal text, and escaping the terminator does
-   not make it a placeholder: only `inner-escape` occurs inside one. Whether a
-   substring is a placeholder MUST NOT depend on any other part of the message;
-   the grammar is decidable on the substring alone. (Appendix A.10.)
+   not make it a placeholder: only `inner-escape` occurs inside one, and
+   `inner-char` excludes every line terminator. Which substrings of the text a
+   pass is given are placeholders MUST NOT depend on the payload, or on what
+   any other placeholder in that text resolves to (note 7); what a placeholder
+   resolved to on an earlier pass is ordinary text to the next one
+   (section 12). (Appendix A.10.)
 
 2. **A key MAY contain a colon or a semicolon only as an escape sequence**
-   (`\:`, `\;`). A key MAY otherwise contain any character, including spaces,
-   dots, digits and non-ASCII text. Keys are compared by exact code-point
-   equality after unescaping.
+   (`\:`, `\;`), and a brace only where it does not form a delimiter (note 6).
+   A key MAY otherwise contain any character, including spaces, dots, digits,
+   backslashes and non-ASCII text; it MUST NOT contain a line terminator in any
+   form (note 1). Keys are compared by exact code-point equality after
+   unescaping.
 
 3. **The selector's colon is the first unescaped colon in the first segment.**
    Everything before it is the key; everything after it, up to the segment's
-   end, is the modifier name.
+   end, is the modifier name. The name is not otherwise constrained: one this
+   format does not specify and the host has not registered is a **message
+   error** (section 11.4), not literal text. A colon with nothing after it
+   names no modifier (section 8).
 
 4. **An option's colon is the first unescaped colon in the segment.**
    Everything after it, up to the segment's end, is the value. A value MAY
@@ -240,24 +243,60 @@ Notes on the grammar, all normative:
 
 5. **A value MUST NOT contain an unescaped semicolon**, which ends the segment.
 
-6. `{{` and `}}` are delimiters only where the two braces stand **adjacent**. A
-   backslash between them breaks the pair, so `{\{v}}` and `{{v}\}` are literal
-   text; a backslash in front of the pair breaks nothing, so `\{{v}}` is still a
-   placeholder and `{{v\}}` still ends at its `}}`. To write either delimiter as
-   literal text, escape **both** braces of the pair: `\{\{`, `\}\}`. Escaping
-   the second brace alone suppresses that pair too, but it leaves the first
-   brace free to pair with a brace in front of it, so `{{\{v}}` is a placeholder
-   again.
+6. **A backslash consumes the character that follows it**, so a brace it
+   consumed is text and cannot be half of a delimiter. `{{` and `}}` are
+   delimiters only where the two braces stand **adjacent** and neither has been
+   consumed, which makes `\{{v}}`, `{\{v}}`, `{{v}\}` and `{{v\}}` all literal
+   text: in each, one brace of a pair was taken by a backslash and the brace
+   left over stands alone. To write either delimiter as literal text, escape
+   **both** of its braces: `\{\{`, `\}\}`. Consuming one brace disturbs no
+   other, so `{{v\}}}` is a placeholder whose key is `v}` — the backslash
+   takes the first `}` and the remaining two close the placeholder, which is
+   what lets a key **end** in a closing brace. A `}` that starts no pair needs
+   no escape at all: `{{a}b}}` already names the key `a}b`. And `{{\{v}}` is
+   a placeholder whose key is `{v`, its opening pair intact because the
+   backslash took only the third brace.
+
+7. **A message has exactly one derivation, and one left-to-right scan finds
+   it.** At each position at most one of `escape` and `placeholder` can begin —
+   the first opens on `\`, the second on `{{` — and a code point where neither
+   **completes** is a `literal-char`. Both need what follows them. An escape
+   needs a character to consume, so a backslash at the end of a message consumes
+   nothing and is a `literal-char` itself. And a placeholder begins only where a
+   **complete** one derives: the scan reads forward from the opening pair and
+   either reaches a closing pair or does not. Where it does not, the opening
+   brace is a `literal-char` and the scan resumes at the very next code point —
+   one brace, not two — so `{{a{{b}}` is the literal text `{{a` followed by the
+   placeholder `{{b}}`, while `{{{{a}}` is the literal text `{` followed by a
+   placeholder whose key is `{a`.
+
+   Inside a placeholder every boundary is forced by a character class rather
+   than by choice: `text-char` excludes `:`, so the selector's colon is the
+   first one no backslash consumed; `text-char` and `value-char` both exclude
+   `;`, so a segment ends at the first semicolon; and both exclude a code point
+   that starts `}}`, so the closing pair is the first one left standing.
+   Nothing in the scan consults the payload, or what any other placeholder
+   resolves to, so a pass over the same text always yields the same
+   placeholders.
+
+8. **The grammar admits whitespace wherever it admits text.** It carries no
+   whitespace production of its own. Section 8 decides which whitespace a
+   placeholder's parts keep, and section 7 decides which of it an escape
+   sequence makes text.
 
 ## 7. Escaping
 
 A backslash cancels the structural meaning of the character that follows it, and
 the pair denotes that character as literal text. A character that has no
 structural meaning where it appears is unchanged by a preceding backslash: both
-characters stand, and the backslash denotes itself.
+characters stand, and the backslash denotes itself. A backslash at the end of a
+message has no character to cancel and denotes itself likewise.
 
-The rule is uniform across the whole message string. There is no position in
-which a different set of characters is escapable.
+The rule is uniform across the whole message string: a backslash consumes the
+character after it wherever it appears, and the same characters are escapable
+everywhere. A position decides reach, not membership — a line terminator is
+escapable like any other whitespace, but an escape sequence that carries one is
+never inside a placeholder (section 6, note 1).
 
 The characters that carry structural meaning are `:`, `;`, `{`, `}`, `\` and
 whitespace. So `\:`, `\;`, `\{` and `\}` write those characters as text, `\\`
@@ -275,7 +314,10 @@ characters in a JSON source file:
 | --- | --- | --- |
 | literal `:` | `\:` | `"\\:"` |
 | literal `;` | `\;` | `"\\;"` |
+| literal `{` | `\{` | `"\\{"` |
+| literal `}` | `\}` | `"\\}"` |
 | literal `{{` | `\{\{` | `"\\{\\{"` |
+| literal `}}` | `\}\}` | `"\\}\\}"` |
 | literal `\` | `\\` | `"\\\\"` |
 | a space trimming keeps | `\` followed by a space | `"\\ "` |
 
@@ -304,6 +346,11 @@ An option value that consists only of unescaped whitespace therefore trims away
 to nothing, so `x:` and `x: ` are equivalent: both declare the empty string
 (section 9.4). (Appendix A.4.)
 
+A **modifier name** or an **option key** that trims away to nothing, or that is
+empty to begin with, names nothing: the placeholder declares no modifier, and
+the segment declares no option. So `{{v:}}` is a plain substitution (section
+9.5), and `{{v;;}}` and `{{v; }}` have no options.
+
 Consequently `{{value}}`, `{{value;}}`, `{{ value }}` and `{{ value; }}` are
 equivalent.
 
@@ -313,10 +360,15 @@ A placeholder resolves in the following order.
 
 ### 9.1 Parse
 
-Split the placeholder into its selector and segments per section 6. A
-placeholder that does not parse resolves to the fallback chain (section 10) and
-MUST NOT be used to look up any payload key. In particular, `{{}}`, `{{ }}` and
-`{{:eq}}` MUST NOT resolve the payload keys `""`, `"null"` or `"undefined"`.
+Split the placeholder into its selector and segments per section 6. There is no
+third state between a placeholder and text: a `{{ … }}` construct that section 6
+does not derive as a placeholder is literal text, rendered as it stands, and it
+MUST NOT be used to look up any payload key or reach any later step of this
+section.
+
+A selector MAY name no key. `{{}}`, `{{ }}` and `{{:eq}}` are placeholders with
+nothing to look up, so they resolve to the fallback chain (section 10), and they
+MUST NOT resolve the payload keys `""`, `"null"` or `"undefined"`.
 
 ### 9.2 Look up the value
 
@@ -355,7 +407,9 @@ If no link yields text, the default is the empty string.
 
 ### 9.4 Collect the options
 
-Every segment other than the inline default is an option, in source order.
+Every segment other than the inline default that names an option key is an
+option, in source order. A segment whose option key is empty or trims away to
+nothing (section 8) declares no option, with or without a value.
 
 - `key:value` yields that key and value.
 - `key` alone — no colon — yields the key as **both** key and value.
@@ -374,6 +428,11 @@ The reserved key `default` MUST NOT appear among the options.
   value is absent.
 - Otherwise it is a *selection*: the result is produced by the modifier
   (section 11), which is `eq` when no modifier is named.
+
+A placeholder that names no key has nothing to compare, so it resolves at
+section 9.1 and is neither a plain substitution nor a selection. A modifier
+name it carries is still subject to section 11.4: `{{:zz}}` resolves to the
+fallback chain and is a message error for naming a modifier nobody registered.
 
 A selection that names a comparison modifier (section 11.1) and no options is a
 message error (section 14.2): the author asked which option matches and offered
@@ -512,8 +571,18 @@ silently change meaning when a later version of this format defines `plural`.
 
 ## 12. Nesting
 
-A value, an option value, an inline default or a payload `default` MAY itself
-contain placeholders; they are resolved on the following pass (section 5).
+Section 6 derives no placeholder inside another: a key, an option key, a
+modifier name and a value all stop at a code point that starts `{{` or `}}`. A
+`{{ … }}` construct that encloses another is therefore not a placeholder at all
+— the inner one is found on its own, and only on a later pass is the enclosing
+construct scanned again, over text that now carries what the inner one resolved
+to. Whether it derives then is decided by that text like any other: a value
+carrying `}}` closes the enclosing construct early, and one carrying `{{` keeps
+it from deriving at all.
+
+A value, an option value, an inline default or a payload `default` MAY likewise
+**resolve to text that contains** placeholders; those are found and resolved on
+the following pass (section 5).
 
 Nesting is bounded by section 13.
 
@@ -586,8 +655,8 @@ content apply to every report that includes payload-derived text.
 
 Every entry records a behavior of the pre-3.0 implementation this draft was
 written against, and the ruling that resolved it. **The rulings are accepted.**
-Each is written into the body of this document as a requirement — sections 4,
-4.1, 7, 9, 10, 11 and 14 — and the body, not this appendix, is normative.
+Each is written into the body of this document as a requirement — sections 4, 6,
+7, 8, 9, 10, 11, 13 and 14 — and the body, not this appendix, is normative.
 
 Each **Observed** block is a historical record of that pre-3.0 implementation:
 what it did before the ruling landed. It is not re-measured against any current
@@ -839,13 +908,14 @@ the key rather than around it stays literal in both cases.
 **Ruling.** A placeholder must not contain a line terminator, in any
 position. Such a construct is literal text unconditionally (section 6, note 1).
 
-Whether a substring is a placeholder must be decidable from that substring
-alone. The current behavior makes it depend on the rest of the message, which no
-static tool can honor — and a static grammar is a prerequisite for extracting a
-message's parameters at build time.
+Which substrings of a message are placeholders must be fixed by the message
+text alone. The current behavior makes it depend on how many interpolation
+passes have run, and so on the payload, which no static tool can honor — and a
+static grammar is a prerequisite for extracting a message's parameters at build
+time.
 
 Whether a later version should admit a placeholder that spans lines — decidably,
-on the substring alone — is deferred to
+in that same single scan (section 6, note 7) — is deferred to
 [issue #3](https://github.com/curly-message/spec/issues/3).
 
 ---
@@ -927,6 +997,91 @@ This is the case A.12 does not reach. A.12 records the options that make a
 formatter raise; here the formatter succeeds, and the message renders a count
 of zero, an epoch date or a default read as a number — none of which a caller
 can tell apart from a real value.
+
+---
+
+### A.14 `{{}}` is literal text while `{{ }}` resolves
+
+**Observed.** An empty placeholder was not recognized. The same construct with a
+single space between the braces was:
+
+```
+{{}}     payload {}                ->  "{{}}"   (literal)
+{{}}     payload { default: 'D' }  ->  "{{}}"   (literal)
+{{ }}    payload {}                ->  ""
+{{ }}    payload { default: 'D' }  ->  "D"
+```
+
+The same held wherever an empty pair stood inside another construct:
+`{{;a:{{}}` over the payload `{ default: 'D' }` was literal in full, because the
+inner `{{}}` that would have closed the outer one was not a placeholder either.
+
+**Ruling.** An empty placeholder is a placeholder. `{{}}` is
+recognized exactly as `{{ }}` is; it names no key, so it resolves to the
+fallback chain (sections 6 and 9.1).
+
+One construct answered two ways, and what separates the two spellings is a
+space that no translator can see and no editor displays. Whitespace around a
+key is insignificant everywhere else (section 8), so a key that is only
+whitespace and a key that is nothing must read alike. The grammar states this
+by making the key optional inside the selector rather than the selector
+optional inside the placeholder, which settles `{{:eq}}` and `{{ ; x:1 }}` by
+the same rule: each is a placeholder that names no key, and each resolves to
+the fallback chain. The inner pair of `{{;a:{{}}` resolves under it too, so that
+text renders `{{;a:D`.
+
+---
+
+### A.15 A backslash before the opening pair does not suppress it
+
+**Observed.** A backslash in front of `{{` did not stop the pair from opening a
+placeholder. It stayed where it was, to be read by the unescaping pass against
+whatever the resolved value put after it:
+
+```
+\{{v}}     payload { v: 'HIT' }  ->  "\HIT"
+\{{v}}     payload {}            ->  "\"
+\\{{v}}    payload { v: 'HIT' }  ->  "\HIT"   (the two spellings agree)
+```
+
+**Ruling.** A backslash before the opening pair suppresses it.
+`\{{v}}` is literal text and renders `{{v}}` (section 6, note 6).
+
+Section 7 states one uniform rule — a backslash cancels the structural
+meaning of the character that follows it — and `{` carries such a meaning. The
+first brace of an opening pair was the single position where that rule did not
+hold. Nothing about a brace's neighbor changes what the backslash in front of
+it does, and a leading backslash that renders or vanishes according to a
+payload value is not something the author of the message can reason about.
+
+---
+
+### A.16 The closing pair is found by a different rule than the opening one
+
+**Observed.** A backslash before `}` did not stop the pair from closing. The
+backslash was taken into the key instead, so `\}` and `\\` yielded the same key
+and no key could hold a closing brace:
+
+```
+{{v\}}     payload { v: 'HIT' }                  ->  ""
+{{v\}}     payload { 'v\': 'BS', v: 'V' }        ->  "BS"   (the key is read as "v\")
+{{v\\}}    payload { 'v\': 'BS', 'v\\': 'BS2' }  ->  "BS"   (the same key, a different spelling)
+{{v\}}}    payload { 'v}': 'HIT' }               ->  "}"    (key "v\" again, one brace left over)
+```
+
+**Ruling.** A `}` that a backslash consumed is content, not half of
+the closing pair: the closing pair is found by the same rule as the opening one
+(section 6, note 6). `{{v\}}` is literal text, and `{{v\}}}` is a placeholder
+whose key is `v}`.
+
+Section 7 already lists `\}` among the sequences that write a character as
+text, and note 2 admits a brace into a key wherever it does not form a
+delimiter. Reading the backslash into
+the key instead left `}` reserved with no escape at all: `\}` and `\\`
+collapsed onto one key, so `v\` was reachable by two spellings and `v}` by
+none. With A.15 ruling the opening pair the same way, a single statement now
+covers both ends of a placeholder — a backslash consumes the character after
+it — where each end previously had a rule of its own.
 
 ## Appendix B: relationship to the reference implementation
 
