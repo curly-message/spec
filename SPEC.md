@@ -7,17 +7,17 @@
 | Format name | Curly Message Format |
 | Machine-readable identifier | `curly-message` |
 | Versioned identifier | `curly-message-1` |
-| Status | Working Draft — not normative |
+| Status | Working Draft |
 
-> **This draft is not yet normative.** It describes the intended version 1 of
-> the format. It is written against the v3 reference parser, which has not been
-> merged or released. Nothing in this document may be treated as settled until
-> that merge lands and this notice is removed.
+> **This is a working draft of version 1.** The body of this document is
+> normative: it states what a conforming implementation must do. Nothing has
+> been released against it, so the version-1 surface may still change before it
+> is frozen.
 >
-> Appendix A records every point where the current reference implementation
-> diverges from this document. Each divergence carries a **proposed** ruling
-> awaiting sign-off. Until those rulings are accepted, Appendix A — not the body
-> of this document — describes what implementations actually do.
+> Appendix A records the divergences found while this draft was written against
+> the pre-3.0 reference parser, and the ruling that resolved each one. Those
+> rulings are accepted and written into the body — the appendix is a historical
+> record, not a list of open questions.
 
 ## 1. Scope
 
@@ -48,7 +48,10 @@ An implementation conforms to this specification at one or more levels:
 
 Core is REQUIRED. An implementation MUST report which levels it satisfies. An
 implementation that does not satisfy Intl MUST treat the formatting modifier
-names as unknown modifiers (section 11.4), not as ordinary option keys.
+names as unknown modifiers (section 11.4), not as ordinary option keys: an
+implementation that lacks those modifiers has not defined them, and a host is
+free to define them itself, because a host's own configuration overrides the
+format's (section 11.3).
 
 Conformance is tested by the fixtures published as `@curly-message/conformance`,
 which target a stated version of this document.
@@ -98,15 +101,63 @@ which target a stated version of this document.
 Resolving a message takes four inputs — a message, a payload, props and a locale
 — and produces a string.
 
-A payload value MAY be of any host type. Wherever this specification requires a
-value to be treated as text, the implementation MUST convert it using the host's
-ordinary string conversion. Wherever a value is compared numerically, the
-implementation MUST convert it using the host's ordinary numeric conversion, and
-a conversion that does not yield a number MUST be treated as a failed
-comparison, never as an error.
+Everything the format carries is text. A payload value MAY be of any host type,
+but it reaches a modifier, an option comparison and the output as text, never at
+the type it was authored with.
+
+A value that is a plain object or an array MUST be converted using the host's
+JSON serialization, so that a structured value survives into a host-defined
+modifier that reads it back. Every other value MUST be converted using the
+host's ordinary string conversion, so a date, a pattern, a set or a class
+instance keeps whatever text it describes itself as.
+
+**Plain object** MUST be read narrowly: an object with no meaningful prototype
+of its own — in ECMAScript, one whose prototype is `Object.prototype` or null.
+The narrow reading is what keeps a value authored as a date instance formattable
+by `date` (section 11.2).
+
+A value that **no conversion can describe** — a serialization that raises or
+yields nothing, a string conversion that raises — MUST be treated as absent,
+MUST NOT raise, and SHOULD be reported (section 14.2).
+
+Wherever a value is compared numerically, the implementation MUST convert it
+using the host's ordinary numeric conversion, and a conversion that does not
+yield a number MUST be treated as a failed comparison, never as an error.
 
 An implementation MUST return a string, including when the message it was given
 was not one.
+
+### 4.1 Value wrappers
+
+A payload entry MAY be the value's own configuration instead of the value.
+
+An entry is a **wrapper** when it is a plain object, owns at least one key, and
+**every** own key is one of `value`, `default` and `props`. Anything else is a
+value — including a plain object that owns any other key alongside them.
+
+```
+{ value: 1 }                  wrapper, value 1
+{ value: 1, default: 'D' }    wrapper
+{ default: 'D' }              wrapper, no value
+{ props: { number: … } }      wrapper, no value
+{ value: 1, unit: 'kg' }      value  ->  {"value":1,"unit":"kg"}
+{}                            value  ->  {}
+```
+
+A wrapper's `value` is the placeholder's value (section 9.2), its `default`
+joins the fallback chain (section 10), and its `props` is the topmost layer of
+formatting options (section 11.2).
+
+Unwrapping happens **exactly once**: a wrapper's `value` is a value, never
+itself a wrapper. A wrapper that owns no `value` key, or whose `value` is the
+host's undefined, has no value.
+
+The payload's root `default` entry is an ordinary value, never a wrapper.
+
+Recognition is exact rather than opportunistic because a payload cannot be
+constrained: message keys are namespaced dotted segments, and payload values are
+frequently plain objects taken straight from an API. `{ value: 1, unit: 'kg' }`
+is data, and it must stay data.
 
 ## 5. Interpolation model
 
@@ -143,17 +194,20 @@ option         = ws , option-key , ws , [ ":" , value ] ;
 
 key            = text-unit , { text-unit } ;
 option-key     = text-unit , { text-unit } ;
-value          = { escape | value-char } ;
+value          = { inner-escape | value-char } ;
 
-modifier-name  = lower-alpha , { alnum } ;
+modifier-name  = lower-alpha , { alnum | "-" } ;
 
-text-unit      = escape | text-char ;
+text-unit      = inner-escape | text-char ;
 
-escape         = "\" , ( ":" | ";" | "{" | "}" ) ;
+escape         = "\" , ( escapable | line-term ) ;
+inner-escape   = "\" , escapable ;
+escapable      = ":" | ";" | "{" | "}" | "\" | ws-char ;
 
 (* character classes *)
 line-term      = ? U+000A | U+000D | U+2028 | U+2029 ? ;
-ws             = { ? any Unicode whitespace except line-term ? } ;
+ws-char        = ? any Unicode whitespace except line-term ? ;
+ws             = { ws-char } ;
 text-char      = ? any code point except ":" ";" "\" line-term,
                    and not starting the sequence "{{" or "}}" ? ;
 value-char     = ? any code point except ";" "\" line-term,
@@ -166,9 +220,10 @@ alnum          = "a" … "z" | "A" … "Z" | "0" … "9" ;
 Notes on the grammar, all normative:
 
 1. **A placeholder MUST NOT contain a line terminator.** A `{{ … }}` construct
-   spanning a line terminator is literal text. Whether a substring is a
-   placeholder MUST NOT depend on any other part of the message; the grammar is
-   decidable on the substring alone. (Appendix A.10.)
+   spanning a line terminator is literal text, and escaping the terminator does
+   not make it a placeholder: only `inner-escape` occurs inside one. Whether a
+   substring is a placeholder MUST NOT depend on any other part of the message;
+   the grammar is decidable on the substring alone. (Appendix A.10.)
 
 2. **A key MAY contain a colon or a semicolon only as an escape sequence**
    (`\:`, `\;`). A key MAY otherwise contain any character, including spaces,
@@ -185,14 +240,31 @@ Notes on the grammar, all normative:
 
 5. **A value MUST NOT contain an unescaped semicolon**, which ends the segment.
 
-6. `{{` and `}}` are recognized greedily as delimiters. To write either as
-   literal text, escape at least one brace of the pair: `\{\{`, `\{{`, `{\{`.
+6. `{{` and `}}` are delimiters only where the two braces stand **adjacent**. A
+   backslash between them breaks the pair, so `{\{v}}` and `{{v}\}` are literal
+   text; a backslash in front of the pair breaks nothing, so `\{{v}}` is still a
+   placeholder and `{{v\}}` still ends at its `}}`. To write either delimiter as
+   literal text, escape **both** braces of the pair: `\{\{`, `\}\}`. Escaping
+   the second brace alone suppresses that pair too, but it leaves the first
+   brace free to pair with a brace in front of it, so `{{\{v}}` is a placeholder
+   again.
 
 ## 7. Escaping
 
-A backslash followed by `:`, `;`, `{` or `}` is an escape sequence denoting that
-character literally. A backslash followed by anything else is an ordinary
-backslash and denotes itself.
+A backslash cancels the structural meaning of the character that follows it, and
+the pair denotes that character as literal text. A character that has no
+structural meaning where it appears is unchanged by a preceding backslash: both
+characters stand, and the backslash denotes itself.
+
+The rule is uniform across the whole message string. There is no position in
+which a different set of characters is escapable.
+
+The characters that carry structural meaning are `:`, `;`, `{`, `}`, `\` and
+whitespace. So `\:`, `\;`, `\{` and `\}` write those characters as text, `\\`
+writes a single backslash, and an escaped space writes a space that the
+insignificance rules of section 8 will not take. Whitespace here includes the
+line terminators, so `\` before one is an escape sequence like any other —
+though none carries a line terminator into a placeholder (section 6, note 1).
 
 Escaping is defined at the level of the message **string**, not at the level of
 the file that carries it. A message stored in JSON must additionally satisfy
@@ -204,12 +276,11 @@ characters in a JSON source file:
 | literal `:` | `\:` | `"\\:"` |
 | literal `;` | `\;` | `"\\;"` |
 | literal `{{` | `\{\{` | `"\\{\\{"` |
-| literal `\` | `\` | `"\\"` |
+| literal `\` | `\\` | `"\\\\"` |
+| a space trimming keeps | `\` followed by a space | `"\\ "` |
 
-There is no escape sequence for a backslash, and none is needed: a backslash
-denotes itself unless it precedes `:`, `;`, `{` or `}`. A literal backslash in
-front of one of those characters is therefore written by escaping the character
-alone — `\\:` yields `\:`.
+A literal backslash in front of a structural character is written by escaping
+both — `\\\:` yields `\:`.
 
 Implementations MUST remove escape sequences exactly once, from the final text,
 after interpolation has finished (section 5). Implementations MUST NOT remove
@@ -222,13 +293,16 @@ Within a placeholder:
 - Whitespace surrounding the **key** is not significant.
 - Whitespace surrounding the **modifier name** is not significant.
 - Whitespace surrounding an **option key** is not significant.
-- Whitespace **leading** an option value or an inline default value is not
-  significant.
-- Whitespace **trailing** an option value or an inline default value **is**
-  significant and is preserved in the output, up to the terminating `;` or `}}`.
+- Whitespace surrounding an **option value** or an **inline default value** is
+  not significant. Whitespace inside one is.
 
-An option value that consists only of whitespace is treated as empty
-(section 9.4), so `x:` and `x: ` are equivalent. (Appendix A.4.)
+Whitespace that an escape sequence claims is text, not padding: it belongs to
+the key, the option key or the value it appears in, and the rules above do not
+remove it (section 7).
+
+An option value that consists only of unescaped whitespace therefore trims away
+to nothing, so `x:` and `x: ` are equivalent: both declare the empty string
+(section 9.4). (Appendix A.4.)
 
 Consequently `{{value}}`, `{{value;}}`, `{{ value }}` and `{{ value; }}` are
 equivalent.
@@ -242,7 +316,7 @@ A placeholder resolves in the following order.
 Split the placeholder into its selector and segments per section 6. A
 placeholder that does not parse resolves to the fallback chain (section 10) and
 MUST NOT be used to look up any payload key. In particular, `{{}}`, `{{ }}` and
-`{{{}}` MUST NOT resolve the payload keys `""`, `"null"` or `"undefined"`.
+`{{:eq}}` MUST NOT resolve the payload keys `""`, `"null"` or `"undefined"`.
 
 ### 9.2 Look up the value
 
@@ -256,29 +330,39 @@ security requirement, not an optimization (section 14).
 
 A value is **absent** only when there is no own entry for the key. A value of
 zero, empty string, `false` or the host's null MUST be treated as present.
-(Appendix A.8.)
+(Appendix A.8.) A value that is present but that no conversion can describe
+(section 4) is treated as absent.
 
-### 9.3 Determine the inline default
+If the entry is a wrapper (section 4.1), the value is the wrapper's `value`, and
+the wrapper's `default` and `props` join resolution as sections 10 and 11.2
+describe. The own-property requirement applies to the wrapper's own keys too: a
+`value`, `default` or `props` that the wrapper only inherits MUST NOT resolve.
+
+### 9.3 Determine the default
 
 The inline default is the value of the first segment whose key is exactly
 `default`, compared case-sensitively. (Appendix A.1.)
 
-If the placeholder has no inline default, the inline default is the payload's
-own `default` entry, if any. `default` is a reserved payload key: it is the
-fallback for every placeholder in the message that resolves to no value, and
-`{{default}}` reads that same fallback rather than a placeholder of its own.
+`default` is also a reserved payload key: it is the fallback for every
+placeholder in the message that resolves to no value, and `{{default}}` reads
+that same fallback rather than a placeholder of its own.
 
-An inline `default:` takes precedence over the payload's `default`.
+The placeholder's default is the first link of the chain in section 10 that
+yields text. The payload's `default` takes precedence over the inline
+`default:`, and a wrapper's `default` takes precedence over both.
 
-If neither exists, the inline default is the empty string.
+If no link yields text, the default is the empty string.
 
 ### 9.4 Collect the options
 
 Every segment other than the inline default is an option, in source order.
 
 - `key:value` yields that key and value.
-- `key` alone, and `key:` with an empty or whitespace-only value, both yield the
-  key as **both** key and value. (Appendix A.4.)
+- `key` alone — no colon — yields the key as **both** key and value.
+  (Appendix A.4.)
+- `key:` yields that key and the **empty string**. The colon declares a value,
+  so a value that ends at the colon — or that is only unescaped whitespace
+  (section 8) — is empty rather than absent.
 - Where two options share a key, the first MUST win.
 
 The reserved key `default` MUST NOT appear among the options.
@@ -286,21 +370,34 @@ The reserved key `default` MUST NOT appear among the options.
 ### 9.5 Select the result
 
 - If the placeholder has **no modifier and no options**, it is a *plain
-  substitution*: the result is the value, or the inline default if the value is
-  absent.
+  substitution*: the result is the value, or the default (section 10) if the
+  value is absent.
 - Otherwise it is a *selection*: the result is produced by the modifier
   (section 11), which is `eq` when no modifier is named.
 
-A selection with no options is a message error (section 14.2): the author named
-a modifier but gave it nothing to select from. (Appendix A.9.)
+A selection that names a comparison modifier (section 11.1) and no options is a
+message error (section 14.2): the author asked which option matches and offered
+none. A formatting modifier selects nothing, so `{{n:number}}` is complete as it
+stands, and whether a host-defined modifier needs options is that modifier's own
+business. (Appendix A.9.)
 
 ## 10. The fallback chain
 
-A placeholder that resolves to no value takes, in order:
+A placeholder that resolves to no value takes the first of the following that
+yields text:
 
-1. the inline `default:` of that placeholder;
+1. the `default` of the wrapper the payload entry was, where it was one
+   (section 4.1);
 2. the payload's own `default` entry;
-3. the empty string.
+3. the inline `default:` of that placeholder;
+4. the empty string.
+
+A link that is absent, or whose value no conversion can describe (section 4), is
+skipped.
+
+The payload outranks the message: a message declares the default it was written
+with, and the application overrides that default where it needs to, so the more
+specific statement wins.
 
 A **message** that does not exist takes, in order:
 
@@ -313,8 +410,13 @@ entry that is present but zero, empty or false counts as present.
 
 ## 11. Modifiers
 
-A modifier receives the value, the options, the inline default, the locale and
+A modifier receives the value, the options, the resolved default, the locale and
 the props, and returns text.
+
+The value and the default both reach the modifier as text (section 4): the
+default is the text the chain in section 10 resolved to, and the value is the
+text the payload entry converted to. No modifier sees a value at the type it was
+authored with.
 
 Modifier names are **case-sensitive**. `eq` is a modifier; `EQ` is not.
 (Appendix A.2.)
@@ -348,13 +450,34 @@ locale. If no locale is available, the result MUST be the empty string.
 | Name | Input | Formats as |
 | --- | --- | --- |
 | `number` | a number | a locale-formatted number, at most 2 fraction digits by default |
-| `date` | milliseconds since the Unix epoch | a locale-formatted date |
+| `date` | milliseconds since the Unix epoch, or text the host can parse as a date | a locale-formatted date |
 | `ago` | a **signed millisecond delta relative to now** — negative is past | a locale-formatted relative time |
 | `currency` | a number, multiplied by a `ratio` option defaulting to 1 | a locale-formatted currency amount |
 
+`number`, `ago` and `currency` take a number only. Because every value arrives
+as text (section 4), `date` also accepts text the host's own date parsing
+understands; that is what keeps a value authored as a date instance formattable.
+
+Text that is empty or consists only of whitespace is **not** a number, whatever
+the host's numeric conversion makes of it, and is not a date either. No
+formatting modifier can format it, so the placeholder MUST take the fallback
+chain (section 10). This governs formatting alone: a numeric comparison
+(section 11.1) converts blank text like any other text.
+
 Formatting options are read from props under the modifier's own name, layered
 over implementation-configured defaults, which are layered over the defaults
-above.
+above. A wrapper's `props` (section 4.1) is layered over all of them.
+
+Every layer composes **per property**: a layer overrides only the properties it
+names, and the properties it does not name keep whatever the layer beneath it
+gave them. A layer MUST NOT reset a property a layer beneath it set.
+
+```
+implementation defaults   number: { maximumFractionDigits: 4, useGrouping: false }
+props                     number: { useGrouping: true }
+wrapper props             number: { maximumFractionDigits: 1 }
+effective                 { maximumFractionDigits: 1, useGrouping: true }
+```
 
 `ago` selects a unit automatically unless one is named. Because the output of
 these modifiers depends on the host's locale data, conformance fixtures for this
@@ -366,12 +489,13 @@ to the fallback chain and SHOULD report the failure. (Appendix A.12, A.13.)
 
 ### 11.3 Host-defined modifiers (Extensions)
 
-A host MAY register additional modifiers. A host-defined modifier MUST NOT
-replace a modifier named in this specification.
+A host MAY register additional modifiers. A host's own configuration overrides
+the format's, so a host-defined modifier MAY replace a modifier named in this
+specification.
 
 To keep host-defined names from colliding with future versions of this format,
 a host-defined modifier name SHOULD begin with `x-`. All names matching
-`[a-z][a-zA-Z0-9]*` without that prefix are reserved for this specification.
+`[a-z][a-zA-Z0-9-]*` without that prefix are reserved for this specification.
 
 A host-defined modifier that raises MUST be contained: the placeholder resolves
 to the fallback chain and the failure SHOULD be reported. (Appendix A.12.)
@@ -437,11 +561,17 @@ Neither property may be disabled by configuration.
 ### 14.2 Message errors
 
 A *message error* is a defect in the message: an unknown modifier (11.4), a
-selection with no options (9.5), a modifier that cannot process its input
+comparison with no options (9.5), a modifier that cannot process its input
 (11.2, 11.3).
 
 On a message error an implementation MUST resolve the placeholder to the
 fallback chain (section 10), MUST NOT raise, and SHOULD report the error.
+
+A value that is present but that no conversion can describe (section 4) is a
+defect in the payload rather than in the message. It is treated as absent, so
+the placeholder takes the fallback chain; the implementation MUST NOT raise and
+SHOULD report the condition. The same holds for a link of the fallback chain
+that is present and cannot be described.
 
 Rendering must not fail because one translation is wrong. A single malformed
 message must not take down the page that contains it.
@@ -454,21 +584,21 @@ content apply to every report that includes payload-derived text.
 
 ## Appendix A: rulings on known divergences
 
-Every entry records a behavior of the reference implementation that this
-document does not describe, and the ruling proposed to resolve it. **The
-rulings are proposals awaiting sign-off.** Until they are accepted, this
-appendix describes what implementations actually do and the body of this
-document describes only where they are headed.
+Every entry records a behavior of the pre-3.0 implementation this draft was
+written against, and the ruling that resolved it. **The rulings are accepted.**
+Each is written into the body of this document as a requirement — sections 4,
+4.1, 7, 9, 10, 11 and 14 — and the body, not this appendix, is normative.
 
-Observed behavior was verified by executing the v3 parser sources at
-`sveltekit-i18n/parsers` PR #10, head `aa1cc9d`. Entries A.1-A.6 correspond to
-the six divergences already catalogued before this draft; the rest were found
+Each **Observed** block is a historical record of that pre-3.0 implementation:
+what it did before the ruling landed. It is not re-measured against any current
+head, and it describes no conforming implementation. Entries A.1-A.6 correspond
+to the six divergences already catalogued before this draft; the rest were found
 while writing it.
 
-Every ruling is a breaking change to the reference implementation and none is a
-breaking change to a released package: the neutral implementation
-`@curly-message/parser` is new, and `@sveltekit-i18n/parser-curly` has never
-been released under that name. No migration note is owed to any user.
+Every ruling is a breaking change to the implementation it was observed on and
+none is a breaking change to a released package: `@curly-message/parser` is new
+and nothing has been released against this specification. No migration note is
+owed to any user.
 
 ---
 
@@ -492,7 +622,7 @@ both spellings appear, the first in source order wins:
 {{v; default:LOWER; DEFAULT:UPPER}}  ->  "LOWER"
 ```
 
-**Ruling (proposed).** `default` is reserved in lowercase only, compared
+**Ruling.** `default` is reserved in lowercase only, compared
 case-sensitively everywhere. `DEFAULT:x` becomes an ordinary option.
 
 Keys, option keys and payload keys are case-sensitive throughout the format; one
@@ -504,8 +634,8 @@ grammar.
 
 ### A.2 An unknown modifier silently becomes `eq`
 
-**Observed.** Any name that is not a registered modifier falls back to `eq`,
-with no diagnostic. Modifier lookup is case-sensitive, so case variants fall
+**Observed.** Any name that was not a registered modifier fell back to `eq`,
+with no diagnostic. Modifier lookup was case-sensitive, so case variants fell
 back too, silently changing meaning:
 
 ```
@@ -514,17 +644,19 @@ back too, silently changing meaning:
 {{v:GT;     1:ONE; default:D}}     payload { v: 1 }  ->  "ONE"   (unknown -> eq)
 ```
 
-**Ruling (proposed).** An unknown modifier is a message error (section 14.2).
+**Ruling.** An unknown modifier is a message error (section 14.2).
 The placeholder resolves to the fallback chain; the error is reported. Names
-matching `[a-z][a-zA-Z0-9]*` are reserved for this specification, and
-host-defined modifiers should carry an `x-` prefix (section 11.3).
+matching `[a-z][a-zA-Z0-9-]*` that do not begin with `x-` are reserved for this
+specification, and host-defined modifiers should carry that prefix
+(section 11.3).
 
 This is the most consequential ruling in this appendix, and the reason is
 forward compatibility rather than diagnostics. Every message written today as
 `{{n:plural}}` renders as an equality selection. If a later version of this
 format defines `plural`, all of them change meaning at once — with no error at
-any point, before or after. The same collision exists between host-defined
-modifiers and future specified names, which is what the `x-` prefix separates.
+any point, before or after. A host that registers `plural` itself overrides the
+format there deliberately (section 11.3); the `x-` prefix keeps the names a host
+never meant to override from colliding with future specified ones.
 
 ---
 
@@ -540,7 +672,7 @@ text `"undefined"`:
 {{v:ne; undefined:U; default:D}}   payload {}  ->  "D"    (the option key matches the text)
 ```
 
-**Ruling (proposed).** Remove the special case. An absent value takes the
+**Ruling.** Remove the special case. An absent value takes the
 fallback chain under every modifier, `ne` included.
 
 The behavior is an artifact of one implementation's absent-value spelling, not a
@@ -553,8 +685,8 @@ foreign language's vocabulary.
 
 ### A.4 Valueless options are whitespace-sensitive
 
-**Observed.** An option with no value, or with an empty value, yields its key as
-its own value. An option whose value is whitespace is dropped instead:
+**Observed.** An option with no value, or with an empty value, yielded its key
+as its own value. An option whose value was whitespace was dropped instead:
 
 ```
 {{v:ne; z; default:DEF}}                payload {}          ->  "z"
@@ -562,12 +694,15 @@ its own value. An option whose value is whitespace is dropped instead:
 {{v; x: ; 5:FIVE; default:DEF}}         payload { v: 'x' }  ->  "DEF"   (one space after the colon)
 ```
 
-**Ruling (proposed).** Keep the shorthand: `z`, `z:` and `z:` followed by
-whitespace are all equivalent to `z:z` (section 9.4).
+**Ruling.** Keep the shorthand, and confine it to the form that has
+no colon: `z` alone is equivalent to `z:z`. A colon declares a value, so `z:`
+and `z:` followed by whitespace both declare the empty string (section 9.4).
 
 The shorthand is useful and already relied upon. The whitespace sensitivity is
 not: the difference between `x:` and `x: ` is invisible in every editor a
-translator uses, and no message can depend on it deliberately.
+translator uses, and no message can depend on it deliberately. Reading them both
+as empty is what keeps the colon worth writing — an author who types one has
+said what the value is, and an author who wants the key back leaves it out.
 
 ---
 
@@ -577,17 +712,20 @@ translator uses, and no message can depend on it deliberately.
 documents "double backslash", which is the JSON encoding of a single one. Both
 descriptions are current, and they describe different layers.
 
-**Ruling (proposed).** Escaping is defined at the level of the message string
-(section 7). JSON encoding is a property of the catalogue file, documented as a
-note with a conversion table, not as part of the format.
+**Ruling.** A backslash cancels the structural meaning of the
+character that follows it, uniformly across the whole message string; the
+characters that carry one are `:`, `;`, `{`, `}`, `\` and whitespace
+(section 7). Escaping is defined at the level of the message string. JSON
+encoding is a property of the catalogue file, documented as a note with a
+conversion table, not as part of the format.
 
 ---
 
 ### A.6 The interpolation limits are undocumented
 
-**Observed.** Interpolation stops after 10 passes, and discards a pass whose
-output would exceed 100 000 characters. Both report through `console.warn` and
-return the last settled text. Verified:
+**Observed.** Interpolation stopped after 10 passes, and discarded a pass whose
+output would exceed 100 000 characters. Both reported through `console.warn` and
+returned the last settled text. Verified:
 
 ```
 chain of 10 references   ->  fully resolved, no report
@@ -595,11 +733,11 @@ chain of 11 references   ->  "{{v11}}", one report
 self-multiplying value   ->  27 968 characters, one report
 ```
 
-The output limit discards the offending pass whole rather than truncating to the
-limit, so the result is the last text that stayed within it — not a 100 000
+The output limit discarded the offending pass whole rather than truncating to
+the limit, so the result was the last text that stayed within it — not a 100 000
 character prefix.
 
-**Ruling (proposed).** Specify both as normative minima (section 13), not as
+**Ruling.** Specify both as normative minima (section 13), not as
 implementation details.
 
 They are a denial-of-service bound on attacker-influenced payloads, which makes
@@ -611,8 +749,8 @@ implementations free to be more generous while guaranteeing a floor.
 
 ### A.7 An option value is truncated at its last unescaped colon
 
-**Observed.** An option segment is split on every unescaped colon; the key is
-the first field and the value is the **last**. Everything between is discarded:
+**Observed.** An option segment was split on every unescaped colon; the key was
+the first field and the value the **last**. Everything between was discarded:
 
 ```
 {{v; a:http://x; default:D}}    payload { v: 'a' }  ->  "//x"
@@ -621,10 +759,10 @@ the first field and the value is the **last**. Everything between is discarded:
 {{v; a:10\:30;   default:D}}    payload { v: 'a' }  ->  "10:30"   (escaped: correct)
 ```
 
-Inline defaults are not affected — `{{v; default:10:30}}` yields `10:30` — so
-the two constructs disagree about the same character.
+Inline defaults were not affected — `{{v; default:10:30}}` yielded `10:30` — so
+the two constructs disagreed about the same character.
 
-**Ruling (proposed).** Only the first unescaped colon separates an option key
+**Ruling.** Only the first unescaped colon separates an option key
 from its value; the value runs to the end of the segment (section 6, note 4).
 
 This silently corrupts URLs, clock times, ratios and Windows paths in
@@ -635,8 +773,8 @@ the inconsistency with inline defaults shows it was never intended.
 
 ### A.8 Falsy values are treated as absent
 
-**Observed.** Several places test truthiness where they mean presence, so zero,
-empty string and `false` behave as though the key were missing:
+**Observed.** Several places tested truthiness where they meant presence, so
+zero, empty string and `false` behaved as though the key were missing:
 
 ```
 {{v:number; default:99}}   payload { v: 0 }         ->  "99"       (expected "0")
@@ -646,8 +784,12 @@ message undefined          payload { default: 0 }   ->  the key    (expected "0"
 message undefined          payload { default: '' }  ->  the key    (expected "")
 ```
 
-**Ruling (proposed).** Only an absent key triggers a fallback. Zero, empty
+**Ruling.** Only an absent key triggers a fallback. Zero, empty
 string and `false` are values (sections 9.2 and 10).
+
+Presence is not formattability: an empty or whitespace-only value is present,
+and a formatting modifier that cannot read it as a number still takes the
+fallback chain (section 11.2).
 
 A count of zero is the most common numeric case in translated text — "0 items",
 "0 unread" — and it is exactly the case this turns into the default. The bug is
@@ -668,10 +810,10 @@ the empty string instead:
 {{v; a:A}}    payload { v: 'RAW' }  ->  ""
 ```
 
-**Ruling (proposed).** Keep the two behaviors, but name them: plain
-substitution and selection are distinct constructs (section 9.5). A selection
-with no options at all is a message error, since a modifier with nothing to
-select from cannot have been intended.
+**Ruling.** Keep the two behaviors, but name them: plain
+substitution and selection are distinct constructs (section 9.5). A comparison
+with no options at all is a message error, since a modifier that selects with
+nothing to select from cannot have been intended.
 
 Once named, the difference is coherent rather than surprising: `{{v}}` asks for
 a value, `{{v:eq; …}}` asks which option matches it. The error covers the one
@@ -694,7 +836,7 @@ some other placeholder in the same message triggers a pass:
 The same holds for carriage return, U+2028 and U+2029. A line terminator inside
 the key rather than around it stays literal in both cases.
 
-**Ruling (proposed).** A placeholder must not contain a line terminator, in any
+**Ruling.** A placeholder must not contain a line terminator, in any
 position. Such a construct is literal text unconditionally (section 6, note 1).
 
 Whether a substring is a placeholder must be decidable from that substring
@@ -702,12 +844,16 @@ alone. The current behavior makes it depend on the rest of the message, which no
 static tool can honor — and a static grammar is a prerequisite for extracting a
 message's parameters at build time.
 
+Whether a later version should admit a placeholder that spans lines — decidably,
+on the substring alone — is deferred to
+[issue #3](https://github.com/curly-message/spec/issues/3).
+
 ---
 
 ### A.11 A non-string message is returned unchanged
 
-**Observed.** A message that is not a string and contains no placeholders is
-returned as it arrived, so the parser's declared string return type is not
+**Observed.** A message that was not a string and carried no placeholders was
+returned as it arrived, so the parser's declared string return type was not
 always honored:
 
 ```
@@ -715,7 +861,7 @@ parse(42)    ->  42     (the number, not "42")
 parse(null)  ->  null
 ```
 
-**Ruling (proposed).** An implementation must return a string (section 4).
+**Ruling.** An implementation must return a string (section 4).
 
 This one is an implementation defect rather than a question about the format,
 recorded here so it is not lost.
@@ -724,8 +870,8 @@ recorded here so it is not lost.
 
 ### A.12 Formatting and host-defined modifiers raise
 
-**Observed.** The formatting modifiers propagate host errors, and host-defined
-modifiers propagate their own. A single misconfigured placeholder aborts
+**Observed.** The formatting modifiers propagated host errors, and host-defined
+modifiers propagated their own. A single misconfigured placeholder aborted
 rendering of the whole message:
 
 ```
@@ -735,40 +881,47 @@ rendering of the whole message:
 {{v:x-boom}}     whose modifier raises       ->  raises
 ```
 
-**Ruling (proposed).** A modifier that cannot produce a result resolves to the
+**Ruling.** A modifier that cannot produce a result resolves to the
 fallback chain and reports; it must not raise (sections 11.2, 11.3, 14.2).
 
-The reference implementation's sibling ICU parser was made fail-soft for exactly
-this reason. Failing soft is more important here, not less: currency and date
-options come from the caller at render time, so the failure surfaces in
-production on a code path a translator never exercised.
+Failing soft matters more here than elsewhere: currency and date options come
+from the caller at render time, so the failure surfaces in production on a code
+path a translator never exercised.
 
 ---
 
 ### A.13 A value that cannot be converted is formatted anyway
 
-**Observed.** No formatting modifier tests whether its input is a number.
-`number`, `date` and `ago` compute `+value || +default`, so a value that
-converts to `NaN` is discarded as falsy and the declared default is converted
-in its place — or zero, where none is declared. `currency` selects with
-`value || default` instead, so a value that is not empty is multiplied by the
-ratio and formatted whatever it is:
+**Observed.** No formatting modifier tested whether its input was a number.
+`number`, `date` and `ago` computed `+value || +default`, so a value that
+converted to `NaN` was discarded as falsy and the declared default was converted
+in its place — or zero, where none was declared. `currency` selected with
+`value || default` instead, so a value that was not empty was multiplied by the
+ratio and formatted whatever it was:
 
 ```
 {{v:number}}               payload { v: 'nope' }  ->  "0"      (expected "")
 {{v:number; default:n/a}}  payload { v: 'nope' }  ->  "NaN"    (expected "n/a")
 {{v:ago}}                  payload { v: 'nope' }  ->  "now"    (expected "")
 {{v:currency}}             payload { v: 'nope' }, currency USD  ->  "$NaN"  (expected "")
+{{v:number}}               payload { v: '' }      ->  "0"      (expected "")
+{{v:date}}                 payload { v: '' }      ->  the epoch date  (expected "")
 ```
 
-The divergence hides wherever the declared default is itself a number:
-`{{v:number; default:5}}` over the same payload renders `"5"`, which is what
-the fallback chain would have produced anyway. Where the default is not a
-number, `date` and `ago` raise rather than render, and those are A.12 cases.
+Empty text took the same path from the other side: numeric conversion turned an
+empty or whitespace-only value into zero rather than into a failure, so it
+formatted as a count of zero or as the epoch instead of falling through.
 
-**Ruling (proposed).** A value a modifier cannot convert is a value it cannot
+The divergence hid wherever the declared default was itself a number:
+`{{v:number; default:5}}` over the same payload rendered `"5"`, which is what
+the fallback chain would have produced anyway. Where the default was not a
+number, `date` and `ago` raised rather than rendered, and those are A.12 cases.
+
+**Ruling.** A value a modifier cannot convert is a value it cannot
 format: the placeholder resolves to the fallback chain and yields the default
-itself, never a number computed from it (sections 10 and 11.2).
+itself, never a number computed from it (sections 10 and 11.2). Text that is
+empty or whitespace-only is not a number either, whatever the host's numeric
+conversion makes of it.
 
 This is the case A.12 does not reach. A.12 records the options that make a
 formatter raise; here the formatter succeeds, and the message renders a count
