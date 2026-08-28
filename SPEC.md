@@ -53,8 +53,10 @@ implementation that lacks those modifiers has not defined them, and a host is
 free to define them itself, because a host's own configuration overrides the
 format's (section 11.3).
 
-Conformance is tested by the fixtures published as `@curly-message/conformance`,
-which target a stated version of this document.
+Conformance is tested by the implementation-independent fixture set
+`@curly-message/conformance`, which targets a stated version of this document.
+That set is not published yet, so until it is, an implementation is assessed
+against this document alone.
 
 ## 3. Terminology
 
