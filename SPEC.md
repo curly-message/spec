@@ -462,7 +462,9 @@ that same fallback rather than a placeholder of its own.
 
 The placeholder's default is the first link of the chain in section 10 that
 yields text. The payload's `default` takes precedence over the inline
-`default:`, and a wrapper's `default` takes precedence over both.
+`default:`, and a wrapper's `default` takes precedence over both. This step
+names where the default comes from, not when the chain is walked: section 10
+walks it only where the placeholder uses its result.
 
 If no link yields text, the default is the empty string.
 
