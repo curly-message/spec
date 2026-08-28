@@ -537,7 +537,7 @@ Nothing behind the key is read again on its account. (Appendix A.17.)
 ## 11. Modifiers
 
 A modifier receives the value, the options, the resolved default, the locale and
-the props, and returns text.
+the props, and returns an answer.
 
 The value and the default both reach the modifier as text (section 4): the
 default is the text the chain in section 10 resolved to, and the value is the
