@@ -588,8 +588,11 @@ does not select for the value `straße`.
 
 `lt` and `lte` MUST consider options in ascending key order; `gt` and `gte` in
 descending key order. Ordering is by numeric value of the key; an option whose
-key is not numeric MUST NOT be selected by a numeric comparison. Implementations
-MUST NOT reorder the caller's option list observably.
+key is not numeric MUST NOT be selected by a numeric comparison. Two keys
+spelled differently that carry the same numeric value — `2` and `2.0` — tie, and
+a tie MUST be broken by source order (section 9.4), so an ordering that is not
+stable does not conform. Implementations MUST NOT reorder the caller's option
+list observably.
 
 `lte` and `gte` compare for equality first, over every option in source order
 (section 9.4), and reach the key order above only where that comparison selects
