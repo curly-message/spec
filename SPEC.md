@@ -1114,12 +1114,14 @@ it — where each end previously had a rule of its own.
 ## Appendix B: relationship to the reference implementation
 
 `@curly-message/parser` is the reference implementation of this specification.
-`@sveltekit-i18n/parser-curly` re-exports it as an adapter for
-`@sveltekit-i18n/base`.
 
-The format is specified independently of both. An implementation in any language
-that satisfies section 2 conforms, whether or not it shares code with either
-package.
+The format is specified independently of it. An implementation in any language
+that satisfies section 2 conforms, whether or not it shares any code with it.
+
+A host library that wants this syntax adapts an implementation to its own
+calling convention. That adapter belongs to the host, and this document
+describes neither — the format is indifferent to which host, if any, an
+implementation is reached through.
 
 The published `@sveltekit-i18n/parser-default` 1.x line predates this
 specification. Where it differs, this document governs and the 1.x behavior is
