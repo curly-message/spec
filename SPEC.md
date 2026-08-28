@@ -745,6 +745,14 @@ count is there:
 `format: 'day'` at a delta of three hours is a count of zero days, and
 `format: 'second'` at a delta of 800 days is a count of 69 120 000 seconds.
 
+`ago` asks the host for its non-numeric phrasing wherever the host has one, so
+a count of one day reads as "yesterday" in English rather than as "1 day ago",
+and the count of zero seconds a small delta rounds to reads as "now". The
+phrasing is a `numeric` property in the layers above, and where no layer names
+one it is `auto` — not whatever the host's own formatter would default to,
+which in ECMAScript is `always`, spelling every count out. A layer naming
+`numeric` decides it like any other property.
+
 Because the output of these modifiers depends on the host's locale data,
 conformance fixtures for this level MUST assert the formatting request — the
 operation, its properties and its input — rather than a literal output string.
