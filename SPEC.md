@@ -873,6 +873,29 @@ answer it reads changes with it. A value section 4 serializes is not exempt
 however plainly it is built: its walk is the work the limit bounds, and a
 resolution that walks it once per placeholder pays for it once per placeholder.
 
+A resolution may begin while another is running: a host-defined modifier
+(section 11.3), a reporting handler (section 14.3) and any host code a
+conversion runs (section 4) all reach the implementation, and any of them may
+ask it to resolve a message. Each of the three limits belongs to the resolution
+that reached it, so a resolution begun inside another owns its own pass count,
+its own output budget and its own record of what it has converted. Neither can
+reach a bound the other owns: an inner resolution that stops at the pass limit
+leaves the outer walking the passes it has left, and one that spends the whole
+output limit leaves the outer free to produce its own. A value both of them read
+is converted once for each of them, because the record the requirement above
+asks for belongs to a resolution and not to the implementation. And a report
+names the message the resolution it came from was given, not the message of the
+resolution around that one (section 14.3).
+
+Nothing here bounds how deep that nesting goes, and the three limits being
+per-resolution is exactly what leaves it unbounded. What ends a resolution that
+reaches itself without end is therefore the host's own limit on how deep it will
+go, not anything this document states. Reaching that limit is a failure inside
+host code the implementation called, and MUST be contained the way section 14.2
+contains every other: the placeholder whose modifier or whose value did not come
+back resolves to its fallback chain (section 10), and the resolution around it
+MUST NOT raise.
+
 A report SHOULD identify the unresolved text. Because that text is derived from
 the payload, a report MUST bound its length and MUST NOT emit line terminators
 from it, so that payload content cannot forge additional log lines.
