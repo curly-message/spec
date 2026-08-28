@@ -625,6 +625,14 @@ none, and where what it supplied is empty. One the caller did supply that the
 host then rejects is available but unusable, which is the formatting failure at
 the end of this section and takes the chain like any other.
 
+The locale is tested **first**, before the value is read: where none is
+available the result is the empty string whatever the value is, so the two
+rules below that send a placeholder to the fallback chain — a value that is
+blank, and an input the modifier cannot format — are reached only where a
+locale is. The test is reached in turn only where the placeholder reaches a
+modifier at all: an absent value (section 9.2) takes the chain before any
+modifier is asked, whether a locale is available or not.
+
 | Name | Input | Formats as |
 | --- | --- | --- |
 | `number` | a number | a locale-formatted number, at most 2 fraction digits by default |
