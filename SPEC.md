@@ -676,10 +676,11 @@ rather than one of the properties it layers, so a layer MUST NOT replace it; an
 implementation applies it over every layer.
 
 `ago` selects a unit automatically unless one is named. A unit is named by a
-`format` property in the layers above, holding the name of a unit the host's
-relative-time formatting offers; the value `auto`, which is what a layer naming
-none leaves in place, is the automatic selection. Both the unit and the count
-are chosen from the **magnitude** of the delta, and the sign is applied to the
+`format` property in the layers above, holding one of the units the automatic
+selection itself chooses among rather than a name from the host's whole
+relative-time vocabulary; the value `auto`, which is what a layer naming none
+leaves in place, is that automatic selection. Both the unit and the count are
+chosen from the **magnitude** of the delta, and the sign is applied to the
 result: a delta and its negation MUST select the same unit and the same count
 with opposite signs. A host rounding rule that takes a half in one direction —
 toward positive infinity, say — reads "half an hour from now" and "half an hour
