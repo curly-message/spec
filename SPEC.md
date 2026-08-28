@@ -66,9 +66,10 @@ which target a stated version of this document.
   placeholder values are resolved.
 
 **props**
-: Caller-supplied formatting options for the formatting modifiers, grouped by
-  modifier name. Distinct from the payload: the payload carries data, props
-  carry presentation options.
+: Caller-supplied formatting properties for the formatting modifiers, grouped
+  by modifier name. Distinct from the payload: the payload carries data, props
+  carry presentation. Distinct from an option, which is written in the
+  placeholder: props are supplied by the caller (section 11.2).
 
 **locale**
 : A language tag identifying the target language, used by the formatting
@@ -152,7 +153,7 @@ value — including a plain object that owns any other key alongside them.
 
 A wrapper's `value` is the placeholder's value (section 9.2), its `default`
 joins the fallback chain (section 10), and its `props` is the topmost layer of
-formatting options (section 11.2).
+formatting properties (section 11.2).
 
 Unwrapping happens **exactly once**: a wrapper's `value` is a value, never
 itself a wrapper. A wrapper that owns no `value` key, or whose `value` is the
@@ -598,7 +599,7 @@ locale. If no locale is available, the result MUST be the empty string.
 | `number` | a number | a locale-formatted number, at most 2 fraction digits by default |
 | `date` | milliseconds since the Unix epoch, or text the host can parse as a date | a locale-formatted date |
 | `ago` | a **signed millisecond delta relative to now** — negative is past | a locale-formatted relative time |
-| `currency` | a number, multiplied by a `ratio` option defaulting to 1 | a locale-formatted currency amount |
+| `currency` | a number, multiplied by a `ratio` property defaulting to 1 | a locale-formatted currency amount |
 
 `number`, `ago` and `currency` take a number only. Because every value arrives
 as text (section 4), `date` also accepts text the host's own date parsing
@@ -612,9 +613,15 @@ text, applied here to a payload value: an implementation MUST NOT substitute
 its host's own notion of a blank string. This governs formatting alone: a
 numeric comparison (section 11.1) converts blank text like any other text.
 
-Formatting options are read from props under the modifier's own name, layered
-over implementation-configured defaults, which are layered over the defaults
-above. A wrapper's `props` (section 4.1) is layered over all of them.
+Formatting properties are read from props under the modifier's own name,
+layered over implementation-configured defaults, which are layered over the
+defaults above. A wrapper's `props` (section 4.1) is layered over all of them.
+
+A property is not an **option** (section 3): an option is a segment written in
+the placeholder and offered to the modifier for selection, and a formatting
+modifier selects nothing (section 9.5). Props are the only place a formatting
+modifier reads a property from, so a placeholder segment spelled like one is an
+option that reaches no layer.
 
 Every layer composes **per property**: a layer overrides only the properties it
 names, and the properties it does not name keep whatever the layer beneath it
@@ -636,10 +643,10 @@ not a cap. Where a layer names a `minimumFractionDigits` above it, the default
 maximum widens to reach that minimum instead of contradicting it; a layer that
 names the maximum itself decides it. A default that held at two would make a
 minimum above two unformattable, and the placeholder would take the fallback
-chain over options the caller wrote deliberately.
+chain over properties the caller wrote deliberately.
 
 `currency` formats in the currency style. That style is what the modifier is
-rather than one of the options it layers, so a layer MUST NOT replace it; an
+rather than one of the properties it layers, so a layer MUST NOT replace it; an
 implementation applies it over every layer.
 
 `ago` selects a unit automatically unless one is named. Both the unit and the
@@ -650,8 +657,8 @@ direction — toward positive infinity, say — reads "half an hour from now" an
 "half an hour ago" as different distances, which no reader of a relative time
 expects. Because the output of
 these modifiers depends on the host's locale data, conformance fixtures for this
-level MUST assert the formatting request — the operation, its options and its
-input — rather than a literal output string.
+level MUST assert the formatting request — the operation, its properties and
+its input — rather than a literal output string.
 
 A formatting modifier that cannot format its input MUST NOT raise; it resolves
 to the fallback chain and SHOULD report the failure. (Appendix A.12, A.13.)
