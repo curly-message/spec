@@ -647,9 +647,11 @@ request (section 14.1).
 The two fraction digits `number` formats by default are a default **maximum**,
 not a cap. Where a layer names a `minimumFractionDigits` above it, the default
 maximum widens to reach that minimum instead of contradicting it; a layer that
-names the maximum itself decides it. A default that held at two would make a
-minimum above two unformattable, and the placeholder would take the fallback
-chain over properties the caller wrote deliberately.
+names the maximum itself decides it. The widening runs after the layers have
+composed, and it is the one place a property no layer named does not keep what
+the layer beneath it gave. A default that held at two would make a minimum
+above two unformattable, and the placeholder would take the fallback chain over
+properties the caller wrote deliberately.
 
 `currency` formats in the currency style. That style is what the modifier is
 rather than one of the properties it layers, so a layer MUST NOT replace it; an
