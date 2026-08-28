@@ -42,7 +42,7 @@ An implementation conforms to this specification at one or more levels:
 
 | Level | Sections | Requirement |
 | --- | --- | --- |
-| **Core** | 4-10, 11.1, 11.4, 12, 13, 14 | Grammar, escaping, whitespace, resolution, the fallback chain, the comparison modifiers, nesting and its limits, security properties and error behavior. |
+| **Core** | 4-10, 11 (excluding 11.2 and 11.3), 12, 13, 14 | Grammar, escaping, whitespace, resolution, the fallback chain, what a modifier receives and returns, the comparison modifiers, nesting and its limits, security properties and error behavior. |
 | **Intl** | 11.2 | The locale-dependent formatting modifiers `number`, `date`, `ago` and `currency`. |
 | **Extensions** | 11.3 | Host-defined modifiers. |
 
