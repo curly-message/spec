@@ -544,7 +544,9 @@ A link this chain skips is skipped for the reasons the placeholder chain skips
 one: a `default` entry the payload does not own is absent, and one it owns whose
 value no conversion can describe is not a value. Neither displaces the key echo.
 Where the caller named no key there is nothing to echo, and the message resolves
-to the empty string.
+to the empty string. A key a host wrote as something else becomes text by
+section 4's conversion like any other input, so a key that no conversion can
+describe leaves nothing to echo either.
 
 **Echoed verbatim** means what it says: the key is not a message, and it is not
 among what MAY resolve to text containing placeholders (section 12). A key
