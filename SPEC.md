@@ -746,9 +746,9 @@ zero, so a step is taken as soon as the count beneath it reaches half that
 step's multiple: 30 seconds make a minute, 30 minutes an hour, 12 hours a day,
 4 days a week, 3 weeks a month and 6 months a year. A named unit climbs the
 same ladder with the same rounding and stops at the unit it names whatever the
-count is there:
-`format: 'day'` at a delta of three hours is a count of zero days, and
-`format: 'second'` at a delta of 800 days is a count of 69 120 000 seconds.
+count is there: `format: 'day'` at a delta of three hours is a count of zero
+days, and `format: 'second'` at a delta of 800 days is a count of 69 120 000
+seconds.
 
 `ago` asks the host for its non-numeric phrasing wherever the host has one, so
 a count of one day reads as "yesterday" in English rather than as "1 day ago",
