@@ -750,14 +750,24 @@ visit any number of nodes and still describe itself in two characters — and th
 output limit cannot stand in for a bound on the work.
 
 One conversion is not a resolution. A value is read once for every placeholder
-that names it, on every pass, so a limit on a single serialization bounds a
-resolution only if its serializations cannot multiply with its reads:
-**resolving a message MUST serialize a given value at most once**, and every
-later read of that value MUST answer with the text the first serialization
+that names it, on every pass, so a limit on a single conversion bounds a
+resolution only if its conversions cannot multiply with its reads:
+**resolving a message MUST convert a given value at most once**, and every
+later read of that value MUST answer with the text the first conversion
 produced — the answer that no conversion can describe it included (section 4).
 What a resolution spends converting is then set by the distinct values it
 reaches, not by the reads the message makes of them. A value the payload builds
-afresh on each read is a new value each time, and is serialized each time.
+afresh on each read is a new value each time, and is converted each time.
+
+The requirement is written over conversion rather than over serialization
+because section 4 defines two ways to reach a text and a value takes whichever
+its type selects. The ordinary string conversion runs host code the same way a
+serialization does, and it can fail the same way, so bounding only the JSON path
+would leave a value that raises on conversion absent at one placeholder and
+present at the next within one resolution, with the reports following. A value
+whose conversion is not deterministic therefore answers every later read with
+the text the first read produced. An implementation need not record a value
+whose conversion can neither run host code nor answer twice over.
 
 A report SHOULD identify the unresolved text. Because that text is derived from
 the payload, a report MUST bound its length and MUST NOT emit line terminators
@@ -798,7 +808,7 @@ serializes for longer than any caller will wait — a message carrying no
 placeholder at all reaches the conversion but never the interpolation loop, so
 the conversion limit is the only one that holds it. That limit holds one
 conversion; what keeps a message from buying as many of them as it has
-placeholders is section 13's requirement that a resolution serialize a value
+placeholders is section 13's requirement that a resolution convert a value
 once.
 
 Neither property may be disabled by configuration.
