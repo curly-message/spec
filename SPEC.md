@@ -65,8 +65,9 @@ against this document alone.
   is converted to text before anything reads it (sections 4 and 5).
 
 **payload**
-: A mapping from string keys to values, supplied by the caller, from which
-  placeholder values are resolved.
+: A mapping from string keys to entries, supplied by the caller, from which
+  placeholder values are resolved. An entry is a value, or the value's own
+  configuration (section 4.1).
 
 **props**
 : Caller-supplied formatting properties for the formatting modifiers, grouped
