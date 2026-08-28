@@ -419,10 +419,14 @@ mappings inherit members, `constructor`, `toString` and `__proto__` are
 therefore absent unless the payload carries them as own entries. This is a
 security requirement, not an optimization (section 14).
 
-A value is **absent** only when there is no own entry for the key. A value of
-zero, empty string, `false` or the host's null MUST be treated as present.
-(Appendix A.8.) A value that is present but that no conversion can describe
-(section 4) is treated as absent.
+A value is **absent** when there is no own entry for the key, or when that
+entry is the host's undefined — the host's own word for nothing here, which
+section 4.1 already reads that way in a wrapper's `value`. An undefined entry
+is absent, not a value no conversion could describe, so there is nothing to
+report (section 14.2). Nothing else is absent: a value of zero, empty string,
+`false` or the host's null MUST be treated as present. (Appendix A.8.) A value
+that is present but that no conversion can describe (section 4) is treated as
+absent.
 
 If the entry is a wrapper (section 4.1), the value is the wrapper's `value`, and
 the wrapper's `default` and `props` join resolution as sections 10 and 11.2
