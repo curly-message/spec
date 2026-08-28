@@ -618,7 +618,12 @@ absent value takes the fallback chain. (Appendix A.3.)
 ### 11.2 Formatting modifiers (Intl)
 
 These delegate to the host's internationalization facilities and require a
-locale. If no locale is available, the result MUST be the empty string.
+locale. If no locale is available, the result MUST be the empty string and not
+the fallback chain (section 10): a declared default does not stand in for a
+locale nobody supplied. A locale is **not available** where the caller supplied
+none, and where what it supplied is empty. One the caller did supply that the
+host then rejects is available but unusable, which is the formatting failure at
+the end of this section and takes the chain like any other.
 
 | Name | Input | Formats as |
 | --- | --- | --- |
