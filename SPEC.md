@@ -1375,9 +1375,10 @@ stopped comparing. The last line is what the two `foo` lines should have read
 as. The two `eq` lines should have compared instead: `eq` is specified, so a
 message may write it whether or not a host registers anything under the name
 (section 11.4). What a comparison answers turns on the value, which this block
-does not state: the two rows are a divergence for the value `X`, which a
-comparison selects `HIT` for, and none for any other value, which reaches `D`
-with no report whether `eq` compares or not.
+does not state: the two rows are a divergence for a value the comparison
+selects `HIT` for — `X`, and `x`, which `eq` reads as the same text
+(section 11.1) — and none for a value it selects nothing for, which reaches
+`D` with no report whether `eq` compares or not.
 
 A host's table is not the only one. An implementation's own exports are the
 layer a host's table composes with, and one implementation exported the `ago`
