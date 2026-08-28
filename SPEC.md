@@ -520,6 +520,13 @@ default is the text the chain in section 10 resolved to, and the value is the
 text the payload entry converted to. No modifier sees a value at the type it was
 authored with.
 
+A modifier's answer is a host value in turn, and becomes text by that same
+conversion: a structured answer serializes rather than collapsing to whatever
+the host calls an object, so a modifier writes the text a payload value of that
+shape would. Neither an answer no conversion can describe nor an answer that is
+nothing at all is an answer, and the placeholder takes the fallback chain
+(section 10) — the treatment a value that is not a value gets.
+
 Modifier names are **case-sensitive**. `eq` is a modifier; `EQ` is not.
 (Appendix A.2.)
 
