@@ -1037,8 +1037,10 @@ message undefined          payload { default: 0 }   ->  the key    (expected "0"
 message undefined          payload { default: '' }  ->  the key    (expected "")
 ```
 
-**Ruling.** Only an absent key triggers a fallback. Zero, empty
-string and `false` are values (sections 9.2 and 10).
+**Ruling.** Only an absent value triggers a fallback. Zero, empty
+string and `false` are values (sections 9.2 and 10). Absence is a property of
+the value, not of the key: an own entry that is the host's undefined, and a
+present value that no conversion can describe, are absent too (section 9.2).
 
 Presence is not formattability: an empty or whitespace-only value is present,
 and a formatting modifier that cannot read it as a number still takes the
