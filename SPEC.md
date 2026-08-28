@@ -660,10 +660,11 @@ the result: a delta and its negation MUST select the same unit and the same
 count with opposite signs. A host rounding rule that takes a half in one
 direction — toward positive infinity, say — reads "half an hour from now" and
 "half an hour ago" as different distances, which no reader of a relative time
-expects. Because the output of
-these modifiers depends on the host's locale data, conformance fixtures for this
-level MUST assert the formatting request — the operation, its properties and
-its input — rather than a literal output string.
+expects.
+
+Because the output of these modifiers depends on the host's locale data,
+conformance fixtures for this level MUST assert the formatting request — the
+operation, its properties and its input — rather than a literal output string.
 
 A formatting modifier that cannot format its input MUST NOT raise; it resolves
 to the fallback chain and SHOULD report the failure. (Appendix A.12, A.13.)
@@ -1265,12 +1266,11 @@ whose key is `v}`.
 
 Section 7 already lists `\}` among the sequences that write a character as
 text, and note 2 admits a brace into a key wherever it does not form a
-delimiter. Reading the backslash into
-the key instead left `}` reserved with no escape at all: `\}` and `\\`
-collapsed onto one key, so `v\` was reachable by two spellings and `v}` by
-none. With A.15 ruling the opening pair the same way, a single statement now
-covers both ends of a placeholder — a backslash consumes the character after
-it — where each end previously had a rule of its own.
+delimiter. Reading the backslash into the key instead left `}` reserved with no
+escape at all: `\}` and `\\` collapsed onto one key, so `v\` was reachable by
+two spellings and `v}` by none. With A.15 ruling the opening pair the same way,
+a single statement now covers both ends of a placeholder — a backslash consumes
+the character after it — where each end previously had a rule of its own.
 
 ---
 
