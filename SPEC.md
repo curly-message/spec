@@ -557,10 +557,29 @@ Modifier names are **case-sensitive**. `eq` is a modifier; `EQ` is not.
 | `gt` | is less than the value, comparing numerically |
 | `gte` | equals the value, compared as text, case-insensitively, otherwise as `gt` |
 
+**Case-insensitively** names one comparison: the option key and the value are
+each mapped to lower case by the host's ordinary, locale-independent case
+conversion, and the two results are compared by code-point equality. Section 7
+defers the comparison here, and this is the whole of it: an implementation MUST
+NOT substitute a collation, a normalization or a case fold for it, and MUST NOT
+tailor the conversion to a locale. The comparison modifiers are Core
+(section 2), so they resolve alike in every locale and where no locale is
+available at all — a conversion a locale tailors reads `I` and `i` as one text
+in most languages and as two in Turkish, and a Core selection cannot turn on
+which. The mapping also leaves apart what a case fold would join: the lower
+case of `STRASSE` is `strasse` and not `straße`, so an option keyed `STRASSE`
+does not select for the value `straße`.
+
 `lt` and `lte` MUST consider options in ascending key order; `gt` and `gte` in
 descending key order. Ordering is by numeric value of the key; an option whose
 key is not numeric MUST NOT be selected by a numeric comparison. Implementations
 MUST NOT reorder the caller's option list observably.
+
+`lte` and `gte` compare for equality first, over every option in source order
+(section 9.4), and reach the key order above only where that comparison selects
+nothing. The equality leg is a text comparison rather than a numeric one, so the
+option it selects need not carry a numeric key: `{{v:lte; abc:X}}` selects `X`
+for the value `abc`, which the numeric leg on its own passes over.
 
 If no option is selected, the result is the fallback chain (section 10).
 
