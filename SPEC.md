@@ -623,7 +623,7 @@ locale. If no locale is available, the result MUST be the empty string.
 | Name | Input | Formats as |
 | --- | --- | --- |
 | `number` | a number | a locale-formatted number, at most 2 fraction digits by default |
-| `date` | milliseconds since the Unix epoch, or text the host can parse as a date | a locale-formatted date |
+| `date` | milliseconds since the Unix epoch; failing that, text the host can parse as a date | a locale-formatted date |
 | `ago` | a **signed millisecond delta relative to now** — negative is past | a locale-formatted relative time |
 | `currency` | a number, multiplied by a `ratio` property defaulting to 1 | a locale-formatted currency amount |
 
@@ -638,6 +638,36 @@ fallback chain (section 10). The class is the one section 8 applies to message
 text, applied here to a payload value: an implementation MUST NOT substitute
 its host's own notion of a blank string. This governs formatting alone: a
 numeric comparison (section 11.1) converts blank text like any other text.
+
+What makes any other value a number is the host's ordinary numeric conversion
+(section 4), applied to the whole of the text and yielding something finite.
+The conversion reads the whole value and not a leading part of it, so `12px` is
+not a number; whitespace around a number is not part of it, so ` 12 ` is one; a
+sign and an exponent are part of it, so `+12` and `1e3` are. An infinity is not
+a number a formatting modifier can format either, so `{{v:number}}` over
+`Infinity` takes the fallback chain while `{{v:gt; 5:X}}` still selects `X` for
+that same value; and `currency` applies the test a second time to the product
+of the value and its `ratio`, so a product that overflows to an infinity takes
+the chain too.
+
+Beyond that the test is the host's, and deliberately so: it is the conversion
+section 4 already requires wherever a value is read as a number, and a second
+test written here would leave `{{v:number}}` and `{{v:date}}` disagreeing about
+what a number is. Two hosts whose conversions read different literal forms — a
+hexadecimal one, say — therefore differ over such a value, and a message that
+must format alike everywhere writes a decimal number.
+
+`date` reads its value as a timestamp **first**: only a value that test does
+not read as a number reaches the host's date parsing. The two readings overlap,
+because a bare run of digits is both a count of milliseconds and a year, and
+the order is what settles which one a message gets. `{{v:date}}` over `2024`
+formats the 2024th millisecond after the epoch and not the first day of 2024;
+over `99` it formats the 99th and not a day in 1999. The order reaches past the
+digits, too: ` 2024 ` is a number with whitespace around it and `+1000` is a
+signed one, so both are timestamps, though a host's date parsing reads a year
+in each. An implementation that parsed dates first would render a different
+date for the same payload, so this order is normative and not a tie a host may
+break.
 
 Formatting properties are read from props under the modifier's own name,
 layered over implementation-configured defaults, which are layered over the
