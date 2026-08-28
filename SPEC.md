@@ -772,9 +772,14 @@ one it is `auto` — not whatever the host's own formatter would default to,
 which in ECMAScript is `always`, spelling every count out. A layer naming
 `numeric` decides it like any other property.
 
-Because the output of these modifiers depends on the host's locale data,
-conformance fixtures for this level MUST assert the formatting request — the
-operation, its properties and its input — rather than a literal output string.
+Because the output of these modifiers depends on the host's locale data, a
+fixture asserting a literal output string tests that data rather than this
+format. A fixture for this level SHOULD assert the formatting request instead —
+the operation, its properties and its input. This document specifies no host
+API (section 1) and requires no implementation to expose that request, so where
+none is exposed a fixture MUST name the locale data its expected output was
+captured against, and an output differing from it by that data alone is not a
+non-conformance.
 
 A formatting modifier that cannot format its input MUST NOT raise; it resolves
 to the fallback chain and SHOULD report the failure. (Appendix A.12, A.13.)
