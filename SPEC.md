@@ -663,12 +663,14 @@ that same value; and `currency` applies the test a second time to the product
 of the value and its `ratio`, so a product that overflows to an infinity takes
 the chain too.
 
-Beyond that the test is the host's, and deliberately so: it is the conversion
-section 4 already requires wherever a value is read as a number, and a second
-test written here would leave `{{v:number}}` and `{{v:date}}` disagreeing about
-what a number is. Two hosts whose conversions read different literal forms — a
-hexadecimal one, say — therefore differ over such a value, and a message that
-must format alike everywhere writes a decimal number.
+Beyond that the test is the host's, and deliberately so: it is the same
+conversion section 4 requires of a numeric comparison, and a second test
+written here would leave `{{v:number}}` and `{{v:date}}` disagreeing about what
+a number is. Only the conversion carries over: where it yields no number a
+comparison merely fails (section 4), while a formatting modifier resolves to
+the fallback chain. Two hosts whose conversions read different literal forms —
+a hexadecimal one, say — therefore differ over such a value, and a message
+that must format alike everywhere writes a decimal number.
 
 `date` reads its value as a timestamp **first**: only a value that test does
 not read as a number reaches the host's date parsing. The two readings overlap,
