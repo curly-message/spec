@@ -351,15 +351,17 @@ Implementations MUST remove escape sequences exactly once, from the final text,
 after interpolation has finished (section 5). Implementations MUST NOT remove
 them from intermediate results.
 
-That rule governs the text a message resolves to, not the names it reaches it
-by. A **key**, a **modifier name** and an **option key** are each matched
-against something a host wrote — a payload entry, a registered modifier, a value
-the message compares — so each is compared by exact code-point equality after
-unescaping (section 6, note 2). A name is what its author wrote, not the
+That rule governs the text a message resolves to, not the spellings it reaches
+it by. A **key** and a **modifier name** are each matched by name against
+something a host wrote — a payload entry, a registered modifier — so each is
+compared by exact code-point equality after unescaping (section 6, note 2). An
+**option key** is unescaped the same way, but it looks nothing up: it is
+compared against the value, and that comparison belongs to the modifier that
+performs it (section 11.1). All three are what their author wrote, not the
 spelling a reserved character forced; unescaping one is not the removal this
-rule bounds, because the name itself never reaches the output. Where an option
-key stands for its own value (section 9.4), that value is the source spelling
-and is unescaped once with the rest of the output, like any other value.
+rule bounds, because none of the three reaches the output. Where an option key
+stands for its own value (section 9.4), that value is the source spelling and is
+unescaped once with the rest of the output, like any other value.
 
 ## 8. Whitespace
 
@@ -544,9 +546,9 @@ Modifier names are **case-sensitive**. `eq` is a modifier; `EQ` is not.
 | `eq` | equals the value, compared as text, case-insensitively |
 | `ne` | differs from the value, compared as text, case-insensitively |
 | `lt` | is greater than the value, comparing numerically |
-| `lte` | equals the value as text, otherwise as `lt` |
+| `lte` | equals the value, compared as text, case-insensitively, otherwise as `lt` |
 | `gt` | is less than the value, comparing numerically |
-| `gte` | equals the value as text, otherwise as `gt` |
+| `gte` | equals the value, compared as text, case-insensitively, otherwise as `gt` |
 
 `lt` and `lte` MUST consider options in ascending key order; `gt` and `gte` in
 descending key order. Ordering is by numeric value of the key; an option whose
@@ -820,10 +822,10 @@ both spellings appear, the first in source order wins:
 **Ruling.** `default` is reserved in lowercase only, compared
 case-sensitively everywhere. `DEFAULT:x` becomes an ordinary option.
 
-Keys, option keys and payload keys are case-sensitive throughout the format; one
-case-insensitive position is an inconsistency, and its side effect — a segment
-that is simultaneously a fallback and an option — cannot be expressed in the
-grammar.
+A reserved word is recognized by name, and a name is matched case-sensitively
+throughout the format (section 7); one case-insensitive position is an
+inconsistency, and its side effect — a segment that is simultaneously a fallback
+and an option — cannot be expressed in the grammar.
 
 ---
 
