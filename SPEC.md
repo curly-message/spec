@@ -82,7 +82,7 @@ which target a stated version of this document.
 : A `{{ … }}` construct within a message.
 
 **selector**
-: The leading segment of a placeholder: a payload key and an optional modifier.
+: The leading part of a placeholder: a payload key and an optional modifier.
 
 **option**
 : A `key:value` pair within a placeholder, offered to the modifier for
@@ -244,8 +244,8 @@ Notes on the grammar, all normative:
    form (note 1). Keys are compared by exact code-point equality after
    unescaping.
 
-3. **The selector's colon is the first unescaped colon in the first segment.**
-   Everything before it is the key; everything after it, up to the segment's
+3. **The selector's colon is the first unescaped colon in the selector.**
+   Everything before it is the key; everything after it, up to the selector's
    end, is the modifier name. The name is not otherwise constrained: one this
    format does not specify and the host has not registered is a **message
    error** (section 11.4), not literal text. A colon with nothing after it
