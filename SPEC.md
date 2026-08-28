@@ -357,7 +357,10 @@ both — `\\\:` yields `\:`.
 
 Implementations MUST remove escape sequences exactly once, from the final text,
 after interpolation has finished (section 5). Implementations MUST NOT remove
-them from intermediate results.
+them from intermediate results. Removing one leaves what the first paragraph of
+this section says it denotes: the escaped character alone where the backslash
+cancelled a structural meaning, and both characters where it cancelled none, so
+`\a` renders as `\a`.
 
 That rule governs the text a message resolves to, not the spellings it reaches
 it by. A **key** and a **modifier name** are each matched by name against
