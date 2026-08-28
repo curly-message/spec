@@ -696,9 +696,9 @@ to. Whether it derives then is decided by that text like any other: a value
 carrying `}}` closes the enclosing construct early, and one carrying `{{` keeps
 it from deriving at all.
 
-A value, an option value, an inline default or a payload `default` MAY likewise
-**resolve to text that contains** placeholders; those are found and resolved on
-the following pass (section 5).
+A value, an option value, an inline default, a payload `default` or a wrapper's
+`default` (section 4.1) MAY likewise **resolve to text that contains**
+placeholders; those are found and resolved on the following pass (section 5).
 
 Nesting is bounded by section 13.
 
@@ -1276,8 +1276,9 @@ key "{{name}}"  payload { default: <circular> }  ->  "", and a second report
 
 **Ruling.** The key is echoed verbatim (section 10). It is not among what MAY
 resolve to text containing placeholders — a value, an option value, an inline
-default and a payload `default` (section 12) — so it is not scanned, and the
-unescaping every resolved message ends with does not reach it either.
+default, a payload `default` and a wrapper's `default` (section 12) — so it is
+not scanned, and the unescaping every resolved message ends with does not reach
+it either.
 
 The key belongs to the application, not to the message catalogue: it is an
 identifier the application chose, and the format repeats it only so the caller
