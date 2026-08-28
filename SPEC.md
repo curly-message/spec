@@ -577,7 +577,13 @@ chain over options the caller wrote deliberately.
 rather than one of the options it layers, so a layer MUST NOT replace it; an
 implementation applies it over every layer.
 
-`ago` selects a unit automatically unless one is named. Because the output of
+`ago` selects a unit automatically unless one is named. Both the unit and the
+count are chosen from the **magnitude** of the delta, and the sign is applied to
+the result: a delta and its negation MUST select the same unit and the same
+count with opposite signs. A host rounding rule that takes a half in one
+direction — toward positive infinity, say — reads "half an hour from now" and
+"half an hour ago" as different distances, which no reader of a relative time
+expects. Because the output of
 these modifiers depends on the host's locale data, conformance fixtures for this
 level MUST assert the formatting request — the operation, its options and its
 input — rather than a literal output string.
