@@ -758,8 +758,8 @@ output limit cannot stand in for a bound on the work.
 One conversion is not a resolution. A value is read once for every placeholder
 that names it, on every pass, so a limit on a single conversion bounds a
 resolution only if its conversions cannot multiply with its reads:
-**resolving a message MUST convert a given value at most once**, and every
-later read of that value MUST answer with the text the first conversion
+**resolving a message MUST NOT convert a given value twice observably**, and
+every later read of that value MUST answer with the text the first conversion
 produced — the answer that no conversion can describe it included (section 4).
 What a resolution spends converting is then set by the distinct values it
 reaches, not by the reads the message makes of them. A value the payload builds
