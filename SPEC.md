@@ -684,9 +684,9 @@ specification.
 
 What a host registers under a name MUST be a modifier. Registration is what
 makes a name one a message may write, so registering anything else registers no
-modifier: the name is not one a message may write, and it does not replace a
-modifier already answering to it. A message writing that name names a modifier
-nobody registered, and section 11.4 governs. (Appendix A.18.)
+modifier: it does not make the name one a message may write, and it does not
+replace a modifier already answering to it. A message writing that name names a
+modifier nobody registered, and section 11.4 governs. (Appendix A.18.)
 
 To keep host-defined names from colliding with future versions of this format,
 a host-defined modifier name SHOULD begin with `x-`. All names matching
@@ -1351,7 +1351,10 @@ nothing       {{v:nosuch; default:D}}     ->  "D", unknown-modifier
 The two `eq` lines are the sharper ones: registering a non-modifier under a
 specified name took the name away from the modifier that held it, so `eq` — the
 comparison a placeholder writing options gets whether or not it names one —
-stopped comparing. The last line is what all four should have read as.
+stopped comparing. The last line is what the two `foo` lines should have read
+as. The two `eq` lines should have compared instead: `eq` is specified, so a
+message may write it whether or not a host registers anything under the name
+(section 11.4).
 
 A host's table is not the only one. An implementation's own exports are the
 layer a host's table composes with, and one implementation exported the `ago`
