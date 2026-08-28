@@ -116,9 +116,10 @@ of its own — in ECMAScript, one whose prototype is `Object.prototype` or null.
 The narrow reading is what keeps a value authored as a date instance formattable
 by `date` (section 11.2).
 
-A value that **no conversion can describe** — a serialization that raises or
-yields nothing, a string conversion that raises — MUST be treated as absent,
-MUST NOT raise, and SHOULD be reported (section 14.2).
+A value that **no conversion can describe** — a serialization that raises,
+yields nothing or reaches the conversion limit of section 13, a string
+conversion that raises — MUST be treated as absent, MUST NOT raise, and SHOULD
+be reported (section 14.2).
 
 Wherever a value is compared numerically, the implementation MUST convert it
 using the host's ordinary numeric conversion, and a conversion that does not
@@ -664,16 +665,29 @@ Nesting is bounded by section 13.
 Interpolation is bounded, because a payload is frequently attacker-influenced
 and a self-referential or self-multiplying value would otherwise not terminate.
 
-An implementation MUST enforce both of the following:
+An implementation MUST enforce all three of the following:
 
 - **A pass limit.** At least **10** passes MUST be performed before stopping.
 - **An output limit.** At least **100 000** characters of output MUST be
   permitted. A pass whose output would exceed the limit MUST be discarded
   whole; the result is the last text that stayed within the limit.
+- **A conversion limit.** At least **100 000** nodes MUST be visited before a
+  value's serialization is abandoned. A serialization that reaches the limit
+  MUST be treated as a conversion that cannot describe the value (section 4).
 
-On reaching either limit the implementation MUST return the last settled text
-with its placeholders unresolved, MUST NOT raise, and SHOULD report that a limit
-was reached.
+On reaching the pass limit or the output limit the implementation MUST return
+the last settled text with its placeholders unresolved, MUST NOT raise, and
+SHOULD report that a limit was reached.
+
+The conversion limit bounds the work of producing a text, which the other two
+cannot: both measure a string that already exists. Serialization follows a
+shared reference again every time it meets one, so a value naming the same child
+twice at each of twenty-four levels holds twenty-five objects and describes
+sixteen million leaves — nothing circular, so nothing a serializer refuses. The
+conversion limit is the output limit's own number because the two bound the same
+thing from two ends: every node a serialization visits owes the output at least
+a character, so a value past the conversion limit could never have settled
+within the output limit.
 
 A report SHOULD identify the unresolved text. Because that text is derived from
 the payload, a report MUST bound its length and MUST NOT emit line terminators
@@ -704,7 +718,10 @@ message whose caller configured none of it.
 
 **Bounded interpolation.** The limits in section 13 MUST bound the work an
 attacker-supplied payload can force. Without them, a payload value of
-`'{{value}}{{value}}'` grows geometrically.
+`'{{value}}{{value}}'` grows geometrically, and a value that merely shares a
+reference with itself serializes for longer than any caller will wait — a
+message carrying no placeholder at all reaches the conversion but never the
+interpolation loop, so the conversion limit is the only one that holds it.
 
 Neither property may be disabled by configuration.
 
