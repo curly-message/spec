@@ -716,6 +716,14 @@ inherited modifier registration or an inherited reporting channel is somebody
 else's, and reading it lets a polluted prototype reformat, re-route or hijack a
 message whose caller configured none of it.
 
+It covers the call's own inputs last of all. This document specifies no host
+API, so an implementation is free to receive the message, the payload, the props
+and the locale grouped in a single host container rather than as separate
+arguments; where it does, that container MUST be read from its own entries too.
+A container read through its prototype lets a polluted prototype supply the
+payload a caller passed none of, which is the whole of section 9.2's protection
+undone one level above the payload.
+
 **Bounded interpolation.** The limits in section 13 MUST bound the work an
 attacker-supplied payload can force. Without them, a payload value of
 `'{{value}}{{value}}'` grows geometrically, and a value that merely shares a
