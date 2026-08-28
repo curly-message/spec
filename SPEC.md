@@ -847,7 +847,10 @@ permits.
 
 On reaching the pass limit or the output limit the implementation MUST return
 the last settled text with its placeholders unresolved, MUST NOT raise, and
-SHOULD report that a limit was reached.
+SHOULD report that a limit was reached. A limit ends the process the way a pass
+producing no placeholders does, so what it settles is the last text a pass
+produced and section 5's single removal of escape sequences still runs over
+that text before it is returned.
 
 The conversion limit bounds the work of producing a text, which the other two
 cannot: both measure a string that already exists. Serialization follows a
