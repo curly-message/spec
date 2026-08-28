@@ -902,7 +902,12 @@ go, not anything this document states. Reaching that limit is a failure inside
 host code the implementation called, and MUST be contained the way section 14.2
 contains every other: the placeholder whose modifier or whose value did not come
 back resolves to its fallback chain (section 10), and the resolution around it
-MUST NOT raise.
+MUST NOT raise. A reporting handler is the third of those callers and has no
+placeholder waiting on it, its own having resolved before the report was made,
+so a handler that does not come back leaves its report undelivered and the
+resolution that was reporting MUST carry on and MUST NOT raise. That holds for a
+handler that fails any other way too: a channel is where diagnostics go, and a
+message does not fail to render because one could not be logged.
 
 A report SHOULD identify the unresolved text. Because that text is derived from
 the payload, a report MUST bound its length and MUST NOT emit line terminators
