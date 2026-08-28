@@ -632,6 +632,12 @@ A host MAY register additional modifiers. A host's own configuration overrides
 the format's, so a host-defined modifier MAY replace a modifier named in this
 specification.
 
+What a host registers under a name MUST be a modifier. Registration is what
+makes a name one a message may write, so registering anything else registers no
+modifier: the name is not one a message may write, and it does not replace a
+modifier already answering to it. A message writing that name names a modifier
+nobody registered, and section 11.4 governs. (Appendix A.18.)
+
 To keep host-defined names from colliding with future versions of this format,
 a host-defined modifier name SHOULD begin with `x-`. All names matching
 `[a-z][a-zA-Z0-9-]*` without that prefix are reserved for this specification.
@@ -1243,6 +1249,43 @@ second time and no bound of section 13 is reached.
 The echo still becomes text, because resolution answers with text: a key a host
 wrote as something else is converted by section 4 like any other input, and
 where the caller named no key there is nothing to echo.
+
+### A.18 A registration that is not a modifier answers to its name
+
+**Observed.** A name counted as registered because the host's table carried it,
+whatever it carried under it. An entry that could not be called therefore
+answered to its name and failed on the call rather than at registration: the
+placeholder resolved to the fallback chain and reported nothing, where a name
+nobody registered resolves there and reports.
+
+```
+foo: [1, 2]   {{v:foo; default:D}}        ->  "D", no report
+foo: "text"   {{v:foo; default:D}}        ->  "D", no report
+eq:  "text"   {{v:eq; X:HIT; default:D}}  ->  "D", no report
+eq:  "text"   {{v; X:HIT; default:D}}     ->  "D", no report
+nothing       {{v:nosuch; default:D}}     ->  "D", unknown-modifier
+```
+
+The two `eq` lines are the sharper ones: registering a non-modifier under a
+specified name took the name away from the modifier that held it, so `eq` — the
+comparison a placeholder writing options gets whether or not it names one —
+stopped comparing. The last line is what all four should have read as.
+
+A host's table is not the only one. An implementation's own exports are the
+layer a host's table composes with, and one implementation exported the `ago`
+unit ladder alongside its modifiers, so `{{v:agoMap}}` answered to a private
+data table the format never named.
+
+**Ruling.** Registration is what makes a name one a message may write, so an
+entry that is not a modifier registers none (section 11.3). It takes no name of
+its own, and it does not replace a modifier already answering to that name. A
+message writing it names a modifier nobody registered, which is what it is:
+the fallback chain and a report, by section 11.4.
+
+Composition follows from that rather than needing a rule of its own. Each layer
+contributes the modifiers it holds and nothing else, so a bad entry costs a host
+the name it wrote and nothing further; a layer read for its modifiers only after
+composing would let that entry take the modifier it named down with it.
 
 ## Appendix B: relationship to the reference implementation
 
