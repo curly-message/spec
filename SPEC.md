@@ -450,9 +450,11 @@ describe. The own-property requirement applies to the wrapper's own keys too: a
 
 ### 9.3 Determine the default
 
-The inline default is the first segment whose key is exactly `default`,
-compared case-sensitively. The default it declares is that segment's value.
-(Appendix A.1.)
+The inline default is the first segment whose key is exactly `default`, compared
+case-sensitively. The default it declares is that segment's value, read the way
+section 9.4 reads an option's: `default:x` declares `x`, `default:` declares the
+empty string, and `default` alone — no colon — declares the key itself, the text
+`default`. (Appendix A.1.)
 
 `default` is also a reserved payload key: it is the fallback for every
 placeholder in the message that resolves to no value, and `{{default}}` reads
