@@ -522,9 +522,12 @@ A **message** that does not exist takes, in order:
 1. the payload's own `default` entry, if present;
 2. the message's key, echoed verbatim.
 
-A message that exists resolves normally, even when it is empty. A message that
-is present but that no conversion can describe (section 4) does not exist, the
-same way such a value is absent (section 9.2). An own `default` entry that is
+A message **does not exist** when the caller supplied none — in a host with an
+undefined, a message that is the host's undefined — or when it is present and
+no conversion can describe it (section 4), the same way such a value is absent
+(section 9.2). Nothing else fails to exist. A message that exists resolves
+normally, even when it is empty, and one that is zero, false or the host's null
+resolves as the text section 4 converts it to. An own `default` entry that is
 present but zero, empty or false counts as present. (Appendix A.8.)
 
 A link this chain skips is skipped for the reasons the placeholder chain skips
