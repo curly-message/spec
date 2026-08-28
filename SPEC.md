@@ -166,6 +166,11 @@ in the current text with its resolved value (section 9). The output of a pass
 becomes the input of the next, so a value that itself contains a placeholder is
 resolved in turn.
 
+A message reaches the first pass as text: it is converted by section 4's rules
+before anything reads it, not after everything has. A host that wrote its
+message as something other than a string therefore gets it interpolated and
+unescaped like any other, exactly as a payload value always has been.
+
 The process stops when a pass produces text containing no placeholders, or when
 a limit in section 13 is reached.
 
@@ -498,6 +503,12 @@ A message that exists resolves normally, even when it is empty. A message that
 is present but that no conversion can describe (section 4) does not exist, the
 same way such a value is absent (section 9.2). An own `default` entry that is
 present but zero, empty or false counts as present. (Appendix A.8.)
+
+A link this chain skips is skipped for the reasons the placeholder chain skips
+one: a `default` entry the payload does not own is absent, and one it owns whose
+value no conversion can describe is not a value. Neither displaces the key echo.
+Where the caller named no key there is nothing to echo, and the message resolves
+to the empty string.
 
 ## 11. Modifiers
 
