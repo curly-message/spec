@@ -1310,6 +1310,8 @@ The echo still becomes text, because resolution answers with text: a key a host
 wrote as something else is converted by section 4 like any other input, and
 where the caller named no key there is nothing to echo.
 
+---
+
 ### A.18 A registration that is not a modifier answers to its name
 
 **Observed.** A name counted as registered because the host's table carried it,
