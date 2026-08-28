@@ -511,6 +511,12 @@ value no conversion can describe is not a value. Neither displaces the key echo.
 Where the caller named no key there is nothing to echo, and the message resolves
 to the empty string.
 
+**Echoed verbatim** means what it says: the key is not a message, and it is not
+among what MAY resolve to text containing placeholders (section 12). A key
+carrying `{{` or `}}` MUST NOT be resolved over, and an escape sequence a key
+carries MUST NOT be removed — the key leaves as the application spelled it.
+Nothing behind the key is read again on its account. (Appendix A.17.)
+
 ## 11. Modifiers
 
 A modifier receives the value, the options, the resolved default, the locale and
@@ -1200,6 +1206,43 @@ collapsed onto one key, so `v\` was reachable by two spellings and `v}` by
 none. With A.15 ruling the opening pair the same way, a single statement now
 covers both ends of a placeholder — a backslash consumes the character after
 it — where each end previously had a rule of its own.
+
+---
+
+### A.17 The key echo is resolved instead of echoed
+
+**Observed.** Where no message existed, the key was handed to interpolation in
+the message's place, so it was scanned for placeholders and unescaped like a
+message. Every line below resolves a message that does not exist:
+
+```
+key "{{name}}"  payload { name: "Alice" }  ->  "Alice"  (expected "{{name}}")
+key "{{name}}"  no payload                 ->  ""       (expected "{{name}}")
+key "a\;b"      no payload                 ->  "a;b"    (expected "a\;b")
+key "{{a}}"     payload { a: "{{a}}" }     ->  "{{a}}", and a pass-limit report
+key "{{name}}"  payload { default: <circular> }  ->  "", and a second report
+```
+
+**Ruling.** The key is echoed verbatim (section 10). It is not among what MAY
+resolve to text containing placeholders — a value, an option value, an inline
+default and a payload `default` (section 12) — so it is not scanned, and the
+unescaping every resolved message ends with does not reach it either.
+
+The key belongs to the application, not to the message catalogue: it is an
+identifier the application chose, and the format repeats it only so the caller
+can see which message went looking. Resolving over it hands that identifier to
+the payload — the same payload that just failed to supply a message — and
+returns a key spelled differently than it was passed. A caller that logs the
+echo, or compares it against the key it asked for, has to be able to recognize
+it.
+
+Nothing behind the key is read on its account either: the echo is the end of
+the chain, not another link in it, so a payload entry read once is not read a
+second time and no bound of section 13 is reached.
+
+The echo still becomes text, because resolution answers with text: a key a host
+wrote as something else is converted by section 4 like any other input, and
+where the caller named no key there is nothing to echo.
 
 ## Appendix B: relationship to the reference implementation
 
