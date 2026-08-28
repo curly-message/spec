@@ -345,6 +345,16 @@ Implementations MUST remove escape sequences exactly once, from the final text,
 after interpolation has finished (section 5). Implementations MUST NOT remove
 them from intermediate results.
 
+That rule governs the text a message resolves to, not the names it reaches it
+by. A **key**, a **modifier name** and an **option key** are each matched
+against something a host wrote — a payload entry, a registered modifier, a value
+the message compares — so each is compared by exact code-point equality after
+unescaping (section 6, note 2). A name is what its author wrote, not the
+spelling a reserved character forced; unescaping one is not the removal this
+rule bounds, because the name itself never reaches the output. Where an option
+key stands for its own value (section 9.4), that value is the source spelling
+and is unescaped once with the rest of the output, like any other value.
+
 ## 8. Whitespace
 
 Within a placeholder:
