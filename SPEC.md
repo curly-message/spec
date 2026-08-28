@@ -768,7 +768,10 @@ would leave a value that raises on conversion absent at one placeholder and
 present at the next within one resolution, with the reports following. A value
 whose conversion is not deterministic therefore answers every later read with
 the text the first read produced. An implementation need not record a value
-whose conversion can neither run host code nor answer twice over.
+whose conversion can neither run host code nor answer twice over: converting
+one again runs no host code and answers what the first conversion answered, so
+neither the work the limit bounds nor the answer a resolution reads changes
+with it.
 
 A report SHOULD identify the unresolved text. Because that text is derived from
 the payload, a report MUST bound its length and MUST NOT emit line terminators
