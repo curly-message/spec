@@ -678,9 +678,10 @@ properties the caller wrote deliberately.
 rather than one of the properties it layers, so a layer MUST NOT replace it; an
 implementation applies it over every layer.
 
-`ago` selects a unit automatically unless one is named. A unit is named by a
-`format` property in the layers above, holding one of the units the automatic
-selection itself chooses among rather than a name from the host's whole
+`ago` selects a unit automatically unless one is named. The selection chooses
+among `second`, `minute`, `hour`, `day`, `week`, `month` and `year`. A unit is
+named by a `format` property in the layers above, holding one of those units,
+written in the singular or the plural, rather than a name from the host's whole
 relative-time vocabulary; the value `auto`, which is what a layer naming none
 leaves in place, is that automatic selection. Both the unit and the count are
 chosen from the **magnitude** of the delta, and the sign is applied to the
