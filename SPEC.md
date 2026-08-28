@@ -775,10 +775,13 @@ would leave a value that raises on conversion absent at one placeholder and
 present at the next within one resolution, with the reports following. A value
 whose conversion is not deterministic therefore answers every later read with
 the text the first read produced. An implementation need not record a value
-whose conversion can neither run host code nor answer twice over: converting
-one again runs no host code and answers what the first conversion answered, so
-neither the work the limit bounds nor the answer a resolution reads changes
-with it.
+section 4 converts by the ordinary string conversion and whose conversion can
+neither run host code nor answer twice over: converting one again visits no
+node the conversion limit counts, runs no host code and answers what the first
+conversion answered, so neither what a resolution spends converting nor the
+answer it reads changes with it. A value section 4 serializes is not exempt
+however plainly it is built: its walk is the work the limit bounds, and a
+resolution that walks it once per placeholder pays for it once per placeholder.
 
 A report SHOULD identify the unresolved text. Because that text is derived from
 the payload, a report MUST bound its length and MUST NOT emit line terminators
