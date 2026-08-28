@@ -87,7 +87,8 @@ against this document alone.
   construct it does not derive is literal text (section 9.1).
 
 **selector**
-: The leading part of a placeholder: a payload key and an optional modifier.
+: The leading part of a placeholder: a payload key and a modifier, both
+  optional (section 9.1).
 
 **option**
 : A `key:value` pair within a placeholder, offered to the modifier for
