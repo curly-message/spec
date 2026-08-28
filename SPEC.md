@@ -562,6 +562,10 @@ wrapper props             number: { maximumFractionDigits: 1 }
 effective                 { maximumFractionDigits: 1, useGrouping: true }
 ```
 
+Each layer is read from its **own** entries, the way section 9.2 reads the
+payload. A property a layer merely inherits MUST NOT reach the formatting
+request (section 14.1).
+
 `ago` selects a unit automatically unless one is named. Because the output of
 these modifiers depends on the host's locale data, conformance fixtures for this
 level MUST assert the formatting request — the operation, its options and its
@@ -644,6 +648,14 @@ requirements, not permissions.
 members (section 9.2). Without this, a message containing `{{constructor}}` or
 `{{__proto__}}` discloses host internals, and in hosts with mutable prototypes a
 polluted prototype changes the rendering of messages that never referenced it.
+
+The requirement covers configuration as well as the payload: the modifier
+registry (sections 11.3, 11.4), the formatting layers of section 11.2 and the
+reporting channel (section 14.3) MUST be read from their own entries only.
+Nobody writes configuration onto a prototype, so an inherited props entry, an
+inherited modifier registration or an inherited reporting channel is somebody
+else's, and reading it lets a polluted prototype reformat, re-route or hijack a
+message whose caller configured none of it.
 
 **Bounded interpolation.** The limits in section 13 MUST bound the work an
 attacker-supplied payload can force. Without them, a payload value of
