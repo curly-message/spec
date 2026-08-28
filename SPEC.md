@@ -61,7 +61,8 @@ against this document alone.
 ## 3. Terminology
 
 **message**
-: A string that may contain placeholders.
+: Text that may contain placeholders. A message a host wrote as something else
+  is converted to text before anything reads it (sections 4 and 5).
 
 **payload**
 : A mapping from string keys to values, supplied by the caller, from which
