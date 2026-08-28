@@ -93,8 +93,10 @@ which target a stated version of this document.
   the placeholder's own fallback.
 
 **absent**
-: A value is absent when the payload has no own entry for the key. A value that
-  is present but empty, zero or false is **not** absent (section 9.2).
+: A value is absent when the payload has no own entry for the key, or when the
+  entry it owns is the host's undefined. A value that is present but empty,
+  zero, false or the host's null is **not** absent; a present value that no
+  conversion can describe is treated as absent (section 9.2).
 
 ## 4. Data model
 
