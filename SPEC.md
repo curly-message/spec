@@ -702,8 +702,9 @@ What a host registers under a name MUST be a modifier. A name a message may
 write is one this specification names or one a host registered a modifier under,
 so registering anything else registers no modifier: it does not make the name
 one a message may write, and it does not replace a modifier already answering to
-it. A message writing that name names a modifier nobody registered, and section
-11.4 governs. (Appendix A.18.)
+it. Where nothing else answers to that name, a message writing it names a
+modifier nobody registered, and section 11.4 governs; where this specification
+names a modifier under it, that modifier answers as it did. (Appendix A.18.)
 
 To keep host-defined names from colliding with future versions of this format,
 a host-defined modifier name SHOULD begin with `x-`. All names matching
@@ -1388,9 +1389,11 @@ data table the format never named.
 **Ruling.** A name a message may write is one this specification names or one a
 host registered a modifier under, so an entry that is not a modifier registers
 none (section 11.3). It takes no name of its own, and it does not replace a
-modifier already answering to that name. A message writing it names a modifier
-nobody registered, which is what it is: the fallback chain and a report, by
-section 11.4.
+modifier already answering to that name. Where nothing else answers to that
+name, a message writing it names a modifier nobody registered, which is what it
+is: the fallback chain and a report, by section 11.4. Where this specification
+names a modifier under it, that modifier answers, which is the case the two
+`eq` rows above record.
 
 Composition follows from that rather than needing a rule of its own. Each layer
 contributes the modifiers it holds and nothing else, so a bad entry costs a host
