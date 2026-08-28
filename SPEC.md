@@ -484,9 +484,10 @@ A **message** that does not exist takes, in order:
 1. the payload's own `default` entry, if present;
 2. the message's key, echoed verbatim.
 
-A message that exists resolves normally, even when it is empty. An own `default`
-entry that is present but zero, empty or false counts as present.
-(Appendix A.8.)
+A message that exists resolves normally, even when it is empty. A message that
+is present but that no conversion can describe (section 4) does not exist, the
+same way such a value is absent (section 9.2). An own `default` entry that is
+present but zero, empty or false counts as present. (Appendix A.8.)
 
 ## 11. Modifiers
 
