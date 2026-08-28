@@ -83,7 +83,8 @@ against this document alone.
   fallback chain (section 10) when no message exists.
 
 **placeholder**
-: A `{{ … }}` construct within a message.
+: A `{{ … }}` construct within a message that section 6 derives as one. A
+  construct it does not derive is literal text (section 9.1).
 
 **selector**
 : The leading part of a placeholder: a payload key and an optional modifier.
