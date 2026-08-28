@@ -20,7 +20,8 @@ inbox     { count: 1234 }    ->  "You have 1,234 messages."
 
 The format is deliberately small. It has no plural categories and no nested
 argument syntax; formatting that depends on a locale — `number`, `date`,
-`currency`, `ago` — is delegated to `Intl`.
+`currency`, `ago` — is delegated to the host platform's internationalization
+facilities.
 
 ## Status
 
