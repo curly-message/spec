@@ -720,6 +720,31 @@ with opposite signs. A host rounding rule that takes a half in one direction —
 toward positive infinity, say — reads "half an hour from now" and "half an hour
 ago" as different distances, which no reader of a relative time expects.
 
+The automatic selection climbs those units in order, each step a fixed multiple
+of the one below it: 1000 milliseconds to the second, 60 seconds to the minute,
+60 minutes to the hour, 24 hours to the day, 7 days to the week, 13/3 weeks —
+four weeks and a third — to the month, and 12 months to the year. The delta is
+divided by 1000 and rounded to a whole count on its magnitude; that is the
+count of seconds, and the climb starts there whatever the count is, so a delta
+under half a second is a count of zero seconds. Each further step divides the
+count it was handed by that step's multiple and rounds it the same way, and is
+taken only where the rounded count is one or more in magnitude. The first step
+that rounds below one is not taken, the climb stops at the unit beneath it, and
+`year` is where it runs out in any case.
+
+The rounding is applied at every step rather than once at the end, so a unit's
+count is the rounded count of the unit beneath it divided again, and the two do
+not always agree: three and a half days is four days before it is a week, and
+so formats as one week rather than as the half week the arithmetic alone gives,
+and twenty-six days is four weeks and then one month. A half rounds away from
+zero, so a step is taken as soon as the count beneath it reaches half that
+step's multiple: 30 seconds make a minute, 30 minutes an hour, 12 hours a day,
+4 days a week, 3 weeks a month and 6 months a year. A named unit climbs the
+same ladder with the same rounding and stops at the unit it names whatever the
+count is there:
+`format: 'day'` at a delta of three hours is a count of zero days, and
+`format: 'second'` at a delta of 800 days is a count of 69 120 000 seconds.
+
 Because the output of these modifiers depends on the host's locale data,
 conformance fixtures for this level MUST assert the formatting request — the
 operation, its properties and its input — rather than a literal output string.
