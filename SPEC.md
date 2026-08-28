@@ -1156,16 +1156,16 @@ rendering of the whole message:
 ```
 {{v:currency}}   with no currency code       ->  raises TypeError
 {{v:currency}}   with an invalid code        ->  raises RangeError
-{{v:date}}       with an invalid option      ->  raises RangeError
+{{v:date}}       with an invalid property    ->  raises RangeError
 {{v:x-boom}}     whose modifier raises       ->  raises
 ```
 
 **Ruling.** A modifier that cannot produce a result resolves to the
 fallback chain and reports; it must not raise (sections 11.2, 11.3, 14.2).
 
-Failing soft matters more here than elsewhere: currency and date options come
-from the caller at render time, so the failure surfaces in production on a code
-path a translator never exercised.
+Failing soft matters more here than elsewhere: currency and date properties
+come from the caller at render time, so the failure surfaces in production on a
+code path a translator never exercised.
 
 ---
 
@@ -1202,7 +1202,7 @@ itself, never a number computed from it (sections 10 and 11.2). Text that is
 empty or whitespace-only is not a number either, whatever the host's numeric
 conversion makes of it.
 
-This is the case A.12 does not reach. A.12 records the options that make a
+This is the case A.12 does not reach. A.12 records the properties that make a
 formatter raise; here the formatter succeeds, and the message renders a count
 of zero, an epoch date or a default read as a number — none of which a caller
 can tell apart from a real value.
