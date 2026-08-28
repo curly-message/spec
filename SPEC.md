@@ -748,14 +748,22 @@ the placeholder takes the fallback chain; the implementation MUST NOT raise and
 SHOULD report the condition. The same holds for a link of the fallback chain
 that is present and cannot be described.
 
+The message itself is not such a link. A message that no conversion can describe
+does not exist (section 10), and a message nobody wrote is not a defect in the
+payload, so stepping past it is not a condition to report. The `default` entry
+the chain reaches instead is a payload value like any other, and is reported
+like one.
+
 Rendering must not fail because one translation is wrong. A single malformed
 message must not take down the page that contains it.
 
 ### 14.3 Reports
 
 This specification does not prescribe a reporting channel. Reports SHOULD
-identify the message key and the placeholder. Section 13's bounds on report
-content apply to every report that includes payload-derived text.
+identify the message key and the placeholder; where the condition is about the
+chain the message itself resolves through, there is no placeholder to identify
+and the key is what says which message went looking. Section 13's bounds on
+report content apply to every report that includes payload-derived text.
 
 ## Appendix A: rulings on known divergences
 
