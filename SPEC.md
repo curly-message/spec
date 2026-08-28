@@ -384,7 +384,8 @@ Within a placeholder:
 
 - Whitespace surrounding the **key** is not significant.
 - Whitespace surrounding the **modifier name** is not significant.
-- Whitespace surrounding an **option key** is not significant.
+- Whitespace surrounding an **option key** or an **inline default key** is not
+  significant.
 - Whitespace surrounding an **option value** or an **inline default value** is
   not significant. Whitespace inside one is.
 
