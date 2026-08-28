@@ -96,8 +96,8 @@ against this document alone.
   selection.
 
 **inline default**
-: The option-shaped segment whose key is `default`. It is not an option; it is
-  the placeholder's own fallback.
+: The option-shaped segment (section 6) whose key is `default`. It is not an
+  option; it is the placeholder's own fallback (section 9.3).
 
 **absent**
 : A value is absent when the payload has no own entry for the key, or when the
