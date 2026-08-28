@@ -624,9 +624,10 @@ defaults above. A wrapper's `props` (section 4.1) is layered over all of them.
 
 A property is not an **option** (section 3): an option is a segment written in
 the placeholder and offered to the modifier for selection, and a formatting
-modifier selects nothing (section 9.5). Props are the only place a formatting
-modifier reads a property from, so a placeholder segment spelled like one is an
-option that reaches no layer.
+modifier selects nothing (section 9.5). The layers above are the only place a
+formatting modifier reads a property from, and a placeholder is not one of
+them, so a placeholder segment spelled like one is an option that reaches no
+layer.
 
 Every layer composes **per property**: a layer overrides only the properties it
 names, and the properties it does not name keep whatever the layer beneath it
