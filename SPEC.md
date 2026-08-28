@@ -515,6 +515,11 @@ yields text:
 A link that is absent, or whose value no conversion can describe (section 4), is
 skipped.
 
+The chain is read only where the placeholder uses its result. A placeholder that
+resolves to a value never reaches it, and a modifier that answers without its
+default leaves it unread, so a link nothing needed is neither converted (section
+13) nor reported for a value it cannot describe (section 14.2).
+
 The payload outranks the message: a message declares the default it was written
 with, and the application overrides that default where it needs to, so the more
 specific statement wins.
@@ -546,8 +551,8 @@ Nothing behind the key is read again on its account. (Appendix A.17.)
 
 ## 11. Modifiers
 
-A modifier receives the value, the options, the resolved default, the locale and
-the props, and returns an answer.
+A modifier receives the value, the options, the default, the locale and the
+props, and returns an answer.
 
 The value and the default both reach the modifier as text (section 4): the
 default is the text the chain in section 10 resolved to, and the value is the
