@@ -566,6 +566,13 @@ Each layer is read from its **own** entries, the way section 9.2 reads the
 payload. A property a layer merely inherits MUST NOT reach the formatting
 request (section 14.1).
 
+The two fraction digits `number` formats by default are a default **maximum**,
+not a cap. Where a layer names a `minimumFractionDigits` above it, the default
+maximum widens to reach that minimum instead of contradicting it; a layer that
+names the maximum itself decides it. A default that held at two would make a
+minimum above two unformattable, and the placeholder would take the fallback
+chain over options the caller wrote deliberately.
+
 `ago` selects a unit automatically unless one is named. Because the output of
 these modifiers depends on the host's locale data, conformance fixtures for this
 level MUST assert the formatting request — the operation, its options and its
