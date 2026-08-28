@@ -715,6 +715,9 @@ An implementation MUST enforce all three of the following:
   value's serialization is abandoned. A serialization that reaches the limit
   MUST be treated as a conversion that cannot describe the value (section 4).
 
+These are minima. An implementation MAY permit more, and MUST document what it
+permits.
+
 On reaching the pass limit or the output limit the implementation MUST return
 the last settled text with its placeholders unresolved, MUST NOT raise, and
 SHOULD report that a limit was reached.
@@ -744,9 +747,6 @@ afresh on each read is a new value each time, and is serialized each time.
 A report SHOULD identify the unresolved text. Because that text is derived from
 the payload, a report MUST bound its length and MUST NOT emit line terminators
 from it, so that payload content cannot forge additional log lines.
-
-These are minima. An implementation MAY permit more, and MUST document what it
-permits.
 
 ## 14. Security properties and error behavior
 
