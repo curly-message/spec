@@ -573,6 +573,10 @@ names the maximum itself decides it. A default that held at two would make a
 minimum above two unformattable, and the placeholder would take the fallback
 chain over options the caller wrote deliberately.
 
+`currency` formats in the currency style. That style is what the modifier is
+rather than one of the options it layers, so a layer MUST NOT replace it; an
+implementation applies it over every layer.
+
 `ago` selects a unit automatically unless one is named. Because the output of
 these modifiers depends on the host's locale data, conformance fixtures for this
 level MUST assert the formatting request — the operation, its options and its
