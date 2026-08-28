@@ -121,6 +121,9 @@ yields nothing or reaches the conversion limit of section 13, a string
 conversion that raises — MUST be treated as absent, MUST NOT raise, and SHOULD
 be reported (section 14.2).
 
+How many times a value is converted while a message resolves is itself bounded
+(section 13).
+
 Wherever a value is compared numerically, the implementation MUST convert it
 using the host's ordinary numeric conversion, and a conversion that does not
 yield a number MUST be treated as a failed comparison, never as an error.
@@ -702,10 +705,22 @@ cannot: both measure a string that already exists. Serialization follows a
 shared reference again every time it meets one, so a value naming the same child
 twice at each of twenty-four levels holds twenty-five objects and describes
 sixteen million leaves — nothing circular, so nothing a serializer refuses. The
-conversion limit is the output limit's own number because the two bound the same
-thing from two ends: every node a serialization visits owes the output at least
-a character, so a value past the conversion limit could never have settled
-within the output limit.
+limit is what a single conversion may spend: a value that visits more nodes than
+a resolvable output could hold is read as one no conversion can describe, which
+is where it takes the output limit's number from. The two do not measure each
+other, though — a serialization visits a member it then omits, so a value can
+visit any number of nodes and still describe itself in two characters — and the
+output limit cannot stand in for a bound on the work.
+
+One conversion is not a resolution. A value is read once for every placeholder
+that names it, on every pass, so a limit on a single serialization bounds a
+resolution only if its serializations cannot multiply with its reads:
+**resolving a message MUST serialize a given value at most once**, and every
+later read of that value MUST answer with the text the first serialization
+produced — the answer that no conversion can describe it included (section 4).
+What a resolution spends converting is then set by the distinct values it
+reaches, not by the reads the message makes of them. A value the payload builds
+afresh on each read is a new value each time, and is serialized each time.
 
 A report SHOULD identify the unresolved text. Because that text is derived from
 the payload, a report MUST bound its length and MUST NOT emit line terminators
@@ -742,12 +757,15 @@ A container read through its prototype lets a polluted prototype supply the
 payload a caller passed none of, which is the whole of section 9.2's protection
 undone one level above the payload.
 
-**Bounded interpolation.** The limits in section 13 MUST bound the work an
-attacker-supplied payload can force. Without them, a payload value of
-`'{{value}}{{value}}'` grows geometrically, and a value that merely shares a
-reference with itself serializes for longer than any caller will wait — a
-message carrying no placeholder at all reaches the conversion but never the
-interpolation loop, so the conversion limit is the only one that holds it.
+**Bounded interpolation.** Section 13 MUST bound the work an attacker-supplied
+payload can force. Without its limits, a payload value of `'{{value}}{{value}}'`
+grows geometrically, and a value that merely shares a reference with itself
+serializes for longer than any caller will wait — a message carrying no
+placeholder at all reaches the conversion but never the interpolation loop, so
+the conversion limit is the only one that holds it. That limit holds one
+conversion; what keeps a message from buying as many of them as it has
+placeholders is section 13's requirement that a resolution serialize a value
+once.
 
 Neither property may be disabled by configuration.
 
