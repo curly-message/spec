@@ -684,7 +684,9 @@ break.
 
 Formatting properties are read from props under the modifier's own name,
 layered over implementation-configured defaults, which are layered over the
-defaults above. A wrapper's `props` (section 4.1) is layered over all of them.
+defaults this section states — `number`'s fraction digits and `currency`'s
+`ratio` above, `ago`'s `format` and `numeric` below. A wrapper's `props`
+(section 4.1) is layered over all of them.
 
 A property is not an **option** (section 3): an option is a segment written in
 the placeholder and offered to the modifier for selection, and a formatting
