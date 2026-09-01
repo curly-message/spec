@@ -541,6 +541,21 @@ The payload outranks the message: a message declares the default it was written
 with, and the application overrides that default where it needs to, so the more
 specific statement wins.
 
+Over one message that declares its own default, the links rank as follows. Only
+a placeholder with no value reaches them at all, so the first two rows stop at
+the value and the empty string in the second is not a missing one:
+
+```
+Hello, {{name; default:Guest;}}!
+
+payload { name: 'Alice', default: 'Friend' }  ->  "Hello, Alice!"
+payload { name: '', default: 'Friend' }       ->  "Hello, !"
+payload { name: { default: 'You' },
+          default: 'Friend' }                 ->  "Hello, You!"
+payload { default: 'Friend' }                 ->  "Hello, Friend!"
+payload {}                                    ->  "Hello, Guest!"
+```
+
 A **message** that does not exist takes, in order:
 
 1. the payload's own `default` entry, if present;
