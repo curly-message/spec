@@ -1061,10 +1061,11 @@ message must not take down the page that contains it.
 ### 14.3 Reports
 
 This specification does not prescribe a reporting channel. Reports SHOULD
-identify the message key and the placeholder; where the condition is about the
-chain the message itself resolves through, there is no placeholder to identify
-and the key is what says which message went looking. Section 13's bounds on
-report content apply to every report that includes payload-derived text.
+identify the message key and the placeholder; where the condition is a limit
+(section 13), or is about the chain the message itself resolves through, there
+is no placeholder to identify and the key is what says which message went
+looking. Section 13's bounds on report content apply to every report that
+includes payload-derived text.
 
 ## Appendix A: rulings on known divergences
 
