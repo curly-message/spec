@@ -434,8 +434,8 @@ The key is matched whole, by exact code-point equality after unescaping
 (section 6, note 2). It is a name and not a path: `{{user.name}}` names the
 payload key `user.name`, and a payload carrying a `user` entry with a `name`
 inside it owns no entry under that name, so the placeholder takes the fallback
-chain. Nothing reaches inside a value — one that is a plain object or an array
-reaches the output whole, as the text section 4 converts it to.
+chain. No placeholder reaches inside a value either — one that is a plain object
+or an array reaches the output whole, as the text section 4 converts it to.
 
 The lookup MUST consider only the payload's **own** entries. Members inherited
 from a prototype, class or base mapping MUST NOT resolve. In a host where
@@ -768,12 +768,12 @@ properties the caller wrote deliberately.
 rather than one of the properties it layers, so a layer MUST NOT replace it; an
 implementation applies it over every layer.
 
-The currency to format in is a property like any other: it comes from those
-layers and from nowhere else, and a placeholder segment spelled like one is an
+The currency to format in is a property like any other: it comes from the layers
+above and from nowhere else, and a placeholder segment spelled like one is an
 option that reaches no layer. A message cannot name it, so where the host's
 facility requires one and no layer supplies it, the modifier cannot format its
 input and the placeholder takes the fallback chain by the last rule of this
-section. An amount renders only where the caller configured a currency.
+section. An amount's currency comes from the caller, never from the message.
 (Appendix A.12.)
 
 `ago` selects a unit automatically unless one is named. The selection chooses
