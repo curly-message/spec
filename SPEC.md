@@ -1030,7 +1030,7 @@ conversion; what keeps a message from buying as many of them as it has
 placeholders is section 13's requirement that a resolution convert a value
 once.
 
-Neither property may be disabled by configuration.
+An implementation MUST NOT provide configuration that disables either property.
 
 ### 14.2 Message errors
 
