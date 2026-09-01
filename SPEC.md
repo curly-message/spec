@@ -435,7 +435,9 @@ The key is matched whole, by exact code-point equality after unescaping
 payload key `user.name`, and a payload carrying a `user` entry with a `name`
 inside it owns no entry under that name, so the placeholder takes the fallback
 chain. No placeholder reaches inside a value either — one that is a plain object
-or an array reaches the output whole, as the text section 4 converts it to.
+or an array resolves whole, as the text section 4 converts it to. That text is
+what the following pass reads, so a placeholder it carries is found and resolved
+there like any other (sections 5, 12).
 
 The lookup MUST consider only the payload's **own** entries. Members inherited
 from a prototype, class or base mapping MUST NOT resolve. In a host where
