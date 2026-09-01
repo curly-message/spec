@@ -429,6 +429,13 @@ MUST NOT resolve the payload keys `""`, `"null"` or `"undefined"`.
 
 Look up the key in the payload.
 
+The key is matched whole, by exact code-point equality after unescaping
+(section 6, note 2). It is a name and not a path: `{{user.name}}` names the
+payload key `user.name`, and a payload carrying a `user` entry with a `name`
+inside it owns no entry under that name, so the placeholder takes the fallback
+chain. Nothing reaches inside a value — one that is a plain object or an array
+reaches the output whole, as the text section 4 converts it to.
+
 The lookup MUST consider only the payload's **own** entries. Members inherited
 from a prototype, class or base mapping MUST NOT resolve. In a host where
 mappings inherit members, `constructor`, `toString` and `__proto__` are
