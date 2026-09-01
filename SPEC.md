@@ -26,8 +26,9 @@ messages in which values are substituted into double-curly placeholders, and a
 placeholder may carry a modifier, a list of options and a fallback.
 
 It specifies the message syntax and the result of resolving a message against a
-payload. It does not specify a host API, a file format for message catalogues, a
-key-namespacing scheme, or how an implementation reports diagnostics.
+payload, props and a locale (section 4). It does not specify a host API, a file
+format for message catalogues, a key-namespacing scheme, or how an
+implementation reports diagnostics.
 
 The format is deliberately small. It has no plural categories, no gender
 selection and no nested argument syntax. Formatting that depends on a locale is
