@@ -41,7 +41,7 @@ Contents:
 | Path | State | Purpose |
 | --- | --- | --- |
 | [`SPEC.md`](./SPEC.md) | Working draft | The specification: grammar, escaping, whitespace, resolution order, modifier semantics, fallback chain, error behavior |
-| `conformance/` | Planned | Implementation-independent fixtures — message, payload, expected output; for the locale-dependent modifiers, the formatting request instead of an output string |
+| `conformance/` | Planned | Implementation-independent fixtures — message, payload, expected output; for the locale-dependent modifiers, the formatting request where an implementation exposes one, and otherwise the locale data the expected output was captured against |
 | `site/` | Planned | Source of the format's public site |
 
 Appendix A of [`SPEC.md`](./SPEC.md) records each behavior of the pre-3.0
