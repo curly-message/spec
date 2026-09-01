@@ -627,6 +627,16 @@ which. The mapping also leaves apart what a case fold would join: the lower
 case of `STRASSE` is `strasse` and not `straße`, so an option keyed `STRASSE`
 does not select for the value `straße`.
 
+An option key is compared against the value's own text (section 11), never
+against what another placeholder makes of it. The count and the noun are two
+placeholders, this format having no plural categories (section 1):
+`{{n}} {{n; 1:file; default:files;}}` renders `1 file` over `{ n: 1 }` and
+`5 files` over `{ n: 5 }`. At an English locale
+`{{n:number}} {{n; 1,000:K; default:files;}}` over `{ n: 1000 }` renders
+`1,000 files`: the grouping belongs to the placeholder that formats it, and the
+one that selects still compares against `1000`, which the key `1,000` does not
+equal.
+
 `lt` and `lte` MUST consider options in ascending key order; `gt` and `gte` in
 descending key order. Ordering is by numeric value of the key; an option whose
 key is not numeric MUST NOT be selected by a numeric comparison. Two keys
