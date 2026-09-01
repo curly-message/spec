@@ -12,6 +12,8 @@ and a fallback.
 ```
 
 ```
+locale "en"
+
 greeting  { name: 'Alice' }  ->  "Hello, Alice!"
 greeting  {}                 ->  "Hello, Guest!"
 inbox     { count: 1 }       ->  "You have 1 message."
@@ -21,7 +23,8 @@ inbox     { count: 1234 }    ->  "You have 1,234 messages."
 The format is deliberately small. It has no plural categories and no nested
 argument syntax; formatting that depends on a locale — `number`, `date`,
 `currency`, `ago` — is delegated to the host platform's internationalization
-facilities.
+facilities, and renders the empty string where the caller supplied no locale,
+which is why the example above names one.
 
 ## Status
 
