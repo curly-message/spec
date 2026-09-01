@@ -744,7 +744,7 @@ layer.
 
 Every layer composes **per property**: a layer overrides only the properties it
 names, and the properties it does not name keep whatever the layer beneath it
-gave them. A layer MUST NOT reset a property a layer beneath it set.
+gave them. A layer MUST NOT reset a property it does not name.
 
 ```
 implementation defaults   number: { maximumFractionDigits: 4, useGrouping: false }
