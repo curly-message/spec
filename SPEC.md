@@ -766,6 +766,14 @@ properties the caller wrote deliberately.
 rather than one of the properties it layers, so a layer MUST NOT replace it; an
 implementation applies it over every layer.
 
+The currency to format in is a property like any other: it comes from those
+layers and from nowhere else, and a placeholder segment spelled like one is an
+option that reaches no layer. A message cannot name it, so where the host's
+facility requires one and no layer supplies it, the modifier cannot format its
+input and the placeholder takes the fallback chain by the last rule of this
+section. An amount renders only where the caller configured a currency.
+(Appendix A.12.)
+
 `ago` selects a unit automatically unless one is named. The selection chooses
 among `second`, `minute`, `hour`, `day`, `week`, `month` and `year`. A unit is
 named by a `format` property in the layers above, holding one of those units,
