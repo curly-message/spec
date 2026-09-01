@@ -859,7 +859,10 @@ to the fallback chain and the failure SHOULD be reported. (Appendix A.12.)
 ### 11.4 Unknown modifiers
 
 A modifier name that is neither specified nor registered is a **message error**
-(section 14.2). The placeholder resolves to the fallback chain.
+(section 14.2). The placeholder resolves to the fallback chain. A name this
+document specifies only at a level an implementation does not satisfy is not
+specified for that implementation, so the formatting modifier names are unknown
+to one that does not satisfy Intl (section 2).
 
 Implementations MUST NOT silently treat an unknown modifier as `eq`. A message
 written today as `{{n:plural}}` must not render as an equality selection now and
