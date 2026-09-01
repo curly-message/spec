@@ -859,15 +859,25 @@ that text before it is returned.
 
 The conversion limit bounds the work of producing a text, which the other two
 cannot: both measure a string that already exists. Serialization follows a
-shared reference again every time it meets one, so a value naming the same child
-twice at each of twenty-four levels holds twenty-five objects and describes
-sixteen million leaves — nothing circular, so nothing a serializer refuses. The
-limit is what a single conversion may spend: a value that visits more nodes than
-a resolvable output could hold is read as one no conversion can describe, which
-is where it takes the output limit's number from. The two do not measure each
-other, though — a serialization visits a member it then omits, so a value can
-visit any number of nodes and still describe itself in two characters — and the
-output limit cannot stand in for a bound on the work.
+shared reference again every time it meets one, so a value naming the same
+child twice at each of twenty-four levels holds twenty-five objects and
+describes sixteen million leaves — nothing circular, so nothing a serializer
+refuses. The limit is what a single conversion may spend: a value that visits
+more nodes than a resolvable output could hold is read as one no conversion can
+describe, which is where it takes the output limit's number from. The two do
+not measure each other, though — a serialization visits a member it then omits,
+so a value can visit any number of nodes and still describe itself in two
+characters — and the output limit cannot stand in for a bound on the work.
+
+A **node**, for that count, is a value the walk visits: the value being
+converted, and then every member it reaches, counted once for each time it
+reaches one. Two things follow from counting visits rather than values. A
+member the walk visits and then omits is counted, so an object whose members
+all hold the host's undefined describes itself in two characters and still
+spends a node on each of them. And a value reached twice is counted twice,
+because the walk follows a shared reference again every time it meets one
+rather than recording where it has been — which is what makes the twenty-five
+objects above twenty-five distinct values and more than sixteen million visits.
 
 One conversion is not a resolution. A value is read once for every placeholder
 that names it, on every pass, so a limit on a single conversion bounds a
