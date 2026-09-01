@@ -503,12 +503,12 @@ The reserved key `default` MUST NOT appear among the options.
 - Otherwise it is a *selection*: the result is produced by the modifier
   (section 11), which is `eq` when no modifier is named.
 
-Adding an option therefore changes what the placeholder asks for, and not only
-what it may answer. `{{v}}` asks for the value; `{{v; a:A;}}` asks which option
-matches it, and where none does the result is the fallback chain (section 11.1)
-and never the value itself. Over the value `RAW` the first renders `RAW` and the
-second the empty string, or the declared default where there is one.
-(Appendix A.9.)
+Giving a placeholder that carries no modifier its first option therefore changes
+what it asks for, and not only what it may answer. `{{v}}` asks for the value;
+`{{v; a:A;}}` asks which option matches it, and where none does the result is
+the fallback chain (section 11.1) and never the value itself. Over the value
+`RAW` the first renders `RAW` and the second the empty string, or the declared
+default where there is one. (Appendix A.9.)
 
 A placeholder that names no key has nothing to compare, so it resolves at
 section 9.1 and is neither a plain substitution nor a selection. A modifier
