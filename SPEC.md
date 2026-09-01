@@ -1047,9 +1047,11 @@ that is present and cannot be described.
 
 The message itself is not such a link. A message that no conversion can describe
 does not exist (section 10), and a message nobody wrote is not a defect in the
-payload, so stepping past it is not a condition to report. The `default` entry
-the chain reaches instead is a payload value like any other, and is reported
-like one.
+payload, so stepping past it is not a condition to report. Neither is the key
+the chain echoes last: a key that no conversion can describe leaves nothing to
+echo (section 10), and a key is a caller's input rather than a payload value, so
+section 4's reporting SHOULD does not reach it. The `default` entry the chain
+reaches instead is a payload value like any other, and is reported like one.
 
 Rendering must not fail because one translation is wrong. A single malformed
 message must not take down the page that contains it.
