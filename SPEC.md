@@ -1058,6 +1058,35 @@ echo (section 10), and a key is a caller's input rather than a payload value, so
 section 4's reporting SHOULD does not reach it. The `default` entry the chain
 reaches instead is a payload value like any other, and is reported like one.
 
+A report names the condition it describes with a **code**, and every code
+declares an **origin**: which of a resolution's inputs the defect is in, and so
+who repairs it. The origin `message` is a defect in the message, which the
+translator who wrote it repairs; `payload` is a defect in the payload, the props
+or the locale, which the code that supplied them repairs; `limit` is a bound of
+section 13 the resolution reached, which is a defect in neither input, because
+the message and the payload together asked for more work than the implementation
+permits, so what repairs it is asking for less or permitting more (section 13).
+The three are the taxonomy this section states, named: the message error and the
+payload defect above are the first two, and section 13's limits are the third.
+
+The vocabulary is seven codes. `unknown-modifier` is a modifier name that is
+neither specified nor registered (section 11.4); `failed-modifier` is a modifier
+that cannot process its input (sections 11.2, 11.3); `missing-options` is a
+selection that names a comparison modifier and declares no option (section 9.5).
+Those three declare the origin `message`. `unserializable-value` is a value no
+conversion can describe (section 4); `missing-locale` is a formatting modifier
+reached where no locale is available (section 11.2). Those two declare the
+origin `payload`. `pass-limit` and `output-limit` are the two bounds of section
+13 whose reaching ends a resolution, and both declare the origin `limit`. The
+conversion limit is not among them: a value whose serialization reaches it is a
+value no conversion can describe (section 4), and is reported as one.
+
+An implementation that reports MUST name the condition with the code this
+section gives it, and where a report carries an origin it MUST be the one that
+code declares. The set is closed: this document defines no code beyond these
+seven, and a code a later version of this format defines declares its origin
+with it.
+
 Rendering must not fail because one translation is wrong. A single malformed
 message must not take down the page that contains it.
 
@@ -1069,6 +1098,19 @@ identify the message key and the placeholder; where the condition is a limit
 is no placeholder to identify and the key is what says which message went
 looking. Section 13's bounds on report content apply to every report that
 includes payload-derived text.
+
+An implementation that reports emits one report for each placeholder that met
+the condition, in the pass where it met it. A message naming an unknown
+modifier at three placeholders therefore reports three times, and a placeholder
+a later pass finds again — because what an earlier pass resolved carried it
+(section 12) — met the condition again and is reported again. Nothing but
+section 13 bounds the count: the pass limit and the output limit bound how many
+placeholders a resolution reaches, and the reports follow them. A limit is met
+by the resolution rather than at a placeholder, and a resolution that reaches
+one stops there (section 13), so it reports that limit once.
+
+The conformance set observes reports through an adapter an implementation
+supplies for it; this document still prescribes no channel.
 
 ## Appendix A: rulings on known divergences
 
