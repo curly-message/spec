@@ -521,6 +521,13 @@ none. A formatting modifier selects nothing, so `{{n:number}}` is complete as it
 stands, and whether a host-defined modifier needs options is that modifier's own
 business. (Appendix A.9.)
 
+An implementation SHOULD report that error, naming it `missing-options`
+(section 14.2), and the placeholder takes the fallback chain (section 10) as
+every message error does. What the placeholder declares is what makes the
+error, so the report does not turn on the payload: `{{v:eq}}` is reported over
+a payload that supplies `v` and over one that leaves it absent alike, though an
+absent value takes the chain before any modifier is asked (section 11.1).
+
 ## 10. The fallback chain
 
 A placeholder that resolves to no value takes the first of the following that
@@ -668,7 +675,10 @@ the fallback chain (section 10): a declared default does not stand in for a
 locale nobody supplied. A locale is **not available** where the caller supplied
 none, and where what it supplied is empty. One the caller did supply that the
 host then rejects is available but unusable, which is the formatting failure at
-the end of this section and takes the chain like any other.
+the end of this section and takes the chain like any other. An implementation
+SHOULD report a locale that is not available, naming it `missing-locale`
+(section 14.2): the empty string is what such a placeholder renders, and the
+report is what says why it rendered nothing.
 
 The locale is tested **first**, before the value is read: where none is
 available the result is the empty string whatever the value is, so the two
@@ -676,7 +686,9 @@ rules below that send a placeholder to the fallback chain — a value that is
 blank, and an input the modifier cannot format — are reached only where a
 locale is. The test is reached in turn only where the placeholder reaches a
 modifier at all: an absent value (section 9.2) takes the chain before any
-modifier is asked, whether a locale is available or not.
+modifier is asked, whether a locale is available or not. A placeholder whose
+value is absent therefore reports no missing locale, over a caller that
+supplied one and over a caller that supplied none alike.
 
 | Name | Input | Formats as |
 | --- | --- | --- |
@@ -790,6 +802,14 @@ with opposite signs. A host rounding rule that takes a half in one direction —
 toward positive infinity, say — reads "half an hour from now" and "half an hour
 ago" as different distances, which no reader of a relative time expects.
 
+A `format` property that names none of those units is a property the modifier
+cannot process: the placeholder resolves to the fallback chain (section 10),
+and the implementation SHOULD report the failure as `failed-modifier`
+(section 14.2), the way an input the modifier cannot format does by the last
+rule of this section. The unit names are compared exactly, so a spelling that
+differs by case names none of them: a placeholder whose `format` is `YEAR`
+takes the chain, where one whose `format` is `year` or `years` names the year.
+
 The automatic selection climbs those units in order, each step a fixed multiple
 of the one below it: 1000 milliseconds to the second, 60 seconds to the minute,
 60 minutes to the hour, 24 hours to the day, 7 days to the week, 13/3 weeks —
@@ -823,14 +843,12 @@ one it is `auto` — not whatever the host's own formatter would default to,
 which in ECMAScript is `always`, spelling every count out. A layer naming
 `numeric` decides it like any other property.
 
-Because the output of these modifiers depends on the host's locale data, a
-fixture asserting a literal output string tests that data rather than this
-format. A fixture for this level SHOULD assert the formatting request instead —
-the operation, its properties and its input. This document specifies no host
-API (section 1) and requires no implementation to expose that request, so where
-none is exposed a fixture MUST name the locale data its expected output was
-captured against, and an output differing from it by that data alone is not a
-non-conformance.
+Because the output of these modifiers depends on the host's locale data, an
+output string on its own tests that data as much as it tests this format. An
+implementation MAY expose the formatting request it makes — the operation, its
+properties and its input — to the conformance adapter (section 14.3); an
+implementation that does not exposes only the output, and an output differing
+from another implementation's by locale data alone is not a non-conformance.
 
 A formatting modifier that cannot format its input MUST NOT raise; it resolves
 to the fallback chain and SHOULD report the failure. (Appendix A.12, A.13.)
@@ -849,9 +867,18 @@ it. Where nothing else answers to that name, a message writing it names a
 modifier nobody registered, and section 11.4 governs; where this specification
 names a modifier under it, that modifier answers as it did. (Appendix A.18.)
 
-To keep host-defined names from colliding with future versions of this format,
-a host-defined modifier name SHOULD begin with `x-`. All names matching
-`[a-z][a-zA-Z0-9-]*` without that prefix are reserved for this specification.
+A host-defined modifier receives its properties the way a formatting modifier
+does (section 11.2): the props written under its own name, layered as that
+section layers them — the implementation-configured defaults, then the call's
+props, then the wrapper's props — with every layer overriding only the
+properties it names and every layer read from its own entries. It receives what
+the layers wrote under its own name and nothing they wrote under another's, and
+where no layer wrote under its name it receives no properties at all.
+
+Because a host's own registration overrides the format's, a name a later
+version of this format defines costs a host that already registered its own
+modifier under that name nothing: its messages resolve as they did, and the
+only thing out of reach is the modifier the new version defines.
 
 A host-defined modifier that raises MUST be contained: the placeholder resolves
 to the fallback chain and the failure SHOULD be reported. (Appendix A.12.)
@@ -1175,18 +1202,15 @@ back too, silently changing meaning:
 ```
 
 **Ruling.** An unknown modifier is a message error (section 14.2).
-The placeholder resolves to the fallback chain; the error is reported. Names
-matching `[a-z][a-zA-Z0-9-]*` that do not begin with `x-` are reserved for this
-specification, and host-defined modifiers should carry that prefix
-(section 11.3).
+The placeholder resolves to the fallback chain; the error is reported.
 
 This is the most consequential ruling in this appendix, and the reason is
 forward compatibility rather than diagnostics. Every message written today as
 `{{n:plural}}` renders as an equality selection. If a later version of this
 format defines `plural`, all of them change meaning at once — with no error at
 any point, before or after. A host that registers `plural` itself overrides the
-format there deliberately (section 11.3); the `x-` prefix keeps the names a host
-never meant to override from colliding with future specified ones.
+format there deliberately, and a later version of this format defining `plural`
+costs that host nothing (section 11.3).
 
 ---
 
