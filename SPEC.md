@@ -59,6 +59,9 @@ Conformance is tested by the implementation-independent fixture set
 That set is not published yet, so until it is, an implementation is assessed
 against this document alone.
 
+An implementation states the levels it satisfies and the limits it permits to
+that set through the adapter of section 14.3.
+
 ## 3. Terminology
 
 **message**
@@ -1137,7 +1140,13 @@ by the resolution rather than at a placeholder, and a resolution that reaches
 one stops there (section 13), so it reports that limit once.
 
 The conformance set observes reports through an adapter an implementation
-supplies for it; this document still prescribes no channel.
+supplies for it; this document still prescribes no channel. The same adapter
+names the levels the implementation satisfies (section 2) and the limits it
+permits (section 13), which is what makes those two statements an
+implementation makes about itself observable: the set reads the levels to
+select the fixtures a level requires, and the limits to derive the cases that
+sit at a boundary, so an implementation that permits more than section 13's
+minima is exercised at the bounds it documents rather than at those minima.
 
 ## Appendix A: rulings on known divergences
 
