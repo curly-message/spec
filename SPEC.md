@@ -137,6 +137,10 @@ be reported (section 14.2).
 How many times a value is converted while a message resolves is itself bounded
 (section 13).
 
+The text a conversion produces is text: a backslash it carries is read like any
+other at the single removal of escape sequences (section 7), so a serialization
+does not necessarily reach the output parsable as the format it was made in.
+
 Wherever a value is compared numerically, the implementation MUST convert it
 using the host's ordinary numeric conversion, and a conversion that does not
 yield a number MUST be treated as a failed comparison, never as an error.
@@ -381,6 +385,27 @@ spelling a reserved character forced; unescaping one is not the removal this
 rule bounds, because none of the three reaches the output. Where an option key
 stands for its own value (section 9.4), that value is the source spelling and is
 unescaped once with the rest of the output, like any other value.
+
+Text a value's conversion produces (section 4) is text like any other: it
+reaches the output through the single removal above, and nothing exempts a
+serialization from it. So the JSON serialization of a value carrying a
+backslash is not guaranteed to be parsable as JSON once it is in the output,
+because the two characters JSON writes for that backslash are an escape
+sequence, and this section's removal takes one of them. A payload entry that is
+the plain object whose `a` holds the four characters `C:\U` therefore reaches
+the output as text no JSON parser reads:
+
+```
+{ a: 'C:\U' }   serializes to  {"a":"C:\\U"}   and renders  {"a":"C:\U"}
+```
+
+A caller that needs a machine-readable serialization in the result passes it as
+a string it escaped itself: it serializes the value, doubles every backslash
+that text carries, and supplies the result as an ordinary string value, which
+this removal returns to the serialization it was made from. A modifier is
+unaffected, because it reads its input before the removal runs (section 5): a
+host-defined modifier that reads a serialized value back (section 4) receives
+the serialization the conversion produced.
 
 ## 8. Whitespace
 
