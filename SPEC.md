@@ -1010,10 +1010,14 @@ the text the first read produced. An implementation need not record a value
 section 4 converts by the ordinary string conversion and whose conversion can
 neither run host code nor answer twice over: converting one again visits no
 node the conversion limit counts, runs no host code and answers what the first
-conversion answered, so neither what a resolution spends converting nor the
-answer it reads changes with it. A value section 4 serializes is not exempt
-however plainly it is built: its walk is the work the limit bounds, and a
-resolution that walks it once per placeholder pays for it once per placeholder.
+conversion answered, so the answer a resolution reads does not change with it.
+What a resolution spends can change with it — a host whose integers grow
+without bound converts a large one to text in time that grows with it, work no
+node of the conversion limit counts — so the exemption is written over the
+answer alone and leaves an implementation free to record such a value anyway.
+A value section 4 serializes is not exempt however plainly it is built: its
+walk is the work the limit bounds, and a resolution that walks it once per
+placeholder pays for it once per placeholder.
 
 A resolution may begin while another is running: a host-defined modifier
 (section 11.3), a reporting handler (section 14.3) and any host code a
