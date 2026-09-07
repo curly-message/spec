@@ -999,6 +999,15 @@ What a resolution spends converting is then set by the distinct values it
 reaches, not by the reads the message makes of them. A value the payload builds
 afresh on each read is a new value each time, and is converted each time.
 
+Recognizing a wrapper (section 4.1) enumerates an entry's own keys, which is
+work that grows with the entry as a serialization's does, and an entry is read
+once for every placeholder that names it, so the same holds of recognition:
+**resolving a message MUST NOT enumerate a given entry twice observably** to
+recognize a wrapper, and every later read MUST answer with the verdict the first
+enumeration reached — the answer that the entry refused to be enumerated
+included, which is reported (section 14.2) at every read that meets it, as a
+value no conversion can describe is.
+
 The requirement is written over conversion rather than over serialization
 because section 4 defines two ways to reach a text and a value takes whichever
 its type selects. The ordinary string conversion runs host code the same way a
