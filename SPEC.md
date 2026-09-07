@@ -1106,8 +1106,8 @@ An implementation MUST NOT provide configuration that disables either property.
 ### 14.2 Message errors
 
 A *message error* is a defect in the message: an unknown modifier (11.4), a
-comparison with no options (9.5), a modifier that cannot process its input
-(11.2, 11.3).
+selection that names a comparison and no options (9.5), a modifier that cannot
+process its input (11.2, 11.3).
 
 On a message error an implementation MUST resolve the placeholder to the
 fallback chain (section 10), MUST NOT raise, and SHOULD report the error.
