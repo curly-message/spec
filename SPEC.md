@@ -1126,9 +1126,8 @@ An implementation MUST NOT provide configuration that disables either property.
 
 ### 14.2 Message errors
 
-A *message error* is a defect in the message: an unknown modifier (11.4), a
-selection that names a comparison and no options (9.5), a modifier that cannot
-process its input (11.2, 11.3).
+A *message error* is a defect in the message: an unknown modifier (11.4), or a
+selection that names a comparison and no options (9.5).
 
 On a message error an implementation MUST resolve the placeholder to the
 fallback chain (section 10), MUST NOT raise, and SHOULD report the error.
@@ -1138,6 +1137,13 @@ defect in the payload rather than in the message. It is treated as absent, so
 the placeholder takes the fallback chain; the implementation MUST NOT raise and
 SHOULD report the condition. The same holds for a link of the fallback chain
 that is present and cannot be described.
+
+So is an input a modifier cannot process (sections 11.2, 11.3). The value, the
+props and the locale a modifier is handed are the caller's, and so is a
+host-defined modifier that raised, so none of it is a defect the message's
+author repairs; the message can name no property a formatting modifier reads.
+The placeholder takes the fallback chain; the implementation MUST NOT raise and
+SHOULD report the failure. (Appendix A.12.)
 
 The message itself is not such a link. A message that no conversion can describe
 does not exist (section 10), and a message nobody wrote is not a defect in the
@@ -1159,17 +1165,17 @@ The three are the taxonomy this section states, named: the message error and the
 payload defect above are the first two, and section 13's limits are the third.
 
 The vocabulary is seven codes. `unknown-modifier` is a modifier name that is
-neither specified nor registered (section 11.4); `failed-modifier` is a modifier
-that cannot process its input (sections 11.2, 11.3); `missing-options` is a
+neither specified nor registered (section 11.4); `missing-options` is a
 selection that names one of this format's comparison modifiers, one no host
-replaced, and declares no option (section 9.5).
-Those three declare the origin `message`. `unserializable-value` is a value no
-conversion can describe (section 4); `missing-locale` is a formatting modifier
-reached where no locale is available (section 11.2). Those two declare the
-origin `payload`. `pass-limit` and `output-limit` are the two bounds of section
-13 whose reaching ends a resolution, and both declare the origin `limit`. The
-conversion limit is not among them: a value whose serialization reaches it is a
-value no conversion can describe (section 4), and is reported as one.
+replaced, and declares no option (section 9.5). Those two declare the origin
+`message`. `failed-modifier` is a modifier that cannot process its input
+(sections 11.2, 11.3); `unserializable-value` is a value no conversion can
+describe (section 4); `missing-locale` is a formatting modifier reached where no
+locale is available (section 11.2). Those three declare the origin `payload`.
+`pass-limit` and `output-limit` are the two bounds of section 13 whose reaching
+ends a resolution, and both declare the origin `limit`. The conversion limit is
+not among them: a value whose serialization reaches it is a value no conversion
+can describe (section 4), and is reported as one.
 
 An implementation that reports MUST name the condition with the code this
 section gives it, and where a report carries an origin it MUST be the one that
