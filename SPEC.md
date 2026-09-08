@@ -958,7 +958,9 @@ An implementation MUST enforce all three of the following:
 
 - **A pass limit.** At least **10** passes MUST be performed before stopping.
 - **An output limit.** At least **100 000** characters of output MUST be
-  permitted. A pass whose output would exceed the limit MUST be discarded
+  permitted, counted in the unit the host measures its strings in — a UTF-16
+  code unit in ECMAScript, so a character outside the Basic Multilingual Plane
+  counts twice. A pass whose output would exceed the limit MUST be discarded
   whole; the result is the last text that stayed within the limit.
 - **A conversion limit.** At least **100 000** nodes MUST be visited before a
   value's serialization is abandoned. A serialization that reaches the limit
