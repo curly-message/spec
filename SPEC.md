@@ -552,14 +552,19 @@ A selection that names a comparison modifier (section 11.1) and no options is a
 message error (section 14.2): the author asked which option matches and offered
 none. A formatting modifier selects nothing, so `{{n:number}}` is complete as it
 stands, and whether a host-defined modifier needs options is that modifier's own
-business. (Appendix A.9.)
+business. A host that registered its own modifier under a comparison's name
+(section 11.3) has replaced the comparison, so a placeholder naming it asks a
+host-defined modifier: `{{v:eq}}` over that registration is no message error.
+(Appendix A.9.)
 
 An implementation SHOULD report that error, naming it `missing-options`
 (section 14.2), and the placeholder takes the fallback chain (section 10) as
 every message error does. What the placeholder declares is what makes the
 error, so the report does not turn on the payload: `{{v:eq}}` is reported over
 a payload that supplies `v` and over one that leaves it absent alike, though an
-absent value takes the chain before any modifier is asked (section 11.1).
+absent value takes the chain before any modifier is asked (section 11.1). It
+turns on what answers to the name: the format's own `eq` is reported, and one a
+host registered in its place is not.
 
 ## 10. The fallback chain
 
@@ -1156,7 +1161,8 @@ payload defect above are the first two, and section 13's limits are the third.
 The vocabulary is seven codes. `unknown-modifier` is a modifier name that is
 neither specified nor registered (section 11.4); `failed-modifier` is a modifier
 that cannot process its input (sections 11.2, 11.3); `missing-options` is a
-selection that names a comparison modifier and declares no option (section 9.5).
+selection that names one of this format's comparison modifiers, one no host
+replaced, and declares no option (section 9.5).
 Those three declare the origin `message`. `unserializable-value` is a value no
 conversion can describe (section 4); `missing-locale` is a formatting modifier
 reached where no locale is available (section 11.2). Those two declare the
