@@ -85,7 +85,8 @@ that set through the adapter of section 14.3.
 
 **key** (of a message)
 : The catalogue identifier under which a message was requested. Used by the
-  fallback chain (section 10) when no message exists.
+  fallback chain (section 10) when no message exists, and named by reports
+  (section 14.3).
 
 **placeholder**
 : A `{{ … }}` construct within a message that section 6 derives as one. A
@@ -112,7 +113,9 @@ that set through the adapter of section 14.3.
 ## 4. Data model
 
 Resolving a message takes four inputs — a message, a payload, props and a locale
-— and produces a string.
+— and produces a string. A fifth, the message's key, is optional, and nothing in
+resolution reads it but the chain a missing message takes (section 10) and the
+reports (section 14.3).
 
 Everything the format carries is text. A payload value MAY be of any host type,
 but it reaches a modifier, an option comparison and the output as text, never at
