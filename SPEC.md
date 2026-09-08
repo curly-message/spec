@@ -789,7 +789,10 @@ layer.
 
 Every layer composes **per property**: a layer overrides only the properties it
 names, and the properties it does not name keep whatever the layer beneath it
-gave them. A layer MUST NOT reset a property it does not name.
+gave them. A layer MUST NOT reset a property it does not name. A property a
+layer holds the host's null under is one it names: null is a value (section 3),
+and it is what reaches the formatting request. A property the layer holds the
+host's undefined under, like one it does not hold, is one it does not name.
 
 ```
 implementation defaults   number: { maximumFractionDigits: 4, useGrouping: false }
