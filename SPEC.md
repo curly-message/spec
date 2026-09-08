@@ -961,7 +961,11 @@ An implementation MUST enforce all three of the following:
   permitted, counted in the unit the host measures its strings in — a UTF-16
   code unit in ECMAScript, so a character outside the Basic Multilingual Plane
   counts twice. A pass whose output would exceed the limit MUST be discarded
-  whole; the result is the last text that stayed within the limit.
+  whole; the result is the last text that stayed within the limit. A pass is
+  not performed past the limit either: a placeholder is reached only while the
+  text the pass has produced ahead of it is within the limit, so one past that
+  point is neither resolved nor reported, and a host-defined modifier it names
+  is not called.
 - **A conversion limit.** At least **100 000** nodes MUST be visited before a
   value's serialization is abandoned. A serialization that reaches the limit
   MUST be treated as a conversion that cannot describe the value (section 4).
