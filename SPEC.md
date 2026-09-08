@@ -124,10 +124,12 @@ modifier that reads it back. Every other value MUST be converted using the
 host's ordinary string conversion, so a date, a pattern, a set or a class
 instance keeps whatever text it describes itself as.
 
-**Plain object** MUST be read narrowly: an object with no meaningful prototype
-of its own — in ECMAScript, one whose prototype is `Object.prototype` or null.
-The narrow reading is what keeps a value authored as a date instance formattable
-by `date` (section 11.2).
+**Plain object** MUST be read narrowly, and by identity: in ECMAScript, an
+object whose prototype is the running realm's `Object.prototype`, or null. An
+object built in another realm has a prototype of its own by that test, whatever
+it was authored as, and converts like every other value. The narrow reading is
+what keeps a value authored as a date instance formattable by `date`
+(section 11.2).
 
 A value that **no conversion can describe** — a serialization that raises,
 yields nothing or reaches the conversion limit of section 13, a string
