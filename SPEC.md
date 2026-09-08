@@ -1075,7 +1075,9 @@ to render because one could not be logged.
 
 A report SHOULD identify the unresolved text. Because that text is derived from
 the payload, a report MUST bound its length and MUST NOT emit line terminators
-from it, so that payload content cannot forge additional log lines.
+from it, so that payload content cannot forge additional log lines. A cut that
+would fall between the two halves of a surrogate pair SHOULD fall before the
+pair instead, so that the excerpt ends on a whole character.
 
 ## 14. Security properties and error behavior
 
