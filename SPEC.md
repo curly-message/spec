@@ -521,7 +521,10 @@ nothing (section 8) declares no option, with or without a value.
 - `key:` yields that key and the **empty string**. The colon declares a value,
   so a value that ends at the colon — or that is only unescaped whitespace
   (section 8) — is empty rather than absent.
-- Where two options share a key, the first MUST win.
+- Where two options share a key, the first MUST win wherever a modifier selects
+  by key (section 11.1). Collection keeps every option in source order,
+  duplicates included, so a host-defined modifier is handed the list as the
+  placeholder wrote it.
 
 The reserved key `default` MUST NOT appear among the options.
 
