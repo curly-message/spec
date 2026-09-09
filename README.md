@@ -30,8 +30,9 @@ which is why the example above names one.
 
 The specification is a **working draft**: its rulings are settled and written
 into the body of the document, which is what an implementation targets. Nothing
-has been tagged or published against it yet, so the draft is still amended in
-place rather than versioned.
+is tagged against it yet: the conformance set and the reference implementation
+are on npm as prereleases (`1.0.0-next.*`, under the `next` dist-tag) that track
+the draft, and the draft is still amended in place rather than versioned.
 
 The syntax grew out of `@sveltekit-i18n/parser-default`, where it was defined
 implicitly — by the implementation, its README and its test suite, which diverge
@@ -44,7 +45,7 @@ Contents:
 | Path | State | Purpose |
 | --- | --- | --- |
 | [`SPEC.md`](./SPEC.md) | Working draft | The specification: grammar, escaping, whitespace, resolution order, modifier semantics, fallback chain, error behavior |
-| [`conformance/`](./conformance) | Working draft | The conformance set, to be published as `@curly-message/conformance`: implementation-independent fixtures — the inputs a resolution takes and the output and reports it must produce, each pinned to the section it tests — with the JSON Schema they validate against, a manifest, and a JavaScript runner that drives an implementation through the adapter of section 14.3. For the locale-dependent modifiers a fixture states the formatting request, and the runner performs it on the host it runs on |
+| [`conformance/`](./conformance) | Working draft, on npm under `next` | The conformance set, published as `@curly-message/conformance`: implementation-independent fixtures — the inputs a resolution takes and the output and reports it must produce, each pinned to the section it tests — with the JSON Schema they validate against, a manifest, and a JavaScript runner that drives an implementation through the adapter of section 14.3. For the locale-dependent modifiers a fixture states the formatting request, and the runner performs it on the host it runs on |
 | `site/` | Planned | Source of the format's public site |
 
 Appendix A of [`SPEC.md`](./SPEC.md) records each behavior of the pre-3.0
