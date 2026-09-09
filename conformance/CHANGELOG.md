@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0-next.2
 
 * The version bump regenerates the manifest, so `index.json` cannot fall
   behind `package.json` the way the shipped `1.0.0-next.1` does.
