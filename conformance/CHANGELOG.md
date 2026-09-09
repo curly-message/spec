@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+* The version bump regenerates the manifest, so `index.json` cannot fall
+  behind `package.json` the way the shipped `1.0.0-next.1` does.
+
 ## 1.0.0-next.1
 
 Initial version line for `@curly-message/conformance`.
