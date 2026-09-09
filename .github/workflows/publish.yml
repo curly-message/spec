@@ -85,7 +85,9 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
-      # The pre-commit hook lints the package; the tests job already did.
+      # The pre-commit hook lints the package; the tests job already did. One
+      # atomic push carries the commit and the tag: either both land or neither,
+      # and --follow-tags would have left a lightweight tag behind.
       - name: Commit, tag and push
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
@@ -98,8 +100,8 @@ jobs:
           git config user.name "$APP[bot]"
           git config user.email "$id+$APP[bot]@users.noreply.github.com"
           git commit --all --no-verify --message "chore($PACKAGE): release $NAME@$VERSION"
-          git tag "$PACKAGE-v$VERSION"
-          git push --follow-tags
+          git tag --annotate --message "$NAME@$VERSION" "$PACKAGE-v$VERSION"
+          git push --atomic origin main "$PACKAGE-v$VERSION"
 
       # No token: the registry trusts the calling workflow's OIDC identity (the
       # package's trusted publisher names its filename) and adds provenance.
