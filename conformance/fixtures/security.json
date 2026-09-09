@@ -1,0 +1,246 @@
+{
+  "format": "curly-message-1",
+  "level": "core",
+  "section": "14.1",
+  "cases": [
+    {
+      "id": "security/constructor-absent",
+      "description": "constructor is absent where the payload does not carry it as an own entry, so the placeholder takes the fallback chain and renders the inline default.",
+      "section": "9.2",
+      "message": "{{constructor; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "security/tostring-absent",
+      "description": "toString is absent where the payload does not carry it as an own entry, so the placeholder takes the fallback chain and renders the inline default.",
+      "section": "9.2",
+      "message": "{{toString; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "security/proto-absent",
+      "description": "__proto__ is absent where the payload does not carry it as an own entry, so the placeholder takes the fallback chain and renders the inline default.",
+      "section": "9.2",
+      "message": "{{__proto__; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "security/valueof-absent",
+      "description": "valueOf is absent where the payload does not carry it as an own entry, so the placeholder takes the fallback chain and renders the inline default.",
+      "section": "9.2",
+      "message": "{{valueOf; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "security/hasownproperty-absent",
+      "description": "hasOwnProperty is absent where the payload does not carry it as an own entry, so the placeholder takes the fallback chain and renders the inline default.",
+      "section": "9.2",
+      "message": "{{hasOwnProperty; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "security/inherited-members-take-payload-default",
+      "description": "An inherited member is absent for every placeholder naming one, so each takes the fallback chain and renders the payload's own default.",
+      "section": "9.2",
+      "message": "{{constructor}} {{toString}} {{__proto__}} {{valueOf}} {{hasOwnProperty}}",
+      "payload": {
+        "default": "P"
+      },
+      "expected": {
+        "output": "P P P P P"
+      }
+    },
+    {
+      "id": "security/inherited-members-disclose-nothing",
+      "description": "A message containing {{constructor}} or {{__proto__}} discloses nothing: resolution does not reach inherited members, and with no default anywhere each placeholder is the empty string.",
+      "section": "14.1",
+      "message": "[{{constructor}}][{{toString}}][{{__proto__}}][{{valueOf}}][{{hasOwnProperty}}]",
+      "payload": {},
+      "expected": {
+        "output": "[][][][][]"
+      }
+    },
+    {
+      "id": "security/constructor-own",
+      "description": "constructor resolves where the payload carries it as an own entry, because the lookup reads own entries and not the name.",
+      "section": "9.2",
+      "message": "{{constructor}}",
+      "payload": {
+        "constructor": "OWN"
+      },
+      "expected": {
+        "output": "OWN"
+      }
+    },
+    {
+      "id": "security/tostring-own",
+      "description": "toString resolves where the payload carries it as an own entry, because the lookup reads own entries and not the name.",
+      "section": "9.2",
+      "message": "{{toString}}",
+      "payload": {
+        "toString": "OWN"
+      },
+      "expected": {
+        "output": "OWN"
+      }
+    },
+    {
+      "id": "security/proto-own",
+      "description": "__proto__ resolves where the payload carries it as an own entry, because the lookup reads own entries and not the name.",
+      "section": "9.2",
+      "message": "{{__proto__}}",
+      "payload": {
+        "__proto__": "OWN"
+      },
+      "expected": {
+        "output": "OWN"
+      }
+    },
+    {
+      "id": "security/valueof-own",
+      "description": "valueOf resolves where the payload carries it as an own entry, because the lookup reads own entries and not the name.",
+      "section": "9.2",
+      "message": "{{valueOf}}",
+      "payload": {
+        "valueOf": "OWN"
+      },
+      "expected": {
+        "output": "OWN"
+      }
+    },
+    {
+      "id": "security/hasownproperty-own",
+      "description": "hasOwnProperty resolves where the payload carries it as an own entry, because the lookup reads own entries and not the name.",
+      "section": "9.2",
+      "message": "{{hasOwnProperty}}",
+      "payload": {
+        "hasOwnProperty": "OWN"
+      },
+      "expected": {
+        "output": "OWN"
+      }
+    },
+    {
+      "id": "security/wrapper-own-value",
+      "description": "A wrapper under an own entry named like an inherited member resolves through the value the wrapper owns.",
+      "section": "9.2",
+      "message": "{{constructor}}",
+      "payload": {
+        "constructor": {
+          "value": "OWN"
+        }
+      },
+      "expected": {
+        "output": "OWN"
+      }
+    },
+    {
+      "id": "security/wrapper-own-default",
+      "description": "A wrapper under an own entry named like an inherited member has no value, and the default it owns is the first link of the chain, over the payload's and the inline one.",
+      "section": "9.2",
+      "message": "{{toString; default:I}}",
+      "payload": {
+        "toString": {
+          "default": "W"
+        },
+        "default": "P"
+      },
+      "expected": {
+        "output": "W"
+      }
+    },
+    {
+      "id": "security/wrapper-own-props",
+      "description": "An own entry named like an inherited member whose only own key is props is recognized as a wrapper: it has no value and takes the chain instead of serializing.",
+      "section": "9.2",
+      "message": "[{{__proto__; default:I}}]",
+      "payload": {
+        "__proto__": {
+          "props": {
+            "number": {
+              "useGrouping": false
+            }
+          }
+        }
+      },
+      "expected": {
+        "output": "[I]"
+      }
+    },
+    {
+      "id": "security/registry-constructor",
+      "description": "The modifier registry is read from its own entries: constructor names a modifier nobody registered, so the placeholder takes the chain and is reported as an unknown modifier.",
+      "section": "14.1",
+      "message": "{{v:constructor; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "key": "security.registry-constructor",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "security.registry-constructor"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/registry-tostring",
+      "description": "The modifier registry is read from its own entries: toString names a modifier nobody registered, so the placeholder takes the chain and is reported as an unknown modifier.",
+      "section": "14.1",
+      "message": "{{v:toString; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "key": "security.registry-tostring",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "security.registry-tostring"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/registry-proto",
+      "description": "The modifier registry is read from its own entries: __proto__ names a modifier nobody registered, so the placeholder takes the chain and is reported as an unknown modifier.",
+      "section": "14.1",
+      "message": "{{v:__proto__; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "key": "security.registry-proto",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "security.registry-proto"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:curly-message:conformance:fixture",
+  "title": "Curly Message Format conformance fixture file",
+  "description": "One file of the conformance set: cases pinning one section of the specification at one conformance level. README.md in this package states what each field means.",
+  "type": "object",
+  "required": [
+    "format",
+    "level",
+    "section",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "description": "The versioned identifier of the format the file targets.",
+      "const": "curly-message-1"
+    },
+    "level": {
+      "description": "The conformance level (section 2) that requires every case in the file.",
+      "$ref": "#/$defs/level"
+    },
+    "section": {
+      "description": "The section of SPEC.md the file pins; a case may name a more specific one.",
+      "$ref": "#/$defs/section"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    }
+  },
+  "$defs": {
+    "level": {
+      "enum": [
+        "core",
+        "intl",
+        "extensions"
+      ]
+    },
+    "section": {
+      "description": "A heading number of SPEC.md: a section (\"7\"), a subsection (\"9.2\") or an appendix entry (\"A.4\").",
+      "type": "string",
+      "pattern": "^([0-9]+(\\.[0-9]+)?|A\\.[0-9]+)$"
+    },
+    "identifier": {
+      "description": "Unique across the whole set: the file's group, a slash, and a slug.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "case": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/concrete"
+        },
+        {
+          "$ref": "#/$defs/generated"
+        }
+      ]
+    },
+    "concrete": {
+      "description": "A resolution written out: its inputs and what they must produce.",
+      "type": "object",
+      "required": [
+        "id",
+        "description",
+        "message",
+        "expected"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "description": {
+          "$ref": "#/$defs/description"
+        },
+        "section": {
+          "$ref": "#/$defs/section"
+        },
+        "message": {
+          "description": "The message, usually text. Any other JSON value is a message a host wrote as something else (section 4); the undefined tag is a message the caller did not supply (section 10)."
+        },
+        "payload": {
+          "description": "The payload (section 3). Entries hold values, wrappers (section 4.1) or tagged values.",
+          "type": "object"
+        },
+        "props": {
+          "description": "The caller's formatting properties, grouped by modifier name (section 11.2).",
+          "type": "object"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "key": {
+          "description": "The message's key (section 4). Any JSON value: a key a host wrote as something other than text is echoed as the text it converts to (section 10)."
+        },
+        "modifiers": {
+          "description": "Host-defined modifiers to register (section 11.3), each the name of a behaviour from the catalogue.",
+          "type": "object",
+          "propertyNames": {
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/behaviour"
+          }
+        },
+        "defaults": {
+          "description": "The implementation-configured defaults: the bottom formatting layer of section 11.2, grouped by modifier name.",
+          "type": "object"
+        },
+        "expected": {
+          "$ref": "#/$defs/expected"
+        }
+      }
+    },
+    "generated": {
+      "description": "A case the runner builds from the limits the adapter declares (section 13); the README states each construction.",
+      "type": "object",
+      "required": [
+        "id",
+        "description",
+        "generate"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "description": {
+          "$ref": "#/$defs/description"
+        },
+        "section": {
+          "$ref": "#/$defs/section"
+        },
+        "generate": {
+          "enum": [
+            "passes-at-limit",
+            "passes-over-limit",
+            "output-at-limit",
+            "output-over-limit",
+            "output-over-limit-stops",
+            "conversion-over-limit"
+          ]
+        }
+      }
+    },
+    "description": {
+      "description": "One sentence naming what the case pins, for the failure it would print.",
+      "type": "string",
+      "minLength": 1
+    },
+    "behaviour": {
+      "enum": [
+        "upper",
+        "echo",
+        "empty",
+        "nothing",
+        "raise",
+        "default",
+        "options",
+        "props",
+        "locale",
+        "object"
+      ]
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "output": {
+          "description": "The text the resolution must produce.",
+          "type": "string"
+        },
+        "format": {
+          "description": "For a locale-dependent output: the formatting request whose result on the running host is the text the resolution must produce. The message is then the placeholder alone.",
+          "$ref": "#/$defs/format"
+        },
+        "reports": {
+          "description": "The reports the resolution must emit, in the order it emits them. Omitted, none are expected.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/report"
+          }
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "output"
+          ],
+          "properties": {
+            "output": true
+          }
+        },
+        {
+          "required": [
+            "format"
+          ],
+          "properties": {
+            "format": true
+          }
+        }
+      ]
+    },
+    "format": {
+      "type": "object",
+      "required": [
+        "api",
+        "input"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "api": {
+          "enum": [
+            "NumberFormat",
+            "DateTimeFormat",
+            "RelativeTimeFormat"
+          ]
+        },
+        "options": {
+          "description": "The options the request is constructed with: the properties the facility reads, as the layers of section 11.2 compose them and the modifier pins them, without the format's own ratio and format, which the input already reflects.",
+          "type": "object"
+        },
+        "input": {
+          "description": "What the request formats: a number for NumberFormat, milliseconds since the epoch for DateTimeFormat, a [value, unit] pair for RelativeTimeFormat."
+        }
+      }
+    },
+    "report": {
+      "type": "object",
+      "required": [
+        "code",
+        "origin"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "unknown-modifier",
+            "failed-modifier",
+            "missing-options",
+            "unserializable-value",
+            "missing-locale",
+            "pass-limit",
+            "output-limit"
+          ]
+        },
+        "origin": {
+          "enum": [
+            "message",
+            "payload",
+            "limit"
+          ]
+        },
+        "key": {
+          "description": "The key the report must name, where the adapter's reports carry one."
+        }
+      }
+    }
+  }
+}

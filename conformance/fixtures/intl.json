@@ -1,0 +1,3057 @@
+{
+  "format": "curly-message-1",
+  "level": "intl",
+  "section": "11.2",
+  "cases": [
+    {
+      "id": "intl/locale-none-number",
+      "description": "number reached where the caller supplied no locale renders the empty string over a present value and a declared default, and reports missing-locale against the payload.",
+      "section": "11.2",
+      "message": "[{{v:number; default:D}}]",
+      "payload": {
+        "v": 10
+      },
+      "key": "intl.locale-none-number",
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "missing-locale",
+            "origin": "payload",
+            "key": "intl.locale-none-number"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/locale-none-date",
+      "description": "date reached where the caller supplied no locale renders the empty string, not the chain, and reports missing-locale.",
+      "section": "11.2",
+      "message": "[{{v:date; default:D}}]",
+      "payload": {
+        "v": 1709632800000
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC"
+        }
+      },
+      "key": "intl.locale-none-date",
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "missing-locale",
+            "origin": "payload",
+            "key": "intl.locale-none-date"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/locale-none-ago",
+      "description": "ago reached where the caller supplied no locale renders the empty string, not the chain, and reports missing-locale.",
+      "section": "11.2",
+      "message": "[{{v:ago; default:D}}]",
+      "payload": {
+        "v": -86400000
+      },
+      "key": "intl.locale-none-ago",
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "missing-locale",
+            "origin": "payload",
+            "key": "intl.locale-none-ago"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/locale-none-currency",
+      "description": "currency reached where the caller supplied no locale renders the empty string, not the chain, and reports missing-locale.",
+      "section": "11.2",
+      "message": "[{{v:currency; default:D}}]",
+      "payload": {
+        "v": 10
+      },
+      "props": {
+        "currency": {
+          "currency": "USD"
+        }
+      },
+      "key": "intl.locale-none-currency",
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "missing-locale",
+            "origin": "payload",
+            "key": "intl.locale-none-currency"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/locale-empty",
+      "description": "A locale the caller supplied empty is not available: the empty string, and a missing-locale report against the payload.",
+      "section": "11.2",
+      "message": "[{{v:number; default:D}}]",
+      "payload": {
+        "v": 10
+      },
+      "locale": "",
+      "key": "intl.locale-empty",
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "missing-locale",
+            "origin": "payload",
+            "key": "intl.locale-empty"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/locale-none-ignores-every-link",
+      "description": "No link of the fallback chain stands in for a locale nobody supplied: a wrapper default and a payload default are both left unread.",
+      "section": "11.2",
+      "message": "[{{v:number}}]",
+      "payload": {
+        "v": {
+          "value": 10,
+          "default": "W"
+        },
+        "default": "P"
+      },
+      "key": "intl.locale-none-links",
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "missing-locale",
+            "origin": "payload",
+            "key": "intl.locale-none-links"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/locale-before-unformattable-value",
+      "description": "The locale is tested before the value is read, so a value the modifier could not format renders the empty string and reports the locale, not the value.",
+      "section": "11.2",
+      "message": "[{{v:number; default:D}}]",
+      "payload": {
+        "v": "not a number"
+      },
+      "key": "intl.locale-before-value",
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "missing-locale",
+            "origin": "payload",
+            "key": "intl.locale-before-value"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/locale-before-blank-value",
+      "description": "The locale is tested before the value is read, so a blank value renders the empty string and reports the locale, not a failed modifier.",
+      "section": "11.2",
+      "message": "[{{v:number; default:D}}]",
+      "payload": {
+        "v": ""
+      },
+      "key": "intl.locale-before-blank",
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "missing-locale",
+            "origin": "payload",
+            "key": "intl.locale-before-blank"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/absent-value-no-locale",
+      "description": "An absent value takes the chain before any modifier is asked, so no missing locale is reported where the caller supplied none.",
+      "section": "11.2",
+      "message": "{{v:number; default:D}}",
+      "payload": {},
+      "key": "intl.absent-no-locale",
+      "expected": {
+        "output": "D",
+        "reports": []
+      }
+    },
+    {
+      "id": "intl/absent-value-with-locale",
+      "description": "An absent value takes the chain before any modifier is asked, and reports nothing where the caller supplied a locale.",
+      "section": "11.2",
+      "message": "{{v:number; default:D}}",
+      "payload": {},
+      "locale": "en",
+      "key": "intl.absent-with-locale",
+      "expected": {
+        "output": "D",
+        "reports": []
+      }
+    },
+    {
+      "id": "intl/undefined-value-no-locale",
+      "description": "An entry that is the host's undefined is absent, so the placeholder takes the chain and no missing locale is reported.",
+      "section": "11.2",
+      "message": "{{v:number; default:D}}",
+      "payload": {
+        "v": {
+          "$curly": "undefined"
+        }
+      },
+      "key": "intl.undefined-no-locale",
+      "expected": {
+        "output": "D",
+        "reports": []
+      }
+    },
+    {
+      "id": "intl/number-formats",
+      "description": "number formats a locale-formatted number with at most two fraction digits where no layer names a maximum.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1234.5678
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/number-locale-is-the-callers",
+      "description": "The locale the facility formats in is the one the caller supplied.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1234.5
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2
+          },
+          "input": 1234.5
+        }
+      }
+    },
+    {
+      "id": "intl/number-text-value",
+      "description": "A number authored as text is the same number, since every value arrives as text.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": "1234.5678"
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/date-timestamp",
+      "description": "date formats milliseconds since the Unix epoch.",
+      "section": "11.2",
+      "message": "{{d:date}}",
+      "payload": {
+        "d": 1709632800000
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "DateTimeFormat",
+          "options": {
+            "timeZone": "UTC"
+          },
+          "input": 1709632800000
+        }
+      }
+    },
+    {
+      "id": "intl/date-parsed-text",
+      "description": "date hands text that is not a number to the host's date parsing, so an ISO date-time with an explicit zone formats the instant it names.",
+      "section": "11.2",
+      "message": "{{d:date}}",
+      "payload": {
+        "d": "2024-03-05T10:00:00.000Z"
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "DateTimeFormat",
+          "options": {
+            "timeZone": "UTC"
+          },
+          "input": 1709632800000
+        }
+      }
+    },
+    {
+      "id": "intl/date-locale-is-the-callers",
+      "description": "date formats in the locale the caller supplied.",
+      "section": "11.2",
+      "message": "{{d:date}}",
+      "payload": {
+        "d": 1709632800000
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC",
+          "dateStyle": "long"
+        }
+      },
+      "locale": "de",
+      "expected": {
+        "format": {
+          "api": "DateTimeFormat",
+          "options": {
+            "timeZone": "UTC",
+            "dateStyle": "long"
+          },
+          "input": 1709632800000
+        }
+      }
+    },
+    {
+      "id": "intl/ago-negative-is-past",
+      "description": "ago reads a signed millisecond delta, negative for the past.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -1200000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -20,
+            "minute"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-positive-is-future",
+      "description": "ago reads a positive delta as the future.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 1200000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            20,
+            "minute"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-locale-is-the-callers",
+      "description": "ago formats in the locale the caller supplied.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -1200000
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -20,
+            "minute"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/currency-ratio-defaults-to-one",
+      "description": "currency multiplies its value by a ratio defaulting to 1 and formats a currency amount.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": 2
+      },
+      "props": {
+        "currency": {
+          "currency": "USD"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "USD"
+          },
+          "input": 2
+        }
+      }
+    },
+    {
+      "id": "intl/currency-ratio",
+      "description": "currency multiplies its value by the ratio a layer names before formatting.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": 2
+      },
+      "props": {
+        "currency": {
+          "currency": "USD",
+          "ratio": 100
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "USD"
+          },
+          "input": 200
+        }
+      }
+    },
+    {
+      "id": "intl/currency-locale-is-the-callers",
+      "description": "currency formats in the locale the caller supplied.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": 200
+      },
+      "props": {
+        "currency": {
+          "currency": "EUR"
+        }
+      },
+      "locale": "de",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "EUR"
+          },
+          "input": 200
+        }
+      }
+    },
+    {
+      "id": "intl/number-rejects-date-text",
+      "description": "number takes a number only: date text takes the chain with a failed-modifier report.",
+      "section": "11.2",
+      "message": "{{v:number; default:D}}",
+      "payload": {
+        "v": "2024-03-05T10:00:00.000Z"
+      },
+      "locale": "en",
+      "key": "intl.number-date-text",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.number-date-text"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/ago-rejects-date-text",
+      "description": "ago takes a number only: date text takes the chain with a failed-modifier report.",
+      "section": "11.2",
+      "message": "{{v:ago; default:D}}",
+      "payload": {
+        "v": "2024-03-05T10:00:00.000Z"
+      },
+      "locale": "en",
+      "key": "intl.ago-date-text",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.ago-date-text"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/currency-rejects-date-text",
+      "description": "currency takes a number only: date text takes the chain with a failed-modifier report.",
+      "section": "11.2",
+      "message": "{{v:currency; default:D}}",
+      "payload": {
+        "v": "2024-03-05T10:00:00.000Z"
+      },
+      "props": {
+        "currency": {
+          "currency": "USD"
+        }
+      },
+      "locale": "en",
+      "key": "intl.currency-date-text",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.currency-date-text"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/number-nope-renders-nothing",
+      "description": "number over text that is not a number takes the chain, which is empty, and reports failed-modifier, as Appendix A.13 shows.",
+      "section": "11.2",
+      "message": "{{v:number}}",
+      "payload": {
+        "v": "nope"
+      },
+      "locale": "en",
+      "key": "intl.number-nope",
+      "expected": {
+        "output": "",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.number-nope"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/number-nope-takes-default",
+      "description": "number over text that is not a number takes the declared default as text and does not convert it, as Appendix A.13 shows.",
+      "section": "11.2",
+      "message": "{{v:number; default:n/a}}",
+      "payload": {
+        "v": "nope"
+      },
+      "locale": "en",
+      "key": "intl.number-nope-default",
+      "expected": {
+        "output": "n/a",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.number-nope-default"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/ago-nope-renders-nothing",
+      "description": "ago over text that is not a number takes the chain, which is empty, and reports failed-modifier, as Appendix A.13 shows.",
+      "section": "11.2",
+      "message": "{{v:ago}}",
+      "payload": {
+        "v": "nope"
+      },
+      "locale": "en",
+      "key": "intl.ago-nope",
+      "expected": {
+        "output": "",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.ago-nope"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/currency-nope-renders-nothing",
+      "description": "currency over text that is not a number takes the chain, which is empty, and reports failed-modifier, as Appendix A.13 shows.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": "nope"
+      },
+      "props": {
+        "currency": {
+          "currency": "USD"
+        }
+      },
+      "locale": "en",
+      "key": "intl.currency-nope",
+      "expected": {
+        "output": "",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.currency-nope"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/number-empty-renders-nothing",
+      "description": "number over empty text takes the chain, which is empty, and reports failed-modifier, as Appendix A.13 shows.",
+      "section": "11.2",
+      "message": "{{v:number}}",
+      "payload": {
+        "v": ""
+      },
+      "locale": "en",
+      "key": "intl.number-empty",
+      "expected": {
+        "output": "",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.number-empty"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/date-empty-renders-nothing",
+      "description": "date over empty text takes the chain, which is empty, and reports failed-modifier, as Appendix A.13 shows.",
+      "section": "11.2",
+      "message": "{{v:date}}",
+      "payload": {
+        "v": ""
+      },
+      "locale": "en",
+      "key": "intl.date-empty",
+      "expected": {
+        "output": "",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.date-empty"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/blank-empty-number",
+      "description": "Empty text is not a number whatever the host's conversion makes of it: number takes the chain and reports failed-modifier.",
+      "section": "11.2",
+      "message": "{{v:number; default:D}}",
+      "payload": {
+        "v": ""
+      },
+      "locale": "en",
+      "key": "intl.blank-empty-number",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.blank-empty-number"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/blank-empty-date",
+      "description": "Empty text is not a date either: date takes the chain rather than formatting the epoch.",
+      "section": "11.2",
+      "message": "{{v:date; default:D}}",
+      "payload": {
+        "v": ""
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC"
+        }
+      },
+      "locale": "en",
+      "key": "intl.blank-empty-date",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.blank-empty-date"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/blank-empty-ago",
+      "description": "Empty text is not a number: ago takes the chain rather than formatting a count of zero.",
+      "section": "11.2",
+      "message": "{{v:ago; default:D}}",
+      "payload": {
+        "v": ""
+      },
+      "locale": "en",
+      "key": "intl.blank-empty-ago",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.blank-empty-ago"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/blank-empty-currency",
+      "description": "Empty text is not a number: currency takes the chain rather than formatting a zero amount.",
+      "section": "11.2",
+      "message": "{{v:currency; default:D}}",
+      "payload": {
+        "v": ""
+      },
+      "props": {
+        "currency": {
+          "currency": "USD"
+        }
+      },
+      "locale": "en",
+      "key": "intl.blank-empty-currency",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.blank-empty-currency"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/blank-whitespace-number",
+      "description": "Text of only whitespace of section 6's class, members outside ASCII included, is not a number: number takes the chain.",
+      "section": "11.2",
+      "message": "{{v:number; default:D}}",
+      "payload": {
+        "v": "\u00a0\u3000\ufeff"
+      },
+      "locale": "en",
+      "key": "intl.blank-whitespace-number",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.blank-whitespace-number"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/blank-whitespace-date",
+      "description": "Text of only whitespace of section 6's class is not a date: date takes the chain.",
+      "section": "11.2",
+      "message": "{{v:date; default:D}}",
+      "payload": {
+        "v": "\u00a0\u3000\ufeff"
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC"
+        }
+      },
+      "locale": "en",
+      "key": "intl.blank-whitespace-date",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.blank-whitespace-date"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/blank-whitespace-ago",
+      "description": "Text of only whitespace of section 6's class is not a number: ago takes the chain.",
+      "section": "11.2",
+      "message": "{{v:ago; default:D}}",
+      "payload": {
+        "v": "\u00a0\u3000\ufeff"
+      },
+      "locale": "en",
+      "key": "intl.blank-whitespace-ago",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.blank-whitespace-ago"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/blank-whitespace-currency",
+      "description": "Text of only whitespace of section 6's class is not a number: currency takes the chain.",
+      "section": "11.2",
+      "message": "{{v:currency; default:D}}",
+      "payload": {
+        "v": "\u00a0\u3000\ufeff"
+      },
+      "props": {
+        "currency": {
+          "currency": "USD"
+        }
+      },
+      "locale": "en",
+      "key": "intl.blank-whitespace-currency",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.blank-whitespace-currency"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/number-trailing-text-not-a-number",
+      "description": "The conversion reads the whole value and not a leading part, so 12px is not a number and takes the chain.",
+      "section": "11.2",
+      "message": "{{v:number; default:D}}",
+      "payload": {
+        "v": "12px"
+      },
+      "locale": "en",
+      "key": "intl.number-12px",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.number-12px"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/number-surrounding-whitespace",
+      "description": "Whitespace around a number is not part of it, so \" 12 \" is a number.",
+      "section": "11.2",
+      "message": "{{v:number}}",
+      "payload": {
+        "v": " 12 "
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2
+          },
+          "input": 12
+        }
+      }
+    },
+    {
+      "id": "intl/number-signed",
+      "description": "A sign is part of a number, so +12 is one.",
+      "section": "11.2",
+      "message": "{{v:number}}",
+      "payload": {
+        "v": "+12"
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2
+          },
+          "input": 12
+        }
+      }
+    },
+    {
+      "id": "intl/number-exponent",
+      "description": "An exponent is part of a number, so 1e3 is one.",
+      "section": "11.2",
+      "message": "{{v:number}}",
+      "payload": {
+        "v": "1e3"
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2
+          },
+          "input": 1000
+        }
+      }
+    },
+    {
+      "id": "intl/number-infinity",
+      "description": "An infinity is not a number a formatting modifier can format, so number over Infinity takes the chain.",
+      "section": "11.2",
+      "message": "{{v:number; default:D}}",
+      "payload": {
+        "v": "Infinity"
+      },
+      "locale": "en",
+      "key": "intl.number-infinity",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.number-infinity"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/currency-product-overflows",
+      "description": "currency applies the test a second time to the product of value and ratio, so a product that overflows to an infinity takes the chain.",
+      "section": "11.2",
+      "message": "{{v:currency; default:D}}",
+      "payload": {
+        "v": 1e+308
+      },
+      "props": {
+        "currency": {
+          "currency": "USD",
+          "ratio": 10
+        }
+      },
+      "locale": "en",
+      "key": "intl.currency-overflow",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.currency-overflow"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/date-digits-are-a-timestamp",
+      "description": "date over 2024 formats the 2024th millisecond after the epoch and not the first day of 2024.",
+      "section": "11.2",
+      "message": "{{v:date}}",
+      "payload": {
+        "v": "2024"
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "DateTimeFormat",
+          "options": {
+            "timeZone": "UTC"
+          },
+          "input": 2024
+        }
+      }
+    },
+    {
+      "id": "intl/date-two-digits-are-a-timestamp",
+      "description": "date over 99 formats the 99th millisecond and not a day in 1999.",
+      "section": "11.2",
+      "message": "{{v:date}}",
+      "payload": {
+        "v": "99"
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "DateTimeFormat",
+          "options": {
+            "timeZone": "UTC"
+          },
+          "input": 99
+        }
+      }
+    },
+    {
+      "id": "intl/date-padded-number-is-a-timestamp",
+      "description": "A number with whitespace around it is a timestamp, though a host's date parsing reads a year in it.",
+      "section": "11.2",
+      "message": "{{v:date}}",
+      "payload": {
+        "v": " 2024 "
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "DateTimeFormat",
+          "options": {
+            "timeZone": "UTC"
+          },
+          "input": 2024
+        }
+      }
+    },
+    {
+      "id": "intl/date-signed-number-is-a-timestamp",
+      "description": "A signed number is a timestamp, though a host's date parsing reads a year in it.",
+      "section": "11.2",
+      "message": "{{v:date}}",
+      "payload": {
+        "v": "+1000"
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "DateTimeFormat",
+          "options": {
+            "timeZone": "UTC"
+          },
+          "input": 1000
+        }
+      }
+    },
+    {
+      "id": "intl/layers-worked-example",
+      "description": "The implementation defaults, the props and the wrapper's props compose per property, each overriding only what it names.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": {
+          "value": 1234.5678,
+          "props": {
+            "number": {
+              "maximumFractionDigits": 1
+            }
+          }
+        }
+      },
+      "props": {
+        "number": {
+          "useGrouping": true
+        }
+      },
+      "locale": "en",
+      "defaults": {
+        "number": {
+          "maximumFractionDigits": 4,
+          "useGrouping": false
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 1,
+            "useGrouping": true
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/defaults-layer",
+      "description": "Implementation-configured defaults are layered over the defaults the section states.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1234.5678
+      },
+      "locale": "en",
+      "defaults": {
+        "number": {
+          "maximumFractionDigits": 4
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 4
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/props-over-defaults",
+      "description": "Props are layered over the implementation-configured defaults.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1234.5678
+      },
+      "props": {
+        "number": {
+          "maximumFractionDigits": 3
+        }
+      },
+      "locale": "en",
+      "defaults": {
+        "number": {
+          "maximumFractionDigits": 4
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 3
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/wrapper-over-props",
+      "description": "A wrapper's props are layered over all the other layers.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": {
+          "value": 1234.5678,
+          "props": {
+            "number": {
+              "maximumFractionDigits": 1
+            }
+          }
+        }
+      },
+      "props": {
+        "number": {
+          "maximumFractionDigits": 3
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 1
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/layer-keeps-unnamed-property",
+      "description": "A layer overrides only the properties it names, so the section's own maximum of two stands beneath a layer naming only the grouping.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1234.5678
+      },
+      "props": {
+        "number": {
+          "useGrouping": false
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2,
+            "useGrouping": false
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/props-read-under-own-name",
+      "description": "Props are read under the modifier's own name: what the caller wrote under another modifier's name does not reach the request.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1234.5678
+      },
+      "props": {
+        "number": {
+          "useGrouping": false
+        },
+        "currency": {
+          "maximumFractionDigits": 0
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2,
+            "useGrouping": false
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/defaults-read-under-own-name",
+      "description": "The implementation defaults are read under the modifier's own name and nothing written under another's.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1234.5678
+      },
+      "locale": "en",
+      "defaults": {
+        "number": {
+          "maximumFractionDigits": 3
+        },
+        "currency": {
+          "maximumFractionDigits": 0
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 3
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/wrapper-props-read-under-own-name",
+      "description": "A wrapper's props are read under the modifier's own name and nothing written under another's.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": {
+          "value": 1234.5678,
+          "props": {
+            "number": {
+              "maximumFractionDigits": 1
+            },
+            "currency": {
+              "maximumFractionDigits": 0
+            }
+          }
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 1
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/null-property-is-named",
+      "description": "A property a layer holds the host's null under is one it names: null reaches the formatting request over the layer beneath.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1.23456
+      },
+      "props": {
+        "number": {
+          "maximumFractionDigits": null
+        }
+      },
+      "locale": "en",
+      "defaults": {
+        "number": {
+          "maximumFractionDigits": 4
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": null
+          },
+          "input": 1.23456
+        }
+      }
+    },
+    {
+      "id": "intl/undefined-property-in-props-not-named",
+      "description": "A property the props hold the host's undefined under is not named, so the implementation default beneath it stands.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1234.5678
+      },
+      "props": {
+        "number": {
+          "maximumFractionDigits": {
+            "$curly": "undefined"
+          }
+        }
+      },
+      "locale": "en",
+      "defaults": {
+        "number": {
+          "maximumFractionDigits": 4
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 4
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/undefined-wrapper-entry-not-named",
+      "description": "A wrapper whose props hold the host's undefined under the modifier's name names nothing, so the props beneath stand.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": {
+          "value": 1234.5678,
+          "props": {
+            "number": {
+              "$curly": "undefined"
+            }
+          }
+        }
+      },
+      "props": {
+        "number": {
+          "useGrouping": false
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2,
+            "useGrouping": false
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/undefined-in-defaults-not-named",
+      "description": "An implementation default holding the host's undefined names nothing, so the section's own maximum of two stands.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1234.5678
+      },
+      "locale": "en",
+      "defaults": {
+        "number": {
+          "maximumFractionDigits": {
+            "$curly": "undefined"
+          }
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2
+          },
+          "input": 1234.5678
+        }
+      }
+    },
+    {
+      "id": "intl/date-layers-compose",
+      "description": "date composes its properties per property over the implementation defaults.",
+      "section": "11.2",
+      "message": "{{d:date}}",
+      "payload": {
+        "d": 1709632800000
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC",
+          "dateStyle": "medium"
+        }
+      },
+      "locale": "en",
+      "defaults": {
+        "date": {
+          "dateStyle": "full",
+          "timeStyle": "short"
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "DateTimeFormat",
+          "options": {
+            "timeZone": "UTC",
+            "dateStyle": "medium",
+            "timeStyle": "short"
+          },
+          "input": 1709632800000
+        }
+      }
+    },
+    {
+      "id": "intl/ago-layers-compose",
+      "description": "ago composes its properties per property over the implementation defaults, the section's numeric beneath them.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -172800000
+      },
+      "props": {
+        "ago": {
+          "style": "narrow"
+        }
+      },
+      "locale": "en",
+      "defaults": {
+        "ago": {
+          "style": "long"
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto",
+            "style": "narrow"
+          },
+          "input": [
+            -2,
+            "day"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/currency-layers-compose",
+      "description": "currency composes its properties per property over the implementation defaults.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": 10
+      },
+      "props": {
+        "currency": {
+          "currencyDisplay": "code"
+        }
+      },
+      "locale": "en",
+      "defaults": {
+        "currency": {
+          "currency": "USD",
+          "currencyDisplay": "name"
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "USD",
+            "currencyDisplay": "code"
+          },
+          "input": 10
+        }
+      }
+    },
+    {
+      "id": "intl/minimum-widens-default-maximum",
+      "description": "Where a layer names a minimumFractionDigits above two, the default maximum widens to reach it.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1.5
+      },
+      "props": {
+        "number": {
+          "minimumFractionDigits": 4
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "minimumFractionDigits": 4,
+            "maximumFractionDigits": 4
+          },
+          "input": 1.5
+        }
+      }
+    },
+    {
+      "id": "intl/widening-runs-after-composition",
+      "description": "The widening runs after the layers have composed, so it reaches the minimum the topmost layer named.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1.5
+      },
+      "props": {
+        "number": {
+          "minimumFractionDigits": 6
+        }
+      },
+      "locale": "en",
+      "defaults": {
+        "number": {
+          "minimumFractionDigits": 4
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "minimumFractionDigits": 6,
+            "maximumFractionDigits": 6
+          },
+          "input": 1.5
+        }
+      }
+    },
+    {
+      "id": "intl/minimum-under-default-keeps-maximum",
+      "description": "A minimum under two leaves the default maximum of two in place.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1.23456
+      },
+      "props": {
+        "number": {
+          "minimumFractionDigits": 1
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "minimumFractionDigits": 1,
+            "maximumFractionDigits": 2
+          },
+          "input": 1.23456
+        }
+      }
+    },
+    {
+      "id": "intl/widens-to-minimum-exactly",
+      "description": "The default widens to the named minimum exactly and not past it.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1.23456789
+      },
+      "props": {
+        "number": {
+          "minimumFractionDigits": 3
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "minimumFractionDigits": 3,
+            "maximumFractionDigits": 3
+          },
+          "input": 1.23456789
+        }
+      }
+    },
+    {
+      "id": "intl/named-maximum-decides",
+      "description": "A layer that names the maximum itself decides it, beside a minimum another layer names.",
+      "section": "11.2",
+      "message": "{{n:number}}",
+      "payload": {
+        "n": 1.5
+      },
+      "props": {
+        "number": {
+          "maximumFractionDigits": 5
+        }
+      },
+      "locale": "en",
+      "defaults": {
+        "number": {
+          "minimumFractionDigits": 3
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "minimumFractionDigits": 3,
+            "maximumFractionDigits": 5
+          },
+          "input": 1.5
+        }
+      }
+    },
+    {
+      "id": "intl/named-maximum-under-minimum-fails",
+      "description": "Only the default widens: a named maximum under a named minimum is the request the host is asked for, and where it rejects the request the placeholder takes the chain with a failed-modifier report.",
+      "section": "11.2",
+      "message": "{{n:number; default:D}}",
+      "payload": {
+        "n": 1.5
+      },
+      "props": {
+        "number": {
+          "maximumFractionDigits": 1
+        }
+      },
+      "locale": "en",
+      "key": "intl.maximum-under-minimum",
+      "defaults": {
+        "number": {
+          "minimumFractionDigits": 4
+        }
+      },
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.maximum-under-minimum"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/currency-style-over-defaults",
+      "description": "currency formats in the currency style over an implementation default naming another style.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": 0.5
+      },
+      "locale": "en",
+      "defaults": {
+        "currency": {
+          "currency": "USD",
+          "style": "percent"
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "USD"
+          },
+          "input": 0.5
+        }
+      }
+    },
+    {
+      "id": "intl/currency-style-over-props",
+      "description": "currency formats in the currency style over props naming another style.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": 0.5
+      },
+      "props": {
+        "currency": {
+          "currency": "USD",
+          "style": "percent"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "USD"
+          },
+          "input": 0.5
+        }
+      }
+    },
+    {
+      "id": "intl/currency-style-over-wrapper",
+      "description": "currency formats in the currency style over a wrapper's props naming another style.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": {
+          "value": 0.5,
+          "props": {
+            "currency": {
+              "style": "decimal"
+            }
+          }
+        }
+      },
+      "props": {
+        "currency": {
+          "currency": "USD"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "USD"
+          },
+          "input": 0.5
+        }
+      }
+    },
+    {
+      "id": "intl/currency-code-from-defaults",
+      "description": "The currency to format in comes from the implementation defaults where they name it.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": 200
+      },
+      "locale": "de",
+      "defaults": {
+        "currency": {
+          "currency": "EUR"
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "EUR"
+          },
+          "input": 200
+        }
+      }
+    },
+    {
+      "id": "intl/currency-code-from-wrapper",
+      "description": "The currency to format in comes from the wrapper's props where they name it.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": {
+          "value": 10,
+          "props": {
+            "currency": {
+              "currency": "CZK"
+            }
+          }
+        }
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "CZK"
+          },
+          "input": 10
+        }
+      }
+    },
+    {
+      "id": "intl/currency-code-from-props-over-defaults",
+      "description": "The currency the props name overrides the one the implementation defaults name.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": 10
+      },
+      "props": {
+        "currency": {
+          "currency": "CZK"
+        }
+      },
+      "locale": "en",
+      "defaults": {
+        "currency": {
+          "currency": "USD"
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "CZK"
+          },
+          "input": 10
+        }
+      }
+    },
+    {
+      "id": "intl/currency-ratio-from-defaults",
+      "description": "The ratio comes from the implementation defaults where they name it.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": 2
+      },
+      "locale": "en",
+      "defaults": {
+        "currency": {
+          "currency": "USD",
+          "ratio": 100
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "USD"
+          },
+          "input": 200
+        }
+      }
+    },
+    {
+      "id": "intl/currency-ratio-zero-is-named",
+      "description": "A ratio of zero is a value a layer names, not an absence: the product is zero.",
+      "section": "11.2",
+      "message": "{{v:currency}}",
+      "payload": {
+        "v": 1234.56
+      },
+      "locale": "en",
+      "defaults": {
+        "currency": {
+          "currency": "USD",
+          "ratio": 0
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "USD"
+          },
+          "input": 0
+        }
+      }
+    },
+    {
+      "id": "intl/option-is-not-a-ratio",
+      "description": "A placeholder segment spelled like a ratio is an option that reaches no layer, so the ratio stays one.",
+      "section": "11.2",
+      "message": "{{v:currency; ratio:100}}",
+      "payload": {
+        "v": 2
+      },
+      "props": {
+        "currency": {
+          "currency": "USD"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "USD"
+          },
+          "input": 2
+        }
+      }
+    },
+    {
+      "id": "intl/option-is-not-a-maximum",
+      "description": "A placeholder segment spelled like a fraction-digit maximum is an option that reaches no layer, so the maximum stays two.",
+      "section": "11.2",
+      "message": "{{v:number; maximumFractionDigits:4}}",
+      "payload": {
+        "v": 1.23456
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2
+          },
+          "input": 1.23456
+        }
+      }
+    },
+    {
+      "id": "intl/option-is-not-a-format",
+      "description": "A placeholder segment spelled like an ago format is an option that reaches no layer, so the unit stays the one the climb selects.",
+      "section": "11.2",
+      "message": "{{v:ago; format:day}}",
+      "payload": {
+        "v": -604800000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -1,
+            "week"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/option-is-not-a-currency",
+      "description": "A message cannot name the currency: a segment spelled like one reaches no layer, so the code a layer names is the one formatted in.",
+      "section": "11.2",
+      "message": "{{v:currency; currency:USD}}",
+      "payload": {
+        "v": 2
+      },
+      "locale": "en",
+      "defaults": {
+        "currency": {
+          "currency": "EUR"
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "EUR"
+          },
+          "input": 2
+        }
+      }
+    },
+    {
+      "id": "intl/ago-ladder-second",
+      "description": "The climb starts at the count of seconds.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -2000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -2,
+            "second"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-ladder-minute",
+      "description": "60 seconds make a minute.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -120000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -2,
+            "minute"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-ladder-hour",
+      "description": "60 minutes make an hour.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -7200000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -2,
+            "hour"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-ladder-day",
+      "description": "24 hours make a day.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -172800000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -2,
+            "day"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-ladder-week",
+      "description": "7 days make a week.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -1209600000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -2,
+            "week"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-ladder-month",
+      "description": "Thirteen thirds of a week make a month.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -5241600000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -2,
+            "month"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-ladder-year",
+      "description": "12 months make a year.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -62899200000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -2,
+            "year"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-rounds-at-every-step-week",
+      "description": "Three and a half days is four days before it is a week, and so formats as one week.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 302400000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            1,
+            "week"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-rounds-at-every-step-month",
+      "description": "Twenty-six days is four weeks and then one month.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 2246400000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            1,
+            "month"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-half-step-minute",
+      "description": "A half rounds away from zero, so 30 seconds make a minute.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 30000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            1,
+            "minute"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-half-step-hour",
+      "description": "30 minutes make an hour.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 1800000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            1,
+            "hour"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-half-step-day",
+      "description": "12 hours make a day.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 43200000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            1,
+            "day"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-half-step-week",
+      "description": "4 days make a week.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 345600000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            1,
+            "week"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-half-step-month",
+      "description": "3 weeks make a month.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 1814400000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            1,
+            "month"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-half-step-year",
+      "description": "6 months make a year.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 15724800000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            1,
+            "year"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-under-half-step-not-taken",
+      "description": "A step whose count rounds below one is not taken, so 29 seconds stay seconds.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 29000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            29,
+            "second"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-under-half-second-is-zero",
+      "description": "A delta under half a second is a count of zero seconds, which the host phrases as the present.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 499
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            0,
+            "second"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-zero",
+      "description": "A delta of zero is a count of zero seconds.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 0
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            0,
+            "second"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-month-is-thirteen-thirds-of-a-week",
+      "description": "The month is thirteen thirds of a week, so 24 weeks are six months and then a year.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 14515200000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            1,
+            "year"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-top-rung-rounds",
+      "description": "The year is climbed with the same rounding: 18 months are a year and a half, and so two years.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 47174400000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            2,
+            "year"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-runs-out-at-year",
+      "description": "The year is where the climb runs out in any case.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -943488000000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -30,
+            "year"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-named-unit-stops",
+      "description": "A format property names the unit ago stops at whatever the count is there.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -172800000
+      },
+      "props": {
+        "ago": {
+          "format": "hour"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -48,
+            "hour"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-named-unit-zero-count",
+      "description": "format day at a delta of three hours is a count of zero days.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 10800000
+      },
+      "props": {
+        "ago": {
+          "format": "day"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            0,
+            "day"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-named-unit-large-count",
+      "description": "format second at a delta of 800 days is a count of 69 120 000 seconds.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 69120000000
+      },
+      "props": {
+        "ago": {
+          "format": "second"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            69120000,
+            "second"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-named-unit-climbs-past-automatic-stop",
+      "description": "A named unit above where the climb would stop is still climbed to, with the same rounding.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 604800000
+      },
+      "props": {
+        "ago": {
+          "format": "month"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            0,
+            "month"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-named-unit-same-rounding",
+      "description": "A named unit climbs the ladder with the same rounding, so three and a half days stop at four days.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 302400000
+      },
+      "props": {
+        "ago": {
+          "format": "day"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            4,
+            "day"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-named-unit-plural",
+      "description": "A unit is named in the singular or the plural, so days names the day.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -604800000
+      },
+      "props": {
+        "ago": {
+          "format": "days"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -7,
+            "day"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-format-auto-is-automatic",
+      "description": "The format value auto is the automatic selection a layer naming none leaves in place.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -604800000
+      },
+      "props": {
+        "ago": {
+          "format": "auto"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -1,
+            "week"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-format-from-defaults",
+      "description": "The unit is named by a format property in the implementation defaults like any other layer.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -604800000
+      },
+      "locale": "en",
+      "defaults": {
+        "ago": {
+          "format": "days"
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -7,
+            "day"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-format-from-wrapper",
+      "description": "The unit is named by a format property in the wrapper's props over the layers beneath.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": {
+          "value": -172800000,
+          "props": {
+            "ago": {
+              "format": "hour"
+            }
+          }
+        }
+      },
+      "props": {
+        "ago": {
+          "format": "day"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -48,
+            "hour"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-format-year-names-the-year",
+      "description": "A format of year names the year.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 47174400000
+      },
+      "props": {
+        "ago": {
+          "format": "year"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            2,
+            "year"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-format-years-names-the-year",
+      "description": "A format of years names the year.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 47174400000
+      },
+      "props": {
+        "ago": {
+          "format": "years"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            2,
+            "year"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-format-case-differs-fails",
+      "description": "Unit names are compared exactly, so a format of YEAR names none of them and the placeholder takes the chain with a failed-modifier report.",
+      "section": "11.2",
+      "message": "{{t:ago; default:D}}",
+      "payload": {
+        "t": -604800000
+      },
+      "props": {
+        "ago": {
+          "format": "YEAR"
+        }
+      },
+      "locale": "en",
+      "key": "intl.ago-format-case",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.ago-format-case"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/ago-format-host-unit-fails",
+      "description": "A format naming a unit from the host's vocabulary that the ladder does not climb is a property the modifier cannot process.",
+      "section": "11.2",
+      "message": "{{t:ago; default:D}}",
+      "payload": {
+        "t": -604800000
+      },
+      "props": {
+        "ago": {
+          "format": "quarter"
+        }
+      },
+      "locale": "en",
+      "key": "intl.ago-format-quarter",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.ago-format-quarter"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/ago-format-null-fails",
+      "description": "A format a layer holds null under is named and names no unit, so the placeholder takes the chain.",
+      "section": "11.2",
+      "message": "{{t:ago; default:D}}",
+      "payload": {
+        "t": -604800000
+      },
+      "props": {
+        "ago": {
+          "format": null
+        }
+      },
+      "locale": "en",
+      "key": "intl.ago-format-null",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "intl.ago-format-null"
+          }
+        ]
+      }
+    },
+    {
+      "id": "intl/ago-numeric-auto-by-default",
+      "description": "Where no layer names numeric it is auto, so a count of one day asks for the host's non-numeric phrasing.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -86400000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -1,
+            "day"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-numeric-always-from-props",
+      "description": "A layer naming numeric decides it like any other property.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -86400000
+      },
+      "props": {
+        "ago": {
+          "numeric": "always"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "always"
+          },
+          "input": [
+            -1,
+            "day"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-numeric-always-from-defaults",
+      "description": "The implementation defaults name numeric over the auto the section states.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -86400000
+      },
+      "locale": "en",
+      "defaults": {
+        "ago": {
+          "numeric": "always"
+        }
+      },
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "always"
+          },
+          "input": [
+            -1,
+            "day"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-half-hour-ago",
+      "description": "Half an hour ago rounds away from zero to one hour, the same distance as half an hour from now.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -1800000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -1,
+            "hour"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-symmetry-future",
+      "description": "An hour and a half from now is two hours.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 5400000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            2,
+            "hour"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-symmetry-past",
+      "description": "An hour and a half ago is two hours, the negation of its future.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -5400000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -2,
+            "hour"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-half-second-future",
+      "description": "Half a second from now rounds away from zero to one second.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": 500
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            1,
+            "second"
+          ]
+        }
+      }
+    },
+    {
+      "id": "intl/ago-half-second-past",
+      "description": "Half a second ago rounds away from zero to one second, the negation of its future.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -500
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "auto"
+          },
+          "input": [
+            -1,
+            "second"
+          ]
+        }
+      }
+    }
+  ]
+}

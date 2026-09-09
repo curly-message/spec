@@ -1,0 +1,742 @@
+{
+  "format": "curly-message-1",
+  "level": "core",
+  "section": "9",
+  "cases": [
+    {
+      "id": "resolution/wrapper-value",
+      "description": "An entry owning only the key value is a wrapper, and its value is the placeholder's value.",
+      "section": "4.1",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "value": 1
+        }
+      },
+      "expected": {
+        "output": "1"
+      }
+    },
+    {
+      "id": "resolution/wrapper-value-and-default",
+      "description": "A wrapper carrying both a value and a default resolves to its value.",
+      "section": "4.1",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "value": 1,
+          "default": "D"
+        }
+      },
+      "expected": {
+        "output": "1"
+      }
+    },
+    {
+      "id": "resolution/wrapper-default-only",
+      "description": "A wrapper owning only a default has no value, so the placeholder takes that default.",
+      "section": "4.1",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "default": "D"
+        }
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "resolution/wrapper-props-only",
+      "description": "A wrapper owning only props has no value, so the placeholder takes the chain.",
+      "section": "4.1",
+      "message": "{{v; default:INLINE}}",
+      "payload": {
+        "v": {
+          "props": {
+            "number": {}
+          }
+        }
+      },
+      "expected": {
+        "output": "INLINE"
+      }
+    },
+    {
+      "id": "resolution/wrapper-near-miss-is-value",
+      "description": "A plain object owning any other key alongside the wrapper keys is a value and serializes whole.",
+      "section": "4.1",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "value": 1,
+          "unit": "kg"
+        }
+      },
+      "expected": {
+        "output": "{\"value\":1,\"unit\":\"kg\"}"
+      }
+    },
+    {
+      "id": "resolution/empty-object-is-value",
+      "description": "An empty plain object owns no key, so it is a value and serializes to its own two braces.",
+      "section": "4.1",
+      "message": "{{v; default:D}}",
+      "payload": {
+        "v": {}
+      },
+      "expected": {
+        "output": "{}"
+      }
+    },
+    {
+      "id": "resolution/misspelled-wrapper-key-is-value",
+      "description": "An entry whose only key is not exactly one of value, default and props is a value.",
+      "section": "4.1",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "valu": "X"
+        }
+      },
+      "expected": {
+        "output": "{\"valu\":\"X\"}"
+      }
+    },
+    {
+      "id": "resolution/array-is-value",
+      "description": "An array entry is a value whatever it holds, because a wrapper is a plain object.",
+      "section": "4.1",
+      "message": "{{v}}",
+      "payload": {
+        "v": [
+          "value"
+        ]
+      },
+      "expected": {
+        "output": "[\"value\"]"
+      }
+    },
+    {
+      "id": "resolution/unwrap-once",
+      "description": "Unwrapping happens exactly once: a wrapper's value that is itself wrapper-shaped is a value and serializes.",
+      "section": "4.1",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "value": {
+            "value": 2
+          }
+        }
+      },
+      "expected": {
+        "output": "{\"value\":2}"
+      }
+    },
+    {
+      "id": "resolution/wrapper-value-undefined",
+      "description": "A wrapper whose value is the host's undefined has no value, so its default fills the placeholder.",
+      "section": "4.1",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "value": {
+            "$curly": "undefined"
+          },
+          "default": "D"
+        }
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "resolution/wrapper-value-zero",
+      "description": "A wrapper's value of zero is a value, not the absence of one.",
+      "section": "4.1",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "value": 0,
+          "default": "D"
+        }
+      },
+      "expected": {
+        "output": "0"
+      }
+    },
+    {
+      "id": "resolution/wrapper-value-null",
+      "description": "A wrapper's value of the host's null is a value, pinned through a comparison so the host's spelling of null is not.",
+      "section": "4.1",
+      "message": "{{v:ne; zzz:PRESENT}}",
+      "payload": {
+        "v": {
+          "value": null,
+          "default": "ABSENT"
+        }
+      },
+      "expected": {
+        "output": "PRESENT"
+      }
+    },
+    {
+      "id": "resolution/root-default-never-wrapper",
+      "description": "The payload's root default entry is never a wrapper, so one shaped like a default-only wrapper is a value that serializes whole rather than an entry with no value.",
+      "section": "4.1",
+      "message": "{{v}}",
+      "payload": {
+        "default": {
+          "default": "Y"
+        }
+      },
+      "expected": {
+        "output": "{\"default\":\"Y\"}"
+      }
+    },
+    {
+      "id": "resolution/key-matched-whole",
+      "description": "A dotted key names one payload entry whole.",
+      "section": "9.2",
+      "message": "{{user.name}}",
+      "payload": {
+        "user.name": "Ann"
+      },
+      "expected": {
+        "output": "Ann"
+      }
+    },
+    {
+      "id": "resolution/key-is-not-a-path",
+      "description": "A payload carrying a user entry with a name inside owns no entry named user.name, so the placeholder takes the chain.",
+      "section": "9.2",
+      "message": "{{user.name; default:D}}",
+      "payload": {
+        "user": {
+          "name": "Ann"
+        }
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "resolution/object-resolves-whole",
+      "description": "No placeholder reaches inside a value: a plain object resolves whole as the text section 4 converts it to.",
+      "section": "9.2",
+      "message": "{{user}}",
+      "payload": {
+        "user": {
+          "name": "Ann"
+        }
+      },
+      "expected": {
+        "output": "{\"name\":\"Ann\"}"
+      }
+    },
+    {
+      "id": "resolution/json-placeholder-next-pass",
+      "description": "A placeholder a serialized value carries is found and resolved on the following pass.",
+      "section": "9.2",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "a": "{{n}}"
+        },
+        "n": "N"
+      },
+      "expected": {
+        "output": "{\"a\":\"N\"}"
+      }
+    },
+    {
+      "id": "resolution/key-case-sensitive",
+      "description": "Keys are compared by exact code-point equality, so a key differing in case names no entry.",
+      "section": "9.2",
+      "message": "{{Name; default:D}}",
+      "payload": {
+        "name": "Ann"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "resolution/key-non-ascii",
+      "description": "A key may be non-ASCII text and is matched by code-point equality.",
+      "section": "9.2",
+      "message": "{{jm\u00e9no}}",
+      "payload": {
+        "jm\u00e9no": "Ann"
+      },
+      "expected": {
+        "output": "Ann"
+      }
+    },
+    {
+      "id": "resolution/key-not-normalized",
+      "description": "Matching is by code point and not by normalization, so a decomposed spelling names no entry the precomposed one does.",
+      "section": "9.2",
+      "message": "{{e\u0301; default:D}}",
+      "payload": {
+        "\u00e9": "x"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "resolution/absent-no-entry",
+      "description": "A key with no own entry is absent and takes the chain.",
+      "section": "9.2",
+      "message": "{{v; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "resolution/absent-undefined-entry",
+      "description": "An own entry that is the host's undefined is absent, and there is nothing to report.",
+      "section": "9.2",
+      "message": "{{v; default:D}}",
+      "payload": {
+        "v": {
+          "$curly": "undefined"
+        }
+      },
+      "expected": {
+        "output": "D",
+        "reports": []
+      }
+    },
+    {
+      "id": "resolution/present-zero",
+      "description": "A value of zero is present, so the placeholder renders it rather than the default.",
+      "section": "9.2",
+      "message": "{{v; default:D}}",
+      "payload": {
+        "v": 0
+      },
+      "expected": {
+        "output": "0"
+      }
+    },
+    {
+      "id": "resolution/present-empty-string",
+      "description": "An empty string is present, so the placeholder renders it rather than the default.",
+      "section": "9.2",
+      "message": "[{{v; default:D}}]",
+      "payload": {
+        "v": ""
+      },
+      "expected": {
+        "output": "[]"
+      }
+    },
+    {
+      "id": "resolution/present-false",
+      "description": "A value of false is present, pinned through a comparison so the host's spelling of false is not.",
+      "section": "9.2",
+      "message": "{{v:ne; zzz:PRESENT; default:ABSENT}}",
+      "payload": {
+        "v": false
+      },
+      "expected": {
+        "output": "PRESENT"
+      }
+    },
+    {
+      "id": "resolution/present-null",
+      "description": "The host's null is present, pinned through a comparison so the host's spelling of null is not.",
+      "section": "9.2",
+      "message": "{{v:ne; zzz:PRESENT; default:ABSENT}}",
+      "payload": {
+        "v": null
+      },
+      "expected": {
+        "output": "PRESENT"
+      }
+    },
+    {
+      "id": "resolution/inline-default-value",
+      "description": "The spelling default:x declares x.",
+      "section": "9.3",
+      "message": "{{v; default:x}}",
+      "payload": {},
+      "expected": {
+        "output": "x"
+      }
+    },
+    {
+      "id": "resolution/inline-default-empty",
+      "description": "The spelling default: declares the empty string.",
+      "section": "9.3",
+      "message": "[{{v; default:}}]",
+      "payload": {},
+      "expected": {
+        "output": "[]"
+      }
+    },
+    {
+      "id": "resolution/inline-default-bare",
+      "description": "The spelling default alone, with no colon, declares the key itself, the text default.",
+      "section": "9.3",
+      "message": "{{v; default}}",
+      "payload": {},
+      "expected": {
+        "output": "default"
+      }
+    },
+    {
+      "id": "resolution/first-default-wins",
+      "description": "The first segment named default is the inline default, and a later one does not displace it.",
+      "section": "9.3",
+      "message": "{{v; default:FIRST; default:SECOND}}",
+      "payload": {},
+      "expected": {
+        "output": "FIRST"
+      }
+    },
+    {
+      "id": "resolution/first-default-wins-when-empty",
+      "description": "An empty first default still wins over a later segment named default.",
+      "section": "9.3",
+      "message": "[{{v; default:; default:SECOND}}]",
+      "payload": {},
+      "expected": {
+        "output": "[]"
+      }
+    },
+    {
+      "id": "resolution/default-uppercase-is-option",
+      "description": "The word default is reserved in lowercase only, so DEFAULT:UPPER is an option and default:LOWER the inline default.",
+      "section": "9.3",
+      "message": "{{v; DEFAULT:UPPER; default:LOWER}}",
+      "payload": {},
+      "expected": {
+        "output": "LOWER"
+      }
+    },
+    {
+      "id": "resolution/default-mixed-case-is-option",
+      "description": "The segment Default:X is an ordinary option, so an absent value with no default renders nothing.",
+      "section": "9.3",
+      "message": "[{{v; Default:X}}]",
+      "payload": {},
+      "expected": {
+        "output": "[]"
+      }
+    },
+    {
+      "id": "resolution/default-uppercase-selects",
+      "description": "An option keyed DEFAULT selects like any other for the value that matches it, as Appendix A.1 shows.",
+      "section": "9.3",
+      "message": "{{v; DEFAULT:D}}",
+      "payload": {
+        "v": "DEFAULT"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "resolution/default-uppercase-is-not-the-fallback",
+      "description": "An option keyed DEFAULT is not the inline fallback, so an absent value renders nothing, as Appendix A.1 shows.",
+      "section": "9.3",
+      "message": "{{v; DEFAULT:D}}",
+      "payload": {},
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "resolution/default-lowercase-beside-uppercase",
+      "description": "Only the lowercase default is the inline fallback, so an absent value renders it beside an option keyed DEFAULT, as Appendix A.1 shows.",
+      "section": "9.3",
+      "message": "{{v; default:LOWER; DEFAULT:UPPER}}",
+      "payload": {},
+      "expected": {
+        "output": "LOWER"
+      }
+    },
+    {
+      "id": "resolution/payload-default-fills-every-placeholder",
+      "description": "The payload's default entry is the fallback for every placeholder in the message that resolves to no value.",
+      "section": "9.3",
+      "message": "{{a}}-{{b}}",
+      "payload": {
+        "default": "D"
+      },
+      "expected": {
+        "output": "D-D"
+      }
+    },
+    {
+      "id": "resolution/payload-default-uppercase-not-reserved",
+      "description": "The reserved payload key is default in lowercase only, so an entry named DEFAULT is not the fallback and an absent value renders nothing, as Appendix A.1 shows.",
+      "section": "9.3",
+      "message": "{{v}}",
+      "payload": {
+        "DEFAULT": "PD"
+      },
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "resolution/selection-no-match-payload-default",
+      "description": "A selection that matches nothing resolves to no value, so the payload default answers it rather than the value.",
+      "section": "9.3",
+      "message": "{{v; a:A}}",
+      "payload": {
+        "v": "RAW",
+        "default": "D"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "resolution/default-placeholder-reads-fallback",
+      "description": "The placeholder {{default}} reads the payload's fallback and not an entry of its own, so a wrapper-shaped default entry serializes as the ordinary value it is rather than unwrapping.",
+      "section": "9.3",
+      "message": "{{default}}",
+      "payload": {
+        "default": {
+          "value": "X"
+        }
+      },
+      "expected": {
+        "output": "{\"value\":\"X\"}"
+      }
+    },
+    {
+      "id": "resolution/option-key-value",
+      "description": "The form key:value yields that key and value, and a comparison selects by the key.",
+      "section": "9.4",
+      "message": "{{v; 1:ONE; 2:TWO}}",
+      "payload": {
+        "v": 2
+      },
+      "expected": {
+        "output": "TWO"
+      }
+    },
+    {
+      "id": "resolution/option-key-alone",
+      "description": "A key alone, with no colon, yields the key as both key and value.",
+      "section": "9.4",
+      "message": "{{v; 1}}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "1"
+      }
+    },
+    {
+      "id": "resolution/option-key-alone-selected-by-ne",
+      "description": "A valueless option stands for its own spelling whichever comparison selects it.",
+      "section": "9.4",
+      "message": "{{v:ne; z; default:DEF}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "z"
+      }
+    },
+    {
+      "id": "resolution/option-empty-value",
+      "description": "The form key: yields the key and the empty string, which is a value and not an absence.",
+      "section": "9.4",
+      "message": "{{v; 1:; 5:FIVE; default:DEF}}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "resolution/option-whitespace-value-empty",
+      "description": "A value that is only unescaped whitespace is empty, so x: and x: followed by a space both declare the empty string.",
+      "section": "9.4",
+      "message": "{{v; x: ; 5:FIVE; default:DEF}}",
+      "payload": {
+        "v": "x"
+      },
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "resolution/empty-option-key-declares-nothing",
+      "description": "A segment whose option key is empty declares no option even with a value, so the placeholder stays a plain substitution.",
+      "section": "9.4",
+      "message": "{{v; :X}}",
+      "payload": {
+        "v": "RAW"
+      },
+      "expected": {
+        "output": "RAW"
+      }
+    },
+    {
+      "id": "resolution/default-not-among-options",
+      "description": "The reserved key default is not an option, so a placeholder carrying only an inline default is a plain substitution that renders the value default.",
+      "section": "9.4",
+      "message": "{{v; default:D}}",
+      "payload": {
+        "v": "default"
+      },
+      "expected": {
+        "output": "default"
+      }
+    },
+    {
+      "id": "resolution/second-default-not-an-option",
+      "description": "A later segment keyed default is neither the inline default nor an option, so the placeholder stays a plain substitution over the value default.",
+      "section": "9.4",
+      "message": "{{v; default:FIRST; default:SECOND}}",
+      "payload": {
+        "v": "default"
+      },
+      "expected": {
+        "output": "default"
+      }
+    },
+    {
+      "id": "resolution/plain-substitution",
+      "description": "A placeholder with no modifier and no options is a plain substitution: the result is the value.",
+      "section": "9.5",
+      "message": "{{v}}",
+      "payload": {
+        "v": "RAW"
+      },
+      "expected": {
+        "output": "RAW"
+      }
+    },
+    {
+      "id": "resolution/selection-by-eq",
+      "description": "A placeholder with options and no modifier is a selection performed by eq.",
+      "section": "9.5",
+      "message": "{{v; a:A; b:B}}",
+      "payload": {
+        "v": "b"
+      },
+      "expected": {
+        "output": "B"
+      }
+    },
+    {
+      "id": "resolution/first-option-changes-the-question",
+      "description": "Giving a placeholder its first option makes it a selection: where no option matches, the result is the chain and never the value.",
+      "section": "9.5",
+      "message": "{{v; a:A}}",
+      "payload": {
+        "v": "RAW"
+      },
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "resolution/selection-no-match-default",
+      "description": "A selection that matches nothing renders the declared default where there is one.",
+      "section": "9.5",
+      "message": "{{v; a:A; default:D}}",
+      "payload": {
+        "v": "RAW"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "resolution/missing-options",
+      "description": "A selection naming a comparison modifier and no options is a message error: the chain, and a missing-options report against the message.",
+      "section": "9.5",
+      "message": "{{v:eq}}",
+      "payload": {
+        "v": "RAW"
+      },
+      "key": "resolution.missing-options",
+      "expected": {
+        "output": "",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "resolution.missing-options"
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution/missing-options-takes-chain",
+      "description": "A missing-options error takes the fallback chain, the inline default being no option.",
+      "section": "9.5",
+      "message": "{{v:eq; default:D}}",
+      "payload": {
+        "v": "RAW"
+      },
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message"
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution/missing-options-other-comparison",
+      "description": "Every comparison modifier of the format is subject to the error, lt among them.",
+      "section": "9.5",
+      "message": "{{v:lt; default:D}}",
+      "payload": {
+        "v": 5
+      },
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message"
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution/missing-options-absent-value",
+      "description": "The error turns on the placeholder and not the payload: it is reported over an absent value too, which takes the chain before any modifier is asked.",
+      "section": "9.5",
+      "message": "{{v:eq; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message"
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution/no-key-is-no-selection",
+      "description": "A placeholder naming no key is neither a substitution nor a selection: it takes the chain, and a comparison it names was asked nothing, so nothing is reported.",
+      "section": "9.5",
+      "message": "{{:eq; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D",
+        "reports": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,826 @@
+{
+  "format": "curly-message-1",
+  "level": "extensions",
+  "section": "11.3",
+  "cases": [
+    {
+      "id": "extensions/registers-by-name",
+      "description": "A host registers a modifier under a name, and a placeholder naming it gets that modifier's answer.",
+      "section": "11.3",
+      "message": "{{v:up}}",
+      "payload": {
+        "v": "abc"
+      },
+      "modifiers": {
+        "up": "upper"
+      },
+      "expected": {
+        "output": "ABC"
+      }
+    },
+    {
+      "id": "extensions/replaces-a-comparison",
+      "description": "A host modifier registered under a comparison's name replaces it, so the options are handed to the host modifier as written rather than selected.",
+      "section": "11.3",
+      "message": "{{v:eq; x:HIT; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "eq": "options"
+      },
+      "expected": {
+        "output": "x=HIT"
+      }
+    },
+    {
+      "id": "extensions/replaced-eq-answers-unnamed-selection",
+      "description": "A selection that names no modifier asks eq, so a host modifier registered under eq answers it.",
+      "section": "9.5",
+      "message": "{{v; x:HIT; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "eq": "upper"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "extensions/replaces-a-formatting-modifier",
+      "description": "A host modifier registered under a formatting modifier's name replaces it, so the placeholder needs no locale and reports none missing.",
+      "section": "11.3",
+      "message": "[{{v:number; default:D}}]",
+      "payload": {
+        "v": "abc"
+      },
+      "key": "extensions.replaces-number",
+      "modifiers": {
+        "number": "upper"
+      },
+      "expected": {
+        "output": "[ABC]",
+        "reports": []
+      }
+    },
+    {
+      "id": "extensions/replaced-comparison-no-options",
+      "description": "A placeholder naming a replaced comparison without options asks a host-defined modifier, so it is no message error.",
+      "section": "9.5",
+      "message": "{{v:eq}}",
+      "payload": {
+        "v": "x"
+      },
+      "key": "extensions.replaced-eq",
+      "modifiers": {
+        "eq": "echo"
+      },
+      "expected": {
+        "output": "x",
+        "reports": []
+      }
+    },
+    {
+      "id": "extensions/replaced-comparison-no-options-absent-value",
+      "description": "What answers to the name decides the report, not the payload: a replaced comparison without options is not reported over an absent value either.",
+      "section": "9.5",
+      "message": "[{{v:eq; default:d}}]",
+      "payload": {},
+      "key": "extensions.replaced-eq-absent",
+      "modifiers": {
+        "eq": "upper"
+      },
+      "expected": {
+        "output": "[d]",
+        "reports": []
+      }
+    },
+    {
+      "id": "extensions/replaced-lt-no-options",
+      "description": "missing-options names a comparison no host replaced, so a replaced lt without options reports nothing.",
+      "section": "14.2",
+      "message": "{{v:lt}}",
+      "payload": {
+        "v": "x"
+      },
+      "key": "extensions.replaced-lt",
+      "modifiers": {
+        "lt": "echo"
+      },
+      "expected": {
+        "output": "x",
+        "reports": []
+      }
+    },
+    {
+      "id": "extensions/registered-name-case-sensitive",
+      "description": "A registered name is matched case-sensitively, so a spelling differing by case names a modifier nobody registered.",
+      "section": "11",
+      "message": "[{{v:UP; default:D}}]",
+      "payload": {
+        "v": "x"
+      },
+      "key": "extensions.case",
+      "modifiers": {
+        "up": "upper"
+      },
+      "expected": {
+        "output": "[D]",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "extensions.case"
+          }
+        ]
+      }
+    },
+    {
+      "id": "extensions/unknown-beside-registered",
+      "description": "A name nobody registered is a message error beside one a host registered: the chain and one unknown-modifier report, never an equality selection.",
+      "section": "11.4",
+      "message": "{{a:up}} {{b:down; x:HIT; default:D}}",
+      "payload": {
+        "a": "x",
+        "b": "x"
+      },
+      "key": "extensions.beside",
+      "modifiers": {
+        "up": "upper"
+      },
+      "expected": {
+        "output": "X D",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "extensions.beside"
+          }
+        ]
+      }
+    },
+    {
+      "id": "extensions/nosuch-unregistered",
+      "description": "A name nobody registered resolves to the chain and is reported as unknown, which is what the non-modifier registrations of A.18 should have read as.",
+      "section": "11.4",
+      "message": "{{v:nosuch; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "key": "extensions.nosuch",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "extensions.nosuch"
+          }
+        ]
+      }
+    },
+    {
+      "id": "extensions/keyless-placeholder-does-not-ask",
+      "description": "A placeholder naming no key resolves at parse to the chain and is no selection, so the registered modifier it names is not asked and nothing is reported.",
+      "section": "9.5",
+      "message": "[{{:boom; default:d}}]",
+      "payload": {
+        "v": "x"
+      },
+      "key": "extensions.keyless",
+      "modifiers": {
+        "boom": "raise"
+      },
+      "expected": {
+        "output": "[d]",
+        "reports": []
+      }
+    },
+    {
+      "id": "extensions/absent-value-does-not-ask",
+      "description": "An absent value takes the fallback chain before any modifier is asked, so a host-defined modifier that would raise is never called.",
+      "section": "11.1",
+      "message": "[{{v:boom; default:abc}}]",
+      "payload": {},
+      "key": "extensions.absent",
+      "modifiers": {
+        "boom": "raise"
+      },
+      "expected": {
+        "output": "[abc]",
+        "reports": []
+      }
+    },
+    {
+      "id": "extensions/value-number-as-text",
+      "description": "No modifier sees a value at the type it was authored with: a number reaches it as text.",
+      "section": "11",
+      "message": "{{v:obj}}",
+      "payload": {
+        "v": 1
+      },
+      "modifiers": {
+        "obj": "object"
+      },
+      "expected": {
+        "output": "{\"answer\":\"1\"}"
+      }
+    },
+    {
+      "id": "extensions/value-plain-object-as-json",
+      "description": "A plain object reaches a host-defined modifier as its JSON serialization, so a structured value survives into one that reads it back.",
+      "section": "4",
+      "message": "{{v:obj}}",
+      "payload": {
+        "v": {
+          "a": 1
+        }
+      },
+      "modifiers": {
+        "obj": "object"
+      },
+      "expected": {
+        "output": "{\"answer\":\"{\\\"a\\\":1}\"}"
+      }
+    },
+    {
+      "id": "extensions/value-array-as-json",
+      "description": "An array reaches a host-defined modifier as its JSON serialization.",
+      "section": "4",
+      "message": "{{v:obj}}",
+      "payload": {
+        "v": [
+          1,
+          2
+        ]
+      },
+      "modifiers": {
+        "obj": "object"
+      },
+      "expected": {
+        "output": "{\"answer\":\"[1,2]\"}"
+      }
+    },
+    {
+      "id": "extensions/blank-value-reaches-modifier",
+      "description": "The blank-text rule governs formatting alone, so a value that is only whitespace reaches a host-defined modifier as that text rather than taking the chain.",
+      "section": "11.2",
+      "message": "{{v:obj; default:D}}",
+      "payload": {
+        "v": " "
+      },
+      "modifiers": {
+        "obj": "object"
+      },
+      "expected": {
+        "output": "{\"answer\":\" \"}"
+      }
+    },
+    {
+      "id": "extensions/options-as-written",
+      "description": "A modifier is handed the options in source order: a value, the empty string after a bare colon, and a valueless key standing for itself.",
+      "section": "9.4",
+      "message": "{{v:opts; a:A; b:; c}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "opts": "options"
+      },
+      "expected": {
+        "output": "a=A,b=,c=c"
+      }
+    },
+    {
+      "id": "extensions/options-keep-duplicates",
+      "description": "Collection keeps every option in source order, duplicates included, so a host-defined modifier is handed the list as the placeholder wrote it.",
+      "section": "9.4",
+      "message": "{{v:opts; a:1; b:2; a:3}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "opts": "options"
+      },
+      "expected": {
+        "output": "a=1,b=2,a=3"
+      }
+    },
+    {
+      "id": "extensions/options-exclude-inline-default",
+      "description": "The reserved key default is not among the options a modifier is handed, wherever the inline default stands.",
+      "section": "9.4",
+      "message": "{{v:opts; a:A; default:D; b:B}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "opts": "options"
+      },
+      "expected": {
+        "output": "a=A,b=B"
+      }
+    },
+    {
+      "id": "extensions/options-skip-segments-declaring-none",
+      "description": "A segment whose option key is empty declares no option, with or without a value, so none reaches the modifier.",
+      "section": "9.4",
+      "message": "{{v:opts; a:A; ; :B; c:C}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "opts": "options"
+      },
+      "expected": {
+        "output": "a=A,c=C"
+      }
+    },
+    {
+      "id": "extensions/options-none",
+      "description": "A placeholder that declares no option hands a modifier an empty list of them.",
+      "section": "9.4",
+      "message": "[{{v:opts}}]",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "opts": "options"
+      },
+      "expected": {
+        "output": "[]"
+      }
+    },
+    {
+      "id": "extensions/host-modifier-needs-no-options",
+      "description": "Whether a host-defined modifier needs options is its own business, so a placeholder naming one without options is no message error and nothing is reported.",
+      "section": "9.5",
+      "message": "{{v:own}}",
+      "payload": {
+        "v": "x"
+      },
+      "key": "extensions.own-business",
+      "modifiers": {
+        "own": "echo"
+      },
+      "expected": {
+        "output": "x",
+        "reports": []
+      }
+    },
+    {
+      "id": "extensions/default-wrapper-first",
+      "description": "The default a modifier reads is the chain of section 10, the wrapper's link first.",
+      "section": "10",
+      "message": "{{v:read; default:Inline}}",
+      "payload": {
+        "v": {
+          "value": "x",
+          "default": "W"
+        },
+        "default": "P"
+      },
+      "modifiers": {
+        "read": "default"
+      },
+      "expected": {
+        "output": "W"
+      }
+    },
+    {
+      "id": "extensions/default-payload-over-inline",
+      "description": "The payload's own default outranks the inline one in the default a modifier reads.",
+      "section": "10",
+      "message": "{{v:read; default:Inline}}",
+      "payload": {
+        "v": "x",
+        "default": "P"
+      },
+      "modifiers": {
+        "read": "default"
+      },
+      "expected": {
+        "output": "P"
+      }
+    },
+    {
+      "id": "extensions/default-inline",
+      "description": "Where no earlier link yields text, the default a modifier reads is the placeholder's inline default.",
+      "section": "10",
+      "message": "{{v:read; default:Inline}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "read": "default"
+      },
+      "expected": {
+        "output": "Inline"
+      }
+    },
+    {
+      "id": "extensions/default-empty-string",
+      "description": "Where no link of the chain yields text, the default a modifier reads is the empty string.",
+      "section": "10",
+      "message": "[{{v:read}}]",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "read": "default"
+      },
+      "expected": {
+        "output": "[]"
+      }
+    },
+    {
+      "id": "extensions/default-as-text",
+      "description": "The default reaches a modifier as the text the chain resolved to: a zero as its text, an array as JSON, neither skipped for being falsy.",
+      "section": "11",
+      "message": "{{a:read}} {{b:read}}",
+      "payload": {
+        "a": {
+          "value": "x",
+          "default": 0
+        },
+        "b": {
+          "value": "y",
+          "default": [
+            1,
+            2
+          ]
+        }
+      },
+      "modifiers": {
+        "read": "default"
+      },
+      "expected": {
+        "output": "0 [1,2]"
+      }
+    },
+    {
+      "id": "extensions/default-skips-undescribable-link",
+      "description": "A link of the chain that no conversion can describe is skipped when a modifier reads its default, and reported against the payload.",
+      "section": "10",
+      "message": "{{v:read; default:Inline}}",
+      "payload": {
+        "v": "x",
+        "default": {
+          "$curly": "unserializable"
+        }
+      },
+      "key": "extensions.undescribable-link",
+      "modifiers": {
+        "read": "default"
+      },
+      "expected": {
+        "output": "Inline",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "key": "extensions.undescribable-link"
+          }
+        ]
+      }
+    },
+    {
+      "id": "extensions/default-unread-is-not-reported",
+      "description": "A modifier that answers without its default leaves the chain unread, so a link nothing needed is neither converted nor reported.",
+      "section": "10",
+      "message": "{{v:echo}}",
+      "payload": {
+        "v": "x",
+        "default": {
+          "$curly": "unserializable"
+        }
+      },
+      "key": "extensions.unread-link",
+      "modifiers": {
+        "echo": "echo"
+      },
+      "expected": {
+        "output": "x",
+        "reports": []
+      }
+    },
+    {
+      "id": "extensions/props-layered",
+      "description": "A host-defined modifier receives its props layered as section 11.2 layers them: the defaults, then the props, then the wrapper's props, each overriding only what it names.",
+      "section": "11.3",
+      "message": "{{v:p}}",
+      "payload": {
+        "v": {
+          "value": "x",
+          "props": {
+            "p": {
+              "c": 3
+            }
+          }
+        }
+      },
+      "props": {
+        "p": {
+          "b": 2,
+          "c": 2
+        }
+      },
+      "modifiers": {
+        "p": "props"
+      },
+      "defaults": {
+        "p": {
+          "a": 1,
+          "b": 1,
+          "c": 1
+        }
+      },
+      "expected": {
+        "output": "a=1,b=2,c=3"
+      }
+    },
+    {
+      "id": "extensions/props-null-names-a-property",
+      "description": "A property a layer holds null under is one it names, so null overrides the layer beneath and reaches the modifier.",
+      "section": "11.2",
+      "message": "{{v:p}}",
+      "payload": {
+        "v": "x"
+      },
+      "props": {
+        "p": {
+          "a": null
+        }
+      },
+      "modifiers": {
+        "p": "props"
+      },
+      "defaults": {
+        "p": {
+          "a": 1,
+          "b": 2
+        }
+      },
+      "expected": {
+        "output": "a=null,b=2"
+      }
+    },
+    {
+      "id": "extensions/props-undefined-names-nothing",
+      "description": "A property a layer holds the host's undefined under is one it does not name, so the layer beneath keeps it.",
+      "section": "11.2",
+      "message": "{{v:p}}",
+      "payload": {
+        "v": "x"
+      },
+      "props": {
+        "p": {
+          "a": {
+            "$curly": "undefined"
+          }
+        }
+      },
+      "modifiers": {
+        "p": "props"
+      },
+      "defaults": {
+        "p": {
+          "a": 1,
+          "b": 2
+        }
+      },
+      "expected": {
+        "output": "a=1,b=2"
+      }
+    },
+    {
+      "id": "extensions/props-own-name-only",
+      "description": "A modifier receives what the layers wrote under its own name and nothing they wrote under another's.",
+      "section": "11.3",
+      "message": "{{v:p}}",
+      "payload": {
+        "v": {
+          "value": "x",
+          "props": {
+            "number": {
+              "z": 3
+            }
+          }
+        }
+      },
+      "props": {
+        "number": {
+          "y": 2
+        },
+        "p": {
+          "a": 1
+        }
+      },
+      "modifiers": {
+        "p": "props"
+      },
+      "defaults": {
+        "number": {
+          "x": 1
+        }
+      },
+      "expected": {
+        "output": "a=1"
+      }
+    },
+    {
+      "id": "extensions/props-none",
+      "description": "Where no layer wrote under its name, a modifier receives no properties at all, whatever the layers wrote under other names.",
+      "section": "11.3",
+      "message": "[{{v:p}}]",
+      "payload": {
+        "v": {
+          "value": "x",
+          "props": {
+            "number": {
+              "z": 3
+            }
+          }
+        }
+      },
+      "props": {
+        "number": {
+          "y": 2
+        }
+      },
+      "key": "extensions.props-none",
+      "modifiers": {
+        "p": "props"
+      },
+      "defaults": {
+        "number": {
+          "x": 1
+        }
+      },
+      "expected": {
+        "output": "[]",
+        "reports": []
+      }
+    },
+    {
+      "id": "extensions/replaced-number-props-none",
+      "description": "A host modifier registered under a formatting modifier's name receives only the three layers of section 11.3, so where none wrote under that name it receives no properties, not the defaults section 11.2 states for the modifier it replaced.",
+      "section": "11.3",
+      "message": "[{{v:number}}]",
+      "payload": {
+        "v": "x"
+      },
+      "key": "extensions.replaced-number-props-none",
+      "modifiers": {
+        "number": "props"
+      },
+      "expected": {
+        "output": "[]",
+        "reports": []
+      }
+    },
+    {
+      "id": "extensions/locale",
+      "description": "A host-defined modifier receives the locale the caller supplied.",
+      "section": "11",
+      "message": "{{v:loc}}",
+      "payload": {
+        "v": "x"
+      },
+      "locale": "cs",
+      "modifiers": {
+        "loc": "locale"
+      },
+      "expected": {
+        "output": "cs"
+      }
+    },
+    {
+      "id": "extensions/locale-none",
+      "description": "A host-defined modifier receives no locale where the caller supplied none.",
+      "section": "11",
+      "message": "{{v:loc}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "loc": "locale"
+      },
+      "expected": {
+        "output": "none"
+      }
+    },
+    {
+      "id": "extensions/locale-as-supplied",
+      "description": "A locale the caller supplied is available whatever the host makes of it, so a host-defined modifier receives it as written.",
+      "section": "11.2",
+      "message": "{{v:loc}}",
+      "payload": {
+        "v": "x"
+      },
+      "locale": "not a locale",
+      "modifiers": {
+        "loc": "locale"
+      },
+      "expected": {
+        "output": "not a locale"
+      }
+    },
+    {
+      "id": "extensions/empty-answer-is-an-answer",
+      "description": "The empty string is an answer, so the placeholder does not take the chain.",
+      "section": "11",
+      "message": "[{{v:empty; default:D}}]",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "empty": "empty"
+      },
+      "expected": {
+        "output": "[]"
+      }
+    },
+    {
+      "id": "extensions/nothing-takes-the-chain",
+      "description": "An answer that is nothing at all is no answer: the placeholder takes the chain, and no code of the closed set names the condition.",
+      "section": "11",
+      "message": "[{{v:nothing; default:D}}]",
+      "payload": {
+        "v": "x"
+      },
+      "key": "extensions.nothing",
+      "modifiers": {
+        "nothing": "nothing"
+      },
+      "expected": {
+        "output": "[D]",
+        "reports": []
+      }
+    },
+    {
+      "id": "extensions/object-answer-serializes",
+      "description": "A structured answer serializes rather than collapsing to the host's word for an object.",
+      "section": "11",
+      "message": "{{v:obj}}",
+      "payload": {
+        "v": "X"
+      },
+      "modifiers": {
+        "obj": "object"
+      },
+      "expected": {
+        "output": "{\"answer\":\"X\"}"
+      }
+    },
+    {
+      "id": "extensions/raise-is-contained",
+      "description": "A host-defined modifier that raises is contained: the placeholder resolves to the chain, which here ends in the empty string, and the failure is reported.",
+      "section": "11.3",
+      "message": "{{v:x-boom}}",
+      "payload": {
+        "v": "x"
+      },
+      "key": "extensions.raise",
+      "modifiers": {
+        "x-boom": "raise"
+      },
+      "expected": {
+        "output": "",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "extensions.raise"
+          }
+        ]
+      }
+    },
+    {
+      "id": "extensions/raise-reported-against-payload",
+      "description": "A host-defined modifier that raised is the caller's defect: failed-modifier declares the origin payload, the placeholder takes its declared default, and the rest of the message still renders.",
+      "section": "14.2",
+      "message": "[{{v:raise; default:D}}] {{w}}",
+      "payload": {
+        "v": "x",
+        "w": "w"
+      },
+      "key": "extensions.raise-origin",
+      "modifiers": {
+        "raise": "raise"
+      },
+      "expected": {
+        "output": "[D] w",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "key": "extensions.raise-origin"
+          }
+        ]
+      }
+    }
+  ]
+}

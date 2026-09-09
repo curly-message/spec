@@ -1,0 +1,76 @@
+{
+  "name": "@curly-message/conformance",
+  "version": "1.0.0-next.0",
+  "description": "Conformance fixtures and runner for the Curly Message Format.",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./index.json": "./index.json",
+    "./fixtures/*.json": "./fixtures/*.json",
+    "./schema/fixture.schema.json": "./schema/fixture.schema.json",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "curly-message-conformance": "./bin/conformance.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "pretest": "npm run build && npm run typecheck && npm run lint",
+    "test": "vitest run",
+    "build": "tsup",
+    "prepack": "npm run build",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint --fix .",
+    "manifest": "node ./bin/manifest.js",
+    "prepare": "cd .. && simple-git-hooks conformance/.simple-git-hooks.json"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "fixtures",
+    "index.json",
+    "schema"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/curly-message/spec.git",
+    "directory": "conformance"
+  },
+  "keywords": [
+    "curly-message",
+    "conformance",
+    "fixtures",
+    "i18n",
+    "internationalization",
+    "translations",
+    "interpolation"
+  ],
+  "author": "Jarda Svoboda",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/curly-message/spec/issues"
+  },
+  "homepage": "https://github.com/curly-message/spec/tree/main/conformance#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@types/node": "^22.20.1",
+    "ajv": "^8.20.0",
+    "eslint": "^10.8.1",
+    "eslint-plugin-import-x": "^4.17.1",
+    "globals": "^17.11.0",
+    "simple-git-hooks": "^2.13.1",
+    "tsup": "^8.0.1",
+    "typescript": "^5.1.6",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^4.1.10"
+  }
+}

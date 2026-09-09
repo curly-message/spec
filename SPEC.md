@@ -56,8 +56,9 @@ format's (section 11.3).
 
 Conformance is tested by the implementation-independent fixture set
 `@curly-message/conformance`, which targets a stated version of this document.
-That set is not published yet, so until it is, an implementation is assessed
-against this document alone.
+That set is developed in the `conformance/` directory of this document's
+repository and is not published yet, so until it is, an implementation is
+assessed against this document alone.
 
 An implementation states the levels it satisfies and the limits it permits to
 that set through the adapter of section 14.3.

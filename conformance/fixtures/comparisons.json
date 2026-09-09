@@ -1,0 +1,916 @@
+{
+  "format": "curly-message-1",
+  "level": "core",
+  "section": "11.1",
+  "cases": [
+    {
+      "id": "comparisons/eq-selects-equal-key",
+      "description": "eq selects the first option whose key equals the value.",
+      "section": "11.1",
+      "message": "{{v:eq; a:A; b:B; default:D}}",
+      "payload": {
+        "v": "b"
+      },
+      "expected": {
+        "output": "B"
+      }
+    },
+    {
+      "id": "comparisons/eq-when-no-modifier-named",
+      "description": "A placeholder with options and no modifier selects as eq.",
+      "section": "9.5",
+      "message": "{{v; a:A; b:B; default:D}}",
+      "payload": {
+        "v": "b"
+      },
+      "expected": {
+        "output": "B"
+      }
+    },
+    {
+      "id": "comparisons/eq-compares-as-text",
+      "description": "eq compares as text, so a key spelled differently from the value does not select however the two compare as numbers.",
+      "section": "11.1",
+      "message": "{{v:eq; 1.0:X; default:D}}",
+      "payload": {
+        "v": "1"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/count-and-noun-one",
+      "description": "The count and the noun are two placeholders, and the noun selects on the value as text: 1 file.",
+      "section": "11.1",
+      "message": "{{n}} {{n; 1:file; default:files;}}",
+      "payload": {
+        "n": 1
+      },
+      "expected": {
+        "output": "1 file"
+      }
+    },
+    {
+      "id": "comparisons/count-and-noun-five",
+      "description": "The count and the noun are two placeholders, and the noun selects on the value as text: 5 files.",
+      "section": "11.1",
+      "message": "{{n}} {{n; 1:file; default:files;}}",
+      "payload": {
+        "n": 5
+      },
+      "expected": {
+        "output": "5 files"
+      }
+    },
+    {
+      "id": "comparisons/grouped-key-does-not-equal",
+      "description": "An option key is compared against the value's own text, so a grouped key does not equal the ungrouped value.",
+      "section": "11.1",
+      "message": "{{n; 1,000:K; default:files;}}",
+      "payload": {
+        "n": 1000
+      },
+      "expected": {
+        "output": "files"
+      }
+    },
+    {
+      "id": "comparisons/eq-case-insensitive-key",
+      "description": "eq compares case-insensitively: an upper-case key selects for a lower-case value.",
+      "section": "11.1",
+      "message": "{{v:eq; YES:A; default:D}}",
+      "payload": {
+        "v": "yes"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "comparisons/eq-case-insensitive-mixed",
+      "description": "eq compares case-insensitively whatever the mix of cases on either side.",
+      "section": "11.1",
+      "message": "{{v:eq; yEs:A; default:D}}",
+      "payload": {
+        "v": "YeS"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "comparisons/eq-no-case-fold",
+      "description": "The mapping is a lower-casing and not a case fold, so a key STRASSE does not select for the value stra\u00dfe.",
+      "section": "11.1",
+      "message": "{{v:eq; STRASSE:X; default:D}}",
+      "payload": {
+        "v": "stra\u00dfe"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/ne-no-case-fold",
+      "description": "Under ne the key STRASSE differs from the value stra\u00dfe, because a lower-casing leaves the two apart.",
+      "section": "11.1",
+      "message": "{{v:ne; STRASSE:X; default:D}}",
+      "payload": {
+        "v": "stra\u00dfe"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/eq-no-normalization",
+      "description": "The comparison is by code-point equality, so a precomposed key does not select for a decomposed value.",
+      "section": "11.1",
+      "message": "{{v:eq; \u00e9:X; default:D}}",
+      "payload": {
+        "v": "e\u0301"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/eq-no-collation",
+      "description": "The comparison is not a collation, so an unaccented key does not select for an accented value.",
+      "section": "11.1",
+      "message": "{{v:eq; e:X; default:D}}",
+      "payload": {
+        "v": "\u00e9"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/eq-not-tailored-to-locale",
+      "description": "The case mapping is locale-independent, so a key I selects for the value i under a Turkish locale.",
+      "section": "11.1",
+      "message": "{{v:eq; I:X; default:D}}",
+      "payload": {
+        "v": "i"
+      },
+      "locale": "tr",
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/eq-dotless-i-not-tailored",
+      "description": "The case mapping is locale-independent, so a key I does not select for a dotless i under a Turkish locale.",
+      "section": "11.1",
+      "message": "{{v:eq; I:X; default:D}}",
+      "payload": {
+        "v": "\u0131"
+      },
+      "locale": "tr",
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/eq-without-locale",
+      "description": "A comparison resolves alike where no locale is available at all.",
+      "section": "11.1",
+      "message": "{{v:eq; I:X; default:D}}",
+      "payload": {
+        "v": "i"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/ne-not-tailored-to-locale",
+      "description": "Under ne the key I equals the value i under a Turkish locale, so nothing differs and the placeholder takes the chain.",
+      "section": "11.1",
+      "message": "{{v:ne; I:X; default:D}}",
+      "payload": {
+        "v": "i"
+      },
+      "locale": "tr",
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/ne-selects-first-differing-key",
+      "description": "ne selects the first option whose key differs from the value.",
+      "section": "11.1",
+      "message": "{{v:ne; a:A; b:B; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "B"
+      }
+    },
+    {
+      "id": "comparisons/ne-no-differing-key-takes-chain",
+      "description": "Where every key equals the value, ne selects nothing and the placeholder takes the chain.",
+      "section": "11.1",
+      "message": "{{v:ne; 10:V2; default:D}}",
+      "payload": {
+        "v": 10
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/ne-case-insensitive",
+      "description": "ne compares case-insensitively, so a key differing from the value only by case does not differ.",
+      "section": "11.1",
+      "message": "{{v:ne; YES:A; NO:B; default:D}}",
+      "payload": {
+        "v": "yes"
+      },
+      "expected": {
+        "output": "B"
+      }
+    },
+    {
+      "id": "comparisons/ne-differs-as-text",
+      "description": "ne compares as text, so a key numerically equal to the value but spelled differently differs.",
+      "section": "11.1",
+      "message": "{{v:ne; 1.0:X; default:D}}",
+      "payload": {
+        "v": "1"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/ne-absent-takes-chain",
+      "description": "An absent value takes the fallback chain under ne like every other modifier.",
+      "section": "11.1",
+      "message": "{{v:ne; 10:V2; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/eq-absent-takes-chain",
+      "description": "An absent value takes the fallback chain under eq, as under every other modifier.",
+      "section": "11.1",
+      "message": "{{v:eq; 10:V2; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/ne-absent-is-not-a-text",
+      "description": "An absent value is never compared, so an option keyed with the host's word for nothing does not select under ne.",
+      "section": "11.1",
+      "message": "{{v:ne; undefined:U; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/ne-absent-without-default",
+      "description": "An absent value under ne takes the chain down to the empty string where nothing declares a default.",
+      "section": "11.1",
+      "message": "{{v:ne; a:A; b:B}}",
+      "payload": {},
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "comparisons/ne-undefined-entry-is-absent",
+      "description": "An own entry that is the host's undefined is absent, and takes the chain under ne.",
+      "section": "11.1",
+      "message": "{{v:ne; 10:V2; default:D}}",
+      "payload": {
+        "v": {
+          "$curly": "undefined"
+        }
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/absent-takes-chain-under-every-comparison",
+      "description": "An absent value takes the fallback chain under every comparison modifier.",
+      "section": "11.1",
+      "message": "{{v:eq; 1:X; default:D}}, {{v:ne; 1:X; default:D}}, {{v:lt; 1:X; default:D}}, {{v:gt; 1:X; default:D}}, {{v:lte; 1:X; default:D}}, {{v:gte; 1:X; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D, D, D, D, D, D"
+      }
+    },
+    {
+      "id": "comparisons/lt-selects-greater-key",
+      "description": "lt selects the first option whose key is greater than the value.",
+      "section": "11.1",
+      "message": "{{v:lt; 1:VALUE1; 10:VALUE2; default:D}}",
+      "payload": {
+        "v": 5
+      },
+      "expected": {
+        "output": "VALUE2"
+      }
+    },
+    {
+      "id": "comparisons/lt-equal-key-is-not-greater",
+      "description": "A key equal to the value is not greater than it, so lt selects nothing.",
+      "section": "11.1",
+      "message": "{{v:lt; 1:VALUE1; 10:VALUE2; default:D}}",
+      "payload": {
+        "v": 10
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/gt-selects-lesser-key",
+      "description": "gt selects the first option whose key is less than the value.",
+      "section": "11.1",
+      "message": "{{v:gt; 1:VALUE1; 10:VALUE2; default:D}}",
+      "payload": {
+        "v": 15
+      },
+      "expected": {
+        "output": "VALUE2"
+      }
+    },
+    {
+      "id": "comparisons/gt-equal-key-is-not-lesser",
+      "description": "A key equal to the value is not less than it, so gt selects nothing.",
+      "section": "11.1",
+      "message": "{{v:gt; 1:VALUE1; 10:VALUE2; default:D}}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/gt-equal-key-verbatim",
+      "description": "A key equal to the value is not less than it, so gt selects nothing and takes the chain.",
+      "section": "11.1",
+      "message": "{{v:gt; 1:ONE; default:D}}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "D",
+        "reports": []
+      }
+    },
+    {
+      "id": "comparisons/lt-compares-numerically",
+      "description": "lt compares numerically, so 10 is greater than 9 though it sorts before it as text.",
+      "section": "11.1",
+      "message": "{{v:lt; 10:TEN; default:D}}",
+      "payload": {
+        "v": "9"
+      },
+      "expected": {
+        "output": "TEN"
+      }
+    },
+    {
+      "id": "comparisons/gt-compares-numerically",
+      "description": "gt compares numerically, so 9 is less than 10 though it sorts after it as text.",
+      "section": "11.1",
+      "message": "{{v:gt; 9:NINE; default:D}}",
+      "payload": {
+        "v": "10"
+      },
+      "expected": {
+        "output": "NINE"
+      }
+    },
+    {
+      "id": "comparisons/lt-ascending-key-order",
+      "description": "lt considers options in ascending numeric key order, not in source order.",
+      "section": "11.1",
+      "message": "{{v:lt; 10:TEN; 5:FIVE; default:D}}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "FIVE"
+      }
+    },
+    {
+      "id": "comparisons/gt-descending-key-order",
+      "description": "gt considers options in descending numeric key order, not in source order.",
+      "section": "11.1",
+      "message": "{{v:gt; 5:FIVE; 10:TEN; default:D}}",
+      "payload": {
+        "v": 20
+      },
+      "expected": {
+        "output": "TEN"
+      }
+    },
+    {
+      "id": "comparisons/lt-skips-non-numeric-key",
+      "description": "An option whose key is not numeric is never selected by lt, and the numeric keys around it are ordered.",
+      "section": "11.1",
+      "message": "{{v:lt; 10:TEN; abc:ABC; 5:FIVE; default:D}}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "FIVE"
+      }
+    },
+    {
+      "id": "comparisons/gt-skips-non-numeric-key",
+      "description": "An option whose key is not numeric is never selected by gt, and the numeric keys around it are ordered.",
+      "section": "11.1",
+      "message": "{{v:gt; 5:FIVE; abc:ABC; 10:TEN; default:D}}",
+      "payload": {
+        "v": 20
+      },
+      "expected": {
+        "output": "TEN"
+      }
+    },
+    {
+      "id": "comparisons/lt-non-numeric-key-only-takes-chain",
+      "description": "Where the only option has a non-numeric key, a numeric comparison selects nothing.",
+      "section": "11.1",
+      "message": "{{v:lt; abc:ABC; default:D}}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/lt-tie-source-order",
+      "description": "Keys 2 and 2.0 tie under lt, and the tie is broken by source order.",
+      "section": "11.1",
+      "message": "{{v:lt; 2:FIRST; 2.0:SECOND; default:D}}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "FIRST"
+      }
+    },
+    {
+      "id": "comparisons/lt-tie-source-order-reversed",
+      "description": "Keys 2.0 and 2 tie under lt, and the tie is broken by source order.",
+      "section": "11.1",
+      "message": "{{v:lt; 2.0:FIRST; 2:SECOND; default:D}}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "FIRST"
+      }
+    },
+    {
+      "id": "comparisons/gt-tie-source-order",
+      "description": "Keys 2 and 2.0 tie under gt, and the tie is broken by source order.",
+      "section": "11.1",
+      "message": "{{v:gt; 2:FIRST; 2.0:SECOND; default:D}}",
+      "payload": {
+        "v": 3
+      },
+      "expected": {
+        "output": "FIRST"
+      }
+    },
+    {
+      "id": "comparisons/gt-tie-source-order-reversed",
+      "description": "Keys 2.0 and 2 tie under gt, and the tie is broken by source order.",
+      "section": "11.1",
+      "message": "{{v:gt; 2.0:FIRST; 2:SECOND; default:D}}",
+      "payload": {
+        "v": 3
+      },
+      "expected": {
+        "output": "FIRST"
+      }
+    },
+    {
+      "id": "comparisons/partly-numeric-value-is-not-a-number",
+      "description": "The numeric conversion reads the whole value, so 12px is not a number and the comparison fails.",
+      "section": "11.2",
+      "message": "{{v:gt; 5:X; default:D}}",
+      "payload": {
+        "v": "12px"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/whitespace-around-a-number",
+      "description": "Whitespace around a number is not part of it, so a padded value compares as the number.",
+      "section": "11.2",
+      "message": "{{v:gt; 5:X; default:D}}",
+      "payload": {
+        "v": " 12 "
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/signed-number",
+      "description": "A sign is part of a number, so a signed value compares as the number.",
+      "section": "11.2",
+      "message": "{{v:gt; 5:X; default:D}}",
+      "payload": {
+        "v": "+12"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/exponent-number",
+      "description": "An exponent is part of a number, so 1e3 compares as one thousand.",
+      "section": "11.2",
+      "message": "{{v:gt; 5:X; default:D}}",
+      "payload": {
+        "v": "1e3"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/infinity-compares",
+      "description": "A comparison over an infinity still selects, though no formatting modifier could format it.",
+      "section": "11.2",
+      "message": "{{v:gt; 5:X}}",
+      "payload": {
+        "v": "Infinity"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/lte-equal-key-selects",
+      "description": "lte selects an option whose key equals the value.",
+      "section": "11.1",
+      "message": "{{v:lte; 1:VALUE1; 10:VALUE2; default:D}}",
+      "payload": {
+        "v": 10
+      },
+      "expected": {
+        "output": "VALUE2"
+      }
+    },
+    {
+      "id": "comparisons/lte-otherwise-as-lt",
+      "description": "Where no key equals the value, lte selects as lt does.",
+      "section": "11.1",
+      "message": "{{v:lte; 1:VALUE1; 10:VALUE2; default:D}}",
+      "payload": {
+        "v": 5
+      },
+      "expected": {
+        "output": "VALUE2"
+      }
+    },
+    {
+      "id": "comparisons/lte-none-takes-chain",
+      "description": "Where no key equals the value and none is greater, lte takes the chain.",
+      "section": "11.1",
+      "message": "{{v:lte; 1:VALUE1; 10:VALUE2; default:D}}",
+      "payload": {
+        "v": 11
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/gte-equal-key-selects",
+      "description": "gte selects an option whose key equals the value.",
+      "section": "11.1",
+      "message": "{{v:gte; 1:VALUE1; 10:VALUE2; default:D}}",
+      "payload": {
+        "v": 10
+      },
+      "expected": {
+        "output": "VALUE2"
+      }
+    },
+    {
+      "id": "comparisons/gte-otherwise-as-gt",
+      "description": "Where no key equals the value, gte selects as gt does, in descending key order.",
+      "section": "11.1",
+      "message": "{{v:gte; 1:VALUE1; 10:VALUE2; default:D}}",
+      "payload": {
+        "v": 5
+      },
+      "expected": {
+        "output": "VALUE1"
+      }
+    },
+    {
+      "id": "comparisons/gte-none-takes-chain",
+      "description": "Where no key equals the value and none is less, gte takes the chain.",
+      "section": "11.1",
+      "message": "{{v:gte; 1:VALUE1; 10:VALUE2; default:D}}",
+      "payload": {
+        "v": 0
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/lte-equality-before-order",
+      "description": "lte compares for equality before it reaches the key order, so an equal key wins over a greater one.",
+      "section": "11.1",
+      "message": "{{v:lte; 10:TEN; 20:TWENTY; default:D}}",
+      "payload": {
+        "v": 10
+      },
+      "expected": {
+        "output": "TEN"
+      }
+    },
+    {
+      "id": "comparisons/gte-equality-before-order",
+      "description": "gte compares for equality before it reaches the key order, so an equal key wins over a lesser one.",
+      "section": "11.1",
+      "message": "{{v:gte; 5:FIVE; 10:TEN; default:D}}",
+      "payload": {
+        "v": 10
+      },
+      "expected": {
+        "output": "TEN"
+      }
+    },
+    {
+      "id": "comparisons/lte-equality-leg-is-text",
+      "description": "The equality leg of lte is a text comparison, so it selects a key that is not numeric.",
+      "section": "11.1",
+      "message": "{{v:lte; abc:X}}",
+      "payload": {
+        "v": "abc"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/gte-equality-leg-is-text",
+      "description": "The equality leg of gte is a text comparison, so it selects a key that is not numeric.",
+      "section": "11.1",
+      "message": "{{v:gte; abc:X; default:D}}",
+      "payload": {
+        "v": "abc"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/lte-equality-leg-over-every-option",
+      "description": "The equality leg of lte runs over every option, so a non-numeric key after a numeric one is still selected.",
+      "section": "11.1",
+      "message": "{{v:lte; 10:TEN; abc:X; default:D}}",
+      "payload": {
+        "v": "abc"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/gte-equality-leg-over-every-option",
+      "description": "The equality leg of gte runs over every option, so a non-numeric key before a numeric one is still selected.",
+      "section": "11.1",
+      "message": "{{v:gte; abc:X; 5:FIVE; default:D}}",
+      "payload": {
+        "v": "abc"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/lte-equality-case-insensitive",
+      "description": "The equality leg of lte compares case-insensitively.",
+      "section": "11.1",
+      "message": "{{v:lte; ABC:X; default:D}}",
+      "payload": {
+        "v": "abc"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/gte-equality-case-insensitive",
+      "description": "The equality leg of gte compares case-insensitively.",
+      "section": "11.1",
+      "message": "{{v:gte; ABC:X; default:D}}",
+      "payload": {
+        "v": "abc"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/lte-equality-is-not-numeric",
+      "description": "The equality leg of lte is text rather than numeric, and the numeric leg is strict, so a key of 2.0 selects nothing for the value 2.",
+      "section": "11.1",
+      "message": "{{v:lte; 2.0:X; default:D}}",
+      "payload": {
+        "v": "2"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/lte-numeric-leg-ascending",
+      "description": "The numeric leg of lte considers options in ascending key order.",
+      "section": "11.1",
+      "message": "{{v:lte; 10:TEN; 5:FIVE; default:D}}",
+      "payload": {
+        "v": 3
+      },
+      "expected": {
+        "output": "FIVE"
+      }
+    },
+    {
+      "id": "comparisons/gte-numeric-leg-descending",
+      "description": "The numeric leg of gte considers options in descending key order.",
+      "section": "11.1",
+      "message": "{{v:gte; 5:FIVE; 10:TEN; default:D}}",
+      "payload": {
+        "v": 20
+      },
+      "expected": {
+        "output": "TEN"
+      }
+    },
+    {
+      "id": "comparisons/gte-numeric-leg-skips-non-numeric",
+      "description": "The numeric leg of gte never selects an option whose key is not numeric.",
+      "section": "11.1",
+      "message": "{{v:gte; abc:ABC; 5:FIVE; default:D}}",
+      "payload": {
+        "v": 7
+      },
+      "expected": {
+        "output": "FIVE"
+      }
+    },
+    {
+      "id": "comparisons/no-selection-takes-inline-default",
+      "description": "Where no option is selected, the result is the fallback chain: the inline default.",
+      "section": "11.1",
+      "message": "{{v:eq; a:A; b:B; default:D}}",
+      "payload": {
+        "v": "c"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/no-selection-takes-payload-default",
+      "description": "Where no option is selected, the chain is read in its order: the payload's default outranks the inline one.",
+      "section": "11.1",
+      "message": "{{v:eq; a:A; default:D}}",
+      "payload": {
+        "v": "c",
+        "default": "P"
+      },
+      "expected": {
+        "output": "P"
+      }
+    },
+    {
+      "id": "comparisons/selection-is-never-the-value",
+      "description": "A placeholder with an option asks which option matches, so where none does the result is never the value itself.",
+      "section": "9.5",
+      "message": "{{v; a:A;}}",
+      "payload": {
+        "v": "RAW"
+      },
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "comparisons/eq-first-of-shared-key",
+      "description": "Where two options share a key, eq selects the first.",
+      "section": "9.4",
+      "message": "{{v:eq; a:first; a:second}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "first"
+      }
+    },
+    {
+      "id": "comparisons/eq-first-of-shared-key-by-case",
+      "description": "eq selects the first option whose key equals the value case-insensitively, so an earlier key differing only by case wins.",
+      "section": "11.1",
+      "message": "{{v:eq; a:first; A:second}}",
+      "payload": {
+        "v": "A"
+      },
+      "expected": {
+        "output": "first"
+      }
+    },
+    {
+      "id": "comparisons/lte-first-of-shared-key",
+      "description": "Where two options share a key, the equality leg of lte selects the first.",
+      "section": "9.4",
+      "message": "{{v:lte; 2:first; 2:second}}",
+      "payload": {
+        "v": 2
+      },
+      "expected": {
+        "output": "first"
+      }
+    },
+    {
+      "id": "comparisons/gte-first-of-shared-key",
+      "description": "Where two options share a key, the equality leg of gte selects the first.",
+      "section": "9.4",
+      "message": "{{v:gte; 2:first; 2:second}}",
+      "payload": {
+        "v": 2
+      },
+      "expected": {
+        "output": "first"
+      }
+    },
+    {
+      "id": "comparisons/ne-first-of-shared-key",
+      "description": "Where two options share a key that differs from the value, ne selects the first.",
+      "section": "9.4",
+      "message": "{{v:ne; a:first; b:second; b:third}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "second"
+      }
+    },
+    {
+      "id": "comparisons/lt-first-of-shared-key",
+      "description": "Where two options share a key, the numeric leg selects the first.",
+      "section": "9.4",
+      "message": "{{v:lt; 5:first; 5:second; default:D}}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "first"
+      }
+    },
+    {
+      "id": "comparisons/empty-value-is-compared",
+      "description": "An empty string is present, so it is compared rather than taking the chain.",
+      "section": "9.2",
+      "message": "{{v:ne; a:A; default:D}}",
+      "payload": {
+        "v": ""
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "comparisons/zero-is-compared",
+      "description": "Zero is present, so it is compared rather than taking the chain.",
+      "section": "9.2",
+      "message": "{{v:eq; 0:ZERO; default:D}}",
+      "payload": {
+        "v": 0
+      },
+      "expected": {
+        "output": "ZERO"
+      }
+    }
+  ]
+}

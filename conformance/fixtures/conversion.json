@@ -1,0 +1,231 @@
+{
+  "format": "curly-message-1",
+  "level": "core",
+  "section": "4",
+  "cases": [
+    {
+      "id": "conversion/plain-object-json",
+      "description": "A plain object value is converted with the host's JSON serialization.",
+      "section": "4",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "a": 1,
+          "b": "x"
+        }
+      },
+      "expected": {
+        "output": "{\"a\":1,\"b\":\"x\"}"
+      }
+    },
+    {
+      "id": "conversion/array-json",
+      "description": "An array value is converted with the host's JSON serialization.",
+      "section": "4",
+      "message": "{{v}}",
+      "payload": {
+        "v": [
+          1,
+          2
+        ]
+      },
+      "expected": {
+        "output": "[1,2]"
+      }
+    },
+    {
+      "id": "conversion/nested-json",
+      "description": "A structured value serializes whole, the objects, arrays and JSON literals it nests included.",
+      "section": "4",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "a": {
+            "b": [
+              1,
+              {
+                "c": null
+              }
+            ]
+          },
+          "d": true
+        }
+      },
+      "expected": {
+        "output": "{\"a\":{\"b\":[1,{\"c\":null}]},\"d\":true}"
+      }
+    },
+    {
+      "id": "conversion/empty-array-json",
+      "description": "An empty array is a present value that serializes to its own two brackets.",
+      "section": "4",
+      "message": "{{v; default:D}}",
+      "payload": {
+        "v": []
+      },
+      "expected": {
+        "output": "[]"
+      }
+    },
+    {
+      "id": "conversion/string-not-serialized",
+      "description": "A string is converted with the ordinary string conversion, so it reaches the output without the quotes a serialization would add.",
+      "section": "4",
+      "message": "{{v}}",
+      "payload": {
+        "v": "a b"
+      },
+      "expected": {
+        "output": "a b"
+      }
+    },
+    {
+      "id": "conversion/number-string-conversion",
+      "description": "A number reaches the output as the text the host's ordinary string conversion produces.",
+      "section": "4",
+      "message": "{{v}}",
+      "payload": {
+        "v": 42
+      },
+      "expected": {
+        "output": "42"
+      }
+    },
+    {
+      "id": "conversion/number-reaches-comparison-as-text",
+      "description": "A number reaches an option comparison as text, so an option keyed with its spelling matches it.",
+      "section": "4",
+      "message": "{{v; 42:HIT; default:MISS}}",
+      "payload": {
+        "v": 42
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "conversion/array-reaches-comparison-as-text",
+      "description": "A value reaches an option comparison as the text it converts to, an array as its JSON.",
+      "section": "4",
+      "message": "{{v; [1,2]:HIT; default:MISS}}",
+      "payload": {
+        "v": [
+          1,
+          2
+        ]
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "conversion/unserializable-takes-chain",
+      "description": "A value no conversion can describe is treated as absent: the placeholder takes the chain, and the condition is reported against the payload.",
+      "section": "4",
+      "message": "{{v; default:D}}",
+      "payload": {
+        "v": {
+          "$curly": "unserializable"
+        }
+      },
+      "key": "conversion.unserializable",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "key": "conversion.unserializable"
+          }
+        ]
+      }
+    },
+    {
+      "id": "conversion/unserializable-reads-payload-default",
+      "description": "A value no conversion can describe is absent the way a missing entry is, so the payload's own default fills the placeholder.",
+      "section": "4",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "$curly": "unserializable"
+        },
+        "default": "P"
+      },
+      "expected": {
+        "output": "P",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload"
+          }
+        ]
+      }
+    },
+    {
+      "id": "conversion/unserializable-without-default",
+      "description": "A value no conversion can describe does not raise: with no link of the chain to take, the placeholder is the empty string.",
+      "section": "4",
+      "message": "[{{v}}]",
+      "payload": {
+        "v": {
+          "$curly": "unserializable"
+        }
+      },
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload"
+          }
+        ]
+      }
+    },
+    {
+      "id": "conversion/numeric-comparison-converts-text",
+      "description": "A numeric comparison converts the value's text with the host's ordinary numeric conversion, so a string spelling a number compares as one.",
+      "section": "4",
+      "message": "{{v:gt; 1:X; default:D}}",
+      "payload": {
+        "v": "5"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "conversion/numeric-comparison-converts-key",
+      "description": "An option key is converted numerically the same way, so a key with a fraction orders against the value.",
+      "section": "4",
+      "message": "{{v:lt; 2.5:X; default:D}}",
+      "payload": {
+        "v": 2
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "conversion/numeric-conversion-failure-is-no-error",
+      "description": "A value whose numeric conversion yields no number fails the comparison and takes the chain, and nothing is reported.",
+      "section": "4",
+      "message": "{{v:lt; 10:X; default:D}}",
+      "payload": {
+        "v": "abc"
+      },
+      "expected": {
+        "output": "D",
+        "reports": []
+      }
+    },
+    {
+      "id": "conversion/message-number",
+      "description": "A message a host wrote as a number resolves to a string, the text its conversion produces.",
+      "section": "4",
+      "message": 42,
+      "expected": {
+        "output": "42"
+      }
+    }
+  ]
+}

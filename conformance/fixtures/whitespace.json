@@ -1,0 +1,1000 @@
+{
+  "format": "curly-message-1",
+  "level": "core",
+  "section": "8",
+  "cases": [
+    {
+      "id": "whitespace/key-padding",
+      "description": "Whitespace surrounding the key is not significant, so the padded spelling is not the key looked up.",
+      "message": "{{ v }}",
+      "payload": {
+        " v ": "PADDED",
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "whitespace/modifier-name-padding",
+      "description": "Whitespace surrounding the modifier name is not significant.",
+      "message": "{{v: eq ; a:A; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/option-key-padding",
+      "description": "Whitespace surrounding an option key is not significant.",
+      "message": "{{v;  a  :A; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/inline-default-key-padding",
+      "description": "Whitespace surrounding the inline default key is not significant, so the segment is still the inline default.",
+      "message": "{{v; default :D}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "whitespace/option-value-padding",
+      "description": "Whitespace surrounding an option value is not significant.",
+      "message": "{{v; a: A ; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/inline-default-value-padding",
+      "description": "Whitespace surrounding the inline default value is not significant.",
+      "message": "{{v; default: D }}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "whitespace/option-value-inner-kept",
+      "description": "Whitespace inside an option value is significant.",
+      "message": "{{v; a:X Y; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "X Y"
+      }
+    },
+    {
+      "id": "whitespace/inline-default-inner-kept",
+      "description": "Whitespace inside an inline default value is significant while the whitespace around every part of the placeholder is not.",
+      "message": "{{ value : eq  ; option1 : VALUE1  ; option2 : VALUE2  ; default : DEFAULT VALUE  ;}}",
+      "payload": {},
+      "expected": {
+        "output": "DEFAULT VALUE"
+      }
+    },
+    {
+      "id": "whitespace/spaced-selection",
+      "description": "A selection padded around its key, modifier name, option keys and option values selects as the unpadded one does.",
+      "message": "{{ value : eq  ; option1 : VALUE1  ; option2 : VALUE2  ; default : DEFAULT VALUE  ;}}",
+      "payload": {
+        "value": "option2"
+      },
+      "expected": {
+        "output": "VALUE2"
+      }
+    },
+    {
+      "id": "whitespace/outside-placeholder-is-text",
+      "description": "The rules apply within a placeholder, so whitespace around one is text.",
+      "message": "\u3000{{v}}\u3000",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "\u3000HIT\u3000"
+      }
+    },
+    {
+      "id": "whitespace/value-untouched",
+      "description": "A value is not a part of the placeholder, so its whitespace is kept.",
+      "message": "[{{v}}]",
+      "payload": {
+        "v": " x "
+      },
+      "expected": {
+        "output": "[ x ]"
+      }
+    },
+    {
+      "id": "whitespace/u0009-pads-every-part",
+      "description": "U+0009 (character tabulation) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u0009v\u0009:\u0009eq\u0009;\u0009a\u0009:\u0009A\u0009;\u0009default\u0009:\u0009D\u0009}}",
+      "payload": {
+        "v": "a",
+        "\u0009v\u0009": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u000b-pads-every-part",
+      "description": "U+000B (line tabulation) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u000bv\u000b:\u000beq\u000b;\u000ba\u000b:\u000bA\u000b;\u000bdefault\u000b:\u000bD\u000b}}",
+      "payload": {
+        "v": "a",
+        "\u000bv\u000b": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u000c-pads-every-part",
+      "description": "U+000C (form feed) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u000cv\u000c:\u000ceq\u000c;\u000ca\u000c:\u000cA\u000c;\u000cdefault\u000c:\u000cD\u000c}}",
+      "payload": {
+        "v": "a",
+        "\u000cv\u000c": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u0020-pads-every-part",
+      "description": "U+0020 (space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{ v : eq ; a : A ; default : D }}",
+      "payload": {
+        "v": "a",
+        " v ": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u00a0-pads-every-part",
+      "description": "U+00A0 (no-break space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u00a0v\u00a0:\u00a0eq\u00a0;\u00a0a\u00a0:\u00a0A\u00a0;\u00a0default\u00a0:\u00a0D\u00a0}}",
+      "payload": {
+        "v": "a",
+        "\u00a0v\u00a0": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u1680-pads-every-part",
+      "description": "U+1680 (ogham space mark) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u1680v\u1680:\u1680eq\u1680;\u1680a\u1680:\u1680A\u1680;\u1680default\u1680:\u1680D\u1680}}",
+      "payload": {
+        "v": "a",
+        "\u1680v\u1680": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u2000-pads-every-part",
+      "description": "U+2000 (en quad) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u2000v\u2000:\u2000eq\u2000;\u2000a\u2000:\u2000A\u2000;\u2000default\u2000:\u2000D\u2000}}",
+      "payload": {
+        "v": "a",
+        "\u2000v\u2000": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u2001-pads-every-part",
+      "description": "U+2001 (em quad) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u2001v\u2001:\u2001eq\u2001;\u2001a\u2001:\u2001A\u2001;\u2001default\u2001:\u2001D\u2001}}",
+      "payload": {
+        "v": "a",
+        "\u2001v\u2001": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u2002-pads-every-part",
+      "description": "U+2002 (en space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u2002v\u2002:\u2002eq\u2002;\u2002a\u2002:\u2002A\u2002;\u2002default\u2002:\u2002D\u2002}}",
+      "payload": {
+        "v": "a",
+        "\u2002v\u2002": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u2003-pads-every-part",
+      "description": "U+2003 (em space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u2003v\u2003:\u2003eq\u2003;\u2003a\u2003:\u2003A\u2003;\u2003default\u2003:\u2003D\u2003}}",
+      "payload": {
+        "v": "a",
+        "\u2003v\u2003": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u2004-pads-every-part",
+      "description": "U+2004 (three-per-em space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u2004v\u2004:\u2004eq\u2004;\u2004a\u2004:\u2004A\u2004;\u2004default\u2004:\u2004D\u2004}}",
+      "payload": {
+        "v": "a",
+        "\u2004v\u2004": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u2005-pads-every-part",
+      "description": "U+2005 (four-per-em space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u2005v\u2005:\u2005eq\u2005;\u2005a\u2005:\u2005A\u2005;\u2005default\u2005:\u2005D\u2005}}",
+      "payload": {
+        "v": "a",
+        "\u2005v\u2005": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u2006-pads-every-part",
+      "description": "U+2006 (six-per-em space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u2006v\u2006:\u2006eq\u2006;\u2006a\u2006:\u2006A\u2006;\u2006default\u2006:\u2006D\u2006}}",
+      "payload": {
+        "v": "a",
+        "\u2006v\u2006": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u2007-pads-every-part",
+      "description": "U+2007 (figure space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u2007v\u2007:\u2007eq\u2007;\u2007a\u2007:\u2007A\u2007;\u2007default\u2007:\u2007D\u2007}}",
+      "payload": {
+        "v": "a",
+        "\u2007v\u2007": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u2008-pads-every-part",
+      "description": "U+2008 (punctuation space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u2008v\u2008:\u2008eq\u2008;\u2008a\u2008:\u2008A\u2008;\u2008default\u2008:\u2008D\u2008}}",
+      "payload": {
+        "v": "a",
+        "\u2008v\u2008": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u2009-pads-every-part",
+      "description": "U+2009 (thin space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u2009v\u2009:\u2009eq\u2009;\u2009a\u2009:\u2009A\u2009;\u2009default\u2009:\u2009D\u2009}}",
+      "payload": {
+        "v": "a",
+        "\u2009v\u2009": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u200a-pads-every-part",
+      "description": "U+200A (hair space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u200av\u200a:\u200aeq\u200a;\u200aa\u200a:\u200aA\u200a;\u200adefault\u200a:\u200aD\u200a}}",
+      "payload": {
+        "v": "a",
+        "\u200av\u200a": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u202f-pads-every-part",
+      "description": "U+202F (narrow no-break space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u202fv\u202f:\u202feq\u202f;\u202fa\u202f:\u202fA\u202f;\u202fdefault\u202f:\u202fD\u202f}}",
+      "payload": {
+        "v": "a",
+        "\u202fv\u202f": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u205f-pads-every-part",
+      "description": "U+205F (medium mathematical space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u205fv\u205f:\u205feq\u205f;\u205fa\u205f:\u205fA\u205f;\u205fdefault\u205f:\u205fD\u205f}}",
+      "payload": {
+        "v": "a",
+        "\u205fv\u205f": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u3000-pads-every-part",
+      "description": "U+3000 (ideographic space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\u3000v\u3000:\u3000eq\u3000;\u3000a\u3000:\u3000A\u3000;\u3000default\u3000:\u3000D\u3000}}",
+      "payload": {
+        "v": "a",
+        "\u3000v\u3000": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/ufeff-pads-every-part",
+      "description": "U+FEFF (zero width no-break space) surrounding the key, the modifier name, the option key, the option value and the inline default is not significant.",
+      "message": "{{\ufeffv\ufeff:\ufeffeq\ufeff;\ufeffa\ufeff:\ufeffA\ufeff;\ufeffdefault\ufeff:\ufeffD\ufeff}}",
+      "payload": {
+        "v": "a",
+        "\ufeffv\ufeff": "PADDED"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/u0009-escaped-is-text",
+      "description": "U+0009 (character tabulation) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u0009x; \\\u0009:\\\u0009ONE\\\u0009; default:D}}",
+      "payload": {
+        "v\u0009x": "\u0009"
+      },
+      "expected": {
+        "output": "\u0009ONE\u0009"
+      }
+    },
+    {
+      "id": "whitespace/u000b-escaped-is-text",
+      "description": "U+000B (line tabulation) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u000bx; \\\u000b:\\\u000bONE\\\u000b; default:D}}",
+      "payload": {
+        "v\u000bx": "\u000b"
+      },
+      "expected": {
+        "output": "\u000bONE\u000b"
+      }
+    },
+    {
+      "id": "whitespace/u000c-escaped-is-text",
+      "description": "U+000C (form feed) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u000cx; \\\u000c:\\\u000cONE\\\u000c; default:D}}",
+      "payload": {
+        "v\u000cx": "\u000c"
+      },
+      "expected": {
+        "output": "\u000cONE\u000c"
+      }
+    },
+    {
+      "id": "whitespace/u0020-escaped-is-text",
+      "description": "U+0020 (space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\ x; \\ :\\ ONE\\ ; default:D}}",
+      "payload": {
+        "v x": " "
+      },
+      "expected": {
+        "output": " ONE "
+      }
+    },
+    {
+      "id": "whitespace/u00a0-escaped-is-text",
+      "description": "U+00A0 (no-break space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u00a0x; \\\u00a0:\\\u00a0ONE\\\u00a0; default:D}}",
+      "payload": {
+        "v\u00a0x": "\u00a0"
+      },
+      "expected": {
+        "output": "\u00a0ONE\u00a0"
+      }
+    },
+    {
+      "id": "whitespace/u1680-escaped-is-text",
+      "description": "U+1680 (ogham space mark) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u1680x; \\\u1680:\\\u1680ONE\\\u1680; default:D}}",
+      "payload": {
+        "v\u1680x": "\u1680"
+      },
+      "expected": {
+        "output": "\u1680ONE\u1680"
+      }
+    },
+    {
+      "id": "whitespace/u2000-escaped-is-text",
+      "description": "U+2000 (en quad) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u2000x; \\\u2000:\\\u2000ONE\\\u2000; default:D}}",
+      "payload": {
+        "v\u2000x": "\u2000"
+      },
+      "expected": {
+        "output": "\u2000ONE\u2000"
+      }
+    },
+    {
+      "id": "whitespace/u2001-escaped-is-text",
+      "description": "U+2001 (em quad) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u2001x; \\\u2001:\\\u2001ONE\\\u2001; default:D}}",
+      "payload": {
+        "v\u2001x": "\u2001"
+      },
+      "expected": {
+        "output": "\u2001ONE\u2001"
+      }
+    },
+    {
+      "id": "whitespace/u2002-escaped-is-text",
+      "description": "U+2002 (en space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u2002x; \\\u2002:\\\u2002ONE\\\u2002; default:D}}",
+      "payload": {
+        "v\u2002x": "\u2002"
+      },
+      "expected": {
+        "output": "\u2002ONE\u2002"
+      }
+    },
+    {
+      "id": "whitespace/u2003-escaped-is-text",
+      "description": "U+2003 (em space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u2003x; \\\u2003:\\\u2003ONE\\\u2003; default:D}}",
+      "payload": {
+        "v\u2003x": "\u2003"
+      },
+      "expected": {
+        "output": "\u2003ONE\u2003"
+      }
+    },
+    {
+      "id": "whitespace/u2004-escaped-is-text",
+      "description": "U+2004 (three-per-em space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u2004x; \\\u2004:\\\u2004ONE\\\u2004; default:D}}",
+      "payload": {
+        "v\u2004x": "\u2004"
+      },
+      "expected": {
+        "output": "\u2004ONE\u2004"
+      }
+    },
+    {
+      "id": "whitespace/u2005-escaped-is-text",
+      "description": "U+2005 (four-per-em space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u2005x; \\\u2005:\\\u2005ONE\\\u2005; default:D}}",
+      "payload": {
+        "v\u2005x": "\u2005"
+      },
+      "expected": {
+        "output": "\u2005ONE\u2005"
+      }
+    },
+    {
+      "id": "whitespace/u2006-escaped-is-text",
+      "description": "U+2006 (six-per-em space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u2006x; \\\u2006:\\\u2006ONE\\\u2006; default:D}}",
+      "payload": {
+        "v\u2006x": "\u2006"
+      },
+      "expected": {
+        "output": "\u2006ONE\u2006"
+      }
+    },
+    {
+      "id": "whitespace/u2007-escaped-is-text",
+      "description": "U+2007 (figure space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u2007x; \\\u2007:\\\u2007ONE\\\u2007; default:D}}",
+      "payload": {
+        "v\u2007x": "\u2007"
+      },
+      "expected": {
+        "output": "\u2007ONE\u2007"
+      }
+    },
+    {
+      "id": "whitespace/u2008-escaped-is-text",
+      "description": "U+2008 (punctuation space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u2008x; \\\u2008:\\\u2008ONE\\\u2008; default:D}}",
+      "payload": {
+        "v\u2008x": "\u2008"
+      },
+      "expected": {
+        "output": "\u2008ONE\u2008"
+      }
+    },
+    {
+      "id": "whitespace/u2009-escaped-is-text",
+      "description": "U+2009 (thin space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u2009x; \\\u2009:\\\u2009ONE\\\u2009; default:D}}",
+      "payload": {
+        "v\u2009x": "\u2009"
+      },
+      "expected": {
+        "output": "\u2009ONE\u2009"
+      }
+    },
+    {
+      "id": "whitespace/u200a-escaped-is-text",
+      "description": "U+200A (hair space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u200ax; \\\u200a:\\\u200aONE\\\u200a; default:D}}",
+      "payload": {
+        "v\u200ax": "\u200a"
+      },
+      "expected": {
+        "output": "\u200aONE\u200a"
+      }
+    },
+    {
+      "id": "whitespace/u202f-escaped-is-text",
+      "description": "U+202F (narrow no-break space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u202fx; \\\u202f:\\\u202fONE\\\u202f; default:D}}",
+      "payload": {
+        "v\u202fx": "\u202f"
+      },
+      "expected": {
+        "output": "\u202fONE\u202f"
+      }
+    },
+    {
+      "id": "whitespace/u205f-escaped-is-text",
+      "description": "U+205F (medium mathematical space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u205fx; \\\u205f:\\\u205fONE\\\u205f; default:D}}",
+      "payload": {
+        "v\u205fx": "\u205f"
+      },
+      "expected": {
+        "output": "\u205fONE\u205f"
+      }
+    },
+    {
+      "id": "whitespace/u3000-escaped-is-text",
+      "description": "U+3000 (ideographic space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\u3000x; \\\u3000:\\\u3000ONE\\\u3000; default:D}}",
+      "payload": {
+        "v\u3000x": "\u3000"
+      },
+      "expected": {
+        "output": "\u3000ONE\u3000"
+      }
+    },
+    {
+      "id": "whitespace/ufeff-escaped-is-text",
+      "description": "U+FEFF (zero width no-break space) that an escape sequence claims is text in the key, the option key and the option value.",
+      "message": "{{v\\\ufeffx; \\\ufeff:\\\ufeffONE\\\ufeff; default:D}}",
+      "payload": {
+        "v\ufeffx": "\ufeff"
+      },
+      "expected": {
+        "output": "\ufeffONE\ufeff"
+      }
+    },
+    {
+      "id": "whitespace/u0085-is-not-whitespace",
+      "description": "U+0085 (next line) is outside the class: it pads a key into a different key and is a non-empty option value.",
+      "message": "{{\u0085v\u0085; a:\u0085; default:D}}",
+      "payload": {
+        "\u0085v\u0085": "a"
+      },
+      "expected": {
+        "output": "\u0085"
+      }
+    },
+    {
+      "id": "whitespace/u001f-is-not-whitespace",
+      "description": "U+001F (information separator one) is outside the class: it pads a key into a different key and is a non-empty option value.",
+      "message": "{{\u001fv\u001f; a:\u001f; default:D}}",
+      "payload": {
+        "\u001fv\u001f": "a"
+      },
+      "expected": {
+        "output": "\u001f"
+      }
+    },
+    {
+      "id": "whitespace/u180e-is-not-whitespace",
+      "description": "U+180E (mongolian vowel separator) is outside the class: it pads a key into a different key and is a non-empty option value.",
+      "message": "{{\u180ev\u180e; a:\u180e; default:D}}",
+      "payload": {
+        "\u180ev\u180e": "a"
+      },
+      "expected": {
+        "output": "\u180e"
+      }
+    },
+    {
+      "id": "whitespace/u200b-is-not-whitespace",
+      "description": "U+200B (zero width space) is outside the class: it pads a key into a different key and is a non-empty option value.",
+      "message": "{{\u200bv\u200b; a:\u200b; default:D}}",
+      "payload": {
+        "\u200bv\u200b": "a"
+      },
+      "expected": {
+        "output": "\u200b"
+      }
+    },
+    {
+      "id": "whitespace/u2060-is-not-whitespace",
+      "description": "U+2060 (word joiner) is outside the class: it pads a key into a different key and is a non-empty option value.",
+      "message": "{{\u2060v\u2060; a:\u2060; default:D}}",
+      "payload": {
+        "\u2060v\u2060": "a"
+      },
+      "expected": {
+        "output": "\u2060"
+      }
+    },
+    {
+      "id": "whitespace/u00ad-is-not-whitespace",
+      "description": "U+00AD (soft hyphen) is outside the class: it pads a key into a different key and is a non-empty option value.",
+      "message": "{{\u00adv\u00ad; a:\u00ad; default:D}}",
+      "payload": {
+        "\u00adv\u00ad": "a"
+      },
+      "expected": {
+        "output": "\u00ad"
+      }
+    },
+    {
+      "id": "whitespace/u2800-is-not-whitespace",
+      "description": "U+2800 (braille pattern blank) is outside the class: it pads a key into a different key and is a non-empty option value.",
+      "message": "{{\u2800v\u2800; a:\u2800; default:D}}",
+      "payload": {
+        "\u2800v\u2800": "a"
+      },
+      "expected": {
+        "output": "\u2800"
+      }
+    },
+    {
+      "id": "whitespace/escaped-space-in-key",
+      "description": "An escaped space belongs to the key.",
+      "message": "{{v\\ x; default:D}}",
+      "payload": {
+        "v x": "HIT",
+        "vx": "NO"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "whitespace/escaped-space-as-option-key",
+      "description": "An escaped space is an option key of its own, not a key that trims away.",
+      "message": "{{v; \\ :X; default:D}}",
+      "payload": {
+        "v": " "
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "whitespace/escaped-space-around-value",
+      "description": "An escaped space at either end of an option value is text the trimming does not remove.",
+      "message": "{{v; 1:\\ ONE\\ }}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": " ONE "
+      }
+    },
+    {
+      "id": "whitespace/escaped-space-in-inline-default",
+      "description": "An escaped space at the start of an inline default is text the trimming does not remove.",
+      "message": "{{v; default:\\ D}}",
+      "payload": {},
+      "expected": {
+        "output": " D"
+      }
+    },
+    {
+      "id": "whitespace/unclaimed-space-after-escape-is-padding",
+      "description": "An escape sequence claims one code point, so whitespace past an escaped space is still padding.",
+      "message": "{{v; 1:ONE\\  }}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "ONE "
+      }
+    },
+    {
+      "id": "whitespace/padding-after-escaped-colon-in-value",
+      "description": "Whitespace after an escape sequence that claims a colon is still padding around the value.",
+      "message": "{{v; 1:ONE\\: }}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "ONE:"
+      }
+    },
+    {
+      "id": "whitespace/padding-after-escaped-colon-in-key",
+      "description": "Whitespace after an escape sequence that claims a colon is still padding around the key.",
+      "message": "{{v\\: ; default:D}}",
+      "payload": {
+        "v:": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "whitespace/shorthand-option-absent-value",
+      "description": "Over an absent value the shorthand is never compared, because ne takes the fallback chain like every other modifier.",
+      "section": "11.1",
+      "message": "{{v:ne; z; default:DEF}}",
+      "payload": {},
+      "expected": {
+        "output": "DEF"
+      }
+    },
+    {
+      "id": "whitespace/shorthand-option-trimmed",
+      "description": "A valueless option is trimmed by the whitespace class, and the value it stands for is the trimmed key.",
+      "message": "{{v:ne;  z  ; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "z"
+      }
+    },
+    {
+      "id": "whitespace/nbsp-value-trims",
+      "description": "U+00A0, though typed on purpose, trims away like any other member when it is the whole value.",
+      "section": "A.4",
+      "message": "{{v; x:\u00a0; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "whitespace/nbsp-value-escaped",
+      "description": "An author who means U+00A0 as the value escapes it.",
+      "section": "A.4",
+      "message": "{{v; x:\\\u00a0; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "expected": {
+        "output": "\u00a0"
+      }
+    },
+    {
+      "id": "whitespace/ideographic-space-value-trims",
+      "description": "U+3000, though typed on purpose, trims away like any other member when it is the whole value.",
+      "section": "A.4",
+      "message": "{{v; x:\u3000; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "whitespace/ideographic-space-value-escaped",
+      "description": "An author who means U+3000 as the value escapes it.",
+      "section": "A.4",
+      "message": "{{v; x:\\\u3000; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "expected": {
+        "output": "\u3000"
+      }
+    },
+    {
+      "id": "whitespace/run-of-members-trims",
+      "description": "A run of every member around a key trims like a single one.",
+      "message": "{{\u0009\u000b\u000c \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeffv\u0009\u000b\u000c \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff}}",
+      "payload": {
+        "v": "HIT",
+        "\u0009\u000b\u000c \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeffv\u0009\u000b\u000c \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff": "PADDED"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "whitespace/run-value-is-empty",
+      "description": "An option value made of every member trims away to nothing.",
+      "message": "{{v; a:\u0009\u000b\u000c \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "whitespace/run-modifier-name-and-segment",
+      "description": "A modifier name and a segment made of every member name nothing, so the placeholder is a plain substitution.",
+      "message": "{{v:\u0009\u000b\u000c \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff;\u0009\u000b\u000c \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "whitespace/empty-modifier-name",
+      "description": "A colon with nothing after it names no modifier, so the placeholder is a plain substitution.",
+      "message": "{{v:}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "whitespace/blank-modifier-name",
+      "description": "A modifier name that trims away to nothing names no modifier, so the placeholder is a plain substitution.",
+      "message": "{{v: }}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "whitespace/empty-modifier-name-with-options",
+      "description": "A colon naming no modifier leaves a placeholder with options to eq.",
+      "message": "{{v:; a:A; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "whitespace/empty-segment",
+      "description": "An empty segment declares no option, so the placeholder is a plain substitution.",
+      "message": "{{v;;}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "whitespace/blank-segment",
+      "description": "A segment that trims away to nothing declares no option, so the placeholder is a plain substitution.",
+      "message": "{{v; }}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "whitespace/blank-option-key-with-value",
+      "description": "A segment whose key is empty declares no option even with a value, so the placeholder stays a plain substitution.",
+      "message": "{{v; :X}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "whitespace/equivalent-spellings",
+      "description": "A placeholder with and without a trailing semicolon, padded or not, is the same placeholder.",
+      "message": "VALUES: {{value}}, {{value;}}, {{ value }}, {{ value; }}",
+      "payload": {
+        "value": "TEST_VALUE"
+      },
+      "expected": {
+        "output": "VALUES: TEST_VALUE, TEST_VALUE, TEST_VALUE, TEST_VALUE"
+      }
+    },
+    {
+      "id": "whitespace/equivalent-spellings-default",
+      "description": "An inline default with and without a trailing semicolon, padded or not, declares the same default.",
+      "message": "VALUES: {{value; default: DEFAULT_VALUE}}, {{value; default: DEFAULT_VALUE;}}, {{ value; default: DEFAULT_VALUE }}, {{ value; default: DEFAULT_VALUE; }}",
+      "payload": {},
+      "expected": {
+        "output": "VALUES: DEFAULT_VALUE, DEFAULT_VALUE, DEFAULT_VALUE, DEFAULT_VALUE"
+      }
+    },
+    {
+      "id": "whitespace/line-terminator-lf-is-not-padding",
+      "description": "A construct with a line feed around its key is not trimmed: a placeholder holds no line terminator, so the construct is literal text.",
+      "section": "A.10",
+      "message": "{{\u000av\u000a}}",
+      "payload": {
+        "v": "HIT",
+        "\u000av\u000a": "PADDED"
+      },
+      "expected": {
+        "output": "{{\u000av\u000a}}"
+      }
+    },
+    {
+      "id": "whitespace/line-terminator-cr-is-not-padding",
+      "description": "A construct with a carriage return around its key is not trimmed: a placeholder holds no line terminator, so the construct is literal text.",
+      "section": "A.10",
+      "message": "{{\u000dv\u000d}}",
+      "payload": {
+        "v": "HIT",
+        "\u000dv\u000d": "PADDED"
+      },
+      "expected": {
+        "output": "{{\u000dv\u000d}}"
+      }
+    },
+    {
+      "id": "whitespace/line-terminator-ls-is-not-padding",
+      "description": "A construct with a line separator (U+2028) around its key is not trimmed: a placeholder holds no line terminator, so the construct is literal text.",
+      "section": "A.10",
+      "message": "{{\u2028v\u2028}}",
+      "payload": {
+        "v": "HIT",
+        "\u2028v\u2028": "PADDED"
+      },
+      "expected": {
+        "output": "{{\u2028v\u2028}}"
+      }
+    },
+    {
+      "id": "whitespace/line-terminator-ps-is-not-padding",
+      "description": "A construct with a paragraph separator (U+2029) around its key is not trimmed: a placeholder holds no line terminator, so the construct is literal text.",
+      "section": "A.10",
+      "message": "{{\u2029v\u2029}}",
+      "payload": {
+        "v": "HIT",
+        "\u2029v\u2029": "PADDED"
+      },
+      "expected": {
+        "output": "{{\u2029v\u2029}}"
+      }
+    }
+  ]
+}

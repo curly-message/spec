@@ -1,0 +1,875 @@
+{
+  "format": "curly-message-1",
+  "level": "core",
+  "section": "6",
+  "cases": [
+    {
+      "id": "grammar/literal-text",
+      "description": "A message that holds no placeholder resolves to its own text.",
+      "message": "NO_PLACEHOLDER",
+      "payload": {},
+      "expected": {
+        "output": "NO_PLACEHOLDER"
+      }
+    },
+    {
+      "id": "grammar/placeholder-full-form",
+      "description": "A placeholder is an opening pair, a selector, semicolon-led segments and a closing pair.",
+      "message": "{{v:eq; a:A; b:B; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "grammar/no-whitespace-required",
+      "description": "No production requires whitespace, so a placeholder written without any derives.",
+      "message": "{{v:eq;a:A;default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-inside-key-lf",
+      "description": "A construct whose key holds a line feed is literal text.",
+      "section": "A.10",
+      "message": "{{v\u000ax}}",
+      "payload": {
+        "v\u000ax": "HIT"
+      },
+      "expected": {
+        "output": "{{v\u000ax}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-beside-resolved-lf",
+      "description": "Whether a construct is a placeholder does not depend on what another resolved to: one spanning a line feed stays literal beside a resolved one.",
+      "section": "A.10",
+      "message": "{{a}} {{\u000av\u000a}}",
+      "payload": {
+        "a": "A",
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "A {{\u000av\u000a}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-in-value-lf",
+      "description": "A construct whose option value holds a line feed is literal text.",
+      "section": "6",
+      "message": "{{v; a:\u000ab; default:D}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "{{v; a:\u000ab; default:D}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-escaped-lf",
+      "description": "Escaping a line feed does not admit it into a placeholder: the construct is literal text, and the escape is removed from it.",
+      "section": "6",
+      "message": "{{v\\\u000ax}}",
+      "payload": {
+        "v\u000ax": "HIT"
+      },
+      "expected": {
+        "output": "{{v\u000ax}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-inside-key-cr",
+      "description": "A construct whose key holds a carriage return is literal text.",
+      "section": "A.10",
+      "message": "{{v\u000dx}}",
+      "payload": {
+        "v\u000dx": "HIT"
+      },
+      "expected": {
+        "output": "{{v\u000dx}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-beside-resolved-cr",
+      "description": "Whether a construct is a placeholder does not depend on what another resolved to: one spanning a carriage return stays literal beside a resolved one.",
+      "section": "6",
+      "message": "{{a}} {{\u000dv\u000d}}",
+      "payload": {
+        "a": "A",
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "A {{\u000dv\u000d}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-in-value-cr",
+      "description": "A construct whose option value holds a carriage return is literal text.",
+      "section": "6",
+      "message": "{{v; a:\u000db; default:D}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "{{v; a:\u000db; default:D}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-escaped-cr",
+      "description": "Escaping a carriage return does not admit it into a placeholder: the construct is literal text, and the escape is removed from it.",
+      "section": "6",
+      "message": "{{v\\\u000dx}}",
+      "payload": {
+        "v\u000dx": "HIT"
+      },
+      "expected": {
+        "output": "{{v\u000dx}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-inside-key-ls",
+      "description": "A construct whose key holds a line separator (U+2028) is literal text.",
+      "section": "A.10",
+      "message": "{{v\u2028x}}",
+      "payload": {
+        "v\u2028x": "HIT"
+      },
+      "expected": {
+        "output": "{{v\u2028x}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-beside-resolved-ls",
+      "description": "Whether a construct is a placeholder does not depend on what another resolved to: one spanning a line separator (U+2028) stays literal beside a resolved one.",
+      "section": "6",
+      "message": "{{a}} {{\u2028v\u2028}}",
+      "payload": {
+        "a": "A",
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "A {{\u2028v\u2028}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-in-value-ls",
+      "description": "A construct whose option value holds a line separator (U+2028) is literal text.",
+      "section": "6",
+      "message": "{{v; a:\u2028b; default:D}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "{{v; a:\u2028b; default:D}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-escaped-ls",
+      "description": "Escaping a line separator (U+2028) does not admit it into a placeholder: the construct is literal text, and the escape is removed from it.",
+      "section": "6",
+      "message": "{{v\\\u2028x}}",
+      "payload": {
+        "v\u2028x": "HIT"
+      },
+      "expected": {
+        "output": "{{v\u2028x}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-inside-key-ps",
+      "description": "A construct whose key holds a paragraph separator (U+2029) is literal text.",
+      "section": "A.10",
+      "message": "{{v\u2029x}}",
+      "payload": {
+        "v\u2029x": "HIT"
+      },
+      "expected": {
+        "output": "{{v\u2029x}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-beside-resolved-ps",
+      "description": "Whether a construct is a placeholder does not depend on what another resolved to: one spanning a paragraph separator (U+2029) stays literal beside a resolved one.",
+      "section": "6",
+      "message": "{{a}} {{\u2029v\u2029}}",
+      "payload": {
+        "a": "A",
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "A {{\u2029v\u2029}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-in-value-ps",
+      "description": "A construct whose option value holds a paragraph separator (U+2029) is literal text.",
+      "section": "6",
+      "message": "{{v; a:\u2029b; default:D}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "{{v; a:\u2029b; default:D}}"
+      }
+    },
+    {
+      "id": "grammar/line-terminator-escaped-ps",
+      "description": "Escaping a paragraph separator (U+2029) does not admit it into a placeholder: the construct is literal text, and the escape is removed from it.",
+      "section": "6",
+      "message": "{{v\\\u2029x}}",
+      "payload": {
+        "v\u2029x": "HIT"
+      },
+      "expected": {
+        "output": "{{v\u2029x}}"
+      }
+    },
+    {
+      "id": "grammar/key-escaped-colon",
+      "description": "A key holds a colon as an escape sequence and is matched after unescaping.",
+      "section": "6",
+      "message": "{{a\\:b}}",
+      "payload": {
+        "a:b": "HIT",
+        "a\\:b": "RAW"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "grammar/key-escaped-semicolon",
+      "description": "A key holds a semicolon as an escape sequence.",
+      "section": "6",
+      "message": "{{a\\;b}}",
+      "payload": {
+        "a;b": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "grammar/key-any-character",
+      "description": "A key may hold spaces, dots, digits and non-ASCII text.",
+      "section": "6",
+      "message": "{{a b.c1 \u00fc}}",
+      "payload": {
+        "a b.c1 \u00fc": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "grammar/key-astral-code-point",
+      "description": "The grammar is defined over code points, so a key may be a character outside the Basic Multilingual Plane.",
+      "section": "6",
+      "message": "{{\ud83d\ude00; default:D}}",
+      "payload": {
+        "\ud83d\ude00": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "grammar/key-exact-code-points",
+      "description": "Keys are compared by exact code-point equality, so a decomposed spelling does not match a precomposed key.",
+      "section": "6",
+      "message": "{{caf\u00e9; default:D}}",
+      "payload": {
+        "cafe\u0301": "X"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "grammar/key-case-sensitive",
+      "description": "A key is compared case-sensitively.",
+      "section": "6",
+      "message": "{{Name}}",
+      "payload": {
+        "name": "lower",
+        "Name": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "grammar/modifier-name-after-first-colon",
+      "description": "Everything after the selector's first unescaped colon is the modifier name, later colons included, so eq:x names a modifier nobody defined.",
+      "section": "6",
+      "message": "{{v:eq:x; a:A; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "key": "grammar.modifier-name",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "grammar.modifier-name"
+          }
+        ]
+      }
+    },
+    {
+      "id": "grammar/selector-colon-skips-escaped",
+      "description": "The selector's colon is the first unescaped one, so an escaped colon stays in the key.",
+      "section": "6",
+      "message": "{{a\\:b:eq; x:X; default:D}}",
+      "payload": {
+        "a:b": "x"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "grammar/unknown-modifier-is-not-literal",
+      "description": "A modifier name this format does not specify is a message error, not literal text.",
+      "section": "6",
+      "message": "{{v:plural; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "key": "grammar.unknown",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "grammar.unknown"
+          }
+        ]
+      }
+    },
+    {
+      "id": "grammar/option-value-keeps-colons",
+      "description": "An option's colon is the first unescaped one in the segment, so the value keeps every colon after it.",
+      "section": "6",
+      "message": "{{v; a:10:30; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "10:30"
+      }
+    },
+    {
+      "id": "grammar/inline-default-starts-with-colon",
+      "description": "An inline default whose value begins with a colon keeps that colon.",
+      "section": "6",
+      "message": "{{v; default::x}}",
+      "payload": {},
+      "expected": {
+        "output": ":x"
+      }
+    },
+    {
+      "id": "grammar/option-colon-skips-escaped",
+      "description": "An escaped colon in an option key does not end the key, so the text before it is not the key compared.",
+      "section": "6",
+      "message": "{{v; a\\:b:X; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "grammar/escaped-backslash-then-colon",
+      "description": "An escaped backslash is a complete escape sequence, so the colon after it is the option's colon.",
+      "section": "6",
+      "message": "{{v; a\\\\:b:X; default:D}}",
+      "payload": {
+        "v": "a\\"
+      },
+      "expected": {
+        "output": "b:X"
+      }
+    },
+    {
+      "id": "grammar/semicolon-ends-segment",
+      "description": "An unescaped semicolon ends the segment, so a value stops there.",
+      "section": "6",
+      "message": "{{v; a:x;y; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "x"
+      }
+    },
+    {
+      "id": "grammar/escaped-opening-first-brace",
+      "description": "A backslash before the opening pair suppresses it, so the construct is literal text.",
+      "section": "A.15",
+      "message": "\\{{v}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "{{v}}"
+      }
+    },
+    {
+      "id": "grammar/escaped-opening-without-value",
+      "description": "A suppressed opening pair renders the same over an empty payload, because nothing about it is resolved.",
+      "section": "A.15",
+      "message": "\\{{v}}",
+      "payload": {},
+      "expected": {
+        "output": "{{v}}"
+      }
+    },
+    {
+      "id": "grammar/escaped-opening-second-brace",
+      "description": "A backslash consuming the second brace of an opening pair leaves the first standing alone, so the construct is literal text.",
+      "section": "6",
+      "message": "{\\{v}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "{{v}}"
+      }
+    },
+    {
+      "id": "grammar/escaped-closing-second-brace",
+      "description": "A backslash consuming the second brace of a closing pair leaves no closing pair, so the construct is literal text.",
+      "section": "6",
+      "message": "{{v}\\}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "{{v}}"
+      }
+    },
+    {
+      "id": "grammar/escaped-closing-first-brace",
+      "description": "A backslash consuming the first brace of a closing pair leaves no closing pair, so the construct is literal text.",
+      "section": "A.16",
+      "message": "{{v\\}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "{{v}}"
+      }
+    },
+    {
+      "id": "grammar/escaped-closing-not-in-key",
+      "description": "The backslash before a closing brace is not read into the key: the construct is literal text whatever the payload spells.",
+      "section": "A.16",
+      "message": "{{v\\}}",
+      "payload": {
+        "v\\": "BS",
+        "v": "V"
+      },
+      "expected": {
+        "output": "{{v}}"
+      }
+    },
+    {
+      "id": "grammar/key-ends-in-backslash",
+      "description": "An escaped backslash ends a key as one backslash, a spelling distinct from an escaped brace.",
+      "section": "A.16",
+      "message": "{{v\\\\}}",
+      "payload": {
+        "v\\": "BS",
+        "v\\\\": "BS2"
+      },
+      "expected": {
+        "output": "BS"
+      }
+    },
+    {
+      "id": "grammar/key-ends-in-closing-brace",
+      "description": "Consuming one brace disturbs no other, so a key may end in a closing brace and the remaining two close the placeholder.",
+      "section": "A.16",
+      "message": "{{v\\}}}",
+      "payload": {
+        "v}": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "grammar/escaped-delimiters-in-value",
+      "description": "Escaped delimiters inside a value are content, and neither close the placeholder nor open another.",
+      "section": "6",
+      "message": "{{v; a:x\\{\\{y\\}\\}z; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "x{{y}}z"
+      }
+    },
+    {
+      "id": "grammar/unpaired-closing-brace-in-key",
+      "description": "A closing brace that starts no pair needs no escape inside a key.",
+      "section": "6",
+      "message": "{{a}b}}",
+      "payload": {
+        "a}b": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "grammar/escaped-brace-after-opening-pair",
+      "description": "An escaped brace right after the opening pair is the key's first character, the pair itself intact.",
+      "section": "6",
+      "message": "{{\\{v}}",
+      "payload": {
+        "{v": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "grammar/consumed-brace-breaks-inner-pair",
+      "description": "A brace a backslash consumed cannot start an inner opening pair, so the key runs on through it.",
+      "section": "6",
+      "message": "{{a\\{{b}}",
+      "payload": {
+        "a{{b": "NESTKEY",
+        "b": "B"
+      },
+      "expected": {
+        "output": "NESTKEY"
+      }
+    },
+    {
+      "id": "grammar/unclosed-construct-is-literal",
+      "description": "A placeholder begins only where a complete one derives, so an opening pair with no closing pair is literal text.",
+      "section": "6",
+      "message": "{{v",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "{{v"
+      }
+    },
+    {
+      "id": "grammar/inner-opening-pair-ends-attempt",
+      "description": "Where a scan reaches no closing pair, only the opening brace is literal and the scan resumes at the next code point, where the inner pair opens for itself.",
+      "section": "6",
+      "message": "{{a{{b}}",
+      "payload": {
+        "a{{b": "NESTKEY",
+        "b": "B"
+      },
+      "expected": {
+        "output": "{{aB"
+      }
+    },
+    {
+      "id": "grammar/four-braces",
+      "description": "Four opening braces are one literal brace followed by a placeholder whose key starts with a brace.",
+      "section": "6",
+      "message": "{{{{a}}",
+      "payload": {
+        "{a": "BRACEA",
+        "a": "A"
+      },
+      "expected": {
+        "output": "{BRACEA"
+      }
+    },
+    {
+      "id": "grammar/closing-pair-first-left-standing",
+      "description": "The closing pair is the first one left standing, so a second closing pair is literal text.",
+      "section": "6",
+      "message": "{{v}}}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "HIT}}"
+      }
+    },
+    {
+      "id": "grammar/underived-construct-reaches-no-step",
+      "description": "A construct section 6 does not derive is rendered as it stands, and neither looks up its key nor takes the chain.",
+      "section": "9.1",
+      "message": "{{v; default:D",
+      "payload": {
+        "v": "HIT",
+        "default": "P"
+      },
+      "expected": {
+        "output": "{{v; default:D"
+      }
+    },
+    {
+      "id": "grammar/empty-selector-looks-nothing-up",
+      "description": "An empty placeholder names no key and resolves none of the payload keys \"\", \"null\" or \"undefined\".",
+      "section": "9.1",
+      "message": "{{}}",
+      "payload": {
+        "": "EMPTY",
+        "null": "NULL",
+        "undefined": "UNDEFINED"
+      },
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "grammar/blank-selector-looks-nothing-up",
+      "description": "A placeholder whose selector is only whitespace names no key and resolves none of the payload keys \"\", \"null\" or \"undefined\".",
+      "section": "9.1",
+      "message": "{{ }}",
+      "payload": {
+        "": "EMPTY",
+        "null": "NULL",
+        "undefined": "UNDEFINED"
+      },
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "grammar/modifier-only-selector-looks-nothing-up",
+      "description": "A selector naming a modifier and no key looks nothing up, and is neither a substitution nor a selection to report.",
+      "section": "9.1",
+      "message": "{{:eq}}",
+      "payload": {
+        "": "EMPTY",
+        "null": "NULL",
+        "undefined": "UNDEFINED"
+      },
+      "key": "grammar.modifier-only",
+      "expected": {
+        "output": "",
+        "reports": []
+      }
+    },
+    {
+      "id": "grammar/empty-placeholder-no-default",
+      "description": "An empty placeholder is a placeholder and resolves to the chain, the empty string where no link yields text.",
+      "section": "A.14",
+      "message": "{{}}",
+      "payload": {},
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "grammar/empty-placeholder-payload-default",
+      "description": "An empty placeholder resolves to the payload's default.",
+      "section": "A.14",
+      "message": "{{}}",
+      "payload": {
+        "default": "D"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "grammar/blank-placeholder-no-default",
+      "description": "A placeholder holding one space is recognized exactly as the empty one is.",
+      "section": "A.14",
+      "message": "{{ }}",
+      "payload": {},
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "grammar/blank-placeholder-payload-default",
+      "description": "A placeholder holding one space resolves to the payload's default exactly as the empty one does.",
+      "section": "A.14",
+      "message": "{{ }}",
+      "payload": {
+        "default": "D"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "grammar/keyless-inline-default",
+      "description": "A selector naming no key resolves to the chain, the inline default included.",
+      "section": "9.1",
+      "message": "{{; default:D}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "grammar/keyless-with-option",
+      "description": "A placeholder that names no key but carries an option is still a placeholder that names no key, and resolves to the chain.",
+      "section": "A.14",
+      "message": "{{ ; x:1 }}",
+      "payload": {
+        "default": "D"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "grammar/empty-pair-inside-construct",
+      "description": "An empty pair inside another construct resolves as a placeholder, and the construct around it does not derive.",
+      "section": "A.14",
+      "message": "{{;a:{{}}",
+      "payload": {
+        "default": "D"
+      },
+      "expected": {
+        "output": "{{;a:D"
+      }
+    },
+    {
+      "id": "grammar/inline-default-encloses",
+      "description": "An inline default written around a placeholder resolves through the inner one first, and the enclosing construct derives on the next pass.",
+      "section": "12",
+      "message": "{{v; default:{{w}}}}",
+      "payload": {
+        "w": "W"
+      },
+      "expected": {
+        "output": "W"
+      }
+    },
+    {
+      "id": "grammar/option-value-encloses",
+      "description": "An option value written around a placeholder resolves through the inner one first, and the enclosing construct derives on the next pass.",
+      "section": "12",
+      "message": "{{v; a:{{w}}}}",
+      "payload": {
+        "v": "a",
+        "w": "W"
+      },
+      "expected": {
+        "output": "W"
+      }
+    },
+    {
+      "id": "grammar/option-key-encloses",
+      "description": "An option key written around a placeholder resolves through the inner one first, and the enclosing construct derives on the next pass.",
+      "section": "12",
+      "message": "{{v; {{k}}:X; default:D}}",
+      "payload": {
+        "v": "a",
+        "k": "a"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "grammar/modifier-name-encloses",
+      "description": "A modifier name written around a placeholder resolves through the inner one first, and the enclosing construct derives on the next pass.",
+      "section": "12",
+      "message": "{{v:{{m}}; a:A; default:D}}",
+      "payload": {
+        "v": "a",
+        "m": "eq"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "grammar/enclosing-derives-on-later-pass",
+      "description": "A construct enclosing another is not a placeholder; the inner one resolves first, and the enclosing one is scanned again over what it resolved to.",
+      "section": "12",
+      "message": "{{a{{b}}c}}",
+      "payload": {
+        "b": "x",
+        "axc": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "grammar/inner-value-closes-early",
+      "description": "A value carrying a closing pair closes the enclosing construct early on the next pass.",
+      "section": "12",
+      "message": "{{a{{b}}c}}",
+      "payload": {
+        "b": "x}}",
+        "ax": "HIT"
+      },
+      "expected": {
+        "output": "HITc}}"
+      }
+    },
+    {
+      "id": "grammar/inner-value-opens-pair",
+      "description": "A value carrying an opening pair keeps the enclosing construct from deriving at all.",
+      "section": "12",
+      "message": "{{a{{b}}c}}",
+      "payload": {
+        "b": "{{",
+        "c": "C"
+      },
+      "expected": {
+        "output": "{{aC"
+      }
+    },
+    {
+      "id": "grammar/value-carrying-opening-pair",
+      "description": "A value carrying an opening pair alone leaves nothing to derive on the following pass.",
+      "section": "12",
+      "message": "[{{v}}]",
+      "payload": {
+        "v": "{{"
+      },
+      "expected": {
+        "output": "[{{]"
+      }
+    },
+    {
+      "id": "grammar/value-carrying-closing-pair",
+      "description": "A value carrying a closing pair alone leaves nothing to derive on the following pass.",
+      "section": "12",
+      "message": "[{{v}}]",
+      "payload": {
+        "v": "}}"
+      },
+      "expected": {
+        "output": "[}}]"
+      }
+    },
+    {
+      "id": "grammar/resolved-text-is-ordinary",
+      "description": "What a placeholder resolved to is ordinary text to the next pass, so a line terminator it carried keeps the enclosing construct literal.",
+      "section": "12",
+      "message": "{{a{{b}}c}}",
+      "payload": {
+        "b": "\u000a",
+        "a\u000ac": "LEAKED"
+      },
+      "expected": {
+        "output": "{{a\u000ac}}"
+      }
+    }
+  ]
+}

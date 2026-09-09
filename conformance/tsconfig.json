@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "strict": true,
+    // Declaration files of build tooling (tsup, vitest) target newer lib
+    // levels than this package; the subject of this gate is our code.
+    "skipLibCheck": true,
+    "target": "es2022",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": [
+    "./src",
+    "./tests",
+    "./*.ts"
+  ]
+}

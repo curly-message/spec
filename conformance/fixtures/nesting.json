@@ -1,0 +1,251 @@
+{
+  "format": "curly-message-1",
+  "level": "core",
+  "section": "12",
+  "cases": [
+    {
+      "id": "nesting/pass-output-feeds-next",
+      "description": "The output of a pass is the input of the next, so a value naming a value naming a value settles over repeated passes.",
+      "section": "5",
+      "message": "{{v1}}",
+      "payload": {
+        "v1": "{{v2}}",
+        "v2": "{{v3}}",
+        "v3": "X"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "nesting/every-placeholder-each-pass",
+      "description": "Each pass replaces every placeholder in the current text, those an earlier pass introduced included.",
+      "section": "5",
+      "message": "{{a}}|{{b}}",
+      "payload": {
+        "a": "{{b}}",
+        "b": "B"
+      },
+      "expected": {
+        "output": "B|B"
+      }
+    },
+    {
+      "id": "nesting/message-converted-before-first-pass",
+      "description": "A message a host wrote as a plain object reaches the first pass as its serialization, and is interpolated like any other.",
+      "section": "5",
+      "message": {
+        "a": "{{value}}"
+      },
+      "payload": {
+        "value": "TEST_STRING"
+      },
+      "expected": {
+        "output": "{\"a\":\"TEST_STRING\"}"
+      }
+    },
+    {
+      "id": "nesting/message-conversion-unescaped",
+      "description": "A message a host wrote as an array is unescaped like any other, so the backslash its serialization doubled is single in the output.",
+      "section": "5",
+      "message": [
+        "a\\;b"
+      ],
+      "payload": {},
+      "expected": {
+        "output": "[\"a\\;b\"]"
+      }
+    },
+    {
+      "id": "nesting/value-escape-not-a-placeholder",
+      "description": "An escape sequence a value introduces is still an escape sequence on the next pass, so an escaped pair never becomes a placeholder and is removed at the end.",
+      "section": "5",
+      "message": "{{v}}",
+      "payload": {
+        "v": "a\\;b \\{\\{n\\}\\}",
+        "n": "N"
+      },
+      "expected": {
+        "output": "a;b {{n}}"
+      }
+    },
+    {
+      "id": "nesting/escapes-removed-once",
+      "description": "Escape sequences are removed exactly once, so a doubly escaped pair in a value leaves a singly escaped pair, not a placeholder.",
+      "section": "5",
+      "message": "{{v}}",
+      "payload": {
+        "v": "\\\\{\\\\{n\\\\}\\\\}",
+        "n": "N"
+      },
+      "expected": {
+        "output": "\\{\\{n\\}\\}"
+      }
+    },
+    {
+      "id": "nesting/message-escape-survives-passes",
+      "description": "Escape sequences are removed after the last pass, so an escaped pair in the message is still an escape while later passes run.",
+      "section": "5",
+      "message": "\\{\\{a\\}\\} {{v}}",
+      "payload": {
+        "v": "{{a}}",
+        "a": "A"
+      },
+      "expected": {
+        "output": "{{a}} A"
+      }
+    },
+    {
+      "id": "nesting/missing-message-default-unescaped",
+      "description": "The payload default a missing message takes is text the passes resolve, so its escape sequences are removed at the end.",
+      "section": "5",
+      "message": {
+        "$curly": "undefined"
+      },
+      "payload": {
+        "default": "a\\;b"
+      },
+      "key": "greeting",
+      "expected": {
+        "output": "a;b"
+      }
+    },
+    {
+      "id": "nesting/value-carries-placeholder",
+      "description": "A value may resolve to text containing a placeholder, which the following pass resolves.",
+      "section": "12",
+      "message": "{{v}}",
+      "payload": {
+        "v": "TEST_{{another}}",
+        "another": "VALUE"
+      },
+      "expected": {
+        "output": "TEST_VALUE"
+      }
+    },
+    {
+      "id": "nesting/option-value-text-joins-next-pass",
+      "description": "The text an option value resolves to is read by the following pass with what surrounds it, so a brace it contributes completes a placeholder there.",
+      "section": "12",
+      "message": "{{v; a:{; default:D}}{n}}",
+      "payload": {
+        "v": "a",
+        "n": "N"
+      },
+      "expected": {
+        "output": "N"
+      }
+    },
+    {
+      "id": "nesting/inline-default-text-joins-next-pass",
+      "description": "The text an inline default resolves to is read by the following pass with what surrounds it, so a brace it contributes completes a placeholder there.",
+      "section": "12",
+      "message": "{{v; default:{}}{n}}",
+      "payload": {
+        "n": "N"
+      },
+      "expected": {
+        "output": "N"
+      }
+    },
+    {
+      "id": "nesting/payload-default-carries-placeholder",
+      "description": "A payload default may resolve to text containing a placeholder, which the following pass resolves.",
+      "section": "12",
+      "message": "{{v}}",
+      "payload": {
+        "default": "P-{{n}}",
+        "n": "N"
+      },
+      "expected": {
+        "output": "P-N"
+      }
+    },
+    {
+      "id": "nesting/wrapper-default-carries-placeholder",
+      "description": "A wrapper default may resolve to text containing a placeholder, which the following pass resolves.",
+      "section": "12",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "default": "W-{{n}}"
+        },
+        "n": "N"
+      },
+      "expected": {
+        "output": "W-N"
+      }
+    },
+    {
+      "id": "nesting/wrapper-default-through-selection",
+      "description": "A wrapper default a selection falls back to is text the following pass resolves, placeholders included.",
+      "section": "12",
+      "message": "{{v:eq; z:Z}}",
+      "payload": {
+        "v": {
+          "value": "q",
+          "default": "W-{{n}}"
+        },
+        "n": "N"
+      },
+      "expected": {
+        "output": "W-N"
+      }
+    },
+    {
+      "id": "nesting/missing-message-default-carries-placeholder",
+      "description": "The payload default a missing message takes is among what may resolve to text containing placeholders, unlike the key echo.",
+      "section": "12",
+      "message": {
+        "$curly": "undefined"
+      },
+      "payload": {
+        "default": "P-{{n}}",
+        "n": "N"
+      },
+      "key": "greeting",
+      "expected": {
+        "output": "P-N"
+      }
+    },
+    {
+      "id": "nesting/enclosing-scanned-again",
+      "description": "A construct enclosing another is not a placeholder: the inner one resolves first, and the enclosing one is scanned again over what it resolved to.",
+      "section": "12",
+      "message": "{{v; a:{{n}}; default:D}}",
+      "payload": {
+        "v": "a",
+        "n": "N"
+      },
+      "expected": {
+        "output": "N"
+      }
+    },
+    {
+      "id": "nesting/enclosing-closes-early",
+      "description": "A value carrying a closing pair closes the enclosing construct early on the following pass, and the rest is literal text.",
+      "section": "12",
+      "message": "{{v; a:{{n}}; default:D}}",
+      "payload": {
+        "v": "a",
+        "n": "X}}"
+      },
+      "expected": {
+        "output": "X; default:D}}"
+      }
+    },
+    {
+      "id": "nesting/enclosing-never-derives",
+      "description": "A value carrying an opening pair keeps the enclosing construct from deriving when it is scanned again, and both pairs stand as literal text.",
+      "section": "12",
+      "message": "{{v; a:{{n}}",
+      "payload": {
+        "v": "a",
+        "n": "{{"
+      },
+      "expected": {
+        "output": "{{v; a:{{"
+      }
+    }
+  ]
+}

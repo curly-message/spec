@@ -1,0 +1,51 @@
+{
+  "format": "curly-message-1",
+  "level": "intl",
+  "section": "10",
+  "cases": [
+    {
+      "id": "fallback-intl/number-zero-is-present",
+      "description": "A value of zero is present, so number formats it and the declared default is never read, as Appendix A.8 expects.",
+      "section": "9.2",
+      "message": "{{v:number; default:99}}",
+      "payload": {
+        "v": 0
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "maximumFractionDigits": 2
+          },
+          "input": 0
+        }
+      }
+    },
+    {
+      "id": "fallback-intl/currency-zero-is-present",
+      "description": "A value of zero is present, so currency formats a zero amount and the declared default is never read, as Appendix A.8 expects.",
+      "section": "9.2",
+      "message": "{{v:currency; default:7}}",
+      "payload": {
+        "v": 0
+      },
+      "props": {
+        "currency": {
+          "currency": "USD"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "NumberFormat",
+          "options": {
+            "style": "currency",
+            "currency": "USD"
+          },
+          "input": 0
+        }
+      }
+    }
+  ]
+}

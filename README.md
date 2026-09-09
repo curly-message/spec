@@ -44,7 +44,7 @@ Contents:
 | Path | State | Purpose |
 | --- | --- | --- |
 | [`SPEC.md`](./SPEC.md) | Working draft | The specification: grammar, escaping, whitespace, resolution order, modifier semantics, fallback chain, error behavior |
-| `conformance/` | Planned | Implementation-independent fixtures — the four inputs a resolution takes (message, payload, props, locale) and the expected output; for the locale-dependent modifiers, the formatting request where an implementation exposes one, and otherwise the locale data the expected output was captured against |
+| [`conformance/`](./conformance) | Working draft | The conformance set, to be published as `@curly-message/conformance`: implementation-independent fixtures — the inputs a resolution takes and the output and reports it must produce, each pinned to the section it tests — with the JSON Schema they validate against, a manifest, and a JavaScript runner that drives an implementation through the adapter of section 14.3. For the locale-dependent modifiers a fixture states the formatting request, and the runner performs it on the host it runs on |
 | `site/` | Planned | Source of the format's public site |
 
 Appendix A of [`SPEC.md`](./SPEC.md) records each behavior of the pre-3.0

@@ -1,0 +1,63 @@
+{
+  "format": "curly-message-1",
+  "level": "core",
+  "section": "13",
+  "cases": [
+    {
+      "id": "limits/passes-at-limit",
+      "description": "At least the declared number of passes is performed: a chain that settles in exactly that many passes settles, with nothing to report.",
+      "section": "13",
+      "generate": "passes-at-limit"
+    },
+    {
+      "id": "limits/passes-over-limit",
+      "description": "On reaching the pass limit the last settled text is returned with its placeholder unresolved, nothing raises, and pass-limit is reported once with origin limit.",
+      "section": "13",
+      "generate": "passes-over-limit"
+    },
+    {
+      "id": "limits/output-at-limit",
+      "description": "At least the declared number of characters of output is permitted: an output of exactly that length is produced whole, with nothing to report.",
+      "section": "13",
+      "generate": "output-at-limit"
+    },
+    {
+      "id": "limits/output-over-limit",
+      "description": "A pass whose output would exceed the limit is discarded whole, so the message as it reached the first pass is what settles, and output-limit is reported once with origin limit.",
+      "section": "13",
+      "generate": "output-over-limit"
+    },
+    {
+      "id": "limits/output-over-limit-stops",
+      "description": "A placeholder past the output limit is neither resolved nor reported, and the host-defined modifier it names is not called.",
+      "section": "13",
+      "generate": "output-over-limit-stops"
+    },
+    {
+      "id": "limits/conversion-over-limit",
+      "description": "A serialization that reaches the conversion limit is a conversion that cannot describe the value: the placeholder takes the chain and unserializable-value is reported with origin payload.",
+      "section": "13",
+      "generate": "conversion-over-limit"
+    },
+    {
+      "id": "limits/pass-limit-unescapes-settled-text",
+      "description": "A limit ends the process the way a settling pass does, so the single removal of escape sequences still runs over the text the pass limit stopped, which a self-referential value reaches whatever the limit is.",
+      "section": "13",
+      "message": "a\\;b {{v}}",
+      "payload": {
+        "v": "{{v}}"
+      },
+      "key": "limits.self-reference",
+      "expected": {
+        "output": "a;b {{v}}",
+        "reports": [
+          {
+            "code": "pass-limit",
+            "origin": "limit",
+            "key": "limits.self-reference"
+          }
+        ]
+      }
+    }
+  ]
+}
