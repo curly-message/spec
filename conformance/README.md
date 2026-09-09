@@ -22,11 +22,11 @@ the sentence the implementation disagrees with.
 
 ## Status
 
-**Unpublished.** The set lives in the specification's repository because its
-fixtures are artifacts of the format, not of any one implementation, and it is
-versioned against the specification: version 1 of the set targets version 1 of
-the format. Until it is published, an implementation is assessed against the
-document alone (section 2).
+**Prerelease**, on npm as `@curly-message/conformance` under the `next`
+dist-tag. The set lives in the specification's repository because its fixtures
+are artifacts of the format, not of any one implementation, and it is versioned
+against the specification: version 1 of the set targets version 1 of the
+format.
 
 ## The fixture files
 
@@ -183,6 +183,12 @@ beside `passed`, and the command counts those cases in its summary.
 
 ## Running the set
 
+The set is a development dependency of the implementation it assesses:
+
+```bash
+npm install --save-dev @curly-message/conformance@next
+```
+
 From a test:
 
 ```ts
@@ -248,9 +254,9 @@ lands, and the set is what the reference is checked against in turn. Where
 the two disagree, the specification decides which is wrong.
 
 `npm run manifest` regenerates `index.json` from the files, and a version bump
-runs it; the tests fail
-where it is stale, where an `id` repeats, where a file does not validate
-against the schema, or where a `section` names no heading of `SPEC.md`.
+runs it; the tests fail where it is stale, where an `id` repeats, where a file
+does not validate against the schema, or where a `section` names no heading of
+`SPEC.md`.
 
 ## Development
 
