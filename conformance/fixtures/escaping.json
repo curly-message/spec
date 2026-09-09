@@ -1,0 +1,546 @@
+{
+  "format": "curly-message-1",
+  "level": "core",
+  "section": "7",
+  "cases": [
+    {
+      "id": "escaping/colon",
+      "description": "A backslash before a colon writes the colon as text.",
+      "section": "7",
+      "message": "a\\:b",
+      "expected": {
+        "output": "a:b"
+      }
+    },
+    {
+      "id": "escaping/semicolon",
+      "description": "A backslash before a semicolon writes the semicolon as text.",
+      "section": "7",
+      "message": "a\\;b",
+      "expected": {
+        "output": "a;b"
+      }
+    },
+    {
+      "id": "escaping/opening-brace",
+      "description": "A backslash before an opening brace writes the brace as text.",
+      "section": "7",
+      "message": "a\\{b",
+      "expected": {
+        "output": "a{b"
+      }
+    },
+    {
+      "id": "escaping/closing-brace",
+      "description": "A backslash before a closing brace writes the brace as text.",
+      "section": "7",
+      "message": "a\\}b",
+      "expected": {
+        "output": "a}b"
+      }
+    },
+    {
+      "id": "escaping/backslash",
+      "description": "Two backslashes write a single backslash.",
+      "section": "7",
+      "message": "a\\\\b",
+      "expected": {
+        "output": "a\\b"
+      }
+    },
+    {
+      "id": "escaping/literal-placeholder",
+      "description": "A delimiter written as text escapes both of its braces, and the construct resolves nothing even where the payload has the key.",
+      "section": "7",
+      "message": "\\{\\{v\\}\\}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "{{v}}"
+      }
+    },
+    {
+      "id": "escaping/every-whitespace-member",
+      "description": "Every member of the whitespace class escapes, the line terminators among them: the backslash before each of the twenty-five is removed.",
+      "section": "7",
+      "message": "\\\u0009|\\\u000a|\\\u000b|\\\u000c|\\\u000d|\\ |\\\u00a0|\\\u1680|\\\u2000|\\\u2001|\\\u2002|\\\u2003|\\\u2004|\\\u2005|\\\u2006|\\\u2007|\\\u2008|\\\u2009|\\\u200a|\\\u2028|\\\u2029|\\\u202f|\\\u205f|\\\u3000|\\\ufeff",
+      "expected": {
+        "output": "\u0009|\u000a|\u000b|\u000c|\u000d| |\u00a0|\u1680|\u2000|\u2001|\u2002|\u2003|\u2004|\u2005|\u2006|\u2007|\u2008|\u2009|\u200a|\u2028|\u2029|\u202f|\u205f|\u3000|\ufeff"
+      }
+    },
+    {
+      "id": "escaping/backslash-before-structural",
+      "description": "A literal backslash in front of a structural character is written by escaping both.",
+      "section": "7",
+      "message": "\\\\\\:",
+      "expected": {
+        "output": "\\:"
+      }
+    },
+    {
+      "id": "escaping/backslash-before-other",
+      "description": "A backslash before a character that carries no structural meaning denotes itself, so both characters stand.",
+      "section": "7",
+      "message": "\\a",
+      "expected": {
+        "output": "\\a"
+      }
+    },
+    {
+      "id": "escaping/backslash-before-letters",
+      "description": "A text whose backslashes all precede letters renders unchanged.",
+      "section": "7",
+      "message": "C:\\Users\\name",
+      "expected": {
+        "output": "C:\\Users\\name"
+      }
+    },
+    {
+      "id": "escaping/backslash-at-end",
+      "description": "A backslash at the end of the message has no character to cancel and denotes itself.",
+      "section": "7",
+      "message": "abc\\",
+      "expected": {
+        "output": "abc\\"
+      }
+    },
+    {
+      "id": "escaping/backslash-at-end-of-value",
+      "description": "A backslash a value carries at the very end of the final text has nothing to cancel and stays.",
+      "section": "7",
+      "message": "{{v}}",
+      "payload": {
+        "v": "abc\\"
+      },
+      "expected": {
+        "output": "abc\\"
+      }
+    },
+    {
+      "id": "escaping/value-backslash-joins-text",
+      "description": "A backslash a value ends in consumes the message character after it, because the removal runs over the final text.",
+      "section": "7",
+      "message": "{{v}};",
+      "payload": {
+        "v": "x\\"
+      },
+      "expected": {
+        "output": "x;"
+      }
+    },
+    {
+      "id": "escaping/key-colon-and-semicolon",
+      "description": "A key carries a colon and a semicolon as escape sequences and is matched after unescaping.",
+      "section": "7",
+      "message": "{{pl\\:ace\\;holder}}",
+      "payload": {
+        "pl:ace;holder": "TEST \\{\\{VALUE\\}\\}"
+      },
+      "expected": {
+        "output": "TEST {{VALUE}}"
+      }
+    },
+    {
+      "id": "escaping/key-leading-semicolon",
+      "description": "An escape sequence at the very start of a key is part of the key.",
+      "section": "7",
+      "message": "{{\\;value}}",
+      "payload": {
+        ";value": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "escaping/key-brace-inside",
+      "description": "An escaped closing brace inside a key is a member of the escapable set wherever it stands, so the backslash is removed and the key holds the brace.",
+      "section": "7",
+      "message": "{{a\\}b}}",
+      "payload": {
+        "a}b": "HIT"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "escaping/key-escaped-space",
+      "description": "A space an escape sequence claims belongs to the key and is not trimmed from it.",
+      "section": "8",
+      "message": "[{{\\ v\\ }}]",
+      "payload": {
+        " v ": "HIT",
+        "v": "TRIMMED"
+      },
+      "expected": {
+        "output": "[HIT]"
+      }
+    },
+    {
+      "id": "escaping/key-backslash-before-other",
+      "description": "A backslash before a non-structural character in a key stands with it, so the key carries both.",
+      "section": "7",
+      "message": "{{a\\xb}}",
+      "payload": {
+        "a\\xb": "HIT",
+        "axb": "STRIPPED"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "escaping/key-line-terminator",
+      "description": "A line terminator is escapable, but an escape sequence carrying one is never inside a placeholder, so the construct is literal text.",
+      "section": "7",
+      "message": "{{v\\\u000a}}",
+      "payload": {
+        "v": "HIT",
+        "v\u000a": "TERMINATOR"
+      },
+      "expected": {
+        "output": "{{v\u000a}}"
+      }
+    },
+    {
+      "id": "escaping/option-key-colon",
+      "description": "An option key carries a colon as an escape sequence and is compared unescaped.",
+      "section": "7",
+      "message": "{{v; a\\:b:X; default:D}}",
+      "payload": {
+        "v": "a:b"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "escaping/option-key-semicolon",
+      "description": "An option key carries a semicolon as an escape sequence and is compared unescaped.",
+      "section": "7",
+      "message": "{{v; a\\;b:X; default:D}}",
+      "payload": {
+        "v": "a;b"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "escaping/option-key-backslash-before-other",
+      "description": "A backslash before a non-structural character in an option key stands with it.",
+      "section": "7",
+      "message": "{{v; a\\xb:X; default:D}}",
+      "payload": {
+        "v": "a\\xb"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "escaping/valueless-option-spelling",
+      "description": "A valueless option compares by its unescaped key and resolves to its source spelling, unescaped once with the output.",
+      "section": "7",
+      "message": "{{v; a\\\\\\\\b}}",
+      "payload": {
+        "v": "a\\\\b"
+      },
+      "expected": {
+        "output": "a\\\\b"
+      }
+    },
+    {
+      "id": "escaping/option-value-colon",
+      "description": "An escaped colon in an option value is text.",
+      "section": "7",
+      "message": "{{v; a:10\\:30;   default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "10:30"
+      }
+    },
+    {
+      "id": "escaping/option-value-url",
+      "description": "An option value keeps every unescaped colon after the first, so a URL survives.",
+      "section": "6",
+      "message": "{{v; a:http://x; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "http://x"
+      }
+    },
+    {
+      "id": "escaping/option-value-clock-time",
+      "description": "An option value keeps every unescaped colon after the first, so a clock time survives.",
+      "section": "6",
+      "message": "{{v; a:10:30;    default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "10:30"
+      }
+    },
+    {
+      "id": "escaping/option-value-many-colons",
+      "description": "An option value runs to the end of the segment, whatever colons it carries.",
+      "section": "6",
+      "message": "{{v; a:b:c:d;    default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "expected": {
+        "output": "b:c:d"
+      }
+    },
+    {
+      "id": "escaping/default-value-colons",
+      "description": "An inline default is read like an option value, so it keeps every colon after the first.",
+      "section": "9.3",
+      "message": "{{v; default:10:30}}",
+      "payload": {},
+      "expected": {
+        "output": "10:30"
+      }
+    },
+    {
+      "id": "escaping/option-value-semicolon",
+      "description": "An escaped semicolon in an option value is text and does not end the segment.",
+      "section": "7",
+      "message": "{{v; 1:a\\;b}}",
+      "payload": {
+        "v": 1
+      },
+      "expected": {
+        "output": "a;b"
+      }
+    },
+    {
+      "id": "escaping/option-value-escaped-pair",
+      "description": "An escaped pair in an option value is still an escape sequence on the next pass, so it is not resolved.",
+      "section": "7",
+      "message": "{{v; 1:\\{\\{n\\}\\}}}",
+      "payload": {
+        "v": 1,
+        "n": "N"
+      },
+      "expected": {
+        "output": "{{n}}"
+      }
+    },
+    {
+      "id": "escaping/default-semicolons",
+      "description": "An escaped semicolon is text at the start, the end and as the whole of an inline default.",
+      "section": "7",
+      "message": "VALUES: {{value; default:\\;SEMI}}, {{value; default:SEMI\\;}}, {{value; default:\\;}}",
+      "payload": {},
+      "expected": {
+        "output": "VALUES: ;SEMI, SEMI;, ;"
+      }
+    },
+    {
+      "id": "escaping/default-escaped-space",
+      "description": "An escaped space writes a space that trimming keeps.",
+      "section": "7",
+      "message": "[{{v; default:\\ D\\ }}]",
+      "payload": {},
+      "expected": {
+        "output": "[ D ]"
+      }
+    },
+    {
+      "id": "escaping/combined-selected",
+      "description": "A key, an option key and an option value all carry escape sequences, and the selected value renders unescaped once.",
+      "section": "7",
+      "message": "{{va\\:lue; option\\:1:VA\\;\\{\\{LUE\\}\\}\\:1; option\\:2:VA\\;\\{\\{LUE\\}\\}\\:2; default:DEFAULT \\{\\{VALUE\\}\\}\\;}}",
+      "payload": {
+        "va:lue": "option:1"
+      },
+      "expected": {
+        "output": "VA;{{LUE}}:1"
+      }
+    },
+    {
+      "id": "escaping/combined-default",
+      "description": "An inline default carrying escaped delimiters renders them as text.",
+      "section": "7",
+      "message": "{{va\\:lue; option\\:1:VA\\;\\{\\{LUE\\}\\}\\:1; option\\:2:VA\\;\\{\\{LUE\\}\\}\\:2; default:DEFAULT \\{\\{VALUE\\}\\}\\;}}",
+      "payload": {},
+      "expected": {
+        "output": "DEFAULT {{VALUE}};"
+      }
+    },
+    {
+      "id": "escaping/modifier-name-backslash-before-other",
+      "description": "A backslash before a non-structural character in a modifier name stands with it, so the name is not the comparison it resembles.",
+      "section": "7",
+      "message": "{{v:e\\q; a:X; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "key": "escaping.modifier-name",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "escaping.modifier-name"
+          }
+        ]
+      }
+    },
+    {
+      "id": "escaping/modifier-name-escaped-space",
+      "description": "A space an escape sequence claims is part of the modifier name, so the name is not the comparison that follows it.",
+      "section": "7",
+      "message": "{{v:\\ eq; a:X; default:D}}",
+      "payload": {
+        "v": "a"
+      },
+      "key": "escaping.modifier-space",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "escaping.modifier-space"
+          }
+        ]
+      }
+    },
+    {
+      "id": "escaping/value-unescaped-like-message",
+      "description": "The text a value converts to is unescaped like the message: an escaped backslash becomes one and a backslash before a letter stands.",
+      "section": "7",
+      "message": "{{v}}",
+      "payload": {
+        "v": "\\\\server\\share"
+      },
+      "expected": {
+        "output": "\\server\\share"
+      }
+    },
+    {
+      "id": "escaping/value-removed-once",
+      "description": "Escape sequences are removed exactly once, from the final text, never from the result of a pass.",
+      "section": "7",
+      "message": "{{v}}",
+      "payload": {
+        "v": "a\\\\\\\\b"
+      },
+      "expected": {
+        "output": "a\\\\b"
+      }
+    },
+    {
+      "id": "escaping/value-escaped-pair",
+      "description": "A value containing an escaped opening pair does not become a placeholder.",
+      "section": "5",
+      "message": "{{v}}",
+      "payload": {
+        "v": "\\{\\{n\\}\\}",
+        "n": "N"
+      },
+      "expected": {
+        "output": "{{n}}"
+      }
+    },
+    {
+      "id": "escaping/value-suppressed-opening-pair",
+      "description": "A backslash a value puts before an opening pair is still an escape sequence on the next pass, so the pair does not open.",
+      "section": "5",
+      "message": "{{v}}",
+      "payload": {
+        "v": "\\{{n}}",
+        "n": "N"
+      },
+      "expected": {
+        "output": "{{n}}"
+      }
+    },
+    {
+      "id": "escaping/value-escaped-backslash-before-pair",
+      "description": "An escaped backslash a value introduces is consumed as a pair on the next pass, so the opening pair after it stands and resolves.",
+      "section": "5",
+      "message": "{{v}}",
+      "payload": {
+        "v": "\\\\{{n}}",
+        "n": "N"
+      },
+      "expected": {
+        "output": "\\N"
+      }
+    },
+    {
+      "id": "escaping/serialization-not-parsable",
+      "description": "A serialized value carrying a backslash reaches the output through the single removal, so it is no longer parsable as JSON.",
+      "section": "7",
+      "message": "{{v}}",
+      "payload": {
+        "v": {
+          "a": "C:\\U"
+        }
+      },
+      "expected": {
+        "output": "{\"a\":\"C:\\U\"}"
+      }
+    },
+    {
+      "id": "escaping/serialization-doubled-by-caller",
+      "description": "A caller that doubles every backslash of a serialization gets that serialization back from the removal.",
+      "section": "7",
+      "message": "{{v}}",
+      "payload": {
+        "v": "{\"a\":\"C:\\\\\\\\U\"}"
+      },
+      "expected": {
+        "output": "{\"a\":\"C:\\\\U\"}"
+      }
+    },
+    {
+      "id": "escaping/option-key-matches-value-before-removal",
+      "description": "An option key that spells the value's backslash escaped selects, because the modifier reads the value's text before the removal runs.",
+      "section": "7",
+      "message": "{{v; a\\\\\\:b:X; default:D}}",
+      "payload": {
+        "v": "a\\:b"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "escaping/option-key-unescaped-value-not",
+      "description": "An option key that unescapes to the value's unescaped text does not select, because the value's escape sequence is still there when the modifier compares.",
+      "section": "7",
+      "message": "{{v; a\\:b:X; default:D}}",
+      "payload": {
+        "v": "a\\:b"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "escaping/escaped-backslash-before-opening-pair",
+      "description": "An escaped backslash before the opening pair writes one backslash and leaves the pair to open.",
+      "section": "7",
+      "message": "\\\\{{v}}",
+      "payload": {
+        "v": "HIT"
+      },
+      "expected": {
+        "output": "\\HIT"
+      }
+    }
+  ]
+}

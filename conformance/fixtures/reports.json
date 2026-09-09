@@ -1,0 +1,512 @@
+{
+  "format": "curly-message-1",
+  "level": "core",
+  "section": "14",
+  "cases": [
+    {
+      "id": "reports/missing-options-eq",
+      "description": "A comparison named with no options is a message error: the chain, and a missing-options report against the message.",
+      "section": "9.5",
+      "message": "{{v:eq; default:FALLBACK}}",
+      "payload": {
+        "v": 10
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "FALLBACK",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/missing-options-each-comparison",
+      "description": "Each of the six comparison modifiers named with no options is reported, one report per placeholder in source order.",
+      "section": "9.5",
+      "message": "{{v:eq; default:D}}, {{v:ne; default:D}}, {{v:lt; default:D}}, {{v:gt; default:D}}, {{v:lte; default:D}}, {{v:gte; default:D}}",
+      "payload": {
+        "v": 10
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "D, D, D, D, D, D",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          },
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          },
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          },
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          },
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          },
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/missing-options-over-present-value",
+      "description": "The report turns on what the placeholder declares, so a comparison with no options is reported over a present value.",
+      "section": "9.5",
+      "message": "{{v:eq}}",
+      "payload": {
+        "v": 10,
+        "default": "CHAIN"
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "CHAIN",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/missing-options-over-absent-value",
+      "description": "A comparison with no options is reported over an absent value alike, though the value takes the chain before any modifier is asked.",
+      "section": "9.5",
+      "message": "{{v:eq}}",
+      "payload": {
+        "default": "CHAIN"
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "CHAIN",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/missing-options-empty-segment",
+      "description": "A segment that declares no option leaves the comparison with none, so it is reported.",
+      "section": "9.5",
+      "message": "{{v:eq;; default:D}}",
+      "payload": {
+        "v": 10
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/one-option-is-no-error",
+      "description": "A comparison offered one option is complete, so nothing is reported.",
+      "section": "9.5",
+      "message": "{{v:eq; 10:TEN; default:FALLBACK}}",
+      "payload": {
+        "v": 10
+      },
+      "expected": {
+        "output": "TEN",
+        "reports": []
+      }
+    },
+    {
+      "id": "reports/one-option-absent-value-no-error",
+      "description": "A comparison offered an option is complete over an absent value too, so it takes the chain and nothing is reported.",
+      "section": "9.5",
+      "message": "{{v:eq; 10:TEN}}",
+      "payload": {},
+      "expected": {
+        "output": "",
+        "reports": []
+      }
+    },
+    {
+      "id": "reports/plain-substitution-is-no-selection",
+      "description": "A placeholder naming no modifier and no options is a plain substitution, not a comparison, so nothing is reported.",
+      "section": "9.5",
+      "message": "{{v}} {{w; default:FALLBACK}}",
+      "payload": {
+        "v": 10
+      },
+      "expected": {
+        "output": "10 FALLBACK",
+        "reports": []
+      }
+    },
+    {
+      "id": "reports/no-key-no-selection",
+      "description": "A placeholder naming no key is neither a substitution nor a selection, so a comparison it names with no options is not reported.",
+      "section": "9.5",
+      "message": "{{:eq; default:FALLBACK}}",
+      "payload": {
+        "v": 10
+      },
+      "expected": {
+        "output": "FALLBACK",
+        "reports": []
+      }
+    },
+    {
+      "id": "reports/no-key-unknown-modifier",
+      "description": "A placeholder naming no key still names its modifier, so one nobody registered is a message error.",
+      "section": "9.5",
+      "message": "{{:zz}}",
+      "payload": {
+        "default": "CHAIN"
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "CHAIN",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/unknown-modifier-takes-chain",
+      "description": "An unknown modifier is a message error and never eq: the chain, and an unknown-modifier report against the message.",
+      "section": "11.4",
+      "message": "{{v:plural; 1:one; default:many}}",
+      "payload": {
+        "v": 1
+      },
+      "key": "common.plural",
+      "expected": {
+        "output": "many",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "common.plural"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/unknown-modifier-without-default",
+      "description": "An unknown modifier takes the chain down to the empty string where nothing declares a default, and is reported.",
+      "section": "11.4",
+      "message": "{{v:plural; 1:one}}",
+      "payload": {
+        "v": 1
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/unknown-modifier-over-absent-value",
+      "description": "The name is the error, so an unknown modifier is reported over an absent value too.",
+      "section": "11.4",
+      "message": "{{v:plural; 1:one; default:FALLBACK}}",
+      "payload": {},
+      "key": "reports.key",
+      "expected": {
+        "output": "FALLBACK",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/unregistered-name-is-unknown",
+      "description": "A name this format does not specify is unknown until a host registers it, whatever its spelling.",
+      "section": "11.4",
+      "message": "{{v:x-icon; ok:CHECK; default:FALLBACK}}",
+      "payload": {
+        "v": "ok"
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "FALLBACK",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/modifier-names-case-sensitive",
+      "description": "Modifier names are case-sensitive: eq is a modifier and EQ is not.",
+      "section": "11",
+      "message": "{{v:eq; x:X; default:D}}{{v:EQ; x:X; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "XD",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/case-variant-is-not-eq",
+      "description": "A case variant of a comparison is an unknown modifier, and is not silently treated as eq.",
+      "section": "11.4",
+      "message": "{{v:GT; 1:ONE; default:D}}",
+      "payload": {
+        "v": 1
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/unserializable-value-origin-payload",
+      "description": "A value no conversion can describe is reported as unserializable-value, whose origin is the payload.",
+      "section": "14.2",
+      "message": "{{v; default:D}}",
+      "payload": {
+        "v": {
+          "$curly": "unserializable"
+        }
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/unserializable-chain-link-reported",
+      "description": "A link of the fallback chain that is present and cannot be described is reported like any payload value, while the message that does not exist is not.",
+      "section": "14.2",
+      "message": {
+        "$curly": "unserializable"
+      },
+      "payload": {
+        "default": {
+          "$curly": "unserializable"
+        }
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "reports.key",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/missing-message-not-reported",
+      "description": "A message that no conversion can describe does not exist, and stepping past it is not a condition to report.",
+      "section": "14.2",
+      "message": {
+        "$curly": "unserializable"
+      },
+      "payload": {},
+      "key": "reports.key",
+      "expected": {
+        "output": "reports.key",
+        "reports": []
+      }
+    },
+    {
+      "id": "reports/one-error-does-not-fail-the-message",
+      "description": "A single malformed placeholder takes its chain while the rest of the message renders.",
+      "section": "14.2",
+      "message": "{{a}} {{v:zz; default:D}} {{b}}",
+      "payload": {
+        "a": "A",
+        "b": "B"
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "A D B",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/three-placeholders-three-reports",
+      "description": "A message naming an unknown modifier at three placeholders reports three times, each report naming the key.",
+      "section": "14.3",
+      "message": "{{a:zz; default:A}}{{b:zz; default:B}}{{c:zz; default:C}}",
+      "payload": {},
+      "key": "reports.key",
+      "expected": {
+        "output": "ABC",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          },
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          },
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/later-pass-reports-again",
+      "description": "A placeholder a later pass finds again, because a value carried it, met the condition again and is reported again.",
+      "section": "14.3",
+      "message": "{{v:zz; default:D}} {{w}}",
+      "payload": {
+        "w": "{{v:zz; default:D}}"
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "D D",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          },
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/source-order-within-a-pass",
+      "description": "Within a pass, reports follow the placeholders in source order.",
+      "section": "14.3",
+      "message": "{{a:zz; default:A}}{{b:eq; default:B}}{{u; default:U}}",
+      "payload": {
+        "u": {
+          "$curly": "unserializable"
+        }
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "ABU",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          },
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          },
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "key": "reports.key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/pass-order-before-source-order",
+      "description": "A report is emitted in the pass where the condition was met, so a placeholder found on the second pass reports after one met on the first however the two sit in the text.",
+      "section": "14.3",
+      "message": "{{w}}{{a:zz; default:A}}",
+      "payload": {
+        "w": "{{b:eq; default:B}}"
+      },
+      "key": "reports.key",
+      "expected": {
+        "output": "BA",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "key": "reports.key"
+          },
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "key": "reports.key"
+          }
+        ]
+      }
+    }
+  ]
+}

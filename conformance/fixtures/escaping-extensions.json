@@ -1,0 +1,84 @@
+{
+  "format": "curly-message-1",
+  "level": "extensions",
+  "section": "7",
+  "cases": [
+    {
+      "id": "escaping-extensions/modifier-name-colon",
+      "description": "A modifier name carries a colon as an escape sequence and is matched after unescaping.",
+      "section": "7",
+      "message": "{{v:x-a\\:b}}",
+      "payload": {
+        "v": "hit"
+      },
+      "modifiers": {
+        "x-a:b": "upper"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "escaping-extensions/modifier-name-escaped-space",
+      "description": "A space an escape sequence claims is part of the modifier name and is matched with it.",
+      "section": "7",
+      "message": "{{v:x-c\\ }}",
+      "payload": {
+        "v": "hit"
+      },
+      "modifiers": {
+        "x-c ": "upper"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "escaping-extensions/modifier-name-keeps-colons",
+      "description": "Only the first unescaped colon of the selector separates the key from the modifier name, so a later one needs no escape.",
+      "section": "6",
+      "message": "{{v:x-a:b}}",
+      "payload": {
+        "v": "hit"
+      },
+      "modifiers": {
+        "x-a:b": "upper"
+      },
+      "expected": {
+        "output": "HIT"
+      }
+    },
+    {
+      "id": "escaping-extensions/modifier-reads-serialization",
+      "description": "A modifier reads its input before the removal runs, so it receives the serialization the conversion produced and the output unescapes it once.",
+      "section": "7",
+      "message": "{{v:echo}}",
+      "payload": {
+        "v": {
+          "a": "x\\:"
+        }
+      },
+      "modifiers": {
+        "echo": "echo"
+      },
+      "expected": {
+        "output": "{\"a\":\"x\\:\"}"
+      }
+    },
+    {
+      "id": "escaping-extensions/options-handed-unescaped-key",
+      "description": "A host-defined modifier is handed an option key unescaped and a valueless option value as its source spelling, which the output unescapes once.",
+      "section": "7",
+      "message": "{{v:opts; a\\\\\\\\b}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "opts": "options"
+      },
+      "expected": {
+        "output": "a\\b=a\\\\b"
+      }
+    }
+  ]
+}

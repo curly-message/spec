@@ -1,0 +1,52 @@
+{
+  "format": "curly-message-1",
+  "level": "extensions",
+  "section": "14.1",
+  "cases": [
+    {
+      "id": "security-extensions/registry-own-tostring",
+      "description": "A modifier registered under toString is an own entry of the registry, so a placeholder naming it asks that modifier.",
+      "section": "14.1",
+      "message": "{{v:toString; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "toString": "upper"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "security-extensions/registry-own-proto",
+      "description": "A modifier registered under __proto__ is an own entry of the registry, so a placeholder naming it asks that modifier.",
+      "section": "14.1",
+      "message": "{{v:__proto__; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "__proto__": "upper"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "security-extensions/registry-own-constructor",
+      "description": "A modifier registered under constructor is an own entry of the registry, so a placeholder naming it asks that modifier.",
+      "section": "14.1",
+      "message": "{{v:constructor; default:D}}",
+      "payload": {
+        "v": "x"
+      },
+      "modifiers": {
+        "constructor": "upper"
+      },
+      "expected": {
+        "output": "X"
+      }
+    }
+  ]
+}
