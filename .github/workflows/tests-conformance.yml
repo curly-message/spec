@@ -2,6 +2,8 @@ name: Conformance package tests
 
 on:
   push:
+    # Branches only: a release tag names a tree the publish workflow has just tested.
+    branches: ['**']
     paths:
       - conformance/**
       # The fixtures cite sections of the specification, and the package's
