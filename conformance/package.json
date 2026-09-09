@@ -15,7 +15,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "curly-message-conformance": "./bin/conformance.js"
+    "curly-message-conformance": "bin/conformance.js"
   },
   "engines": {
     "node": ">=22"
