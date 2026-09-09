@@ -12,6 +12,8 @@ and a fallback.
 ```
 
 ```
+locale "en"
+
 greeting  { name: 'Alice' }  ->  "Hello, Alice!"
 greeting  {}                 ->  "Hello, Guest!"
 inbox     { count: 1 }       ->  "You have 1 message."
@@ -20,43 +22,47 @@ inbox     { count: 1234 }    ->  "You have 1,234 messages."
 
 The format is deliberately small. It has no plural categories and no nested
 argument syntax; formatting that depends on a locale — `number`, `date`,
-`currency`, `ago` — is delegated to `Intl`.
+`currency`, `ago` — is delegated to the host platform's internationalization
+facilities, and renders the empty string where the caller supplied no locale,
+which is why the example above names one.
 
 ## Status
 
-This repository is being seeded. **Nothing here is normative yet.**
+The specification is a **working draft**: its rulings are settled and written
+into the body of the document, which is what an implementation targets. Nothing
+has been tagged or published against it yet, so the draft is still amended in
+place rather than versioned.
 
-The syntax grew out of `@sveltekit-i18n/parser-default`, where it has so far
-been defined implicitly — by the implementation, its README and its test suite,
-which diverge in edge cases. This repository exists to give the format a
-specification that stands on its own, so that other implementations can target
-it and agree on the edges.
-
-The specification will document the behavior of the v3 parser family, which has
-not been released yet. Until then, the reference implementation is the only
-authority on what the syntax means.
+The syntax grew out of `@sveltekit-i18n/parser-default`, where it was defined
+implicitly — by the implementation, its README and its test suite, which diverge
+in edge cases. This repository exists to give the format a specification that
+stands on its own, so that other implementations can target it and agree on the
+edges.
 
 Contents:
 
 | Path | State | Purpose |
 | --- | --- | --- |
 | [`SPEC.md`](./SPEC.md) | Working draft | The specification: grammar, escaping, whitespace, resolution order, modifier semantics, fallback chain, error behavior |
-| `conformance/` | Planned | Implementation-independent fixtures — message, payload, expected output |
+| `conformance/` | Planned | Implementation-independent fixtures — the four inputs a resolution takes (message, payload, props, locale) and the expected output; for the locale-dependent modifiers, the formatting request where an implementation exposes one, and otherwise the locale data the expected output was captured against |
 | `site/` | Planned | Source of the format's public site |
 
-[`SPEC.md`](./SPEC.md) is a working draft. Its Appendix A lists every point
-where the reference implementation diverges from it, each with a proposed
-ruling that has not yet been accepted. Until those rulings are settled and the
-reference parser's v3 line is released, Appendix A — not the body of the
-document — describes what implementations actually do.
+Appendix A of [`SPEC.md`](./SPEC.md) records each behavior of the pre-3.0
+implementation the draft was written against, together with the ruling that
+resolved it. Those rulings are accepted and already stated in the body of the
+document; the appendix is a historical record, not a second set of requirements.
 
 The machine-readable identifier for the format is `curly-message`; versioned
 references use `curly-message-1`, and so on.
 
 ## Reference implementation
 
-[`@sveltekit-i18n/parser-default`](https://github.com/sveltekit-i18n/parsers/tree/master/parser-default),
-part of the [sveltekit-i18n](https://github.com/sveltekit-i18n/lib) ecosystem.
+[`@curly-message/parser`](https://github.com/curly-message/parsers/tree/main/js),
+the JavaScript implementation in the
+[curly-message/parsers](https://github.com/curly-message/parsers) repository. It
+is not published yet, and it is a reference rather than the definition — an
+implementation in any language that satisfies section 2 conforms, whether or not
+it shares any code with it.
 
 ## License
 
