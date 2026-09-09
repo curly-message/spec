@@ -59,10 +59,10 @@ references use `curly-message-1`, and so on.
 
 [`@curly-message/parser`](https://github.com/curly-message/parsers/tree/main/js),
 the JavaScript implementation in the
-[curly-message/parsers](https://github.com/curly-message/parsers) repository. It
-is not published yet, and it is a reference rather than the definition — an
-implementation in any language that satisfies section 2 conforms, whether or not
-it shares any code with it.
+[curly-message/parsers](https://github.com/curly-message/parsers) repository,
+on npm as a prerelease under the `next` dist-tag. It is a reference rather than
+the definition — an implementation in any language that satisfies section 2
+conforms, whether or not it shares any code with it.
 
 ## Releasing the conformance set
 
@@ -84,10 +84,10 @@ in the package's settings on npmjs.com or with
 `npm trust github --file publish-conformance.yml --repository curly-message/spec --allow-publish`
 — the calling workflow's filename, which is the one the registry checks — and
 the registry attaches provenance itself. A trusted publisher can be
-registered only for a package that exists, so the first version is published
-by hand once, from `main`, by a maintainer of the scope
+registered only for a package that exists, so the first version,
+`1.0.0-next.0`, was published by hand from `main` by a maintainer of the scope
 (`cd conformance && npm ci && npm publish --access public --tag next`); the
-workflow refuses to run before that.
+workflow refuses to run for a package the registry does not know.
 
 ## License
 
