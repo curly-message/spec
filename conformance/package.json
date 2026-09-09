@@ -27,6 +27,7 @@
     "test": "vitest run",
     "build": "tsup",
     "prepack": "npm run build",
+    "version": "npm run manifest",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint --fix .",
     "manifest": "node ./bin/manifest.js",

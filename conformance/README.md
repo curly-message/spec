@@ -247,7 +247,8 @@ The reference implementation is what the set is checked against before it
 lands, and the set is what the reference is checked against in turn. Where
 the two disagree, the specification decides which is wrong.
 
-`npm run manifest` regenerates `index.json` from the files; the tests fail
+`npm run manifest` regenerates `index.json` from the files, and a version bump
+runs it; the tests fail
 where it is stale, where an `id` repeats, where a file does not validate
 against the schema, or where a `section` names no heading of `SPEC.md`.
 
