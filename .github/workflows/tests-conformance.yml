@@ -1,0 +1,26 @@
+name: Conformance package tests
+
+on:
+  push:
+    paths:
+      - conformance/**
+      # The fixtures cite sections of the specification, and the package's
+      # tests check that every citation still names a heading.
+      - SPEC.md
+      - .github/workflows/tests-conformance.yml
+      - .github/workflows/tests.yml
+  workflow_dispatch:
+
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+    with:
+      package: conformance
+      packed: |
+        bin/conformance.js
+        bin/manifest.js
+        dist/index.js
+        dist/index.d.ts
+        fixtures/grammar.json
+        index.json
+        schema/fixture.schema.json
