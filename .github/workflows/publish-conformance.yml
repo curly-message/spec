@@ -1,0 +1,41 @@
+name: Conformance package publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'next cuts a prerelease under the next dist-tag; patch, minor and major cut a release under latest'
+        required: true
+        default: next
+        type: choice
+        options:
+          - next
+          - patch
+          - minor
+          - major
+
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+    with:
+      package: conformance
+      packed: |
+        bin/conformance.js
+        bin/manifest.js
+        dist/index.js
+        dist/index.d.ts
+        fixtures/grammar.json
+        index.json
+        schema/fixture.schema.json
+
+  publish:
+    needs: tests
+    uses: ./.github/workflows/publish.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      package: conformance
+      release: ${{ inputs.release }}
+    secrets:
+      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}

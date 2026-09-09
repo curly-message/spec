@@ -64,6 +64,31 @@ is not published yet, and it is a reference rather than the definition — an
 implementation in any language that satisfies section 2 conforms, whether or not
 it shares any code with it.
 
+## Releasing the conformance set
+
+`@curly-message/conformance` is released from `main` by the **Conformance
+package publish** workflow (`.github/workflows/publish-conformance.yml`,
+started by hand). `next` bumps the prerelease counter and publishes under the
+`next` dist-tag; `patch`, `minor` and `major` cut a release under `latest`,
+closing any prerelease line. The workflow runs the package's test matrix,
+bumps the version, turns the changelog's `## Unreleased` section into the
+version's, commits, tags (`conformance-v1.0.0`), pushes, publishes to npm,
+and publishes a GitHub release carrying that changelog section. A release
+whose changelog has no `## Unreleased` section is refused.
+
+The commit, the tag and the release are made as a GitHub App, whose id and
+private key the repository holds as the `APP_ID` variable and the
+`APP_PRIVATE_KEY` secret. npm holds no token: the workflow is the package's
+[trusted publisher](https://docs.npmjs.com/trusted-publishers), registered
+in the package's settings on npmjs.com or with
+`npm trust github --file publish-conformance.yml --repository curly-message/spec --allow-publish`
+— the calling workflow's filename, which is the one the registry checks — and
+the registry attaches provenance itself. A trusted publisher can be
+registered only for a package that exists, so the first version is published
+by hand once, from `main`, by a maintainer of the scope
+(`cd conformance && npm ci && npm publish --access public --tag next`); the
+workflow refuses to run before that.
+
 ## License
 
 [MIT](./LICENSE)
