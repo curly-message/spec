@@ -5,7 +5,7 @@ The visual identity of the Curly Message Format.
 | File | What it is |
 | --- | --- |
 | [`curly-icon.svg`](./curly-icon.svg) | The icon: a brace and a C. `viewBox="0 0 1024 1024"` |
-| [`curly-wordmark.svg`](./curly-wordmark.svg) | The wordmark: the icon, the letters `URLY` and the line `Message format`. `viewBox="0 0 999 408"` |
+| [`curly-wordmark.svg`](./curly-wordmark.svg) | The wordmark: the icon, the letters `URLY` and the line `MESSAGE FORMAT`. `viewBox="0 0 999 406"` |
 | [`curly-wordmark-no-tagline.svg`](./curly-wordmark-no-tagline.svg) | The wordmark without that line, in its own tight box. `viewBox="0 0 999 297"` |
 
 Every file is one `<path>` on a transparent background with no `fill`, no
@@ -44,6 +44,12 @@ Two shapes carry their own decisions:
   37.27 — the mark's one kern, which is why `L` and `Y` have no gap between
   them.
 
+The tagline is the one part of the wordmark that is not drawn from the icon's
+numbers. It is set in capitals at 52.0 with 0.22 em of letter spacing, its cap
+line 72 below the letters' baseline, and its ink centre on the wordmark's ink
+centre rather than on the viewBox — the `{` at the head and the `Y` at the tail
+weigh differently, so centring on the box would read as off-centre.
+
 The icon survives a redraw of the letters unchanged: where it appears it keeps
 the modulation it was drawn with, which is why its brace reads lighter than the
 letters beside it. The letters are made of straight lines and circular arcs
@@ -54,14 +60,14 @@ outlines.
 
 - Give the wordmark clear space of at least half the letter stroke, which is the
   padding already inside the viewBox.
-- Below roughly 200 px wide the tagline stops being legible: use
+- Below roughly 280 px wide the tagline stops being legible: use
   `curly-wordmark-no-tagline.svg`, which stays readable down to about 64 px.
 - Colour by setting `fill` on the `<svg>` or the `<path>`, or with
   `color` and `fill="currentColor"` if you add that attribute yourself.
 
 ## Provenance
 
-The tagline is set in Wix Madefor Display 600, converted to outlines. The face
-is published under the SIL Open Font License 1.1; artwork made with a font is
-not itself a font, so the outlines carry no licence obligation, but the
-attribution is recorded here because the wordmark cannot be re-set without it.
+The tagline is set in Outfit 600, converted to outlines. The face is published
+under the SIL Open Font License 1.1; artwork made with a font is not itself a
+font, so the outlines carry no licence obligation, but the attribution is
+recorded here because the wordmark cannot be re-set without it.
