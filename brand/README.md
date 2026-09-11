@@ -5,8 +5,8 @@ The visual identity of the Curly Message Format.
 | File | What it is |
 | --- | --- |
 | [`curly-icon.svg`](./curly-icon.svg) | The icon: a brace and a C. `viewBox="0 0 1024 1024"` |
-| [`curly-wordmark.svg`](./curly-wordmark.svg) | The wordmark: the icon, the letters `URLY` and the line `Message format`. `viewBox="0 0 1007 408"` |
-| [`curly-wordmark-no-tagline.svg`](./curly-wordmark-no-tagline.svg) | The wordmark without that line, in its own tight box. `viewBox="0 0 1007 297"` |
+| [`curly-wordmark.svg`](./curly-wordmark.svg) | The wordmark: the icon, the letters `URLY` and the line `Message format`. `viewBox="0 0 999 408"` |
+| [`curly-wordmark-no-tagline.svg`](./curly-wordmark-no-tagline.svg) | The wordmark without that line, in its own tight box. `viewBox="0 0 999 297"` |
 
 Every file is one `<path>` on a transparent background with no `fill`, no
 `width` and no `height`, so it renders black by default, takes any `fill` for a
@@ -14,33 +14,41 @@ light-on-dark variant, and scales to whatever box it is given.
 
 ## How the three files relate
 
-The wordmark is built from the icon, not drawn beside it:
+The wordmark is built from the icon, not drawn beside it. The `{C` at its head
+**is** `curly-icon.svg`'s path, uniformly scaled so the icon's height becomes
+the cap height (256 units) and translated into place. Everything after it is
+drawn to four numbers the icon supplies:
 
-- the `{C` at its head **is** `curly-icon.svg`'s path, uniformly scaled so the
-  icon's height becomes the cap height (256 units) and translated into place;
-- the fork of the `Y` is the same path again, rotated a quarter turn
-  counter-clockwise so the arm ends point up and the brace's cusp points down,
-  and scaled to 175.5 units wide. Its silhouette is still the icon's: the two
-  arms are thickened along their inner edges - from 84.10 to 122.70 icon units,
-  before the rotation - until the prongs measure the mark's single stroke,
-  40.7 units, rather than the thinner arms the smaller scale would otherwise
-  give. Nothing moves outward except each prong tip's cap, which rounds back by
-  about 6 units because a split cap's two radii scale with the arm they close;
-- the fork sits above the stem by the icon's own brace-to-C gap, 12.9 units,
-  and the stem's top is not flat: it follows the underside of the fork at that
-  same constant offset, so the channel between them holds its width from one
-  shoulder to the other and 83.2 units of stem are left below the cusp;
-- `U`, `R`, `L` and the `Y`'s stem are drawn at one stroke width, 40.7 units,
-  which is the thickness of the icon's horizontal arms at the scale the `{C`
-  is placed. Every free terminal of `U`, `R`, `L` and the foot of the `Y`'s
-  stem is a semicircle of half that width.
+| | Units | Where it comes from |
+| --- | --- | --- |
+| Stroke | 40.70 | the thickness of the icon's horizontal arms at the scale the `{C` is placed |
+| Letter width | 174.93 | the icon's `C` is 172.39 wide; the letters take the widest of the traced boxes, the `R`'s |
+| Corner radius | 64.98 outer, 24.28 inner | the largest of the icon's own outer curves, 44.63 on the centre line |
+| Gap | 20.60 | the same at every joint: icon to `U`, `U` to `R`, `R` to `L` |
 
-So the letters are drawn at one weight and one shape vocabulary; where the icon
-appears it keeps the modulation it was drawn with, which is why the fork's
-nested V reads lighter than its prongs. The icon survives a redraw of the
-letters unchanged. The letters and the fork are made of straight lines and
-circular arcs only; the tagline carries the quadratics of its typeface,
-converted to outlines.
+So `U`, `R`, `L` and `Y` are one width and one weight, every corner in all four
+turns on one radius, and the three gaps are one gap. Free terminals are
+semicircles of half the stroke, 20.35, which is how the icon's arms end too.
+Where a stroke runs into the side of another — the `R`'s leg under its bar, the
+`Y`'s stem under its fork — the junction is rounded by 15.69.
+
+Two shapes carry their own decisions:
+
+- the `R` has a connected top: the stem runs the whole cap height and the bowl
+  springs off it and closes back onto it, so the letter has no free bar
+  terminal. Its bar sits 133.76 below the cap line and the leg leaves that bar
+  53.95 right of the stem, at 38.3° from vertical;
+- the `Y` is a `U` fork on a stem, not a rotated brace. The fork is the letter
+  width, its bar sits 128.55 below the cap line, and the stem rises 25.50 into
+  that bar so the two read as one letter. The fork overlaps the `L`'s foot by
+  37.27 — the mark's one kern, which is why `L` and `Y` have no gap between
+  them.
+
+The icon survives a redraw of the letters unchanged: where it appears it keeps
+the modulation it was drawn with, which is why its brace reads lighter than the
+letters beside it. The letters are made of straight lines and circular arcs
+only; the tagline carries the quadratics of its typeface, converted to
+outlines.
 
 ## Using them
 
