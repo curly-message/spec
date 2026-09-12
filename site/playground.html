@@ -1,0 +1,82 @@
+<p class="lede">One call, and what it answers with. The parser runs in this
+page: nothing is sent anywhere, and the address bar carries the whole case, so
+a link reproduces it exactly.</p>
+
+<div class="cases" id="cases">
+  <button type="button" data-case="greeting">A fallback</button>
+  <button type="button" data-case="inbox">A selection</button>
+  <button type="button" data-case="invoice">A locale-dependent modifier</button>
+</div>
+
+<div class="play">
+  <form class="inputs" id="inputs" novalidate>
+    <div class="field">
+      <label for="message">Message</label>
+      <textarea id="message" rows="3" spellcheck="false" autocapitalize="off"></textarea>
+    </div>
+    <div class="field">
+      <label for="payload">Payload <span class="hint">JSON</span></label>
+      <textarea id="payload" rows="5" spellcheck="false" autocapitalize="off"></textarea>
+      <p class="bad" id="payload-bad" hidden></p>
+    </div>
+    <div class="pair">
+      <div class="field">
+        <label for="locale">Locale</label>
+        <input id="locale" type="text" spellcheck="false" autocomplete="off" autocapitalize="off">
+      </div>
+      <div class="field">
+        <label for="key">Key</label>
+        <input id="key" type="text" spellcheck="false" autocomplete="off" autocapitalize="off">
+      </div>
+    </div>
+    <details class="props">
+      <summary>Modifier properties</summary>
+      <p>What each modifier is configured with, by the name it is called under —
+        the layer <code>props</code> carries. <code>{"currency": {"currency": "EUR"}}</code>
+        says what currency the <code>currency</code> modifier formats in.</p>
+      <div class="field">
+        <label class="visually-hidden" for="props">Props</label>
+        <textarea id="props" rows="4" spellcheck="false" autocapitalize="off"></textarea>
+        <p class="bad" id="props-bad" hidden></p>
+      </div>
+    </details>
+  </form>
+
+  <div class="results">
+    <section class="result">
+      <h2>Output</h2>
+      <output id="output"></output>
+    </section>
+    <section class="result">
+      <h2>Reports</h2>
+      <div id="reports"></div>
+    </section>
+    <section class="result">
+      <h2>Parameters</h2>
+      <div id="params"></div>
+    </section>
+  </div>
+</div>
+
+<noscript>
+  <p class="bad">The playground is the one page here that needs JavaScript: it
+    runs the parser rather than describing it. Everything else on this site is
+    readable without.</p>
+</noscript>
+
+<div class="notes">
+<h2 id="what-you-are-running">What you are running</h2>
+
+<p><a href="https://www.npmjs.com/package/@curly-message/parser"><code>@curly-message/parser</code></a>
+<!--parser-version-->, the reference implementation, served from this site and
+run in this browser. It is the build the version above names, not this page's
+own copy of the format.</p>
+
+<p><strong>Locale-dependent modifiers render through this browser's own
+internationalization data.</strong> <code>number</code>, <code>date</code>,
+<code>currency</code> and <code>ago</code> ask the host to format, and hosts
+differ: the same message, payload and locale can come out differently here,
+in another browser and in Node. What this page shows is what your browser
+makes of the message — a reading, not a canonical one. Everything else the
+format specifies is the parser's own and is the same everywhere.</p>
+</div>

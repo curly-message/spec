@@ -54,6 +54,10 @@ translation that is wrong, not as a blank page.
   `@curly-message/parser` in JavaScript, released on npm. It is a reference, not
   the definition.
 
+- **[The playground](./playground.html)**
+  Resolve a message against a payload in the browser, and see the string, the
+  reports and the parameters the message names.
+
 </div>
 
 ## Status
