@@ -6,6 +6,7 @@ a link reproduces it exactly.</p>
   <button type="button" data-case="greeting">A fallback</button>
   <button type="button" data-case="inbox">A selection</button>
   <button type="button" data-case="invoice">A locale-dependent modifier</button>
+  <button type="button" data-case="missing">A key with no translation</button>
 </div>
 
 <div class="play">
@@ -13,6 +14,11 @@ a link reproduces it exactly.</p>
     <div class="field">
       <label for="message">Message</label>
       <textarea id="message" rows="3" spellcheck="false" autocapitalize="off"></textarea>
+      <label class="switch"><input type="checkbox" id="absent"> There is no message</label>
+      <p class="hint under">A host resolves what its translations hold for the key, which is
+        nothing at all when the key has none — and a message nobody wrote is the one case
+        where the key itself comes back. An empty message is still a message, and resolves
+        to the empty string.</p>
     </div>
     <div class="field">
       <label for="payload">Payload <span class="hint">JSON</span></label>

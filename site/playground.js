@@ -8,7 +8,10 @@ import { createExtractor, createParser } from './parser.js';
 const field = (id) => document.getElementById(id);
 
 // The five inputs are the five things a resolution takes, under the letters
-// the shared link spells them with.
+// the shared link spells them with. The sixth is not a value but the absence
+// of one: a key its host holds no translation for resolves nothing at all,
+// which an empty box cannot say — the empty string is a message like any
+// other.
 const FIELDS = {
   m: field('message'),
   p: field('payload'),
@@ -16,6 +19,8 @@ const FIELDS = {
   l: field('locale'),
   k: field('key'),
 };
+
+const ABSENT = field('absent');
 
 const CASES = {
   greeting: {
@@ -38,6 +43,14 @@ const CASES = {
     r: '{\n  "currency": { "currency": "EUR" },\n  "date": { "dateStyle": "long" }\n}',
     l: 'en',
     k: 'invoice',
+  },
+  missing: {
+    m: '',
+    a: '1',
+    p: '',
+    r: '',
+    l: 'en',
+    k: 'checkout.submit',
   },
 };
 
@@ -88,6 +101,7 @@ const showReports = (reports) => {
       const head = el('p', 'head');
       head.append(el('code', 'code', report.code), el('span', 'origin', report.origin));
       row.append(head, el('p', 'said', report.message));
+      if (report.key !== undefined) row.append(el('p', 'at', `Key: ${report.key}`));
       if (report.limit !== undefined) row.append(el('p', 'at', `Limit: ${report.limit}`));
       if (report.text) row.append(el('pre', 'excerpt', report.text));
       return row;
@@ -116,7 +130,8 @@ const showParams = (params) => {
 };
 
 const run = () => {
-  const message = FIELDS.m.value;
+  FIELDS.m.disabled = ABSENT.checked;
+  const message = ABSENT.checked ? undefined : FIELDS.m.value;
   const payload = object(FIELDS.p, field('payload-bad'));
   const props = object(FIELDS.r, field('props-bad'));
   const locale = FIELDS.l.value.trim() || undefined;
@@ -135,12 +150,14 @@ const run = () => {
 const share = () => {
   const state = new URLSearchParams();
   for (const [name, input] of Object.entries(FIELDS)) if (input.value) state.set(name, input.value);
+  if (ABSENT.checked) state.set('a', '1');
   const query = `${state}`;
   history.replaceState(null, '', query ? `#${query}` : location.pathname);
 };
 
 const load = (state) => {
   for (const [name, input] of Object.entries(FIELDS)) input.value = state[name] ?? '';
+  ABSENT.checked = state.a === '1';
   run();
 };
 
