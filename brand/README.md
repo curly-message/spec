@@ -100,9 +100,10 @@ the letters and twenty-seven for the tagline.
 ## Licence
 
 The marks are **not** covered by the repository's MIT licence. The name *Curly
-Message Format*, the three SVGs and the plate are © 2026
+Message Format*, the three SVGs and the two plates are © 2026
 G.A.W.Group, s.r.o., all rights reserved, under the terms in
-[`LICENSE`](./LICENSE) beside this file.
+[`LICENSE`](./LICENSE) beside this file. This README is not one of them:
+it is MIT like everything else in the repository.
 
 The short of it: you may say your software implements the format, and you may
 use these files unchanged to refer to it — scaled to any size, in any single
