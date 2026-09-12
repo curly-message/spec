@@ -6,8 +6,8 @@ Copyright (c) 2026 G.A.W.Group, s.r.o. All rights reserved.
 SCOPE
 
 This file covers the name "Curly Message Format" and the marks in this
-directory: curly-icon.svg, curly-wordmark.svg, curly-wordmark-no-tagline.svg
-and usage.png.
+directory: curly-icon.svg, curly-wordmark.svg, curly-wordmark-no-tagline.svg,
+usage-wordmark.png and usage-icon.png.
 
 These are NOT licensed under the MIT License in the root of this repository.
 That license covers the specification and the code. The format is open; its

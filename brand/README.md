@@ -2,14 +2,17 @@
 
 The visual identity of the Curly Message Format.
 
-![The wordmark on a dark ground, the brace in the theme colour](./usage.png)
+![The wordmark on a dark ground, the brace in the theme colour](./usage-wordmark.png)
+
+![The icon on the same ground, split the same way](./usage-icon.png)
 
 | File | What it is |
 | --- | --- |
 | [`curly-icon.svg`](./curly-icon.svg) | The icon: a brace and a C. `viewBox="0 0 1024 1024"` |
 | [`curly-wordmark.svg`](./curly-wordmark.svg) | The wordmark: the icon, the letters `URLY` and the line `MESSAGE FORMAT`. `viewBox="0 0 999 406"` |
 | [`curly-wordmark-no-tagline.svg`](./curly-wordmark-no-tagline.svg) | The wordmark without that line, in its own tight box. `viewBox="0 0 999 297"` |
-| [`usage.png`](./usage.png) | The plate above: the wordmark in colour on the dark ground, 2800×1160. A picture of the marks, not an asset to place. |
+| [`usage-wordmark.png`](./usage-wordmark.png) | The first plate above: the wordmark in colour on the dark ground, 2800×1160. A picture of the marks, not an asset to place. |
+| [`usage-icon.png`](./usage-icon.png) | The second: the icon alone in the same treatment, 1740×1160. |
 
 Each of the three SVGs is one `<path>` on a transparent background with no
 `fill`, no `width` and no `height`, so it renders black by default, takes any
@@ -70,9 +73,10 @@ outlines.
 
 ## Colour
 
-The plate at the top is variant A of the dark treatment: the brace in the
+The plates at the top are variant A of the dark treatment: the brace in the
 theme colour, the `C` and the letters in the base, the tagline dimmed. The
-three neutrals are settled:
+icon is the same split with nothing after the `C`, which is the point of
+drawing the wordmark from it. The three neutrals are settled:
 
 | | | Contrast on the ground |
 | --- | --- | --- |
@@ -80,8 +84,8 @@ three neutrals are settled:
 | Base | `#F5F5F3` | 16.6:1 |
 | Dimmed | `#8A8F98` | 5.6:1 |
 
-The theme colour is not. The `#F2A61A` in the plate is a placeholder picked
-for this one file, 8.8:1 on the ground; mint `#2DD4BF` at 9.7:1, vermilion
+The theme colour is not. The `#F2A61A` in the plates is a placeholder picked
+for those two files, 8.8:1 on the ground; mint `#2DD4BF` at 9.7:1, vermilion
 `#FF6B4A` at 6.4:1 and periwinkle `#818CF8` at 6.1:1 were the other
 candidates, all of them past AA here. Nothing in the SVGs depends on the
 choice — they carry no `fill` at all.
@@ -89,8 +93,9 @@ choice — they carry no `fill` at all.
 Two colours need two elements. Each SVG is a single `<path>` filled nonzero,
 so `fill` cannot colour the brace apart from the rest; split the path's
 subpaths into separate `<path>` elements first, keeping their order. In
-`curly-wordmark.svg` the first subpath is the brace, the second the `C`, the
-next eleven the letters, and the remaining twenty-seven the tagline.
+`curly-icon.svg` the first subpath is the brace and the second the `C`. In
+`curly-wordmark.svg` those two come first in the same order, then eleven for
+the letters and twenty-seven for the tagline.
 
 ## Licence
 
