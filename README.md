@@ -28,11 +28,15 @@ which is why the example above names one.
 
 ## Status
 
-The specification is a **working draft**: its rulings are settled and written
-into the body of the document, which is what an implementation targets. Nothing
-is tagged against it yet: the conformance set and the reference implementation
-are on npm as prereleases (`1.0.0-next.*`, under the `next` dist-tag) that track
-the draft, and the draft is still amended in place rather than versioned.
+The specification is **stable**. Version 1 of the format is settled: within
+`curly-message-1`, what a message resolves to does not change, and an amendment
+that would change it belongs to a later version of the format rather than to
+this one. Revisions of the document are tagged in this repository, beginning at
+`v1.0.0`.
+
+The conformance set and the reference implementation are on npm as prereleases
+(`1.0.0-next.*`, under the `next` dist-tag) and release against the stable
+document as `1.0.0`.
 
 The syntax grew out of `@sveltekit-i18n/parser-default`, where it was defined
 implicitly — by the implementation, its README and its test suite, which diverge
@@ -44,13 +48,13 @@ Contents:
 
 | Path | State | Purpose |
 | --- | --- | --- |
-| [`SPEC.md`](./SPEC.md) | Working draft | The specification: grammar, escaping, whitespace, resolution order, modifier semantics, fallback chain, error behavior |
-| [`conformance/`](./conformance) | Working draft, on npm under `next` | The conformance set, published as `@curly-message/conformance`: implementation-independent fixtures — the inputs a resolution takes and the output and reports it must produce, each pinned to the section it tests — with the JSON Schema they validate against, a manifest, and a JavaScript runner that drives an implementation through the adapter of section 14.3. For the locale-dependent modifiers a fixture states the formatting request, and the runner performs it on the host it runs on |
+| [`SPEC.md`](./SPEC.md) | Stable | The specification: grammar, escaping, whitespace, resolution order, modifier semantics, fallback chain, error behavior |
+| [`conformance/`](./conformance) | Prerelease, on npm under `next` | The conformance set, published as `@curly-message/conformance`: implementation-independent fixtures — the inputs a resolution takes and the output and reports it must produce, each pinned to the section it tests — with the JSON Schema they validate against, a manifest, and a JavaScript runner that drives an implementation through the adapter of section 14.3. For the locale-dependent modifiers a fixture states the formatting request, and the runner performs it on the host it runs on |
 | [`brand/`](./brand) | In progress | The visual identity: the icon and the wordmark as SVGs, under [their own terms](./brand/LICENSE) |
 | `site/` | Planned | Source of the format's public site |
 
 Appendix A of [`SPEC.md`](./SPEC.md) records each behavior of the pre-3.0
-implementation the draft was written against, together with the ruling that
+implementation the document was written against, together with the ruling that
 resolved it. Those rulings are accepted and already stated in the body of the
 document; the appendix is a historical record, not a second set of requirements.
 

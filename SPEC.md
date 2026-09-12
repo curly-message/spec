@@ -1,23 +1,28 @@
 # Curly Message Format
 
-**Version 1 — Working Draft**
+**Version 1 — Stable**
 
 | | |
 | --- | --- |
 | Format name | Curly Message Format |
 | Machine-readable identifier | `curly-message` |
 | Versioned identifier | `curly-message-1` |
-| Status | Working Draft |
+| Status | Stable |
 
-> **This is a working draft of version 1.** The body of this document is
-> normative: it states what a conforming implementation must do. Nothing has
-> been released against it, so the version-1 surface may still change before it
-> is frozen.
+> **Version 1 is stable.** The body of this document is normative: it states
+> what a conforming implementation must do. Within `curly-message-1`, what a
+> message resolves to is settled — a message written against this document
+> resolves the same way against every later revision of it, and an amendment
+> that would change that belongs to a later version of the format rather than
+> to this one. What a later revision may add is what leaves the messages
+> written today alone: a modifier under a name no earlier revision defined, a
+> conformance level an implementation opts into, and wording that states more
+> precisely what the body already required.
 >
-> Appendix A records the divergences found while this draft was written against
-> the pre-3.0 reference parser, and the ruling that resolved each one. Those
-> rulings are accepted and written into the body — the appendix is a historical
-> record, not a list of open questions.
+> Appendix A records the divergences found while this document was written
+> against the pre-3.0 reference parser, and the ruling that resolved each one.
+> Those rulings are accepted and written into the body — the appendix is a
+> historical record, not a list of open questions.
 
 ## 1. Scope
 
@@ -1229,7 +1234,7 @@ minima is exercised at the bounds it documents rather than at those minima.
 
 ## Appendix A: rulings on known divergences
 
-Every entry records a behavior of the pre-3.0 implementation this draft was
+Every entry records a behavior of the pre-3.0 implementation this document was
 written against, and the ruling that resolved it. **The rulings are accepted.**
 Each is written into the body of this document as a requirement — sections 4, 6,
 7, 8, 9, 10, 11, 13 and 14 — and the body, not this appendix, is normative.
@@ -1237,8 +1242,8 @@ Each is written into the body of this document as a requirement — sections 4, 
 Each **Observed** block is a historical record of that pre-3.0 implementation:
 what it did before the ruling landed. It is not re-measured against any current
 head, and it describes no conforming implementation. Entries A.1-A.6 correspond
-to the six divergences already catalogued before this draft; the rest were found
-while writing it.
+to the six divergences already catalogued before this document; the rest were
+found while writing it.
 
 Every ruling is a breaking change to the implementation it was observed on and
 none is a breaking change to a released package: `@curly-message/parser` is new
