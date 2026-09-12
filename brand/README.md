@@ -101,9 +101,12 @@ Light:
 | Theme | `#FF4365` | 3.1:1 |
 
 Every pair but one clears the 4.5:1 that text is held to. The light theme
-colour clears 3:1 instead, which is what WCAG 1.4.11 asks of a graphic: the
-brace carries it, and so do a border, an icon and a rule. Text set in it — a
-link, a label — does not, and takes the base or a darker tone of the hue.
+colour clears 3:1 instead, which is what WCAG 1.4.11 asks of a graphic, and it
+is still the only theme value that ground has: the brace takes it, and so do a
+border, a rule, a label, a version pill and a link. Words set in it measure
+3.1:1, under the 4.5:1 that 1.4.3 asks of text. Where that threshold is
+binding they take the base — not a second red, which at the size a link is set
+reads as the first one misprinted.
 
 Nothing in the SVGs depends on any of it: they carry no `fill` at all.
 
