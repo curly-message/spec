@@ -197,7 +197,7 @@ beside `passed`, and the command counts those cases in its summary.
 The set is a development dependency of the implementation it assesses:
 
 ```bash
-npm install --save-dev @curly-message/conformance@next
+npm install --save-dev @curly-message/conformance
 ```
 
 From a test:
