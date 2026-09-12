@@ -137,6 +137,10 @@ body {
   text-transform: uppercase;
   color: var(--dim);
   white-space: nowrap;
+  /* Centred on its ink rather than on its box: the box carries descender room
+   * under the last baseline that the capitals never use, which lifts two
+   * centred lines above the letters beside them. */
+  transform: translateY(2px);
 }
 
 .mark:hover .tag {
