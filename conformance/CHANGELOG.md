@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+First stable release. The set targets `curly-message-1` — version 1 of the
+Curly Message Format, which the specification states is stable — so what a
+fixture expects is settled with it.
+
 * The key of an expected report is text. A tagged value is read on a case's
   inputs and never in its expectations, so one written in an expectation would
   have been compared as the object it is spelled as; the schema now rules it
