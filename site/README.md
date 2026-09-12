@@ -60,7 +60,8 @@ face; the prose is Literata; code takes the reader's own monospace.
 
 The masthead carries the whole lockup on one line: the wordmark without its
 tagline, which is the file `brand/` prescribes at this size, then a hairline
-rule, then the tagline beside it rather than under it — set as text in the
-setting `brand/README.md` records for it, so it stays selectable and takes the
-reader's rendering. Its three colours are the plate's: the brace in the theme
+rule, then the tagline beside it rather than under it, broken over two lines so
+the pair stands as tall as the wordmark does. It is set as text in the setting
+`brand/README.md` records for it, so it stays selectable and takes the reader's
+own rendering. Its three colours are the plate's: the brace in the theme
 colour, the letters in the base, the tagline dimmed.
