@@ -34,9 +34,8 @@ that would change it belongs to a later version of the format rather than to
 this one. Revisions of the document are tagged in this repository, beginning at
 `v1.0.0`.
 
-The conformance set and the reference implementation are on npm as prereleases
-(`1.0.0-next.*`, under the `next` dist-tag) and release against the stable
-document as `1.0.0`.
+The conformance set and the reference implementation are on npm as `1.0.0`,
+released against this document.
 
 The syntax grew out of `@sveltekit-i18n/parser-default`, where it was defined
 implicitly — by the implementation, its README and its test suite, which diverge
@@ -49,7 +48,7 @@ Contents:
 | Path | State | Purpose |
 | --- | --- | --- |
 | [`SPEC.md`](./SPEC.md) | Stable | The specification: grammar, escaping, whitespace, resolution order, modifier semantics, fallback chain, error behavior |
-| [`conformance/`](./conformance) | Prerelease, on npm under `next` | The conformance set, published as `@curly-message/conformance`: implementation-independent fixtures — the inputs a resolution takes and the output and reports it must produce, each pinned to the section it tests — with the JSON Schema they validate against, a manifest, and a JavaScript runner that drives an implementation through the adapter of section 14.3. For the locale-dependent modifiers a fixture states the formatting request, and the runner performs it on the host it runs on |
+| [`conformance/`](./conformance) | Stable, on npm | The conformance set, published as `@curly-message/conformance`: implementation-independent fixtures — the inputs a resolution takes and the output and reports it must produce, each pinned to the section it tests — with the JSON Schema they validate against, a manifest, and a JavaScript runner that drives an implementation through the adapter of section 14.3. For the locale-dependent modifiers a fixture states the formatting request, and the runner performs it on the host it runs on |
 | [`brand/`](./brand) | In progress | The visual identity: the icon and the wordmark as SVGs, under [their own terms](./brand/LICENSE) |
 | `site/` | Planned | Source of the format's public site |
 
@@ -66,9 +65,9 @@ references use `curly-message-1`, and so on.
 [`@curly-message/parser`](https://github.com/curly-message/parsers/tree/main/js),
 the JavaScript implementation in the
 [curly-message/parsers](https://github.com/curly-message/parsers) repository,
-on npm as a prerelease under the `next` dist-tag. It is a reference rather than
-the definition — an implementation in any language that satisfies section 2
-conforms, whether or not it shares any code with it.
+released on npm. It is a reference rather than the definition — an
+implementation in any language that satisfies section 2 conforms, whether or
+not it shares any code with it.
 
 ## Releasing the conformance set
 

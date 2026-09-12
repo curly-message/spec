@@ -22,11 +22,10 @@ the sentence the implementation disagrees with.
 
 ## Status
 
-**Prerelease**, on npm as `@curly-message/conformance` under the `next`
-dist-tag. The set lives in the specification's repository because its fixtures
-are artifacts of the format, not of any one implementation, and it is versioned
-against the specification: version 1 of the set targets version 1 of the
-format.
+**Stable**, on npm as `@curly-message/conformance`. The set lives in the
+specification's repository because its fixtures are artifacts of the format,
+not of any one implementation, and it is versioned against the specification:
+version 1 of the set targets version 1 of the format.
 
 ## The fixture files
 
