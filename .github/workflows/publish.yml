@@ -11,6 +11,11 @@ on:
         description: 'next (a prerelease under the next dist-tag), patch, minor or major'
         required: true
         type: string
+      assets:
+        description: 'Paths in the package, one per line, packed into one archive the release carries'
+        required: false
+        default: ''
+        type: string
     secrets:
       APP_PRIVATE_KEY:
         required: true
@@ -86,6 +91,32 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
+      # Files a consumer may want without the registry in the way. They are
+      # staged under one directory so the archive unpacks into a folder rather
+      # than over the directory it is unpacked in, and are named rather than
+      # matched: a path that has moved fails the release instead of dropping
+      # out of it.
+      - name: Pack the release asset
+        id: asset
+        if: inputs.assets != ''
+        env:
+          ASSETS: ${{ inputs.assets }}
+          PACKAGE: ${{ inputs.package }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          name="$PACKAGE-$VERSION"
+          root="$RUNNER_TEMP/asset/$name"
+          mkdir -p "$root"
+          while IFS= read -r path; do
+            [ -n "$path" ] || continue
+            [ -e "$path" ] || { echo "::error::'$path' is named as a release asset but is not in $PACKAGE."; exit 1; }
+            cp --parents --recursive "$path" "$root"
+          done <<< "$ASSETS"
+          ( cd "$RUNNER_TEMP/asset" && zip --quiet --recurse-paths "$name.zip" "$name" )
+          echo "file=$RUNNER_TEMP/asset/$name.zip" >> "$GITHUB_OUTPUT"
+          echo "name=$name.zip" >> "$GITHUB_OUTPUT"
+          echo "sha=$(sha256sum "$RUNNER_TEMP/asset/$name.zip" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+
       # The pre-commit hook lints the package; the tests job already did. One
       # atomic push carries the commit and the tag: either both land or neither,
       # and --follow-tags would have left a lightweight tag behind.
@@ -109,7 +140,8 @@ jobs:
       - name: Publish to npm
         run: npm publish --access public --tag ${{ steps.version.outputs.tag }}
 
-      # The release notes are the changelog section the bump just named.
+      # The release notes are the changelog section the bump just named, and
+      # the digest of the asset where there is one.
       - name: Publish the GitHub release
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
@@ -117,7 +149,13 @@ jobs:
           NAME: ${{ steps.version.outputs.name }}
           VERSION: ${{ steps.version.outputs.version }}
           TAG: ${{ steps.version.outputs.tag }}
+          ASSET: ${{ steps.asset.outputs.file }}
+          ASSET_NAME: ${{ steps.asset.outputs.name }}
+          ASSET_SHA: ${{ steps.asset.outputs.sha }}
         run: |
           awk -v heading="## $VERSION" '$0 == heading { on = 1; next } /^## / { on = 0 } on' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          if [ -n "$ASSET" ]; then
+            printf 'The release carries **%s** for anything that does not install from npm. `sha256 %s`\n' "$ASSET_NAME" "$ASSET_SHA" >> "$RUNNER_TEMP/notes.md"
+          fi
           [ "$TAG" = next ] && prerelease=--prerelease || prerelease=
-          gh release create "$PACKAGE-v$VERSION" --verify-tag --title "$NAME@$VERSION" --notes-file "$RUNNER_TEMP/notes.md" $prerelease
+          gh release create "$PACKAGE-v$VERSION" --verify-tag --title "$NAME@$VERSION" --notes-file "$RUNNER_TEMP/notes.md" $prerelease $ASSET

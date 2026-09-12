@@ -37,5 +37,11 @@ jobs:
     with:
       package: conformance
       release: ${{ inputs.release }}
+      # The set itself, as the release carries it for an implementation in a
+      # language npm does not reach.
+      assets: |
+        fixtures
+        index.json
+        schema/fixture.schema.json
     secrets:
       APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}

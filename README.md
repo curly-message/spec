@@ -98,6 +98,12 @@ version's, commits, tags (`conformance-v1.0.0`), pushes, publishes to npm,
 and publishes a GitHub release carrying that changelog section. A release
 whose changelog has no `## Unreleased` section is refused.
 
+That release also carries the set as a file: `conformance-<version>.zip`,
+holding `fixtures/`, `index.json` and `schema/fixture.schema.json` under one
+directory, with its digest in the notes, for an implementation in a language
+npm does not reach. It is packed before anything is pushed or published, so a
+path that has moved fails the run rather than dropping out of the archive.
+
 The commit, the tag and the release are made as a GitHub App, whose id and
 private key the repository holds as the `APP_ID` variable and the
 `APP_PRIVATE_KEY` secret. npm holds no token: the workflow is the package's
