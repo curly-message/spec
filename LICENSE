@@ -1,3 +1,11 @@
+SCOPE
+
+This license covers the specification, the conformance package and everything
+else in this repository EXCEPT the brand directory. The name "Curly Message
+Format" and the marks in brand/ - the icon and the wordmark - are not licensed
+under the terms below; their terms are in brand/LICENSE.
+
+
 MIT License
 
 Copyright (c) 2026 G.A.W.Group, s.r.o.

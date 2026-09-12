@@ -1,0 +1,47 @@
+The Curly Message Format marks
+
+Copyright (c) 2026 G.A.W.Group, s.r.o. All rights reserved.
+
+
+SCOPE
+
+This file covers the name "Curly Message Format" and the marks in this
+directory: curly-icon.svg, curly-wordmark.svg and
+curly-wordmark-no-tagline.svg.
+
+These are NOT licensed under the MIT License in the root of this repository.
+That license covers the specification and the code. The format is open; its
+marks are not.
+
+
+WHAT YOU MAY DO
+
+Refer to the format by name, including saying that your software implements,
+supports, reads or writes the Curly Message Format.
+
+Use the marks, unchanged, to refer to the format: in documentation, in an
+article, in a list of supported formats, on a slide, in a README. You may
+scale them to any size and render them in any single colour, which is what
+they are built for.
+
+
+WHAT YOU MAY NOT DO
+
+Change a mark's shape, its proportions or its wording, or combine it with
+other elements into a new mark.
+
+Use the name or the marks as the name or the mark of your own project,
+product or organisation, or in any way that suggests G.A.W.Group, s.r.o.
+endorses you or is affiliated with you, or that your implementation is the
+official one.
+
+Sell merchandise carrying the marks.
+
+Register the name or the marks, or anything confusingly similar to them, as a
+trademark.
+
+
+ANYTHING ELSE
+
+If you need something these terms do not cover, open an issue in this
+repository and ask.

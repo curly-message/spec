@@ -65,7 +65,26 @@ outlines.
 - Colour by setting `fill` on the `<svg>` or the `<path>`, or with
   `color` and `fill="currentColor"` if you add that attribute yourself.
 
+## Licence
+
+The marks are **not** covered by the repository's MIT licence. The name *Curly
+Message Format* and the three SVGs are © 2026
+G.A.W.Group, s.r.o., all rights reserved, under the terms in
+[`LICENSE`](./LICENSE) beside this file.
+
+The short of it: you may say your software implements the format, and you may
+use these files unchanged to refer to it — scaled to any size, in any single
+colour. You may not redraw them, fold them into a mark of your own, or use
+them in a way that reads as official or endorsed. The format is open; its
+marks are how people tell it apart from everything else.
+
 ## Provenance
+
+The marks were traced from three generated bitmaps — the icon on a light
+rounded tile, and two wordmark variants differing only in the `Y`. They are not
+kept here. Nothing in these files still matches them: the letters were redrawn
+afterwards to the icon's own numbers and the tagline was re-set in capitals, so
+the bitmaps are the origin of the mark rather than a target it answers to.
 
 The tagline is set in Outfit 600, converted to outlines. The face is published
 under the SIL Open Font License 1.1; artwork made with a font is not itself a
