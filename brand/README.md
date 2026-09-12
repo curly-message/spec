@@ -91,11 +91,16 @@ candidates, all of them past AA here. Nothing in the SVGs depends on the
 choice — they carry no `fill` at all.
 
 Two colours need two elements. Each SVG is a single `<path>` filled nonzero,
-so `fill` cannot colour the brace apart from the rest; split the path's
-subpaths into separate `<path>` elements first, keeping their order. In
-`curly-icon.svg` the first subpath is the brace and the second the `C`. In
-`curly-wordmark.svg` those two come first in the same order, then eleven for
-the letters and twenty-seven for the tagline.
+so `fill` cannot colour the brace apart from the rest; split it into one
+`<path>` per colour, each carrying the subpaths of that colour together, in
+their original order and still filled nonzero. In `curly-icon.svg` the first
+subpath is the brace and the second the `C`. In `curly-wordmark.svg` those two
+come first in the same order, then eleven for the letters and twenty-seven for
+the tagline.
+
+One `<path>` per subpath is not the same thing, and the tagline is where the
+difference shows: the `O`'s counter is a subpath the nonzero rule cuts out of
+the ring around it, and given an element of its own it fills the letter in.
 
 ## Licence
 
