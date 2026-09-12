@@ -49,7 +49,7 @@ Contents:
 | --- | --- | --- |
 | [`SPEC.md`](./SPEC.md) | Stable | The specification: grammar, escaping, whitespace, resolution order, modifier semantics, fallback chain, error behavior |
 | [`conformance/`](./conformance) | Stable, on npm | The conformance set, published as `@curly-message/conformance`: implementation-independent fixtures — the inputs a resolution takes and the output and reports it must produce, each pinned to the section it tests — with the JSON Schema they validate against, a manifest, and a JavaScript runner that drives an implementation through the adapter of section 14.3. For the locale-dependent modifiers a fixture states the formatting request, and the runner performs it on the host it runs on |
-| [`brand/`](./brand) | In progress | The visual identity: the icon and the wordmark as SVGs, under [their own terms](./brand/LICENSE) |
+| [`brand/`](./brand) | Stable | The visual identity: the icon and the wordmark as SVGs, and the palette they are used in, under [their own terms](./brand/LICENSE) |
 | `site/` | Planned | Source of the format's public site |
 
 Appendix A of [`SPEC.md`](./SPEC.md) records each behavior of the pre-3.0

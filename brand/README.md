@@ -76,19 +76,36 @@ outlines.
 The plates at the top are variant A of the dark treatment: the brace in the
 theme colour, the `C` and the letters in the base, the tagline dimmed. The
 icon is the same split with nothing after the `C`, which is the point of
-drawing the wordmark from it. The three neutrals are settled:
+drawing the wordmark from it.
+
+The palette is settled, and it is two palettes. A ground carries its own theme
+colour, because one value cannot serve both: the amber that sits at 8.8:1 on
+the dark ground falls to 1.9:1 on the light one.
+
+Dark:
 
 | | | Contrast on the ground |
 | --- | --- | --- |
 | Ground | `#14161A` | |
 | Base | `#F5F5F3` | 16.6:1 |
 | Dimmed | `#8A8F98` | 5.6:1 |
+| Theme | `#F2A61A` | 8.8:1 |
 
-The theme colour is not. The `#F2A61A` in the plates is a placeholder picked
-for those two files, 8.8:1 on the ground; mint `#2DD4BF` at 9.7:1, vermilion
-`#FF6B4A` at 6.4:1 and periwinkle `#818CF8` at 6.1:1 were the other
-candidates, all of them past AA here. Nothing in the SVGs depends on the
-choice — they carry no `fill` at all.
+Light:
+
+| | | Contrast on the ground |
+| --- | --- | --- |
+| Ground | `#F5F5F3` | |
+| Base | `#14161A` | 16.6:1 |
+| Dimmed | `#6B7079` | 4.6:1 |
+| Theme | `#FF4365` | 3.1:1 |
+
+Every pair but one clears the 4.5:1 that text is held to. The light theme
+colour clears 3:1 instead, which is what WCAG 1.4.11 asks of a graphic: the
+brace carries it, and so do a border, an icon and a rule. Text set in it — a
+link, a label — does not, and takes the base or a darker tone of the hue.
+
+Nothing in the SVGs depends on any of it: they carry no `fill` at all.
 
 Two colours need two elements. Each SVG is a single `<path>` filled nonzero,
 so `fill` cannot colour the brace apart from the rest; split it into one
