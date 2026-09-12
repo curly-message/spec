@@ -1,10 +1,13 @@
 // Builds the Curly Message Format's site into _site/.
 //
-// Every page is one markdown file that already lives in this repository, so
-// the site says what the repository says or it does not say it at all. The
-// output is static HTML: no client-side JavaScript, nothing fetched at
-// runtime, and every link relative, so the same build serves from a project
-// path and from the root of a domain without being told which.
+// Every page but one is a markdown file that already lives in this repository,
+// so the site says what the repository says or it does not say it at all. The
+// exception is the playground, which runs the reference parser rather than
+// describing it: it is written as HTML and carries the one script the site
+// has. Nothing is fetched at runtime — the parser is vendored out of
+// node_modules at build time, from the version this package pins — and every
+// link is relative, so the same build serves from a project path and from the
+// root of a domain without being told which.
 
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -21,7 +24,9 @@ const PARSERS = 'https://github.com/curly-message/parsers';
 
 // The pages, in navigation order. `from` is a path in the repository and `to`
 // the file the site serves it as; `toc` gives the page the sidebar its own
-// headings build.
+// headings build. `html` marks a page written as a fragment rather than
+// rendered from markdown, and then `title` is its heading and `script` the
+// module it loads.
 const PAGES = [
   {
     from: 'site/index.md',
@@ -50,6 +55,18 @@ const PAGES = [
       'The implementation-independent conformance set: what an implementation is driven through, what it must produce, and how to run it in any language.',
   },
   {
+    from: 'site/playground.html',
+    to: 'playground/index.html',
+    nav: 'Playground',
+    tab: 'Playground',
+    html: true,
+    title: 'Playground',
+    script: 'app.js',
+    cls: 'playground',
+    description:
+      'Resolve a message against a payload in the browser and see what the reference implementation answers with: the string, its reports, and the parameters the message names.',
+  },
+  {
     from: 'brand/README.md',
     to: 'brand/index.html',
     nav: 'Brand',
@@ -69,6 +86,7 @@ const ONSITE = new Map([
   ['conformance/README.md', 'conformance/index.html'],
   ['brand', 'brand/index.html'],
   ['brand/README.md', 'brand/index.html'],
+  ['site/playground.html', 'playground/index.html'],
   ['brand/curly-icon.svg', 'brand/curly-icon.svg'],
   ['brand/curly-wordmark.svg', 'brand/curly-wordmark.svg'],
   ['brand/curly-wordmark-no-tagline.svg', 'brand/curly-wordmark-no-tagline.svg'],
@@ -203,7 +221,7 @@ const shell = ({ page, glyph, title, body, sidebar }) => `<!doctype html>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,wght@0,400;0,600;1,400&family=Outfit:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="${href('style.css', page)}">
 </head>
-<body class="${page.to === 'index.html' ? 'home' : 'doc'}${page.toc ? ' has-toc' : ''}">
+<body class="${page.cls ?? (page.to === 'index.html' ? 'home' : 'doc')}${page.toc ? ' has-toc' : ''}">
 <a class="skip" href="#content">Skip to content</a>
 <header class="masthead">
   <a class="mark" href="${href('index.html', page)}" aria-label="Curly Message Format">
@@ -238,7 +256,7 @@ ${body}
     © 2026 G.A.W.Group, s.r.o., all rights reserved, under
     <a href="${REPO}/blob/main/brand/LICENSE">their own terms</a>.</p>
 </footer>
-</body>
+${page.script ? `<script type="module" src="${page.script}"></script>\n` : ''}</body>
 </html>
 `;
 
@@ -247,9 +265,13 @@ const build = async () => {
   const glyph = await mark('brand/curly-wordmark-no-tagline.svg');
   const favicon = await mark('brand/curly-icon.svg');
 
+  const parser = JSON.parse(await readFile(join(here, 'node_modules/@curly-message/parser/package.json'), 'utf8'));
+
   for (const page of PAGES) {
-    const markdown = await readFile(join(repo, page.from), 'utf8');
-    const { body, headings, title } = render(markdown, page);
+    const source = await readFile(join(repo, page.from), 'utf8');
+    const { body, headings, title } = page.html
+      ? { body: source.replace('<!--parser-version-->', escape(parser.version)), headings: [], title: page.title }
+      : render(source, page);
     if (!title) throw new Error(`${page.from} opens with no heading to take a title from.`);
     const html = shell({ page, glyph, title, body, sidebar: toc(headings, page) });
     const file = join(out, page.to);
@@ -257,6 +279,15 @@ const build = async () => {
     await writeFile(file, html);
     console.log(`${page.from} -> ${page.to} (${headings.length} headings)`);
   }
+
+  // The playground's two modules, both from this package: the parser as the
+  // lockfile pins it, and the page's own script. A runtime CDN would make a
+  // static page depend on a third party staying up and would let the
+  // playground drift from the release it says it is running.
+  await mkdir(join(out, 'playground'), { recursive: true });
+  await cp(join(here, 'node_modules/@curly-message/parser/dist/index.js'), join(out, 'playground/parser.js'));
+  await cp(join(here, 'playground.js'), join(out, 'playground/app.js'));
+  console.log(`playground -> @curly-message/parser ${parser.version}`);
 
   await cp(join(here, 'style.css'), join(out, 'style.css'));
   await writeFile(

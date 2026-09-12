@@ -12,6 +12,7 @@
     "serve": "node --run build && node --watch-path=. build.mjs --serve"
   },
   "devDependencies": {
+    "@curly-message/parser": "^1.0.0",
     "marked": "^18.0.12"
   }
 }

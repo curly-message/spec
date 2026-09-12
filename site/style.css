@@ -587,3 +587,229 @@ footer code {
   max-width: 62ch;
   font-size: 13.5px;
 }
+
+/* Playground -------------------------------------------------------------- */
+
+body.playground article {
+  max-width: 1180px;
+}
+
+/* The measure is 68 characters of the body face, so it is set on a block of
+ * prose rather than on a heading — `ch` on a heading is the display face's
+ * character, which is a different length. */
+body.playground article > p,
+body.playground .notes {
+  max-width: var(--measure);
+}
+
+.cases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 24px;
+}
+
+.cases button {
+  font-family: var(--display);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--dim);
+  background: none;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 5px 15px;
+  cursor: pointer;
+}
+
+.cases button:hover {
+  color: var(--base);
+  border-color: var(--base);
+}
+
+/* The call on the left, what it answered with on the right, and one column
+ * under the width where two would each be too narrow to read a message in. */
+.play {
+  display: grid;
+  gap: 30px;
+  align-items: start;
+  margin-bottom: 8px;
+}
+
+@media (min-width: 900px) {
+  .play {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 40px;
+  }
+}
+
+.inputs {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.label,
+.field label,
+.result h2,
+.props summary {
+  font-family: var(--display);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.field .hint {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.inputs textarea,
+.inputs input {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--base);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 7px;
+  padding: 11px 13px;
+  resize: vertical;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.props summary {
+  cursor: pointer;
+}
+
+.props > p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--dim);
+  margin: 10px 0 12px;
+}
+
+.results {
+  display: grid;
+  gap: 26px;
+  min-width: 0;
+}
+
+.result h2 {
+  border-top: none;
+  padding-top: 0;
+  margin: 0 0 9px;
+}
+
+#output {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 7px;
+  padding: 16px 18px;
+  font-size: 18px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+#output.empty {
+  color: var(--dim);
+  font-style: italic;
+}
+
+/* A report is the parser saying something went wrong, so it takes the rail the
+ * theme colour is spent on; a parameter is an observation and takes a plain
+ * one. */
+.report,
+.param {
+  border-left: 2px solid var(--hairline);
+  padding-left: 15px;
+  margin-bottom: 16px;
+}
+
+.report {
+  border-left-color: var(--theme);
+}
+
+.report:last-child,
+.param:last-child {
+  margin-bottom: 0;
+}
+
+.report .head,
+.param .head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 11px;
+  margin: 0 0 5px;
+}
+
+.origin,
+.kind {
+  font-family: var(--display);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.said {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+
+.at,
+.values {
+  margin: 5px 0 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--dim);
+}
+
+.excerpt {
+  margin: 10px 0 0;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.quiet {
+  margin: 0;
+  font-size: 15.5px;
+  color: var(--dim);
+}
+
+.bad {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  border-left: 2px solid var(--theme);
+  padding-left: 11px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
