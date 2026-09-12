@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+* The release carries the set as `conformance-<version>.zip` — the fixtures,
+  the manifest and the schema — so an implementation in a language npm does not
+  reach has the same files the runner reads.
+
 ## 1.0.0
 
 First stable release. The set targets `curly-message-1` — version 1 of the

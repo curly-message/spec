@@ -35,6 +35,12 @@ section each covers. `schema/fixture.schema.json` is the JSON Schema every file
 validates against, so a runner in another language checks the set before it
 reads it.
 
+Those files are the set. Nothing in them is JavaScript, so an implementation in
+another language needs nothing else from this package: every release carries
+them as `conformance-<version>.zip` — the fixtures, the manifest and the schema
+under one directory, with its digest in the release notes — attached to the
+[release](https://github.com/curly-message/spec/releases) that named it.
+
 A file has a `format`, the versioned identifier of the format it targets; a
 `level`, the conformance level of section 2 that requires every case in it;
 a `section`, the heading of the specification the file pins; and its `cases`.
