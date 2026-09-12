@@ -68,14 +68,6 @@ describe('the shipped set', () => {
     expect(requests.filter(({ format }) => format.api === 'DateTimeFormat' && !Object.hasOwn(format.options ?? {}, 'timeZone')).map(({ id }) => id)).toEqual([]);
   });
 
-  it('stays clear of what the contract leaves open: a tagged value in an expected report key, and an empty locale beside the locale behaviour', () => {
-    const tagged = (value: unknown): boolean => Array.isArray(value) ? value.some(tagged) : value !== null && typeof value === 'object' && (Object.hasOwn(value, '$curly') || Object.values(value).some(tagged));
-    const concrete = cases.flatMap(({ c }) => 'expected' in c ? [c] : []);
-
-    expect(concrete.filter((c) => c.expected.reports?.some((report) => tagged(report.key))).map(({ id }) => id)).toEqual([]);
-    expect(concrete.filter((c) => c.locale === '' && Object.values(c.modifiers ?? {}).includes('locale')).map(({ id }) => id)).toEqual([]);
-  });
-
   it('writes its generated cases as the runner builds them', () => {
     const generated = cases.filter((entry): entry is { name: string; c: Extract<Case, { generate: string }> } => 'generate' in entry.c);
 

@@ -109,7 +109,8 @@ export type FormatRequest = {
 export type ExpectedReport = {
   code: ReportCode;
   origin: ReportOrigin;
-  key?: unknown;
+  /** Text, compared as written: a tagged value is read on a case's inputs, never in its expectations. */
+  key?: string;
 };
 
 export type Expected = {

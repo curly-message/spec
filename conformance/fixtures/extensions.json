@@ -684,7 +684,7 @@
     {
       "id": "extensions/locale",
       "description": "A host-defined modifier receives the locale the caller supplied.",
-      "section": "11",
+      "section": "11.3",
       "message": "{{v:loc}}",
       "payload": {
         "v": "x"
@@ -700,7 +700,7 @@
     {
       "id": "extensions/locale-none",
       "description": "A host-defined modifier receives no locale where the caller supplied none.",
-      "section": "11",
+      "section": "11.3",
       "message": "{{v:loc}}",
       "payload": {
         "v": "x"
@@ -710,6 +710,23 @@
       },
       "expected": {
         "output": "none"
+      }
+    },
+    {
+      "id": "extensions/locale-empty",
+      "description": "An empty locale reaches a host-defined modifier empty, and no locale is reported missing.",
+      "section": "11.3",
+      "message": "[{{v:loc}}]",
+      "payload": {
+        "v": "x"
+      },
+      "locale": "",
+      "modifiers": {
+        "loc": "locale"
+      },
+      "expected": {
+        "output": "[]",
+        "reports": []
       }
     },
     {

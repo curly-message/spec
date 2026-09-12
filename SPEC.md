@@ -920,6 +920,15 @@ properties it names and every layer read from its own entries. It receives what
 the layers wrote under its own name and nothing they wrote under another's, and
 where no layer wrote under its name it receives no properties at all.
 
+It receives the locale the caller supplied, verbatim: an empty locale reaches it
+empty, and where the caller supplied none it receives none. Section 11.2's test
+for a locale that is **not available** governs the modifiers that section names
+— the format defines those, so it must say what they do without one — and does
+not reach here. What a host-defined modifier needs of a locale is the host's
+own, and an implementation substitutes nothing for it: it supplies no locale of
+its own and does not collapse an empty one into none, so a modifier that treats
+the two differently can.
+
 Because a host's own registration overrides the format's, a name a later
 version of this format defines costs a host that already registered its own
 modifier under that name nothing: its messages resolve as they did, and the

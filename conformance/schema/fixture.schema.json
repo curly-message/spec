@@ -256,7 +256,8 @@
           ]
         },
         "key": {
-          "description": "The key the report must name, where the adapter's reports carry one."
+          "type": "string",
+          "description": "The key the report must name, where the adapter's reports carry one. Text, and compared as written: tagged values (see the package README) are read on a case's inputs and not in its expectations, so a case whose key is not text leaves this out and the key goes unobserved."
         }
       }
     }

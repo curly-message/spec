@@ -69,6 +69,12 @@ the defaults. A runner decodes each into the host value it names before the
 adapter sees it; nothing else is decoded, so a payload entry of any other shape
 reaches the implementation as the plain data JSON describes.
 
+A tag is read on a case's **inputs** and nowhere else. An expectation is
+compared as written, so a tag in one would be compared as the object it is
+spelled as, which no implementation answers with; the schema therefore holds the
+key of an expected report to text. A case whose key is not text leaves that key
+out of its expectation and the key goes unobserved.
+
 | Tag | Stands for |
 | --- | --- |
 | `{ "$curly": "undefined" }` | The host's undefined (sections 4.1, 9.2, 10). A message so tagged is one the caller did not supply. |
@@ -81,9 +87,9 @@ A case at the Extensions level may register modifiers. It cannot ship code, so
 it names behaviours from a catalogue every runner implements in its own
 language and hands to the adapter as functions of section 11's inputs: the
 value and the default as text, the options as the placeholder wrote them, the
-props composed under the modifier's own name, and the locale where one is
-available. The adapter wraps each into its implementation's own modifier
-signature.
+props composed under the modifier's own name, and the locale the caller
+supplied, as it supplied it (section 11.3). The adapter wraps each into its
+implementation's own modifier signature.
 
 | Behaviour | Answers with |
 | --- | --- |
@@ -95,7 +101,7 @@ signature.
 | `default` | The default, read through the chain (section 10). |
 | `options` | The options in the order they were handed over, each `key=value`, joined by commas: `a=A,b=,c=c` (section 9.4). |
 | `props` | The props it received, each own property `name=value` with the value as JSON, sorted by name and joined by commas: `maximumFractionDigits=1,useGrouping=true` (sections 11.2, 11.3). |
-| `locale` | The locale it received, or `none` where it received none. |
+| `locale` | The locale it received, or `none` where it received none. An empty locale answers empty. |
 | `object` | A plain object holding the value under `answer`, so the answer serializes (section 11): `{"answer":"X"}`. |
 
 ### Locale-dependent expectations
