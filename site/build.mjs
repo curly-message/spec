@@ -209,7 +209,7 @@ const shell = ({ page, glyph, title, body, sidebar }) => `<!doctype html>
   <a class="mark" href="${href('index.html', page)}" aria-label="Curly Message Format">
     ${drawn(glyph, 'wordmark')}
     <span class="rule"></span>
-    <span class="tag">Message format</span>
+    <span class="tag">Message<br />format</span>
   </a>
   <nav aria-label="Sections"><ul>
 ${PAGES.map(

@@ -93,9 +93,11 @@ body {
 }
 
 /* The whole lockup on one line: the wordmark without its tagline, then the
- * tagline beside it rather than under it, in its own setting — capitals in
- * Outfit at 0.22 em of letter spacing. The three colours are the plates':
- * brace in the theme colour, letters in the base, tagline dimmed. */
+ * tagline beside it rather than under it, broken over two lines so the pair
+ * stands as tall as the wordmark does. Its setting is the one the brand
+ * records — capitals in Outfit at 0.22 em of letter spacing — and the three
+ * colours are the plate's: brace in the theme colour, letters in the base,
+ * tagline dimmed. */
 .mark {
   display: inline-flex;
   align-items: center;
@@ -122,14 +124,15 @@ body {
 
 .mark .rule {
   width: 1px;
-  height: 19px;
+  height: 25px;
   background: var(--hairline);
 }
 
 .mark .tag {
   font-family: var(--display);
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
+  line-height: 1.25;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--dim);
