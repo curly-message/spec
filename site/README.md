@@ -57,3 +57,10 @@ Both palettes of [`brand/README.md`](../brand/README.md), one per ground: the
 page takes whichever the reader's system asks for, and the theme colour of that
 ground is the only colour on it. Headings are set in Outfit, the wordmark's own
 face; the prose is Literata; code takes the reader's own monospace.
+
+The masthead carries the whole lockup on one line: the wordmark without its
+tagline, which is the file `brand/` prescribes at this size, then a hairline
+rule, then the tagline beside it rather than under it — set as text in the
+setting `brand/README.md` records for it, so it stays selectable and takes the
+reader's rendering. Its three colours are the plate's: the brace in the theme
+colour, the letters in the base, the tagline dimmed.

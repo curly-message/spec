@@ -92,35 +92,52 @@ body {
   border-bottom: 1px solid var(--hairline);
 }
 
+/* The whole lockup on one line: the wordmark without its tagline, then the
+ * tagline beside it rather than under it, in its own setting — capitals in
+ * Outfit at 0.22 em of letter spacing. The three colours are the plates':
+ * brace in the theme colour, letters in the base, tagline dimmed. */
 .mark {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
-  font-family: var(--display);
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  gap: 13px;
   color: var(--base);
   text-decoration: none;
 }
 
-.mark b {
-  font-weight: 500;
-  color: var(--dim);
-}
-
-.glyph {
-  width: 26px;
-  height: 26px;
+.wordmark {
+  height: 25px;
+  width: auto;
   display: block;
+  /* Clear space of half the letter stroke, which the box does not carry. */
+  margin-right: 1px;
 }
 
-.glyph .brace {
+.wordmark .brace {
   fill: var(--theme);
 }
 
-.glyph .cee {
+.wordmark .ink {
   fill: var(--base);
+}
+
+.mark .rule {
+  width: 1px;
+  height: 19px;
+  background: var(--hairline);
+}
+
+.mark .tag {
+  font-family: var(--display);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+.mark:hover .tag {
+  color: var(--base);
 }
 
 .masthead nav {
