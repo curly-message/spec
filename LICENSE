@@ -1,9 +1,10 @@
 SCOPE
 
 This license covers the specification, the conformance package and everything
-else in this repository EXCEPT the brand directory. The name "Curly Message
-Format" and the marks in brand/ - the icon and the wordmark - are not licensed
-under the terms below; their terms are in brand/LICENSE.
+else in this repository EXCEPT the marks in the brand directory. The name
+"Curly Message Format", the icon, the wordmark and the usage plates in brand/
+are not licensed under the terms below; their terms are in brand/LICENSE. The
+README beside them is prose, not a mark, and stays MIT.
 
 
 MIT License
