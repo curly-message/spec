@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
 
 First stable release. The set targets `curly-message-1` — version 1 of the
 Curly Message Format, which the specification states is stable — so what a
