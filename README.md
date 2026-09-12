@@ -32,7 +32,7 @@ The specification is **stable**. Version 1 of the format is settled: within
 `curly-message-1`, what a message resolves to does not change, and an amendment
 that would change it belongs to a later version of the format rather than to
 this one. Revisions of the document are tagged in this repository, beginning at
-`v1.0.0`.
+`v1.0.0`, and [`CHANGELOG.md`](./CHANGELOG.md) says what each one changed.
 
 The conformance set and the reference implementation are on npm as `1.0.0`,
 released against this document.
@@ -68,6 +68,23 @@ the JavaScript implementation in the
 released on npm. It is a reference rather than the definition — an
 implementation in any language that satisfies section 2 conforms, whether or
 not it shares any code with it.
+
+## Releasing the specification
+
+A revision of the document is cut from `main` by the **Specification release**
+workflow (`.github/workflows/release-spec.yml`, started by hand). A document has
+no manifest to bump, so it takes the revision as `major.minor.patch` and reads
+it back against the document: a revision already tagged is refused, and so is
+one whose major is not the version of the format `SPEC.md` specifies. It runs
+the conformance set — which is what holds every section a fixture cites to a
+heading of the document — turns the changelog's `## Unreleased` section into
+the revision's, commits, tags (`v1.0.0`), pushes, and publishes a GitHub
+release carrying that changelog section. A revision whose changelog has no
+`## Unreleased` section is refused.
+
+The document's line and the conformance set's are separate: the set may release
+against a document that has not changed, and the document may be revised
+without the set moving. Each keeps its own changelog.
 
 ## Releasing the conformance set
 
