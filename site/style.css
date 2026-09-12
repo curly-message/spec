@@ -671,8 +671,49 @@ body.playground .notes {
   letter-spacing: 0.04em;
 }
 
+/* A label of its own kind: not the small capital heading over a box, but a
+ * control the reader reads as a sentence. */
+.field label.switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--display);
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.field label.switch input {
+  accent-color: var(--theme);
+  width: auto;
+  margin: 0;
+}
+
+.field label.switch:hover {
+  color: var(--base);
+}
+
+.hint.under {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 14.5px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--dim);
+}
+
+.inputs textarea:disabled {
+  color: var(--dim);
+  opacity: 0.6;
+}
+
 .inputs textarea,
-.inputs input {
+.inputs input:not([type="checkbox"]) {
   width: 100%;
   font-family: var(--mono);
   font-size: 13.5px;
