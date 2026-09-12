@@ -11,7 +11,7 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
-## Unreleased
+## 1.0.0
 
 First stable revision. `SPEC.md` states version 1 of the Curly Message Format:
 the grammar, the escaping and whitespace rules, the order a message resolves
