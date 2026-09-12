@@ -193,12 +193,12 @@ describe('execute', () => {
     expect(outcome(reporting({ code: 'unknown-modifier', key: 'other' }), c)).toMatchObject({ ok: false, reason: 'The key of report 1 differs.' });
   });
 
-  it('compares a structured key structurally', () => {
-    const c = concrete('a/key', { key: ['a', { b: 1 }], expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message', key: ['a', { b: 1 }] }] } });
+  it('leaves a key of another shape unobserved, an expectation naming only text', () => {
+    const c = concrete('a/key', { key: ['a', { b: 1 }], expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message' }] } });
     const reporting = (key: unknown) => adapter(() => ({ output: 'x', reports: [{ code: 'unknown-modifier', key }] }));
 
     expect(outcome(reporting(['a', { b: 1 }]), c)).toEqual({ ok: true });
-    expect(outcome(reporting(['a', { b: 2 }]), c)).toMatchObject({ ok: false, reason: 'The key of report 1 differs.' });
+    expect(outcome(reporting(['a', { b: 2 }]), c)).toEqual({ ok: true });
   });
 
   it('passes without checking the reports where the adapter leaves them undefined, and says so', () => {

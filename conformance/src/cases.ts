@@ -21,18 +21,6 @@ const failure = (reason: string, expected: unknown, actual: unknown): Failure =>
 
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object';
 
-const equal = (a: unknown, b: unknown): boolean => {
-  if (a === b) return true;
-
-  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((entry, index) => equal(entry, b[index]));
-
-  if (!isObject(a) || !isObject(b) || Array.isArray(a) || Array.isArray(b)) return false;
-
-  const keys = Object.keys(a);
-
-  return keys.length === Object.keys(b).length && keys.every((key) => Object.hasOwn(b, key) && equal(a[key], b[key]));
-};
-
 /** The text a formatting request produces on this host, which is what a locale-dependent case expects. */
 export const format = ({ api, options, input }: FormatRequest, locale?: string): string => {
   switch (api) {
@@ -125,7 +113,9 @@ const COMPARED = ['origin', 'key', 'limit'] as const;
 const count = (reports: unknown[]) => `${reports.length} ${reports.length === 1 ? 'report' : 'reports'}`;
 
 // A field is compared where the adapter's report carries it and the case
-// expects something of it; the specification prescribes a report no shape.
+// expects something of it; the specification prescribes a report no shape. Each
+// is text or a number, so a report that carries a key of another shape is one
+// no expectation names, and that key goes unobserved.
 const compareReports = (expected: Expectation['reports'], actual: Report[]) => {
   if (expected.length !== actual.length) return failure(`Expected ${count(expected)}, got ${count(actual)}.`, expected, actual);
 
@@ -135,7 +125,7 @@ const compareReports = (expected: Expectation['reports'], actual: Report[]) => {
 
     if (report.code !== wanted.code) return failure(`The code of ${position} differs.`, wanted, report);
 
-    const field = COMPARED.find((name) => report[name] !== undefined && wanted[name] !== undefined && !equal(report[name], wanted[name]));
+    const field = COMPARED.find((name) => report[name] !== undefined && wanted[name] !== undefined && report[name] !== wanted[name]);
 
     if (field) return failure(`The ${field} of ${position} differs.`, wanted, report);
   }

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+* The key of an expected report is text. A tagged value is read on a case's
+  inputs and never in its expectations, so one written in an expectation would
+  have been compared as the object it is spelled as; the schema now rules it
+  out, and a case whose key is not text leaves the key unobserved.
+* A case for what a host-defined modifier receives as its locale where the
+  caller supplied an empty one, which section 11.3 now states.
+
 ## 1.0.0-next.2
 
 * The version bump regenerates the manifest, so `index.json` cannot fall

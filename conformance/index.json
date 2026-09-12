@@ -30,7 +30,7 @@
       "path": "fixtures/extensions.json",
       "level": "extensions",
       "section": "11.3",
-      "cases": 43
+      "cases": 44
     },
     {
       "path": "fixtures/fallback-intl.json",
