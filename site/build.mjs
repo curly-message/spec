@@ -170,22 +170,24 @@ ${headings
 </ul></nav>
 </details>`;
 
-// The icon, split the way brand/README.md says to split it: one element per
-// colour, the brace first and the C second, each still filled nonzero.
-const mark = async () => {
-  const svg = await readFile(join(repo, 'brand/curly-icon.svg'), 'utf8');
+// A mark, split the way brand/README.md says to split it: one element per
+// colour, each carrying its own subpaths together, in their original order and
+// still filled nonzero. The first subpath is the brace; what follows is the C
+// and, in the wordmark, the letters after it.
+const mark = async (file) => {
+  const svg = await readFile(join(repo, file), 'utf8');
   const box = svg.match(/viewBox="([^"]+)"/)[1];
-  const [brace, cee] = svg
+  const subpaths = svg
     .match(/ d="([^"]+)"/)[1]
     .trim()
     .split(/(?=M )/)
     .map((d) => d.trim());
-  return { box, brace, cee };
+  return { box, brace: subpaths[0], ink: subpaths.slice(1).join(' ') };
 };
 
-const icon = ({ box, brace, cee }, className) =>
+const drawn = ({ box, brace, ink }, className) =>
   `<svg class="${className}" viewBox="${box}" aria-hidden="true" focusable="false">` +
-  `<path class="brace" d="${brace}"/><path class="cee" d="${cee}"/></svg>`;
+  `<path class="brace" d="${brace}"/><path class="ink" d="${ink}"/></svg>`;
 
 const shell = ({ page, glyph, title, body, sidebar }) => `<!doctype html>
 <html lang="en">
@@ -204,7 +206,11 @@ const shell = ({ page, glyph, title, body, sidebar }) => `<!doctype html>
 <body class="${page.to === 'index.html' ? 'home' : 'doc'}${page.toc ? ' has-toc' : ''}">
 <a class="skip" href="#content">Skip to content</a>
 <header class="masthead">
-  <a class="mark" href="${href('index.html', page)}">${icon(glyph, 'glyph')}<span>Curly <b>Message Format</b></span></a>
+  <a class="mark" href="${href('index.html', page)}" aria-label="Curly Message Format">
+    ${drawn(glyph, 'wordmark')}
+    <span class="rule"></span>
+    <span class="tag">Message format</span>
+  </a>
   <nav aria-label="Sections"><ul>
 ${PAGES.map(
   (p) =>
@@ -238,7 +244,8 @@ ${body}
 
 const build = async () => {
   await rm(out, { recursive: true, force: true });
-  const glyph = await mark();
+  const glyph = await mark('brand/curly-wordmark-no-tagline.svg');
+  const favicon = await mark('brand/curly-icon.svg');
 
   for (const page of PAGES) {
     const markdown = await readFile(join(repo, page.from), 'utf8');
@@ -254,9 +261,9 @@ const build = async () => {
   await cp(join(here, 'style.css'), join(out, 'style.css'));
   await writeFile(
     join(out, 'favicon.svg'),
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${glyph.box}">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${favicon.box}">` +
       `<rect width="1024" height="1024" rx="224" fill="#14161A"/>` +
-      `<path fill="#F2A61A" d="${glyph.brace}"/><path fill="#F5F5F3" d="${glyph.cee}"/></svg>\n`,
+      `<path fill="#F2A61A" d="${favicon.brace}"/><path fill="#F5F5F3" d="${favicon.ink}"/></svg>\n`,
   );
   for (const asset of ASSETS) {
     await mkdir(dirname(join(out, asset)), { recursive: true });
