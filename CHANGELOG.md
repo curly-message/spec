@@ -13,7 +13,7 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
-## Unreleased
+## 1.0.1
 
 The message's key is the message's **id**, and it names the message for
 diagnostics only: reports carry it (section 14.3) and no step of resolution
