@@ -67,7 +67,7 @@ The specification is **stable**. Version 1 of the format is settled: within
 that would change it belongs to a later version of the format rather than to
 this one. Revisions of the document are tagged, beginning at `v1.0.0`.
 
-The conformance set and the reference implementation are on npm as `1.0.0`,
+The conformance set and the reference implementation are on npm as `1.0.1`,
 released against this document. An implementation in any language that
 satisfies section 2 conforms, whether or not it shares any code with the
 reference.

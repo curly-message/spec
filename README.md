@@ -36,8 +36,8 @@ nothing for the document to settle. Revisions of the document are tagged in this
 repository, beginning at `v1.0.0`, and [`CHANGELOG.md`](./CHANGELOG.md) says
 what each one changed.
 
-The conformance set and the reference implementation are on npm; `1.0.0` of each
-was released against revision 1.0.0 of this document.
+The conformance set and the reference implementation are on npm; `1.0.1` of each
+was released against revision 1.0.1 of this document.
 
 The syntax grew out of `@sveltekit-i18n/parser-default`, where it was defined
 implicitly — by the implementation, its README and its test suite, which diverge
