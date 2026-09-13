@@ -1,17 +1,5 @@
 # Changelog
 
-## 2.0.0
-
-The change 1.0.1 carried was breaking, and a patch release was the wrong place
-for it: a caller on `^1.0.0` was handed it silently. This is the set 1.0.1
-holds, under the major it should have carried — an implementation that passes
-one passes the other — and 1.0.1 is deprecated on npm, pointing here.
-
-* A package's major is the package's own. `index.json` names the format the set
-  targets, `curly-message-1`, and that is what a fixture is written against;
-  the version beside it is this package's and says nothing about which version
-  of the format the set is for.
-
 ## 1.0.1
 
 Targets revision 1.0.1 of the specification, where the message's key became the
