@@ -93,7 +93,7 @@ describe('plan', () => {
       payload: { v: 'x', w: { value: { $curly: 'undefined' }, default: 'W' } },
       props: { number: { maximumFractionDigits: 1 } },
       locale: 'cs',
-      key: 'a.key',
+      messageId: 'a.id',
       modifiers: { up: 'upper', obj: 'object' },
       defaults: { number: { useGrouping: false } },
     });
@@ -107,7 +107,7 @@ describe('plan', () => {
       payload: { v: 'x', w: { value: undefined, default: 'W' } },
       props: { number: { maximumFractionDigits: 1 } },
       locale: 'cs',
-      key: 'a.key',
+      id: 'a.id',
       modifiers: { up: behaviours.upper, obj: behaviours.object },
       defaults: { number: { useGrouping: false } },
     });
@@ -183,19 +183,19 @@ describe('execute', () => {
     expect(outcome(reporting, c)).toEqual({ ok: false, reason: 'The code of report 2 differs.', expected: { code: 'missing-options', origin: 'message' }, actual: { code: 'failed-modifier' } });
   });
 
-  it('compares the origin, the key and the limit only where the adapter\'s report carries them', () => {
-    const c = concrete('a/fields', { key: 'k', expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message', key: 'k' }] } });
+  it('compares the origin, the id and the limit only where the adapter\'s report carries them', () => {
+    const c = concrete('a/fields', { messageId: 'k', expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message', id: 'k' }] } });
     const reporting = (report: object) => adapter(() => ({ output: 'x', reports: [report as { code: 'unknown-modifier' }] }));
 
     expect(outcome(reporting({ code: 'unknown-modifier' }), c)).toEqual({ ok: true });
-    expect(outcome(reporting({ code: 'unknown-modifier', origin: 'message', key: 'k', limit: 10 }), c)).toEqual({ ok: true });
+    expect(outcome(reporting({ code: 'unknown-modifier', origin: 'message', id: 'k', limit: 10 }), c)).toEqual({ ok: true });
     expect(outcome(reporting({ code: 'unknown-modifier', origin: 'payload' }), c)).toMatchObject({ ok: false, reason: 'The origin of report 1 differs.' });
-    expect(outcome(reporting({ code: 'unknown-modifier', key: 'other' }), c)).toMatchObject({ ok: false, reason: 'The key of report 1 differs.' });
+    expect(outcome(reporting({ code: 'unknown-modifier', id: 'other' }), c)).toMatchObject({ ok: false, reason: 'The id of report 1 differs.' });
   });
 
-  it('leaves a key of another shape unobserved, an expectation naming only text', () => {
-    const c = concrete('a/key', { key: ['a', { b: 1 }], expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message' }] } });
-    const reporting = (key: unknown) => adapter(() => ({ output: 'x', reports: [{ code: 'unknown-modifier', key }] }));
+  it('leaves an id of another shape unobserved, an expectation naming only text', () => {
+    const c = concrete('a/id', { messageId: ['a', { b: 1 }], expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message' }] } });
+    const reporting = (id: unknown) => adapter(() => ({ output: 'x', reports: [{ code: 'unknown-modifier', id }] }));
 
     expect(outcome(reporting(['a', { b: 1 }]), c)).toEqual({ ok: true });
     expect(outcome(reporting(['a', { b: 2 }]), c)).toEqual({ ok: true });

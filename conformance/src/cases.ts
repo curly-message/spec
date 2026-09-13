@@ -52,37 +52,37 @@ const concrete = (c: ConcreteCase): Prepared => ({
     payload: decode(c.payload),
     props: decode(c.props),
     locale: c.locale,
-    key: decode(c.key),
+    id: decode(c.messageId),
     defaults: decode(c.defaults),
     modifiers: register(c.modifiers),
   },
   expected: { output: output(c), reports: c.expected.reports ?? [] },
 });
 
-// Every generated case reports through this key.
-const KEY = 'limits';
+// Every generated case reports under this id.
+const ID = 'limits';
 
 // `p1` … `p<links-1>` each hold the placeholder of the next; the last holds
 // the text the chain settles to.
 const chain = (links: number) => Object.fromEntries(Array.from({ length: links }, (_, index) => [`p${index + 1}`, index + 1 < links ? `{{p${index + 2}}}` : 'settled']));
 
-const limit = (code: 'pass-limit' | 'output-limit', declared: number): Expectation['reports'][number] => ({ code, origin: 'limit', key: KEY, limit: declared });
+const limit = (code: 'pass-limit' | 'output-limit', declared: number): Expectation['reports'][number] => ({ code, origin: 'limit', id: ID, limit: declared });
 
 const generators: Record<Generator, (limits: Limits) => Prepared> = {
   'passes-at-limit': ({ passes }) => ({
-    input: { message: '{{p1}}', payload: chain(passes), key: KEY },
+    input: { message: '{{p1}}', payload: chain(passes), id: ID },
     expected: { output: 'settled', reports: [] },
   }),
   'passes-over-limit': ({ passes }) => ({
-    input: { message: '{{p1}}', payload: chain(passes + 1), key: KEY },
+    input: { message: '{{p1}}', payload: chain(passes + 1), id: ID },
     expected: { output: `{{p${passes + 1}}}`, reports: [limit('pass-limit', passes)] },
   }),
   'output-at-limit': ({ output: length }) => ({
-    input: { message: '{{v}}', payload: { v: 'x'.repeat(length) }, key: KEY },
+    input: { message: '{{v}}', payload: { v: 'x'.repeat(length) }, id: ID },
     expected: { output: 'x'.repeat(length), reports: [] },
   }),
   'output-over-limit': ({ output: length }) => ({
-    input: { message: '{{v}}', payload: { v: 'x'.repeat(length + 1) }, key: KEY },
+    input: { message: '{{v}}', payload: { v: 'x'.repeat(length + 1) }, id: ID },
     expected: { output: '{{v}}', reports: [limit('output-limit', length)] },
   }),
   'output-over-limit-stops': ({ output: length }) => {
@@ -97,25 +97,25 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
     };
 
     return {
-      input: { message: '{{v}}{{w:raise}}', payload: { v: 'x'.repeat(length + 1), w: 'w' }, key: KEY, modifiers: { raise } },
+      input: { message: '{{v}}{{w:raise}}', payload: { v: 'x'.repeat(length + 1), w: 'w' }, id: ID, modifiers: { raise } },
       expected: { output: '{{v}}{{w:raise}}', reports: [limit('output-limit', length)] },
       verify: () => called ? failure('The modifier past the output limit was called.', 'not called', 'called') : undefined,
     };
   },
   'conversion-over-limit': ({ conversion }) => ({
-    input: { message: '{{v; default:D}}', payload: { v: nodes(conversion + 1) }, key: KEY },
-    expected: { output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', key: KEY }] },
+    input: { message: '{{v; default:D}}', payload: { v: nodes(conversion + 1) }, id: ID },
+    expected: { output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', id: ID }] },
   }),
 };
 
-const COMPARED = ['origin', 'key', 'limit'] as const;
+const COMPARED = ['origin', 'id', 'limit'] as const;
 
 const count = (reports: unknown[]) => `${reports.length} ${reports.length === 1 ? 'report' : 'reports'}`;
 
 // A field is compared where the adapter's report carries it and the case
 // expects something of it; the specification prescribes a report no shape. Each
-// is text or a number, so a report that carries a key of another shape is one
-// no expectation names, and that key goes unobserved.
+// is text or a number, so a report that carries an id of another shape is one
+// no expectation names, and that id goes unobserved.
 const compareReports = (expected: Expectation['reports'], actual: Report[]) => {
   if (expected.length !== actual.length) return failure(`Expected ${count(expected)}, got ${count(actual)}.`, expected, actual);
 

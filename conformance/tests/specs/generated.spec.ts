@@ -54,7 +54,7 @@ describe('generated cases', () => {
   it('passes-at-limit chains exactly P links to settled', () => {
     const { input, outcome } = build('passes-at-limit', () => ({ output: 'settled', reports: [] }));
 
-    expect(input).toEqual({ message: '{{p1}}', payload: { p1: '{{p2}}', p2: '{{p3}}', p3: 'settled' }, key: 'limits' });
+    expect(input).toEqual({ message: '{{p1}}', payload: { p1: '{{p2}}', p2: '{{p3}}', p3: 'settled' }, id: 'limits' });
     expect(outcome).toEqual({ ok: true });
   });
 
@@ -66,12 +66,12 @@ describe('generated cases', () => {
   it('passes-over-limit chains one link more and expects the last placeholder with a pass-limit report at the declared limit', () => {
     const { input, outcome } = build('passes-over-limit', () => ({ output: '{{p4}}', reports: [] }));
 
-    expect(input).toEqual({ message: '{{p1}}', payload: { p1: '{{p2}}', p2: '{{p3}}', p3: '{{p4}}', p4: 'settled' }, key: 'limits' });
-    expect(outcome).toEqual({ ok: false, reason: 'Expected 1 report, got 0 reports.', expected: [{ code: 'pass-limit', origin: 'limit', key: 'limits', limit: 3 }], actual: [] });
+    expect(input).toEqual({ message: '{{p1}}', payload: { p1: '{{p2}}', p2: '{{p3}}', p3: '{{p4}}', p4: 'settled' }, id: 'limits' });
+    expect(outcome).toEqual({ ok: false, reason: 'Expected 1 report, got 0 reports.', expected: [{ code: 'pass-limit', origin: 'limit', id: 'limits', limit: 3 }], actual: [] });
   });
 
   it('holds a report that carries a limit to the declared one, and one that carries none to nothing', () => {
-    expect(build('passes-over-limit', () => ({ output: '{{p4}}', reports: [{ code: 'pass-limit', origin: 'limit', key: 'limits', limit: 3 }] })).outcome).toEqual({ ok: true });
+    expect(build('passes-over-limit', () => ({ output: '{{p4}}', reports: [{ code: 'pass-limit', origin: 'limit', id: 'limits', limit: 3 }] })).outcome).toEqual({ ok: true });
     expect(build('passes-over-limit', () => ({ output: '{{p4}}', reports: [{ code: 'pass-limit' }] })).outcome).toEqual({ ok: true });
     expect(build('passes-over-limit', () => ({ output: '{{p4}}', reports: [{ code: 'pass-limit', limit: 10 }] })).outcome).toMatchObject({ ok: false, reason: 'The limit of report 1 differs.' });
   });
@@ -79,14 +79,14 @@ describe('generated cases', () => {
   it('output-at-limit holds L characters and expects them back', () => {
     const { input, outcome } = build('output-at-limit', () => ({ output: 'xxxxx', reports: [] }));
 
-    expect(input).toEqual({ message: '{{v}}', payload: { v: 'xxxxx' }, key: 'limits' });
+    expect(input).toEqual({ message: '{{v}}', payload: { v: 'xxxxx' }, id: 'limits' });
     expect(outcome).toEqual({ ok: true });
   });
 
   it('output-over-limit holds L + 1 characters and expects the message with an output-limit report', () => {
-    const { input, outcome } = build('output-over-limit', () => ({ output: '{{v}}', reports: [{ code: 'output-limit', origin: 'limit', key: 'limits', limit: 5 }] }));
+    const { input, outcome } = build('output-over-limit', () => ({ output: '{{v}}', reports: [{ code: 'output-limit', origin: 'limit', id: 'limits', limit: 5 }] }));
 
-    expect(input).toEqual({ message: '{{v}}', payload: { v: 'xxxxxx' }, key: 'limits' });
+    expect(input).toEqual({ message: '{{v}}', payload: { v: 'xxxxxx' }, id: 'limits' });
     expect(outcome).toEqual({ ok: true });
     expect(build('output-over-limit', () => ({ output: 'xxxxxx', reports: [] })).outcome).toEqual({ ok: false, reason: 'The output differs.', expected: '{{v}}', actual: 'xxxxxx' });
   });
@@ -95,7 +95,7 @@ describe('generated cases', () => {
     const { input, outcome } = build('output-over-limit-stops', () => ({ output: '{{v}}{{w:raise}}', reports: [{ code: 'output-limit', origin: 'limit', limit: 5 }] }));
     const probe: ModifierInput = { value: 'w', options: [], props: {}, default: () => '' };
 
-    expect(input).toMatchObject({ message: '{{v}}{{w:raise}}', payload: { v: 'xxxxxx', w: 'w' }, key: 'limits' });
+    expect(input).toMatchObject({ message: '{{v}}{{w:raise}}', payload: { v: 'xxxxxx', w: 'w' }, id: 'limits' });
     expect(raised(() => input.modifiers?.raise(probe))).toBe(raised(() => behaviours.raise(probe)));
     expect(outcome).toEqual({ ok: true });
   });
@@ -118,12 +118,12 @@ describe('generated cases', () => {
   });
 
   it('conversion-over-limit holds a value visiting more than C nodes and expects the default with an unserializable-value report', () => {
-    const { input, outcome } = build('conversion-over-limit', () => ({ output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', key: 'limits' }] }));
+    const { input, outcome } = build('conversion-over-limit', () => ({ output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }] }));
     const { v } = input.payload as { v: unknown };
 
-    expect(input).toMatchObject({ message: '{{v; default:D}}', key: 'limits' });
+    expect(input).toMatchObject({ message: '{{v; default:D}}', id: 'limits' });
     expect(visits(v)).toBeGreaterThanOrEqual(8);
     expect(outcome).toEqual({ ok: true });
-    expect(build('conversion-over-limit', () => ({ output: 'D', reports: [] })).outcome).toEqual({ ok: false, reason: 'Expected 1 report, got 0 reports.', expected: [{ code: 'unserializable-value', origin: 'payload', key: 'limits' }], actual: [] });
+    expect(build('conversion-over-limit', () => ({ output: 'D', reports: [] })).outcome).toEqual({ ok: false, reason: 'Expected 1 report, got 0 reports.', expected: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }], actual: [] });
   });
 });

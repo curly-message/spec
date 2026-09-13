@@ -663,14 +663,14 @@
       "payload": {
         "v": "RAW"
       },
-      "key": "resolution.missing-options",
+      "messageId": "resolution.missing-options",
       "expected": {
         "output": "",
         "reports": [
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "resolution.missing-options"
+            "id": "resolution.missing-options"
           }
         ]
       }

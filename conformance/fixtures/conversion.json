@@ -128,14 +128,14 @@
           "$curly": "unserializable"
         }
       },
-      "key": "conversion.unserializable",
+      "messageId": "conversion.unserializable",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "conversion.unserializable"
+            "id": "conversion.unserializable"
           }
         ]
       }
@@ -225,6 +225,139 @@
       "message": 42,
       "expected": {
         "output": "42"
+      }
+    },
+    {
+      "id": "conversion/missing-message-empty",
+      "description": "A message the caller did not supply is nothing to resolve: neither the payload's own default nor the id stands in for it.",
+      "section": "4",
+      "message": {
+        "$curly": "undefined"
+      },
+      "payload": {
+        "default": "D"
+      },
+      "messageId": "greeting",
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "conversion/missing-message-without-id-empty",
+      "description": "A caller that named no id is answered the same way: there is no message to resolve, and the resolution is the empty string.",
+      "section": "4",
+      "message": {
+        "$curly": "undefined"
+      },
+      "payload": {
+        "default": "D"
+      },
+      "expected": {
+        "output": "",
+        "reports": []
+      }
+    },
+    {
+      "id": "conversion/missing-message-reads-nothing",
+      "description": "Nothing is read on a missing message's account, so a payload default no conversion can describe is neither reached nor reported.",
+      "section": "14.2",
+      "message": {
+        "$curly": "undefined"
+      },
+      "payload": {
+        "default": {
+          "$curly": "unserializable"
+        }
+      },
+      "messageId": "greeting",
+      "expected": {
+        "output": "",
+        "reports": []
+      }
+    },
+    {
+      "id": "conversion/undescribable-message-empty",
+      "description": "A message no conversion can describe is nothing to resolve either, and a message nobody wrote is not a defect to report.",
+      "section": "4",
+      "message": {
+        "$curly": "unserializable"
+      },
+      "payload": {
+        "default": "D"
+      },
+      "messageId": "greeting",
+      "expected": {
+        "output": "",
+        "reports": []
+      }
+    },
+    {
+      "id": "conversion/empty-message-exists",
+      "description": "An empty message exists and resolves to nothing: the payload default does not displace it.",
+      "section": "4",
+      "message": "",
+      "payload": {
+        "default": "CHAIN"
+      },
+      "messageId": "greeting",
+      "expected": {
+        "output": ""
+      }
+    },
+    {
+      "id": "conversion/zero-message-exists",
+      "description": "A message that is zero exists and resolves as the text it converts to.",
+      "section": "4",
+      "message": 0,
+      "payload": {
+        "default": "CHAIN"
+      },
+      "messageId": "greeting",
+      "expected": {
+        "output": "0"
+      }
+    },
+    {
+      "id": "conversion/object-message-exists",
+      "description": "A message a conversion describes exists: a plain object resolves as its serialization.",
+      "section": "4",
+      "message": {
+        "a": 1
+      },
+      "payload": {
+        "default": "CHAIN"
+      },
+      "messageId": "greeting",
+      "expected": {
+        "output": "{\"a\":1}"
+      }
+    },
+    {
+      "id": "conversion/id-reaches-no-output",
+      "description": "The id reaches no step of resolution, so an id carrying a placeholder is neither echoed nor resolved over the payload.",
+      "section": "4",
+      "message": {
+        "$curly": "undefined"
+      },
+      "payload": {
+        "name": "Alice"
+      },
+      "messageId": "{{name}}",
+      "expected": {
+        "output": "",
+        "reports": []
+      }
+    },
+    {
+      "id": "conversion/id-of-another-shape-unread",
+      "description": "An id a host wrote as something other than text is not converted either: nothing in resolution reads it.",
+      "section": "4",
+      "message": {
+        "$curly": "undefined"
+      },
+      "messageId": 42,
+      "expected": {
+        "output": ""
       }
     }
   ]

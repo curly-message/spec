@@ -385,14 +385,14 @@
       "payload": {
         "v": "a"
       },
-      "key": "escaping.modifier-name",
+      "messageId": "escaping.modifier-name",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "escaping.modifier-name"
+            "id": "escaping.modifier-name"
           }
         ]
       }
@@ -405,14 +405,14 @@
       "payload": {
         "v": "a"
       },
-      "key": "escaping.modifier-space",
+      "messageId": "escaping.modifier-space",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "escaping.modifier-space"
+            "id": "escaping.modifier-space"
           }
         ]
       }

@@ -47,14 +47,14 @@
       "payload": {
         "v": "{{v}}"
       },
-      "key": "limits.self-reference",
+      "messageId": "limits.self-reference",
       "expected": {
         "output": "a;b {{v}}",
         "reports": [
           {
             "code": "pass-limit",
             "origin": "limit",
-            "key": "limits.self-reference"
+            "id": "limits.self-reference"
           }
         ]
       }

@@ -11,14 +11,14 @@
       "payload": {
         "v": 10
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "FALLBACK",
         "reports": [
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -31,39 +31,39 @@
       "payload": {
         "v": 10
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "D, D, D, D, D, D",
         "reports": [
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           },
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           },
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           },
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           },
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           },
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -77,14 +77,14 @@
         "v": 10,
         "default": "CHAIN"
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "CHAIN",
         "reports": [
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -97,14 +97,14 @@
       "payload": {
         "default": "CHAIN"
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "CHAIN",
         "reports": [
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -117,14 +117,14 @@
       "payload": {
         "v": 10
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -187,14 +187,14 @@
       "payload": {
         "default": "CHAIN"
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "CHAIN",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -207,14 +207,14 @@
       "payload": {
         "v": 1
       },
-      "key": "common.plural",
+      "messageId": "common.plural",
       "expected": {
         "output": "many",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "common.plural"
+            "id": "common.plural"
           }
         ]
       }
@@ -227,14 +227,14 @@
       "payload": {
         "v": 1
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -245,14 +245,14 @@
       "section": "11.4",
       "message": "{{v:plural; 1:one; default:FALLBACK}}",
       "payload": {},
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "FALLBACK",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -265,14 +265,14 @@
       "payload": {
         "v": "ok"
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "FALLBACK",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -285,14 +285,14 @@
       "payload": {
         "v": "x"
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "XD",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -305,14 +305,14 @@
       "payload": {
         "v": 1
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -327,53 +327,29 @@
           "$curly": "unserializable"
         }
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "reports.key"
-          }
-        ]
-      }
-    },
-    {
-      "id": "reports/unserializable-chain-link-reported",
-      "description": "A link of the fallback chain that is present and cannot be described is reported like any payload value, while the message that does not exist is not.",
-      "section": "14.2",
-      "message": {
-        "$curly": "unserializable"
-      },
-      "payload": {
-        "default": {
-          "$curly": "unserializable"
-        }
-      },
-      "key": "reports.key",
-      "expected": {
-        "output": "reports.key",
-        "reports": [
-          {
-            "code": "unserializable-value",
-            "origin": "payload",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
     },
     {
       "id": "reports/missing-message-not-reported",
-      "description": "A message that no conversion can describe does not exist, and stepping past it is not a condition to report.",
+      "description": "A message that no conversion can describe is nothing to resolve, and that is not a condition to report.",
       "section": "14.2",
       "message": {
         "$curly": "unserializable"
       },
       "payload": {},
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
-        "output": "reports.key",
+        "output": "",
         "reports": []
       }
     },
@@ -386,14 +362,14 @@
         "a": "A",
         "b": "B"
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "A D B",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -404,24 +380,24 @@
       "section": "14.3",
       "message": "{{a:zz; default:A}}{{b:zz; default:B}}{{c:zz; default:C}}",
       "payload": {},
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "ABC",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           },
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           },
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -434,19 +410,19 @@
       "payload": {
         "w": "{{v:zz; default:D}}"
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "D D",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           },
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -461,24 +437,24 @@
           "$curly": "unserializable"
         }
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "ABU",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           },
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           },
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
@@ -491,19 +467,19 @@
       "payload": {
         "w": "{{b:eq; default:B}}"
       },
-      "key": "reports.key",
+      "messageId": "reports.id",
       "expected": {
         "output": "BA",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           },
           {
             "code": "missing-options",
             "origin": "message",
-            "key": "reports.key"
+            "id": "reports.id"
           }
         ]
       }
