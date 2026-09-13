@@ -626,6 +626,13 @@ body.playground .notes {
   border-color: var(--base);
 }
 
+/* The case the page is holding. */
+.cases button[aria-pressed="true"],
+.cases button[aria-pressed="true"]:hover {
+  color: var(--theme);
+  border-color: var(--theme);
+}
+
 /* The call on the left, what it answered with on the right, and one column
  * under the width where two would each be too narrow to read a message in. */
 .play {

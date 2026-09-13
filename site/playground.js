@@ -26,12 +26,12 @@ const CASES = {
     l: 'en',
     i: 'greeting',
   },
-  inbox: {
-    m: 'You have {{count:number;}} {{count; 1:message; default:messages;}}.',
-    p: '{\n  "count": 1234\n}',
+  order: {
+    m: 'Order {{order}} is {{status; shipped:on its way; delivered:delivered; default:still being packed;}}.',
+    p: '{\n  "order": "A-2291",\n  "status": "shipped"\n}',
     r: '',
     l: 'en',
-    i: 'inbox',
+    i: 'order',
   },
   invoice: {
     m: 'Invoice {{total:currency;}} is due {{due:date;}}.',
@@ -137,6 +137,7 @@ const run = () => {
   showOutput(parser.resolve(message, { payload, props, locale, id }));
   showReports(reports);
   showParams(createExtractor()(message));
+  showCases();
 };
 
 // The case travels in the fragment, which no request carries: a link
@@ -151,6 +152,19 @@ const share = () => {
 const load = (state) => {
   for (const [name, input] of Object.entries(FIELDS)) input.value = state[name] ?? '';
   run();
+};
+
+// A case is shown as chosen only while the page still holds what it loads:
+// editing any field moves off the case, and typing back onto it returns.
+const chosen = () =>
+  Object.keys(CASES).find((name) =>
+    Object.entries(FIELDS).every(([key, input]) => input.value === CASES[name][key]),
+  );
+
+const showCases = () => {
+  const name = chosen();
+  for (const button of field('cases').querySelectorAll('button'))
+    button.setAttribute('aria-pressed', String(button.dataset.case === name));
 };
 
 const fragment = () => Object.fromEntries(new URLSearchParams(location.hash.slice(1)));
@@ -169,4 +183,4 @@ field('cases').addEventListener('click', (event) => {
 
 addEventListener('hashchange', () => load(fragment()));
 
-load(location.hash.length > 1 ? fragment() : CASES.inbox);
+load(location.hash.length > 1 ? fragment() : CASES.order);
