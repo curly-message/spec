@@ -13,6 +13,15 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
+## Unreleased
+
+Appendix A no longer says that nothing has been released against this
+specification. Releases have been made against it since revision 1.0.0. What
+the passage states is unchanged — no ruling in the appendix is a breaking
+change to a released package, and no migration note is owed to any user —
+because the body has carried every ruling since that first revision, so every
+release made against this document already has them.
+
 ## 1.0.1
 
 The message's key is the message's **id**, and it names the message for

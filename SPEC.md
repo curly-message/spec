@@ -1225,9 +1225,9 @@ to the six divergences already catalogued before this document; the rest were
 found while writing it.
 
 Every ruling is a breaking change to the implementation it was observed on and
-none is a breaking change to a released package: `@curly-message/parser` is new
-and nothing has been released against this specification. No migration note is
-owed to any user.
+none is a breaking change to a released package: the body has carried every
+ruling since revision 1.0.0, so every release made against this specification
+has them. No migration note is owed to any user.
 
 ---
 
