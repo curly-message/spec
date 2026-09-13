@@ -7,20 +7,16 @@ import { createExtractor, createParser } from './parser.js';
 
 const field = (id) => document.getElementById(id);
 
-// The five inputs are the five things a resolution takes, under the letters
-// the shared link spells them with. The sixth is not a value but the absence
-// of one: a key its host holds no translation for resolves nothing at all,
-// which an empty box cannot say — the empty string is a message like any
-// other.
+// The five inputs are the four a resolution takes and the message's id, under
+// the letters the shared link spells them with. The id reaches no step of
+// resolution: it is what a report names the message by.
 const FIELDS = {
   m: field('message'),
   p: field('payload'),
   r: field('props'),
   l: field('locale'),
-  k: field('key'),
+  i: field('id'),
 };
-
-const ABSENT = field('absent');
 
 const CASES = {
   greeting: {
@@ -28,29 +24,21 @@ const CASES = {
     p: '{\n  "name": "Alice"\n}',
     r: '',
     l: 'en',
-    k: 'greeting',
+    i: 'greeting',
   },
   inbox: {
     m: 'You have {{count:number;}} {{count; 1:message; default:messages;}}.',
     p: '{\n  "count": 1234\n}',
     r: '',
     l: 'en',
-    k: 'inbox',
+    i: 'inbox',
   },
   invoice: {
     m: 'Invoice {{total:currency;}} is due {{due:date;}}.',
     p: '{\n  "total": 1290.5,\n  "due": "2026-10-01"\n}',
     r: '{\n  "currency": { "currency": "EUR" },\n  "date": { "dateStyle": "long" }\n}',
     l: 'en',
-    k: 'invoice',
-  },
-  missing: {
-    m: '',
-    a: '1',
-    p: '',
-    r: '',
-    l: 'en',
-    k: 'checkout.submit',
+    i: 'invoice',
   },
 };
 
@@ -101,7 +89,7 @@ const showReports = (reports) => {
       const head = el('p', 'head');
       head.append(el('code', 'code', report.code), el('span', 'origin', report.origin));
       row.append(head, el('p', 'said', report.message));
-      if (report.key !== undefined) row.append(el('p', 'at', `Key: ${report.key}`));
+      if (report.id !== undefined) row.append(el('p', 'at', `Id: ${report.id}`));
       if (report.limit !== undefined) row.append(el('p', 'at', `Limit: ${report.limit}`));
       if (report.text) row.append(el('pre', 'excerpt', report.text));
       return row;
@@ -130,17 +118,16 @@ const showParams = (params) => {
 };
 
 const run = () => {
-  FIELDS.m.disabled = ABSENT.checked;
-  const message = ABSENT.checked ? undefined : FIELDS.m.value;
+  const message = FIELDS.m.value;
   const payload = object(FIELDS.p, field('payload-bad'));
   const props = object(FIELDS.r, field('props-bad'));
   const locale = FIELDS.l.value.trim() || undefined;
-  const key = FIELDS.k.value.trim() || undefined;
+  const id = FIELDS.i.value.trim() || undefined;
 
   const reports = [];
   const parser = createParser({ onReport: (report) => reports.push(report) });
 
-  showOutput(parser.resolve(message, { payload, props, locale, key }));
+  showOutput(parser.resolve(message, { payload, props, locale, id }));
   showReports(reports);
   showParams(createExtractor()(message));
 };
@@ -150,14 +137,12 @@ const run = () => {
 const share = () => {
   const state = new URLSearchParams();
   for (const [name, input] of Object.entries(FIELDS)) if (input.value) state.set(name, input.value);
-  if (ABSENT.checked) state.set('a', '1');
   const query = `${state}`;
   history.replaceState(null, '', query ? `#${query}` : location.pathname);
 };
 
 const load = (state) => {
   for (const [name, input] of Object.entries(FIELDS)) input.value = state[name] ?? '';
-  ABSENT.checked = state.a === '1';
   run();
 };
 

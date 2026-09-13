@@ -6,7 +6,6 @@ a link reproduces it exactly.</p>
   <button type="button" data-case="greeting">A fallback</button>
   <button type="button" data-case="inbox">A selection</button>
   <button type="button" data-case="invoice">A locale-dependent modifier</button>
-  <button type="button" data-case="missing">A key with no translation</button>
 </div>
 
 <div class="play">
@@ -14,11 +13,9 @@ a link reproduces it exactly.</p>
     <div class="field">
       <label for="message">Message</label>
       <textarea id="message" rows="3" spellcheck="false" autocapitalize="off"></textarea>
-      <label class="switch"><input type="checkbox" id="absent"> There is no message</label>
-      <p class="hint under">A host resolves what its translations hold for the key, which is
-        nothing at all when the key has none — and a message nobody wrote is the one case
-        where the key itself comes back. An empty message is still a message, and resolves
-        to the empty string.</p>
+      <p class="hint under">The message as a host's translations hold it. An empty message is
+        still a message, and resolves to the empty string — as does a call a host makes with
+        no message at all, which has nothing to resolve.</p>
     </div>
     <div class="field">
       <label for="payload">Payload <span class="hint">JSON</span></label>
@@ -31,8 +28,8 @@ a link reproduces it exactly.</p>
         <input id="locale" type="text" spellcheck="false" autocomplete="off" autocapitalize="off">
       </div>
       <div class="field">
-        <label for="key">Key</label>
-        <input id="key" type="text" spellcheck="false" autocomplete="off" autocapitalize="off">
+        <label for="id">Message id</label>
+        <input id="id" type="text" spellcheck="false" autocomplete="off" autocapitalize="off">
       </div>
     </div>
     <details class="props">

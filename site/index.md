@@ -33,10 +33,10 @@ one.
 
 A resolution never raises and never refuses a message. Where a value is missing,
 unusable or absent, the placeholder falls through a chain that is the same four
-steps everywhere — the inline default, the payload's own default, the message
-key, then the empty string — and what went wrong is reported on a channel the
-host may or may not listen to. A translation that is wrong should show as a
-translation that is wrong, not as a blank page.
+steps everywhere — the entry's own default, the payload's own default, the
+placeholder's inline default, then the empty string — and what went wrong is
+reported on a channel the host may or may not listen to. A translation that is
+wrong should show as a translation that is wrong, not as a blank page.
 
 ## Where to start
 
