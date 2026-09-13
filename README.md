@@ -31,11 +31,13 @@ which is why the example above names one.
 The specification is **stable**. Version 1 of the format is settled: within
 `curly-message-1`, what a message resolves to does not change, and an amendment
 that would change it belongs to a later version of the format rather than to
-this one. Revisions of the document are tagged in this repository, beginning at
-`v1.0.0`, and [`CHANGELOG.md`](./CHANGELOG.md) says what each one changed.
+this one. The promise is about messages: a caller that supplied none wrote
+nothing for the document to settle. Revisions of the document are tagged in this
+repository, beginning at `v1.0.0`, and [`CHANGELOG.md`](./CHANGELOG.md) says
+what each one changed.
 
-The conformance set and the reference implementation are on npm as `1.0.0`,
-released against this document.
+The conformance set and the reference implementation are on npm; `1.0.0` of each
+was released against revision 1.0.0 of this document.
 
 The syntax grew out of `@sveltekit-i18n/parser-default`, where it was defined
 implicitly — by the implementation, its README and its test suite, which diverge

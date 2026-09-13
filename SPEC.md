@@ -14,10 +14,12 @@
 > message resolves to is settled — a message written against this document
 > resolves the same way against every later revision of it, and an amendment
 > that would change that belongs to a later version of the format rather than
-> to this one. What a later revision may add is what leaves the messages
-> written today alone: a modifier under a name no earlier revision defined, a
-> conformance level an implementation opts into, and wording that states more
-> precisely what the body already required.
+> to this one. The promise is about messages: a caller that supplied none wrote
+> nothing for this document to settle, and what an implementation answers where
+> there is no message to resolve is outside it. What a later revision may add is
+> what leaves the messages written today alone: a modifier under a name no
+> earlier revision defined, a conformance level an implementation opts into, and
+> wording that states more precisely what the body already required.
 >
 > Appendix A records the divergences found while this document was written
 > against the pre-3.0 reference parser, and the ruling that resolved each one.
@@ -32,7 +34,7 @@ placeholder may carry a modifier, a list of options and a fallback.
 
 It specifies the message syntax and the result of resolving a message against a
 payload, props and a locale (section 4). It does not specify a host API, a file
-format for message catalogues, a key-namespacing scheme, or how an
+format for message catalogues, an id-namespacing scheme, or how an
 implementation reports diagnostics.
 
 The format is deliberately small. It has no plural categories, no gender
@@ -62,8 +64,7 @@ format's (section 11.3).
 Conformance is tested by the implementation-independent fixture set
 `@curly-message/conformance`, which targets a stated version of this document.
 That set is developed in the `conformance/` directory of this document's
-repository and is not published yet, so until it is, an implementation is
-assessed against this document alone.
+repository and released from it.
 
 An implementation states the levels it satisfies and the limits it permits to
 that set through the adapter of section 14.3.
@@ -89,9 +90,9 @@ that set through the adapter of section 14.3.
 : A language tag identifying the target language, used by the formatting
   modifiers.
 
-**key** (of a message)
-: The catalogue identifier under which a message was requested. Used by the
-  fallback chain (section 10) when no message exists, and named by reports
+**id** (of a message)
+: The identifier under which a message was requested. Nothing in resolution
+  reads it; reports name it, so that a report says which message went looking
   (section 14.3).
 
 **placeholder**
@@ -119,9 +120,18 @@ that set through the adapter of section 14.3.
 ## 4. Data model
 
 Resolving a message takes four inputs — a message, a payload, props and a locale
-— and produces a string. A fifth, the message's key, is optional, and nothing in
-resolution reads it but the chain a missing message takes (section 10) and the
-reports (section 14.3).
+— and produces a string. A fifth, the message's id, is optional and reaches no
+step of resolution: reports name it (section 14.3), and nothing else reads it.
+
+A caller that supplies no message — in a host with an undefined, a message that
+is the host's undefined — has supplied nothing to resolve, and the resolution is
+the empty string. So has one whose message is present but that no conversion
+below can describe, the same way such a value is absent (section 9.2). Nothing
+else fails to exist: a message that exists resolves normally, even when it is
+empty, and one that is zero, false or the host's null resolves as the text this
+section converts it to. What a host shows in the place of a message its
+catalogue does not hold is the host's own, which section 1 declines along with
+the catalogue itself. (Appendix A.17.)
 
 Everything the format carries is text. A payload value MAY be of any host type,
 but it reaches a modifier, an option comparison and the output as text, never at
@@ -187,7 +197,7 @@ host's undefined, has no value.
 The payload's root `default` entry is an ordinary value, never a wrapper.
 
 Recognition is exact rather than opportunistic because a payload cannot be
-constrained: message keys are namespaced dotted segments, and payload values are
+constrained: message ids are namespaced dotted segments, and payload values are
 frequently plain objects taken straight from an API. `{ value: 1, unit: 'kg' }`
 is data, and it must stay data.
 
@@ -613,33 +623,6 @@ payload { name: { default: 'You' },
 payload { default: 'Friend' }                 ->  "Hello, Friend!"
 payload {}                                    ->  "Hello, Guest!"
 ```
-
-A **message** that does not exist takes, in order:
-
-1. the payload's own `default` entry, if present;
-2. the message's key, echoed verbatim.
-
-A message **does not exist** when the caller supplied none — in a host with an
-undefined, a message that is the host's undefined — or when it is present and
-no conversion can describe it (section 4), the same way such a value is absent
-(section 9.2). Nothing else fails to exist. A message that exists resolves
-normally, even when it is empty, and one that is zero, false or the host's null
-resolves as the text section 4 converts it to. An own `default` entry that is
-present but zero, empty or false counts as present. (Appendix A.8.)
-
-A link this chain skips is skipped for the reasons the placeholder chain skips
-one: a `default` entry the payload does not own is absent, and one it owns whose
-value no conversion can describe is not a value. Neither displaces the key echo.
-Where the caller named no key there is nothing to echo, and the message resolves
-to the empty string. A key a host wrote as something else becomes text by
-section 4's conversion like any other input, so a key that no conversion can
-describe leaves nothing to echo either.
-
-**Echoed verbatim** means what it says: the key is not a message, and it is not
-among what MAY resolve to text containing placeholders (section 12). A key
-carrying `{{` or `}}` MUST NOT be resolved over, and an escape sequence a key
-carries MUST NOT be removed — the key leaves as the application spelled it.
-Nothing behind the key is read again on its account. (Appendix A.17.)
 
 ## 11. Modifiers
 
@@ -1076,8 +1059,8 @@ leaves the outer walking the passes it has left, and one that spends the whole
 output limit leaves the outer free to produce its own. A value both of them read
 is converted once for each of them, because the record the requirement above
 asks for belongs to a resolution and not to the implementation. And a report
-names the message the resolution it came from was given, not the message of the
-resolution around that one (section 14.3).
+names the id the resolution it came from was given, not the id of the resolution
+around that one (section 14.3).
 
 Nothing here bounds how deep that nesting goes, and the three limits being
 per-resolution is exactly what leaves it unbounded. What ends a resolution that
@@ -1089,8 +1072,7 @@ back resolves to its fallback chain (section 10), and the resolution around it
 MUST NOT raise. A reporting handler is the third of those callers and has no
 placeholder waiting on it: what a placeholder resolves to is settled by the
 condition being reported and not by the handler's answer, and where that
-condition is a limit or the chain the message itself resolved through there is
-no placeholder to identify at all (section 14.3). So a handler that does not
+condition is a limit there is no placeholder to identify at all (section 14.3). So a handler that does not
 come back leaves its report undelivered and the resolution that was reporting
 MUST carry on and MUST NOT raise. That holds for a handler that fails any
 other way too: a channel is where diagnostics go, and a message does not fail
@@ -1164,12 +1146,10 @@ The placeholder takes the fallback chain; the implementation MUST NOT raise and
 SHOULD report the failure. (Appendix A.12.)
 
 The message itself is not such a link. A message that no conversion can describe
-does not exist (section 10), and a message nobody wrote is not a defect in the
-payload, so stepping past it is not a condition to report. Neither is the key
-the chain echoes last: a key that no conversion can describe leaves nothing to
-echo (section 10), and a key is a caller's input rather than a payload value, so
-section 4's reporting SHOULD does not reach it. The `default` entry the chain
-reaches instead is a payload value like any other, and is reported like one.
+is nothing to resolve (section 4), and a message nobody wrote is not a defect in
+the payload, so stepping past it is not a condition to report. Neither is the
+id: no step of resolution reads it, and it is a caller's input rather than a
+payload value, so section 4's reporting SHOULD does not reach it.
 
 A report names the condition it describes with a **code**, and every code
 declares an **origin**: which of a resolution's inputs the defect is in, and so
@@ -1207,11 +1187,10 @@ message must not take down the page that contains it.
 ### 14.3 Reports
 
 This specification does not prescribe a reporting channel. Reports SHOULD
-identify the message key and the placeholder; where the condition is a limit
-(section 13), or is about the chain the message itself resolves through, there
-is no placeholder to identify and the key is what says which message went
-looking. Section 13's bounds on report content apply to every report that
-includes payload-derived text.
+identify the message id and the placeholder; where the condition is a limit
+(section 13) there is no placeholder to identify, and the id is what says which
+message went looking. Section 13's bounds on report content apply to every
+report that includes payload-derived text.
 
 An implementation that reports emits one report for each placeholder that met
 the condition, in the pass where it met it. A message naming an unknown
@@ -1431,8 +1410,6 @@ zero, empty string and `false` behaved as though the key were missing:
 {{v:number; default:99}}   payload { v: 0 }         ->  "99"       (expected "0")
 {{v:currency; default:7}}  payload { v: 0 }, currency USD  ->  "$7.00"  (expected "$0.00")
 {{v}}                      payload { default: 0 }   ->  ""         (expected "0")
-message undefined          payload { default: 0 }   ->  the key    (expected "0")
-message undefined          payload { default: '' }  ->  the key    (expected "")
 ```
 
 **Ruling.** Only an absent value triggers a fallback. Zero, empty
@@ -1668,41 +1645,42 @@ the character after it — where each end previously had a rule of its own.
 
 ---
 
-### A.17 The key echo is resolved instead of echoed
+### A.17 A message that does not exist resolves to its key
 
-**Observed.** Where no message existed, the key was handed to interpolation in
-the message's place, so it was scanned for placeholders and unescaped like a
-message. Every line below resolves a message that does not exist:
+**Observed.** Where no message existed, the key the message had been requested
+under was handed to interpolation in the message's place, so it was scanned for
+placeholders and unescaped like a message. Every line below resolves a message
+that does not exist:
 
 ```
-key "{{name}}"  payload { name: "Alice" }  ->  "Alice"  (expected "{{name}}")
-key "{{name}}"  no payload                 ->  ""       (expected "{{name}}")
-key "a\;b"      no payload                 ->  "a;b"    (expected "a\;b")
+key "{{name}}"  payload { name: "Alice" }  ->  "Alice"
+key "{{name}}"  no payload                 ->  ""
+key "a\;b"      no payload                 ->  "a;b"
 key "{{a}}"     payload { a: "{{a}}" }     ->  "{{a}}", and a pass-limit report
 key "{{name}}"  payload { default: <circular> }  ->  "", and a second report
 ```
 
-**Ruling.** The key is echoed verbatim (section 10). It is not among what MAY
-resolve to text containing placeholders — a value, an option value, an inline
-default, a payload `default` and a wrapper's `default` (section 12) — so it is
-not scanned, and the unescaping every resolved message ends with does not reach
-it either.
+**Ruling.** There is no echo, and there is no chain a missing message takes. A
+caller that supplies no message has supplied nothing to resolve, and the
+resolution is the empty string (section 4).
 
-The key belongs to the application, not to the message catalogue: it is an
-identifier the application chose, and the format repeats it only so the caller
-can see which message went looking. Resolving over it hands that identifier to
-the payload — the same payload that just failed to supply a message — and
-returns a key spelled differently than it was passed. A caller that logs the
-echo, or compares it against the key it asked for, has to be able to recognize
-it.
+What to show where a catalogue holds no message for an identifier is a question
+about the catalogue, and section 1 declines it along with the catalogue's file
+format and its id-namespacing scheme. A host that answers it with the
+identifier — as hosts commonly do — answers it in a line of its own, and answers
+it correctly by construction: an identifier that never reaches resolution is
+never scanned for placeholders, so the divergence observed above has nowhere
+left to occur.
 
-Nothing behind the key is read on its account either: the echo is the end of
-the chain, not another link in it, so a payload entry read once is not read a
-second time and no bound of section 13 is reached.
+The identifier survives as the message's **id** (sections 4 and 14.3), which
+reports name so that a report says which message went looking. No step of
+resolution reads it and it does not reach the output.
 
-The echo still becomes text, because resolution answers with text: a key a host
-wrote as something else is converted by section 4 like any other input, and
-where the caller named no key there is nothing to echo.
+Revision 1.0.0 of this document ruled the other way: it kept the echo and
+required it to be verbatim. An implementation written against that revision
+answers a caller who supplies no message with the identifier where this one
+answers with the empty string, and the payload's own `default` entry outranked
+the identifier there. Nothing else about such an implementation changes.
 
 ---
 
