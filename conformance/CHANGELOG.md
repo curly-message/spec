@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.1
 
 Targets revision 1.0.1 of the specification, where the message's key became the
 message's **id** and stopped reaching the output.
