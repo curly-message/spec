@@ -56,7 +56,7 @@
       "payload": {
         "v": "abc"
       },
-      "key": "extensions.replaces-number",
+      "messageId": "extensions.replaces-number",
       "modifiers": {
         "number": "upper"
       },
@@ -73,7 +73,7 @@
       "payload": {
         "v": "x"
       },
-      "key": "extensions.replaced-eq",
+      "messageId": "extensions.replaced-eq",
       "modifiers": {
         "eq": "echo"
       },
@@ -88,7 +88,7 @@
       "section": "9.5",
       "message": "[{{v:eq; default:d}}]",
       "payload": {},
-      "key": "extensions.replaced-eq-absent",
+      "messageId": "extensions.replaced-eq-absent",
       "modifiers": {
         "eq": "upper"
       },
@@ -105,7 +105,7 @@
       "payload": {
         "v": "x"
       },
-      "key": "extensions.replaced-lt",
+      "messageId": "extensions.replaced-lt",
       "modifiers": {
         "lt": "echo"
       },
@@ -122,7 +122,7 @@
       "payload": {
         "v": "x"
       },
-      "key": "extensions.case",
+      "messageId": "extensions.case",
       "modifiers": {
         "up": "upper"
       },
@@ -132,7 +132,7 @@
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "extensions.case"
+            "id": "extensions.case"
           }
         ]
       }
@@ -146,7 +146,7 @@
         "a": "x",
         "b": "x"
       },
-      "key": "extensions.beside",
+      "messageId": "extensions.beside",
       "modifiers": {
         "up": "upper"
       },
@@ -156,7 +156,7 @@
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "extensions.beside"
+            "id": "extensions.beside"
           }
         ]
       }
@@ -169,14 +169,14 @@
       "payload": {
         "v": "x"
       },
-      "key": "extensions.nosuch",
+      "messageId": "extensions.nosuch",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "extensions.nosuch"
+            "id": "extensions.nosuch"
           }
         ]
       }
@@ -189,7 +189,7 @@
       "payload": {
         "v": "x"
       },
-      "key": "extensions.keyless",
+      "messageId": "extensions.keyless",
       "modifiers": {
         "boom": "raise"
       },
@@ -204,7 +204,7 @@
       "section": "11.1",
       "message": "[{{v:boom; default:abc}}]",
       "payload": {},
-      "key": "extensions.absent",
+      "messageId": "extensions.absent",
       "modifiers": {
         "boom": "raise"
       },
@@ -361,7 +361,7 @@
       "payload": {
         "v": "x"
       },
-      "key": "extensions.own-business",
+      "messageId": "extensions.own-business",
       "modifiers": {
         "own": "echo"
       },
@@ -471,7 +471,7 @@
           "$curly": "unserializable"
         }
       },
-      "key": "extensions.undescribable-link",
+      "messageId": "extensions.undescribable-link",
       "modifiers": {
         "read": "default"
       },
@@ -481,7 +481,7 @@
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "extensions.undescribable-link"
+            "id": "extensions.undescribable-link"
           }
         ]
       }
@@ -497,7 +497,7 @@
           "$curly": "unserializable"
         }
       },
-      "key": "extensions.unread-link",
+      "messageId": "extensions.unread-link",
       "modifiers": {
         "echo": "echo"
       },
@@ -650,7 +650,7 @@
           "y": 2
         }
       },
-      "key": "extensions.props-none",
+      "messageId": "extensions.props-none",
       "modifiers": {
         "p": "props"
       },
@@ -672,7 +672,7 @@
       "payload": {
         "v": "x"
       },
-      "key": "extensions.replaced-number-props-none",
+      "messageId": "extensions.replaced-number-props-none",
       "modifiers": {
         "number": "props"
       },
@@ -768,7 +768,7 @@
       "payload": {
         "v": "x"
       },
-      "key": "extensions.nothing",
+      "messageId": "extensions.nothing",
       "modifiers": {
         "nothing": "nothing"
       },
@@ -800,7 +800,7 @@
       "payload": {
         "v": "x"
       },
-      "key": "extensions.raise",
+      "messageId": "extensions.raise",
       "modifiers": {
         "x-boom": "raise"
       },
@@ -810,7 +810,7 @@
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "extensions.raise"
+            "id": "extensions.raise"
           }
         ]
       }
@@ -824,7 +824,7 @@
         "v": "x",
         "w": "w"
       },
-      "key": "extensions.raise-origin",
+      "messageId": "extensions.raise-origin",
       "modifiers": {
         "raise": "raise"
       },
@@ -834,7 +834,7 @@
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "extensions.raise-origin"
+            "id": "extensions.raise-origin"
           }
         ]
       }

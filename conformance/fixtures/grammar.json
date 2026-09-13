@@ -312,14 +312,14 @@
       "payload": {
         "v": "a"
       },
-      "key": "grammar.modifier-name",
+      "messageId": "grammar.modifier-name",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "grammar.modifier-name"
+            "id": "grammar.modifier-name"
           }
         ]
       }
@@ -344,14 +344,14 @@
       "payload": {
         "v": "a"
       },
-      "key": "grammar.unknown",
+      "messageId": "grammar.unknown",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "grammar.unknown"
+            "id": "grammar.unknown"
           }
         ]
       }
@@ -660,7 +660,7 @@
         "null": "NULL",
         "undefined": "UNDEFINED"
       },
-      "key": "grammar.modifier-only",
+      "messageId": "grammar.modifier-only",
       "expected": {
         "output": "",
         "reports": []

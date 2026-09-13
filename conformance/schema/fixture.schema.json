@@ -94,8 +94,8 @@
         "locale": {
           "type": "string"
         },
-        "key": {
-          "description": "The message's key (section 4). Any JSON value: a key a host wrote as something other than text is echoed as the text it converts to (section 10)."
+        "messageId": {
+          "description": "The message's id (section 4), spelled out because a case's own `id` names the case. Any JSON value: no step of resolution reads it, and reports name it (section 14.3)."
         },
         "modifiers": {
           "description": "Host-defined modifiers to register (section 11.3), each the name of a behaviour from the catalogue.",
@@ -255,9 +255,9 @@
             "limit"
           ]
         },
-        "key": {
+        "id": {
           "type": "string",
-          "description": "The key the report must name, where the adapter's reports carry one. Text, and compared as written: tagged values (see the package README) are read on a case's inputs and not in its expectations, so a case whose key is not text leaves this out and the key goes unobserved."
+          "description": "The id the report must name, where the adapter's reports carry one. Text, and compared as written: tagged values (see the package README) are read on a case's inputs and not in its expectations, so a case whose id is not text leaves this out and the id goes unobserved."
         }
       }
     }

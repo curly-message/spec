@@ -96,16 +96,14 @@
       }
     },
     {
-      "id": "nesting/missing-message-default-unescaped",
-      "description": "The payload default a missing message takes is text the passes resolve, so its escape sequences are removed at the end.",
+      "id": "nesting/payload-default-unescaped",
+      "description": "The payload default a placeholder takes is text the passes resolve, so its escape sequences are removed at the end.",
       "section": "5",
-      "message": {
-        "$curly": "undefined"
-      },
+      "message": "{{v}}",
       "payload": {
         "default": "a\\;b"
       },
-      "key": "greeting",
+      "messageId": "greeting",
       "expected": {
         "output": "a;b"
       }
@@ -190,22 +188,6 @@
       },
       "expected": {
         "output": "W-N"
-      }
-    },
-    {
-      "id": "nesting/missing-message-default-carries-placeholder",
-      "description": "The payload default a missing message takes is among what may resolve to text containing placeholders, unlike the key echo.",
-      "section": "12",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {
-        "default": "P-{{n}}",
-        "n": "N"
-      },
-      "key": "greeting",
-      "expected": {
-        "output": "P-N"
       }
     },
     {

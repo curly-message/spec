@@ -12,7 +12,7 @@
       "path": "fixtures/conversion.json",
       "level": "core",
       "section": "4",
-      "cases": 15
+      "cases": 24
     },
     {
       "path": "fixtures/escaping-extensions.json",
@@ -42,7 +42,7 @@
       "path": "fixtures/fallback.json",
       "level": "core",
       "section": "10",
-      "cases": 47
+      "cases": 26
     },
     {
       "path": "fixtures/grammar.json",
@@ -66,13 +66,13 @@
       "path": "fixtures/nesting.json",
       "level": "core",
       "section": "12",
-      "cases": 18
+      "cases": 17
     },
     {
       "path": "fixtures/reports.json",
       "level": "core",
       "section": "14",
-      "cases": 24
+      "cases": 23
     },
     {
       "path": "fixtures/resolution.json",

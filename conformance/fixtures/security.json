@@ -190,14 +190,14 @@
       "payload": {
         "v": "x"
       },
-      "key": "security.registry-constructor",
+      "messageId": "security.registry-constructor",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "security.registry-constructor"
+            "id": "security.registry-constructor"
           }
         ]
       }
@@ -210,14 +210,14 @@
       "payload": {
         "v": "x"
       },
-      "key": "security.registry-tostring",
+      "messageId": "security.registry-tostring",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "security.registry-tostring"
+            "id": "security.registry-tostring"
           }
         ]
       }
@@ -230,14 +230,14 @@
       "payload": {
         "v": "x"
       },
-      "key": "security.registry-proto",
+      "messageId": "security.registry-proto",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "key": "security.registry-proto"
+            "id": "security.registry-proto"
           }
         ]
       }

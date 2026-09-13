@@ -45,8 +45,8 @@ export type Behaviour = 'upper' | 'echo' | 'empty' | 'nothing' | 'raise' | 'defa
 
 /**
  * One resolution's inputs, decoded into host values: the four inputs of
- * section 4 and the key, plus the two pieces of configuration a case may ask
- * for — host-defined modifiers to register (section 11.3) and the
+ * section 4 and the message's id, plus the two pieces of configuration a case
+ * may ask for — host-defined modifiers to register (section 11.3) and the
  * implementation-configured defaults of section 11.2.
  */
 export type Resolution = {
@@ -54,7 +54,7 @@ export type Resolution = {
   payload?: unknown;
   props?: unknown;
   locale?: string;
-  key?: unknown;
+  id?: unknown;
   modifiers?: Record<string, ModifierBehaviour>;
   defaults?: unknown;
 };
@@ -71,7 +71,7 @@ export type ReportOrigin = 'message' | 'payload' | 'limit';
 export type Report = {
   code: ReportCode;
   origin?: ReportOrigin;
-  key?: unknown;
+  id?: unknown;
   limit?: number;
 };
 
@@ -110,7 +110,7 @@ export type ExpectedReport = {
   code: ReportCode;
   origin: ReportOrigin;
   /** Text, compared as written: a tagged value is read on a case's inputs, never in its expectations. */
-  key?: string;
+  id?: string;
 };
 
 export type Expected = {
@@ -128,7 +128,8 @@ export type ConcreteCase = {
   payload?: Record<string, unknown>;
   props?: Record<string, unknown>;
   locale?: string;
-  key?: unknown;
+  /** The message's id (section 4). Spelled out because a case's own `id` names the case. */
+  messageId?: unknown;
   modifiers?: Record<string, Behaviour>;
   defaults?: Record<string, unknown>;
   expected: Expected;

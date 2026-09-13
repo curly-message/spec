@@ -55,11 +55,11 @@ describe('decode', () => {
     expect(tree[0][0]).toEqual([]);
   });
 
-  it('decodes tags nested inside a payload, props and a key', () => {
+  it('decodes tags nested inside a payload, props and an id', () => {
     const decoded = decode({
       payload: { v: { value: { $curly: 'undefined' } }, list: [{ $curly: 'nodes', count: 3 }, 'plain'] },
       props: { number: { maximumFractionDigits: { $curly: 'undefined' } } },
-      key: [{ $curly: 'unserializable' }],
+      messageId: [{ $curly: 'unserializable' }],
     }) as any;
 
     expect('value' in decoded.payload.v).toBe(true);
@@ -68,7 +68,7 @@ describe('decode', () => {
     expect(decoded.payload.list[1]).toBe('plain');
     expect('maximumFractionDigits' in decoded.props.number).toBe(true);
     expect(decoded.props.number.maximumFractionDigits).toBeUndefined();
-    expect(decoded.key[0].self).toBe(decoded.key[0]);
+    expect(decoded.messageId[0].self).toBe(decoded.messageId[0]);
   });
 
   it('keeps a __proto__ entry as an own entry', () => {

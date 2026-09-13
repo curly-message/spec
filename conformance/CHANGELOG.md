@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+Targets revision 1.0.1 of the specification, where the message's key became the
+message's **id** and stopped reaching the output.
+
+* A case names the message's id under `messageId` rather than `key`, spelled out
+  because a case's own `id` names the case, and an expected report names it
+  under `id`. An adapter is handed `id` in place of `key`.
+* The cases for the chain a missing message took are gone, and section 4's
+  cases say what replaces it: a message the caller did not supply resolves to
+  the empty string, whatever the payload's `default` holds, and nothing is read
+  or reported on its account. An id carrying a placeholder is neither echoed nor
+  resolved over, because no step of resolution reads it.
 * The release carries the set as `conformance-<version>.zip` — the fixtures,
   the manifest and the schema — so an implementation in a language npm does not
   reach has the same files the runner reads.

@@ -52,11 +52,11 @@ A case is either written out or generated. A written-out case has:
 | `id` | Unique across the set: the file's group, a slash, and a slug. |
 | `description` | One sentence naming what the case pins, for the failure it would print. |
 | `section` | A more specific heading than the file's, where the case pins one. |
-| `message` | The message. Usually text; any other JSON value is a message a host wrote as something else (section 4), and the `undefined` tag below is a message the caller did not supply (section 10). |
+| `message` | The message. Usually text; any other JSON value is a message a host wrote as something else (section 4), and the `undefined` tag below is a message the caller did not supply, which resolves to the empty string (section 4). |
 | `payload` | The payload (section 3). Entries hold values, wrappers (section 4.1) or tagged values. |
 | `props` | The caller's formatting properties, grouped by modifier name (section 11.2). |
 | `locale` | The locale. |
-| `key` | The message's key (section 4). Any JSON value: a key a host wrote as something other than text is echoed as the text it converts to (section 10). |
+| `messageId` | The message's id (section 4), spelled out because a case's own `id` names the case. Any JSON value: no step of resolution reads it, and reports name it (section 14.3). |
 | `modifiers` | Host-defined modifiers to register (section 11.3): a name to a behaviour from the catalogue below. |
 | `defaults` | The implementation-configured defaults, the bottom formatting layer of section 11.2, grouped by modifier name. |
 | `expected` | What the resolution must produce: an `output`, or for a locale-dependent one a `format` request; and the `reports`, in the order they are emitted, none where the field is omitted. |
@@ -69,7 +69,7 @@ declares.
 ### Tagged values
 
 A fixture is JSON, and the format takes inputs JSON cannot spell. Three tagged
-objects stand in for them, anywhere in a message, a payload, props, a key or
+objects stand in for them, anywhere in a message, a payload, props, an id or
 the defaults. A runner decodes each into the host value it names before the
 adapter sees it; nothing else is decoded, so a payload entry of any other shape
 reaches the implementation as the plain data JSON describes.
@@ -77,8 +77,8 @@ reaches the implementation as the plain data JSON describes.
 A tag is read on a case's **inputs** and nowhere else. An expectation is
 compared as written, so a tag in one would be compared as the object it is
 spelled as, which no implementation answers with; the schema therefore holds the
-key of an expected report to text. A case whose key is not text leaves that key
-out of its expectation and the key goes unobserved.
+id of an expected report to text. A case whose id is not text leaves that id out
+of its expectation and the id goes unobserved.
 
 | Tag | Stands for |
 | --- | --- |
@@ -140,7 +140,7 @@ Section 13 lets an implementation permit more than its minima and requires it
 to document what it permits, so a case at a limit cannot be written out: it is
 built from the limits the adapter declares, and exercises the implementation at
 the bounds it documents. `P` is the declared pass limit, `L` the output limit,
-`C` the conversion limit, and every generated case reports through the key
+`C` the conversion limit, and every generated case reports under the id
 `limits`.
 
 | `generate` | Message and payload | Expected |
@@ -166,7 +166,7 @@ import type { Adapter } from '@curly-message/conformance';
 export const adapter: Adapter = {
   levels: ['core', 'intl', 'extensions'],
   limits: { passes: 10, output: 100000, conversion: 100000 },
-  resolve: ({ message, payload, props, locale, key, modifiers, defaults }) => {
+  resolve: ({ message, payload, props, locale, id, modifiers, defaults }) => {
     // Call the implementation and answer with what it produced.
     return { output, reports };
   },
@@ -181,7 +181,7 @@ section 13 requires, and is what the generated cases are built from.
 `resolve` is handed one resolution's inputs, decoded into host values, and
 answers with the `output` and the `reports` the implementation produced. The
 output is compared exactly. A report is compared by its `code`; its `origin`,
-`key` and `limit` are compared where the adapter's reports carry them, since
+`id` and `limit` are compared where the adapter's reports carry them, since
 the specification prescribes no shape for a report, only what a code names and
 which origin it declares. Reports are compared in order, because section 14.3
 has an implementation report in the pass where the condition was met and

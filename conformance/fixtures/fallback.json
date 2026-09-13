@@ -106,7 +106,7 @@
         },
         "default": "PAYLOAD"
       },
-      "key": "fallback.wrapper-undefined",
+      "messageId": "fallback.wrapper-undefined",
       "expected": {
         "output": "PAYLOAD",
         "reports": []
@@ -122,7 +122,7 @@
           "$curly": "undefined"
         }
       },
-      "key": "fallback.payload-undefined",
+      "messageId": "fallback.payload-undefined",
       "expected": {
         "output": "INLINE",
         "reports": []
@@ -141,14 +141,14 @@
         },
         "default": "PAYLOAD"
       },
-      "key": "fallback.wrapper-undescribable",
+      "messageId": "fallback.wrapper-undescribable",
       "expected": {
         "output": "PAYLOAD",
         "reports": [
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "fallback.wrapper-undescribable"
+            "id": "fallback.wrapper-undescribable"
           }
         ]
       }
@@ -168,19 +168,19 @@
           "$curly": "unserializable"
         }
       },
-      "key": "fallback.two-undescribable",
+      "messageId": "fallback.two-undescribable",
       "expected": {
         "output": "INLINE",
         "reports": [
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "fallback.two-undescribable"
+            "id": "fallback.two-undescribable"
           },
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "fallback.two-undescribable"
+            "id": "fallback.two-undescribable"
           }
         ]
       }
@@ -200,19 +200,19 @@
           "$curly": "unserializable"
         }
       },
-      "key": "fallback.all-undescribable",
+      "messageId": "fallback.all-undescribable",
       "expected": {
         "output": "[]",
         "reports": [
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "fallback.all-undescribable"
+            "id": "fallback.all-undescribable"
           },
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "fallback.all-undescribable"
+            "id": "fallback.all-undescribable"
           }
         ]
       }
@@ -230,14 +230,14 @@
           "default": "W"
         }
       },
-      "key": "fallback.wrapper-value",
+      "messageId": "fallback.wrapper-value",
       "expected": {
         "output": "W",
         "reports": [
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "fallback.wrapper-value"
+            "id": "fallback.wrapper-value"
           }
         ]
       }
@@ -292,7 +292,7 @@
           "$curly": "unserializable"
         }
       },
-      "key": "fallback.unread",
+      "messageId": "fallback.unread",
       "expected": {
         "output": "x",
         "reports": []
@@ -309,7 +309,7 @@
           "$curly": "unserializable"
         }
       },
-      "key": "fallback.unread-selection",
+      "messageId": "fallback.unread-selection",
       "expected": {
         "output": "Q",
         "reports": []
@@ -365,14 +365,14 @@
           "$curly": "unserializable"
         }
       },
-      "key": "fallback.default-once",
+      "messageId": "fallback.default-once",
       "expected": {
         "output": "",
         "reports": [
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "fallback.default-once"
+            "id": "fallback.default-once"
           }
         ]
       }
@@ -399,19 +399,19 @@
           "$curly": "unserializable"
         }
       },
-      "key": "fallback.shared-link",
+      "messageId": "fallback.shared-link",
       "expected": {
         "output": "",
         "reports": [
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "fallback.shared-link"
+            "id": "fallback.shared-link"
           },
           {
             "code": "unserializable-value",
             "origin": "payload",
-            "key": "fallback.shared-link"
+            "id": "fallback.shared-link"
           }
         ]
       }
@@ -431,211 +431,8 @@
       }
     },
     {
-      "id": "fallback/missing-message-takes-payload-default",
-      "description": "A message the caller did not supply takes the payload's own default first.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {
-        "default": "D"
-      },
-      "key": "greeting",
-      "expected": {
-        "output": "D"
-      }
-    },
-    {
-      "id": "fallback/missing-message-echoes-key",
-      "description": "A message the caller did not supply echoes its key where the payload declares no default.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {},
-      "key": "greeting",
-      "expected": {
-        "output": "greeting"
-      }
-    },
-    {
-      "id": "fallback/missing-message-default-zero",
-      "description": "A payload default of zero is present, so a missing message takes it rather than echoing the key.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {
-        "default": 0
-      },
-      "key": "greeting",
-      "expected": {
-        "output": "0"
-      }
-    },
-    {
-      "id": "fallback/missing-message-default-empty",
-      "description": "An empty payload default is present, so a missing message takes it rather than echoing the key.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {
-        "default": ""
-      },
-      "key": "greeting",
-      "expected": {
-        "output": ""
-      }
-    },
-    {
-      "id": "fallback/missing-message-default-undefined",
-      "description": "A payload default that is the host's undefined is absent: a missing message steps past it to the key without a report.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {
-        "default": {
-          "$curly": "undefined"
-        }
-      },
-      "key": "greeting",
-      "expected": {
-        "output": "greeting",
-        "reports": []
-      }
-    },
-    {
-      "id": "fallback/missing-message-default-undescribable",
-      "description": "A payload default no conversion can describe does not displace the key echo, and is reported like any payload value.",
-      "section": "14.2",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {
-        "default": {
-          "$curly": "unserializable"
-        }
-      },
-      "key": "greeting",
-      "expected": {
-        "output": "greeting",
-        "reports": [
-          {
-            "code": "unserializable-value",
-            "origin": "payload",
-            "key": "greeting"
-          }
-        ]
-      }
-    },
-    {
-      "id": "fallback/missing-message-no-key",
-      "description": "Where the caller named no key there is nothing to echo, and a missing message resolves to the empty string.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {},
-      "expected": {
-        "output": ""
-      }
-    },
-    {
-      "id": "fallback/missing-message-no-key-undescribable-default",
-      "description": "An undescribable payload default is reported even where no key remains to echo, and the message resolves to the empty string.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {
-        "default": {
-          "$curly": "unserializable"
-        }
-      },
-      "expected": {
-        "output": "",
-        "reports": [
-          {
-            "code": "unserializable-value",
-            "origin": "payload"
-          }
-        ]
-      }
-    },
-    {
-      "id": "fallback/empty-message-exists",
-      "description": "An empty message exists and resolves to nothing: neither the payload default nor the key displaces it.",
-      "section": "10",
-      "message": "",
-      "payload": {
-        "default": "CHAIN"
-      },
-      "key": "greeting",
-      "expected": {
-        "output": ""
-      }
-    },
-    {
-      "id": "fallback/zero-message-exists",
-      "description": "A message that is zero exists and resolves as the text it converts to.",
-      "section": "10",
-      "message": 0,
-      "payload": {
-        "default": "CHAIN"
-      },
-      "key": "greeting",
-      "expected": {
-        "output": "0"
-      }
-    },
-    {
-      "id": "fallback/object-message-exists",
-      "description": "A message a conversion describes exists: a plain object resolves as its serialization.",
-      "section": "10",
-      "message": {
-        "a": 1
-      },
-      "payload": {
-        "default": "CHAIN"
-      },
-      "key": "greeting",
-      "expected": {
-        "output": "{\"a\":1}"
-      }
-    },
-    {
-      "id": "fallback/undescribable-message-takes-payload-default",
-      "description": "A message no conversion can describe does not exist, so the payload default takes its place.",
-      "section": "10",
-      "message": {
-        "$curly": "unserializable"
-      },
-      "payload": {
-        "default": "D"
-      },
-      "key": "greeting",
-      "expected": {
-        "output": "D",
-        "reports": []
-      }
-    },
-    {
-      "id": "fallback/undescribable-message-nothing-to-echo",
-      "description": "A message no conversion can describe, with no payload default and no key, resolves to the empty string.",
-      "section": "10",
-      "message": {
-        "$curly": "unserializable"
-      },
-      "expected": {
-        "output": "",
-        "reports": []
-      }
-    },
-    {
-      "id": "fallback/existing-message-leaves-link-unread",
-      "description": "A message that exists resolves normally, so the payload default behind it is neither read nor reported.",
+      "id": "fallback/no-placeholder-leaves-default-unread",
+      "description": "A message with no placeholder reaches no chain, so the payload's own default is neither read nor reported.",
       "section": "10",
       "message": "MESSAGE",
       "payload": {
@@ -643,130 +440,9 @@
           "$curly": "unserializable"
         }
       },
-      "key": "greeting",
+      "messageId": "greeting",
       "expected": {
         "output": "MESSAGE",
-        "reports": []
-      }
-    },
-    {
-      "id": "fallback/key-echo-not-resolved",
-      "description": "A key carrying a placeholder is echoed verbatim, not resolved over the payload.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {
-        "name": "Alice"
-      },
-      "key": "{{name}}",
-      "expected": {
-        "output": "{{name}}",
-        "reports": []
-      }
-    },
-    {
-      "id": "fallback/key-echo-no-payload",
-      "description": "A key carrying a placeholder is echoed verbatim where there is no payload at all.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "key": "{{name}}",
-      "expected": {
-        "output": "{{name}}"
-      }
-    },
-    {
-      "id": "fallback/key-echo-not-unescaped",
-      "description": "An escape sequence a key carries is not removed: the key leaves as the application spelled it.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "key": "a\\;b",
-      "expected": {
-        "output": "a\\;b"
-      }
-    },
-    {
-      "id": "fallback/key-echo-reads-nothing-behind",
-      "description": "Nothing behind the key is read on its account: a key naming a self-referential entry is echoed and no limit is reached.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {
-        "a": "{{a}}"
-      },
-      "key": "{{a}}",
-      "expected": {
-        "output": "{{a}}",
-        "reports": []
-      }
-    },
-    {
-      "id": "fallback/key-echo-ends-the-chain",
-      "description": "The echo ends the chain: the undescribable payload default is read once and reported once, and the key is not resolved over it.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "payload": {
-        "default": {
-          "$curly": "unserializable"
-        }
-      },
-      "key": "{{name}}",
-      "expected": {
-        "output": "{{name}}",
-        "reports": [
-          {
-            "code": "unserializable-value",
-            "origin": "payload",
-            "key": "{{name}}"
-          }
-        ]
-      }
-    },
-    {
-      "id": "fallback/key-number-becomes-text",
-      "description": "A key a host wrote as a number is echoed as the text it converts to.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "key": 42,
-      "expected": {
-        "output": "42"
-      }
-    },
-    {
-      "id": "fallback/key-object-serializes",
-      "description": "A key a host wrote as a plain object is echoed as its serialization.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "key": {
-        "a": 1
-      },
-      "expected": {
-        "output": "{\"a\":1}"
-      }
-    },
-    {
-      "id": "fallback/key-undescribable-echoes-nothing",
-      "description": "A key no conversion can describe leaves nothing to echo, and a key is not reported.",
-      "section": "10",
-      "message": {
-        "$curly": "undefined"
-      },
-      "key": {
-        "$curly": "unserializable"
-      },
-      "expected": {
-        "output": "",
         "reports": []
       }
     }

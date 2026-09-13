@@ -11,14 +11,14 @@
       "payload": {
         "v": 10
       },
-      "key": "intl.locale-none-number",
+      "messageId": "intl.locale-none-number",
       "expected": {
         "output": "[]",
         "reports": [
           {
             "code": "missing-locale",
             "origin": "payload",
-            "key": "intl.locale-none-number"
+            "id": "intl.locale-none-number"
           }
         ]
       }
@@ -36,14 +36,14 @@
           "timeZone": "UTC"
         }
       },
-      "key": "intl.locale-none-date",
+      "messageId": "intl.locale-none-date",
       "expected": {
         "output": "[]",
         "reports": [
           {
             "code": "missing-locale",
             "origin": "payload",
-            "key": "intl.locale-none-date"
+            "id": "intl.locale-none-date"
           }
         ]
       }
@@ -56,14 +56,14 @@
       "payload": {
         "v": -86400000
       },
-      "key": "intl.locale-none-ago",
+      "messageId": "intl.locale-none-ago",
       "expected": {
         "output": "[]",
         "reports": [
           {
             "code": "missing-locale",
             "origin": "payload",
-            "key": "intl.locale-none-ago"
+            "id": "intl.locale-none-ago"
           }
         ]
       }
@@ -81,14 +81,14 @@
           "currency": "USD"
         }
       },
-      "key": "intl.locale-none-currency",
+      "messageId": "intl.locale-none-currency",
       "expected": {
         "output": "[]",
         "reports": [
           {
             "code": "missing-locale",
             "origin": "payload",
-            "key": "intl.locale-none-currency"
+            "id": "intl.locale-none-currency"
           }
         ]
       }
@@ -102,14 +102,14 @@
         "v": 10
       },
       "locale": "",
-      "key": "intl.locale-empty",
+      "messageId": "intl.locale-empty",
       "expected": {
         "output": "[]",
         "reports": [
           {
             "code": "missing-locale",
             "origin": "payload",
-            "key": "intl.locale-empty"
+            "id": "intl.locale-empty"
           }
         ]
       }
@@ -126,14 +126,14 @@
         },
         "default": "P"
       },
-      "key": "intl.locale-none-links",
+      "messageId": "intl.locale-none-links",
       "expected": {
         "output": "[]",
         "reports": [
           {
             "code": "missing-locale",
             "origin": "payload",
-            "key": "intl.locale-none-links"
+            "id": "intl.locale-none-links"
           }
         ]
       }
@@ -146,14 +146,14 @@
       "payload": {
         "v": "not a number"
       },
-      "key": "intl.locale-before-value",
+      "messageId": "intl.locale-before-value",
       "expected": {
         "output": "[]",
         "reports": [
           {
             "code": "missing-locale",
             "origin": "payload",
-            "key": "intl.locale-before-value"
+            "id": "intl.locale-before-value"
           }
         ]
       }
@@ -166,14 +166,14 @@
       "payload": {
         "v": ""
       },
-      "key": "intl.locale-before-blank",
+      "messageId": "intl.locale-before-blank",
       "expected": {
         "output": "[]",
         "reports": [
           {
             "code": "missing-locale",
             "origin": "payload",
-            "key": "intl.locale-before-blank"
+            "id": "intl.locale-before-blank"
           }
         ]
       }
@@ -184,7 +184,7 @@
       "section": "11.2",
       "message": "{{v:number; default:D}}",
       "payload": {},
-      "key": "intl.absent-no-locale",
+      "messageId": "intl.absent-no-locale",
       "expected": {
         "output": "D",
         "reports": []
@@ -197,7 +197,7 @@
       "message": "{{v:number; default:D}}",
       "payload": {},
       "locale": "en",
-      "key": "intl.absent-with-locale",
+      "messageId": "intl.absent-with-locale",
       "expected": {
         "output": "D",
         "reports": []
@@ -213,7 +213,7 @@
           "$curly": "undefined"
         }
       },
-      "key": "intl.undefined-no-locale",
+      "messageId": "intl.undefined-no-locale",
       "expected": {
         "output": "D",
         "reports": []
@@ -501,14 +501,14 @@
         "v": "2024-03-05T10:00:00.000Z"
       },
       "locale": "en",
-      "key": "intl.number-date-text",
+      "messageId": "intl.number-date-text",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.number-date-text"
+            "id": "intl.number-date-text"
           }
         ]
       }
@@ -522,14 +522,14 @@
         "v": "2024-03-05T10:00:00.000Z"
       },
       "locale": "en",
-      "key": "intl.ago-date-text",
+      "messageId": "intl.ago-date-text",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.ago-date-text"
+            "id": "intl.ago-date-text"
           }
         ]
       }
@@ -548,14 +548,14 @@
         }
       },
       "locale": "en",
-      "key": "intl.currency-date-text",
+      "messageId": "intl.currency-date-text",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.currency-date-text"
+            "id": "intl.currency-date-text"
           }
         ]
       }
@@ -569,14 +569,14 @@
         "v": "nope"
       },
       "locale": "en",
-      "key": "intl.number-nope",
+      "messageId": "intl.number-nope",
       "expected": {
         "output": "",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.number-nope"
+            "id": "intl.number-nope"
           }
         ]
       }
@@ -590,14 +590,14 @@
         "v": "nope"
       },
       "locale": "en",
-      "key": "intl.number-nope-default",
+      "messageId": "intl.number-nope-default",
       "expected": {
         "output": "n/a",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.number-nope-default"
+            "id": "intl.number-nope-default"
           }
         ]
       }
@@ -611,14 +611,14 @@
         "v": "nope"
       },
       "locale": "en",
-      "key": "intl.ago-nope",
+      "messageId": "intl.ago-nope",
       "expected": {
         "output": "",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.ago-nope"
+            "id": "intl.ago-nope"
           }
         ]
       }
@@ -637,14 +637,14 @@
         }
       },
       "locale": "en",
-      "key": "intl.currency-nope",
+      "messageId": "intl.currency-nope",
       "expected": {
         "output": "",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.currency-nope"
+            "id": "intl.currency-nope"
           }
         ]
       }
@@ -658,14 +658,14 @@
         "v": ""
       },
       "locale": "en",
-      "key": "intl.number-empty",
+      "messageId": "intl.number-empty",
       "expected": {
         "output": "",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.number-empty"
+            "id": "intl.number-empty"
           }
         ]
       }
@@ -679,14 +679,14 @@
         "v": ""
       },
       "locale": "en",
-      "key": "intl.date-empty",
+      "messageId": "intl.date-empty",
       "expected": {
         "output": "",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.date-empty"
+            "id": "intl.date-empty"
           }
         ]
       }
@@ -700,14 +700,14 @@
         "v": ""
       },
       "locale": "en",
-      "key": "intl.blank-empty-number",
+      "messageId": "intl.blank-empty-number",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.blank-empty-number"
+            "id": "intl.blank-empty-number"
           }
         ]
       }
@@ -726,14 +726,14 @@
         }
       },
       "locale": "en",
-      "key": "intl.blank-empty-date",
+      "messageId": "intl.blank-empty-date",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.blank-empty-date"
+            "id": "intl.blank-empty-date"
           }
         ]
       }
@@ -747,14 +747,14 @@
         "v": ""
       },
       "locale": "en",
-      "key": "intl.blank-empty-ago",
+      "messageId": "intl.blank-empty-ago",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.blank-empty-ago"
+            "id": "intl.blank-empty-ago"
           }
         ]
       }
@@ -773,14 +773,14 @@
         }
       },
       "locale": "en",
-      "key": "intl.blank-empty-currency",
+      "messageId": "intl.blank-empty-currency",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.blank-empty-currency"
+            "id": "intl.blank-empty-currency"
           }
         ]
       }
@@ -794,14 +794,14 @@
         "v": "\u00a0\u3000\ufeff"
       },
       "locale": "en",
-      "key": "intl.blank-whitespace-number",
+      "messageId": "intl.blank-whitespace-number",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.blank-whitespace-number"
+            "id": "intl.blank-whitespace-number"
           }
         ]
       }
@@ -820,14 +820,14 @@
         }
       },
       "locale": "en",
-      "key": "intl.blank-whitespace-date",
+      "messageId": "intl.blank-whitespace-date",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.blank-whitespace-date"
+            "id": "intl.blank-whitespace-date"
           }
         ]
       }
@@ -841,14 +841,14 @@
         "v": "\u00a0\u3000\ufeff"
       },
       "locale": "en",
-      "key": "intl.blank-whitespace-ago",
+      "messageId": "intl.blank-whitespace-ago",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.blank-whitespace-ago"
+            "id": "intl.blank-whitespace-ago"
           }
         ]
       }
@@ -867,14 +867,14 @@
         }
       },
       "locale": "en",
-      "key": "intl.blank-whitespace-currency",
+      "messageId": "intl.blank-whitespace-currency",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.blank-whitespace-currency"
+            "id": "intl.blank-whitespace-currency"
           }
         ]
       }
@@ -888,14 +888,14 @@
         "v": "12px"
       },
       "locale": "en",
-      "key": "intl.number-12px",
+      "messageId": "intl.number-12px",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.number-12px"
+            "id": "intl.number-12px"
           }
         ]
       }
@@ -966,14 +966,14 @@
         "v": "Infinity"
       },
       "locale": "en",
-      "key": "intl.number-infinity",
+      "messageId": "intl.number-infinity",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.number-infinity"
+            "id": "intl.number-infinity"
           }
         ]
       }
@@ -993,14 +993,14 @@
         }
       },
       "locale": "en",
-      "key": "intl.currency-overflow",
+      "messageId": "intl.currency-overflow",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.currency-overflow"
+            "id": "intl.currency-overflow"
           }
         ]
       }
@@ -1697,7 +1697,7 @@
         }
       },
       "locale": "en",
-      "key": "intl.maximum-under-minimum",
+      "messageId": "intl.maximum-under-minimum",
       "defaults": {
         "number": {
           "minimumFractionDigits": 4
@@ -1709,7 +1709,7 @@
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.maximum-under-minimum"
+            "id": "intl.maximum-under-minimum"
           }
         ]
       }
@@ -2803,14 +2803,14 @@
         }
       },
       "locale": "en",
-      "key": "intl.ago-format-case",
+      "messageId": "intl.ago-format-case",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.ago-format-case"
+            "id": "intl.ago-format-case"
           }
         ]
       }
@@ -2829,14 +2829,14 @@
         }
       },
       "locale": "en",
-      "key": "intl.ago-format-quarter",
+      "messageId": "intl.ago-format-quarter",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.ago-format-quarter"
+            "id": "intl.ago-format-quarter"
           }
         ]
       }
@@ -2855,14 +2855,14 @@
         }
       },
       "locale": "en",
-      "key": "intl.ago-format-null",
+      "messageId": "intl.ago-format-null",
       "expected": {
         "output": "D",
         "reports": [
           {
             "code": "failed-modifier",
             "origin": "payload",
-            "key": "intl.ago-format-null"
+            "id": "intl.ago-format-null"
           }
         ]
       }
