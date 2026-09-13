@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.0.0
 
 The change 1.0.1 carried was breaking, and a patch release was the wrong place
 for it: a caller on `^1.0.0` was handed it silently. This is the set 1.0.1
