@@ -40,6 +40,13 @@ const CASES = {
     l: 'en',
     i: 'invoice',
   },
+  nesting: {
+    m: 'You have {{count:gt; 0:{{count:number;}}; default:no;}} {{count; 1:message; default:messages;}}.',
+    p: '{\n  "count": 0\n}',
+    r: '',
+    l: 'en',
+    i: 'nesting',
+  },
 };
 
 const el = (tag, className, text) => {

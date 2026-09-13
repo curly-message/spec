@@ -6,6 +6,7 @@ a link reproduces it exactly.</p>
   <button type="button" data-case="greeting">A fallback</button>
   <button type="button" data-case="inbox">A selection</button>
   <button type="button" data-case="invoice">A locale-dependent modifier</button>
+  <button type="button" data-case="nesting">A nested placeholder</button>
 </div>
 
 <div class="play">
@@ -68,6 +69,20 @@ a link reproduces it exactly.</p>
 </noscript>
 
 <div class="notes">
+<h2 id="placeholders-inside-placeholders">Placeholders inside placeholders</h2>
+
+<p>No placeholder derives inside another. Where one encloses another, the inner
+one is found on its own and resolved first; only on a later pass is the
+enclosing text scanned again, over what the inner one left behind. So
+<code>{{count:gt; 0:{{count:number;}}; default:no;}}</code> is two placeholders
+a pass apart, not one: <code>{{count:number;}}</code> resolves to
+<code>0</code>, and the next pass reads
+<code>{{count:gt; 0:0; default:no;}}</code>, finds no key less than the value
+and takes the fallback. Raise the count and the same message selects the number
+the inner placeholder formatted. <a href="../spec/#12-nesting">Section 12</a>
+states the rule, <a href="../spec/#13-limits">section 13</a> the limits that
+bound it.</p>
+
 <h2 id="what-you-are-running">What you are running</h2>
 
 <p><a href="https://www.npmjs.com/package/@curly-message/parser"><code>@curly-message/parser</code></a>
