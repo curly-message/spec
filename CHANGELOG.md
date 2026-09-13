@@ -15,12 +15,21 @@ the document may be revised without it moving.
 
 ## Unreleased
 
-Appendix A no longer says that nothing has been released against this
-specification. Releases have been made against it since revision 1.0.0. What
-the passage states is unchanged — no ruling in the appendix is a breaking
-change to a released package, and no migration note is owed to any user —
-because the body has carried every ruling since that first revision, so every
-release made against this document already has them.
+Wording. Every message resolves exactly as it did, in every host.
+
+* Section 4 no longer defines a plain object in ECMAScript alone. The reading
+  is stated as what that test is an instance of — a value of the type a host
+  offers for arbitrary keyed data, carrying no meaning beyond the entries it
+  holds — and the prototype test stays as what the reading is in ECMAScript. A
+  host without prototypes had no rule to read, only one language's spelling of
+  it, and two implementations could spell it back differently; section 4.1
+  recognizes a wrapper by the same reading, so the guess reached that far too.
+* Appendix A no longer says that nothing has been released against this
+  specification. Releases have been made against it since revision 1.0.0. What
+  the passage states is unchanged — no ruling in the appendix is a breaking
+  change to a released package, and no migration note is owed to any user —
+  because the body has carried every ruling since that first revision, so every
+  release made against this document already has them.
 
 ## 1.0.1
 
