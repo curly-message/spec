@@ -886,6 +886,21 @@ one it is `auto` — not whatever the host's own formatter would default to,
 which in ECMAScript is `always`, spelling every count out. A layer naming
 `numeric` decides it like any other property.
 
+The properties are named in the vocabulary of ECMAScript's internationalization
+facilities. That vocabulary is this format's way of describing a request rather
+than a call into any one language: a host reads each name onto its own
+facility, and a caller that writes the same properties asks for the same
+formatting wherever it runs.
+
+A property the host's facility cannot express is not an input the modifier
+cannot format. The modifier formats with the properties the facility does
+express, and the placeholder does not take the fallback chain on a property's
+account: a number formatted without the grouping a caller asked to suppress is
+still the number, and a fallback in its place is not. An implementation MUST
+document the properties it cannot express, and states them to the conformance
+set through the adapter of section 14.3, so that what it did not apply is
+observable rather than only written down.
+
 Because the output of these modifiers depends on the host's locale data, an
 output string on its own tests that data as much as it tests this format. An
 implementation MAY expose the formatting request it makes — the operation, its

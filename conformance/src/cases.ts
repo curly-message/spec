@@ -6,6 +6,7 @@ import type { Adapter, ConcreteCase, ExpectedReport, Failure, FormatRequest, Gen
 // the adapter declared where the report is about one.
 type Expectation = {
   output: string;
+  format?: FormatRequest;
   reports: (ExpectedReport & { limit?: number })[];
 };
 
@@ -56,7 +57,7 @@ const concrete = (c: ConcreteCase): Prepared => ({
     defaults: decode(c.defaults),
     modifiers: register(c.modifiers),
   },
-  expected: { output: output(c), reports: c.expected.reports ?? [] },
+  expected: { output: output(c), format: c.expected.format, reports: c.expected.reports ?? [] },
 });
 
 // Every generated case reports under this id.
@@ -106,6 +107,36 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
     input: { message: '{{v; default:D}}', payload: { v: nodes(conversion + 1) }, id: ID },
     expected: { output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', id: ID }] },
   }),
+};
+
+// Property order is the host's, so a request is compared by its entries and
+// not by the text a serialization happens to make of it.
+const canonical = (value: unknown): string => {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+
+  if (!isObject(value)) return JSON.stringify(value) ?? 'undefined';
+
+  return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`;
+};
+
+// Section 11.2 lets an implementation expose the request it makes, and an
+// adapter that does is measured on it rather than on the text its own locale
+// data made. A case that states a request writes the placeholder alone, so the
+// resolution it describes makes exactly one.
+const compareFormats = (expected: FormatRequest, actual: unknown): Failure | undefined => {
+  if (!Array.isArray(actual)) return failure('The formatting requests are not a list.', [expected], actual);
+
+  if (actual.length !== 1) return failure(`Expected one formatting request, got ${actual.length}.`, [expected], actual);
+
+  const request = actual[0] as FormatRequest | undefined;
+
+  if (request?.api !== expected.api) return failure('The facility of the request differs.', expected, request);
+
+  if (canonical(request.options ?? {}) !== canonical(expected.options ?? {})) return failure('The properties of the request differ.', expected, request);
+
+  if (canonical(request.input) !== canonical(expected.input)) return failure('The input of the request differs.', expected, request);
+
+  return undefined;
 };
 
 const COMPARED = ['origin', 'id', 'limit'] as const;
@@ -169,7 +200,11 @@ const execute = (adapter: Adapter, { input, expected, verify }: Prepared): Outco
 
   if ('ok' in resolved) return resolved;
 
-  if (resolved.output !== expected.output) return failure('The output differs.', expected.output, resolved.output);
+  const produced = expected.format && resolved.formats !== undefined
+    ? compareFormats(expected.format, resolved.formats)
+    : resolved.output === expected.output ? undefined : failure('The output differs.', expected.output, resolved.output);
+
+  if (produced) return produced;
 
   const verified = verify?.();
 

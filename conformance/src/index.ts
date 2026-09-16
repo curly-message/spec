@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { executeConcrete, executeGenerated } from './cases';
-import type { Adapter, Case, Fixture, FixtureFile, Level, Limits, Options, Plan, Planned, Result, Skipped } from './types';
+import type { Adapter, Case, Fixture, FixtureFile, FormatApi, Level, Limits, Options, Plan, Planned, Result, Skipped } from './types';
 
 export type * from './types';
 
@@ -26,9 +26,27 @@ const LEVELS: readonly Level[] = ['core', 'intl', 'extensions'];
 
 const LIMITS = ['passes', 'output', 'conversion'] as const;
 
-// The adapter's two statements about itself, and the levels option, are held
-// to the vocabulary of sections 2 and 13 before anything runs: a level that is
-// not one of the three, or a limit that is not a count, is an error, not a
+const APIS: readonly FormatApi[] = ['NumberFormat', 'DateTimeFormat', 'RelativeTimeFormat'];
+
+// The third statement an adapter makes about itself (section 11.2), held to
+// the same vocabulary as the other two before anything runs.
+const unexpressibleClaim = (adapter: Adapter) => {
+  const declared = adapter.unexpressible;
+
+  if (declared === undefined) return;
+
+  if (typeof declared !== 'object' || declared === null) throw new Error('The adapter must name the properties it cannot express by the request that reads them.');
+
+  for (const [api, names] of Object.entries(declared)) {
+    if (!APIS.includes(api as FormatApi)) throw new Error(`The adapter names the facility ${JSON.stringify(api)}; the facilities are ${APIS.join(', ')}.`);
+
+    if (!Array.isArray(names) || names.some((name) => typeof name !== 'string')) throw new Error(`The adapter must name what it cannot express of a ${api} request as a list of property names.`);
+  }
+};
+
+// The adapter's statements about itself, and the levels option, are held to
+// the vocabulary of sections 2, 11.2 and 13 before anything runs: a level that
+// is not one of the three, or a limit that is not a count, is an error, not a
 // skip. A JavaScript adapter is not typed, so its shape is checked as well.
 const claims = (adapter: Adapter, options: Options) => {
   const unknown = (levels: readonly Level[], where: string) => {
@@ -55,6 +73,21 @@ const claims = (adapter: Adapter, options: Options) => {
   const undeclared = LIMITS.find((name) => !Number.isInteger(declared?.[name]) || (declared?.[name] as number) < 1);
 
   if (undeclared) throw new Error(`The adapter must declare its ${undeclared} limit as a positive integer.`);
+
+  unexpressibleClaim(adapter);
+};
+
+// A case whose request reads a property the adapter documented it cannot
+// express (section 11.2) measures the host's facility rather than the
+// implementation, so it is left out the way an unclaimed level is.
+const unexpressible = (c: Case, adapter: Adapter) => {
+  if ('generate' in c || !c.expected.format) return undefined;
+
+  const { api, options } = c.expected.format;
+  const cannot = adapter.unexpressible?.[api];
+  const property = cannot && Object.keys(options ?? {}).find((name) => cannot.includes(name));
+
+  return property && `The adapter cannot express the ${property} property of a ${api} request.`;
 };
 
 // Why a level's cases are left out, or nothing where they run.
@@ -73,7 +106,7 @@ const reason = (c: Case, level: Level, adapter: Adapter, options: Options) => {
 
   if ('generate' in c && c.generate === REGISTERING && exclusion('extensions', adapter, options)) return 'The case registers a host-defined modifier, which needs the extensions level.';
 
-  return undefined;
+  return unexpressible(c, adapter);
 };
 
 /** One entry per case the adapter's levels require, each ready to run, beside the cases left out and why. */

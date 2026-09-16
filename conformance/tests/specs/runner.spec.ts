@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
-import { behaviours, check, fixtures, load, plan, run, summarize, type Adapter, type Case, type ConcreteCase, type Fixture, type Level } from '../../src';
+import { behaviours, check, fixtures, load, plan, run, summarize, type Adapter, type Case, type ConcreteCase, type Fixture, type Level, type Resolved } from '../../src';
 import { format } from '../../src/cases';
 
 const LIMITS = { passes: 10, output: 100000, conversion: 100000 };
@@ -45,6 +45,28 @@ describe('plan', () => {
     expect(() => plan(shaped({ limits: { passes: 10, output: 100000 } }))).toThrow('The adapter must declare its conversion limit as a positive integer.');
     expect(() => plan(shaped({ limits: { passes: 2.5, output: 100000, conversion: 100000 } }))).toThrow('The adapter must declare its passes limit as a positive integer.');
     expect(() => plan(shaped({ limits: { passes: 10, output: 0, conversion: 100000 } }))).toThrow('The adapter must declare its output limit as a positive integer.');
+  });
+
+  it('leaves out a case whose request reads a property the adapter documented it cannot express', () => {
+    const c = concrete('b/grouping', { expected: { format: { api: 'NumberFormat', options: { useGrouping: false, maximumFractionDigits: 2 }, input: 1 } } });
+    const cannot = (unexpressible: Adapter['unexpressible']) => plan({ ...adapter(echo, ['core', 'intl']), unexpressible }, { fixtures: [file('intl', [c], '11.2')] });
+
+    expect(cannot({ NumberFormat: ['useGrouping'] }).skipped.map(({ id, reason }) => ({ id, reason }))).toEqual([
+      { id: 'b/grouping', reason: 'The adapter cannot express the useGrouping property of a NumberFormat request.' },
+    ]);
+    expect(cannot({ NumberFormat: ['style'] }).cases).toHaveLength(1);
+    expect(cannot({ DateTimeFormat: ['useGrouping'] }).cases).toHaveLength(1);
+    expect(cannot(undefined).cases).toHaveLength(1);
+  });
+
+  it('rejects what an adapter cannot express named by an unknown facility, or as anything but property names', () => {
+    const cannot = (unexpressible: unknown) => ({ ...adapter(echo), unexpressible } as Adapter);
+
+    expect(() => plan(cannot({ NumberFormat: ['useGrouping'] }), { fixtures: [] })).not.toThrow();
+    expect(() => plan(cannot('useGrouping'))).toThrow('The adapter must name the properties it cannot express by the request that reads them.');
+    expect(() => plan(cannot({ Bogus: ['x'] }))).toThrow('The adapter names the facility "Bogus"; the facilities are NumberFormat, DateTimeFormat, RelativeTimeFormat.');
+    expect(() => plan(cannot({ NumberFormat: 'useGrouping' }))).toThrow('The adapter must name what it cannot express of a NumberFormat request as a list of property names.');
+    expect(() => plan(cannot({ NumberFormat: [1] }))).toThrow('The adapter must name what it cannot express of a NumberFormat request as a list of property names.');
   });
 
   it('rejects a generated case naming no construction, the prototype\'s names included', () => {
@@ -215,6 +237,28 @@ describe('execute', () => {
 
     expect(outcome(formatted('de'), c)).toEqual({ ok: true });
     expect(outcome(formatted('en'), c)).toEqual({ ok: false, reason: 'The output differs.', expected: '1.234,57', actual: '1,234.57' });
+  });
+
+  it('measures an adapter that exposes its request on the request, not on the text its locale data made of it', () => {
+    const request = { api: 'NumberFormat', options: { maximumFractionDigits: 2 }, input: 1234.5678 } as const;
+    const c = concrete('a/format', { message: '{{n:number}}', payload: { n: '1234.5678' }, locale: 'de', expected: { format: request } });
+    const exposing = (formats: unknown) => adapter(() => ({ output: 'what this host made of it', reports: [], formats } as Resolved));
+
+    expect(outcome(exposing([request]), c)).toEqual({ ok: true });
+    expect(outcome(exposing([{ ...request, api: 'DateTimeFormat' }]), c)).toMatchObject({ ok: false, reason: 'The facility of the request differs.' });
+    expect(outcome(exposing([{ ...request, options: { maximumFractionDigits: 2, useGrouping: false } }]), c)).toMatchObject({ ok: false, reason: 'The properties of the request differ.' });
+    expect(outcome(exposing([{ ...request, input: 1234.5 }]), c)).toMatchObject({ ok: false, reason: 'The input of the request differs.' });
+  });
+
+  it('expects one request of a case that states one, whatever order its properties arrived in', () => {
+    const request = { api: 'NumberFormat', options: { style: 'currency', currency: 'EUR' }, input: 12.5 } as const;
+    const c = concrete('a/currency', { message: '{{n:currency}}', payload: { n: '12.5' }, locale: 'de', expected: { format: request } });
+    const exposing = (formats: unknown) => adapter(() => ({ output: '', reports: [], formats } as Resolved));
+
+    expect(outcome(exposing([{ api: 'NumberFormat', options: { currency: 'EUR', style: 'currency' }, input: 12.5 }]), c)).toEqual({ ok: true });
+    expect(outcome(exposing([]), c)).toMatchObject({ ok: false, reason: 'Expected one formatting request, got 0.' });
+    expect(outcome(exposing([request, request]), c)).toMatchObject({ ok: false, reason: 'Expected one formatting request, got 2.' });
+    expect(outcome(exposing('one'), c)).toMatchObject({ ok: false, reason: 'The formatting requests are not a list.' });
   });
 
   it('rejects a case expecting neither an output nor a format', () => {

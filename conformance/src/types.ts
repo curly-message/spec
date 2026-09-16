@@ -77,11 +77,16 @@ export type Report = {
 
 /**
  * What a resolution produced. `reports` left undefined says the adapter does
- * not observe reports at all, and every expectation about them is skipped.
+ * not observe reports at all, and every expectation about them is skipped, and
+ * `formats` left undefined says the same of the formatting requests the
+ * resolution made (section 11.2). An implementation that supplies them is
+ * measured on the request rather than on the text its own locale data made of
+ * it, which is what lets a host whose data differs from the runner's conform.
  */
 export type Resolved = {
   output: string;
   reports?: Report[];
+  formats?: FormatRequest[];
 };
 
 /**
@@ -93,15 +98,26 @@ export type Resolved = {
 export type Adapter = {
   levels: readonly Level[];
   limits: Limits;
+  /**
+   * The formatting properties the host's facility cannot express (section
+   * 11.2), by the request that reads them. A case whose request names one is
+   * skipped: the implementation formats without it by design, so its output is
+   * not the request's, and holding it to one it documented it cannot make
+   * measures the host rather than the implementation.
+   */
+  unexpressible?: Partial<Record<FormatApi, readonly string[]>>;
   resolve: (input: Resolution) => Resolved;
 };
 
 /** A section reference: a heading number of SPEC.md, such as `9.2` or `A.4`. */
 export type Section = string;
 
+/** The host facility a formatting modifier delegates to (section 11.2). */
+export type FormatApi = 'NumberFormat' | 'DateTimeFormat' | 'RelativeTimeFormat';
+
 /** A formatting request whose result on the running host is the expected output. */
 export type FormatRequest = {
-  api: 'NumberFormat' | 'DateTimeFormat' | 'RelativeTimeFormat';
+  api: FormatApi;
   options?: Record<string, unknown>;
   input: unknown;
 };

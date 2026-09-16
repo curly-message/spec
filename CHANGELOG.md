@@ -15,7 +15,8 @@ the document may be revised without it moving.
 
 ## Unreleased
 
-Wording. Every message resolves exactly as it did, in every host.
+Nothing a message resolves to changes. What changes is what a document written
+against one language left an implementation in another to guess.
 
 * Section 4 no longer defines a plain object in ECMAScript alone. The reading
   is stated as what that test is an instance of — a value of the type a host
@@ -24,6 +25,14 @@ Wording. Every message resolves exactly as it did, in every host.
   host without prototypes had no rule to read, only one language's spelling of
   it, and two implementations could spell it back differently; section 4.1
   recognizes a wrapper by the same reading, so the guess reached that far too.
+* Section 11.2 says that its property names are ECMAScript's vocabulary used to
+  describe a request, which a host reads onto its own facility, and says what an
+  implementation does with a property its facility cannot express: it formats
+  with the properties the facility does express, the placeholder does not take
+  the fallback chain over a property, and the implementation documents what it
+  cannot express and states it to the conformance set. The section already let
+  an implementation expose the request it makes; what it did not say was what to
+  do where the request cannot be made in full.
 * Appendix A no longer says that nothing has been released against this
   specification. Releases have been made against it since revision 1.0.0. What
   the passage states is unchanged — no ruling in the appendix is a breaking

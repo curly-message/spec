@@ -134,6 +134,19 @@ alone, so that the whole output is the request's result. A date case names a
 `timeZone` in its props, because a request without one formats in the host's,
 which the fixture cannot know.
 
+An implementation whose locale data is not the runner's cannot be held to the
+text, and section 11.2 lets it expose the request it made instead. An adapter
+that answers with `formats` is measured on that: such a case compares the
+facility, the properties and the input, and the locale data on each side stays
+its own. One that leaves `formats` undefined is measured on the text, which is
+what an implementation sharing the runner's host can be held to.
+
+A property the host's facility cannot express is a different matter, and
+section 11.2 has such an implementation document what it cannot express. The
+adapter states it as `unexpressible`, and every case whose request reads one of
+those properties is left out — listed among the skipped, the way an unclaimed
+level's cases are.
+
 ### Generated cases
 
 Section 13 lets an implementation permit more than its minima and requires it
@@ -176,7 +189,11 @@ export const adapter: Adapter = {
 `levels` is the statement section 2 requires: the levels the implementation
 satisfies. The runner selects the fixtures those levels require and skips the
 rest, and the skipped cases are listed, not hidden. `limits` is the statement
-section 13 requires, and is what the generated cases are built from.
+section 13 requires, and is what the generated cases are built from. An adapter
+MAY make a third statement, `unexpressible`: the formatting properties the
+host's facility cannot express (section 11.2), under the request that reads
+them, which leaves out the cases that would measure the host rather than the
+implementation.
 
 `resolve` is handed one resolution's inputs, decoded into host values, and
 answers with the `output` and the `reports` the implementation produced. The
@@ -191,6 +208,12 @@ SHOULD — and every expectation about reports is then skipped, and said to be:
 such a case passes on its output alone with an outcome of
 `{ ok: true, unobserved: 'reports' }`, `run` lists it under `unobserved`
 beside `passed`, and the command counts those cases in its summary.
+
+`resolve` MAY answer with `formats` as well, the formatting requests the
+resolution made, in the order it made them. A case that states a request is
+then compared on that request rather than on the output, as the section above
+describes; a case that states an output is compared on its output whether the
+adapter answers with `formats` or not.
 
 ## Running the set
 

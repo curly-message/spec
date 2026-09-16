@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+An implementation whose locale data is not the runner's can now conform at the
+intl level.
+
+* An adapter MAY answer with `formats`, the formatting requests the resolution
+  made — what section 11.2 has always permitted an implementation to expose and
+  the contract had no field for. A case that states a request compares that
+  request where the adapter supplies one, so a host whose CLDR data differs from
+  the runner's is measured on what the specification pins rather than on text
+  only the two hosts' data could agree on.
+* An adapter MAY declare `unexpressible`, the formatting properties its host's
+  facility cannot express, under the request that reads them. Every case whose
+  request reads one is skipped rather than failed.
+
 ## 1.0.1
 
 Targets revision 1.0.1 of the specification, where the message's key became the
