@@ -54,7 +54,9 @@ jobs:
       # A document has no manifest to bump, so the revision is given by hand and
       # read back against what the document declares itself to be. The
       # changelog's Unreleased section becomes the revision's, so a release
-      # without one fails.
+      # without one fails. Its heading may name the bump the section is expected
+      # to be cut under; that note is read by people, and the revision given
+      # here is what runs.
       - name: Name the revision
         id: revision
         env:
@@ -68,8 +70,8 @@ jobs:
           format=$(sed -n 's/^| Versioned identifier | `curly-message-\([0-9]\{1,\}\)` |$/\1/p' SPEC.md)
           [ -n "$format" ] || { echo "::error::SPEC.md names no versioned identifier to read v$VERSION against."; exit 1; }
           [ "${VERSION%%.*}" = "$format" ] || { echo "::error::SPEC.md specifies curly-message-$format; v$VERSION would name version ${VERSION%%.*} of the format."; exit 1; }
-          grep -qx '## Unreleased' CHANGELOG.md || { echo "::error::CHANGELOG.md has no '## Unreleased' section to release as $VERSION."; exit 1; }
-          sed -i "s/^## Unreleased$/## $VERSION/" CHANGELOG.md
+          grep -Eqx '## Unreleased( \((patch|minor|major)\))?' CHANGELOG.md || { echo "::error::CHANGELOG.md has no '## Unreleased' section to release as $VERSION."; exit 1; }
+          sed -i -E "s/^## Unreleased( \((patch|minor|major)\))?$/## $VERSION/" CHANGELOG.md
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       # One atomic push carries the commit and the tag: either both land or

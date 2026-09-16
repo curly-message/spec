@@ -72,6 +72,8 @@ jobs:
       # 1.0.0 -> 1.0.1-next.0); the others cut a release, which also closes a
       # prerelease line (1.0.0-next.3 -> 1.0.0 under `patch`). The changelog's
       # Unreleased section becomes the version's, so a release without one fails.
+      # Its heading may name the bump the section is expected to be cut under;
+      # that note is read by people, and the release given here is what runs.
       - name: Bump the version
         id: version
         env:
@@ -85,8 +87,8 @@ jobs:
           npm version $bump --no-git-tag-version
           # Read back from package.json: a version script prints while npm version runs.
           version=$(node -p "require('./package.json').version")
-          grep -qx '## Unreleased' CHANGELOG.md || { echo "::error::CHANGELOG.md has no '## Unreleased' section to release as $version."; exit 1; }
-          sed -i "s/^## Unreleased$/## $version/" CHANGELOG.md
+          grep -Eqx '## Unreleased( \((patch|minor|major)\))?' CHANGELOG.md || { echo "::error::CHANGELOG.md has no '## Unreleased' section to release as $version."; exit 1; }
+          sed -i -E "s/^## Unreleased( \((patch|minor|major)\))?$/## $version/" CHANGELOG.md
           echo "name=$(node -p "require('./package.json').name")" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"

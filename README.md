@@ -94,7 +94,9 @@ the conformance set — which is what holds every section a fixture cites to a
 heading of the document — turns the changelog's `## Unreleased` section into
 the revision's, commits, tags (`v1.0.0`), pushes, and publishes a GitHub
 release carrying that changelog section. A revision whose changelog has no
-`## Unreleased` section is refused.
+`## Unreleased` section is refused. That heading may name the bump the section
+is expected to be cut under — `## Unreleased (minor)` — as a note to the
+reader; the revision the workflow is given is what it releases.
 
 The document's line and the conformance set's are separate: the set may release
 against a document that has not changed, and the document may be revised
@@ -110,7 +112,8 @@ closing any prerelease line. The workflow runs the package's test matrix,
 bumps the version, turns the changelog's `## Unreleased` section into the
 version's, commits, tags (`conformance-v1.0.0`), pushes, publishes to npm,
 and publishes a GitHub release carrying that changelog section. A release
-whose changelog has no `## Unreleased` section is refused.
+whose changelog has no `## Unreleased` section is refused, and that heading may
+name the expected bump in the same way.
 
 That release also carries the set as a file: `conformance-<version>.zip`,
 holding the fixtures, the manifest, the defect catalogue a runner is audited
