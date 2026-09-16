@@ -236,3 +236,68 @@ export type Result = {
   /** The cases among `passed` whose report expectation went unchecked, because the adapter observes no reports. */
   unobserved: Planned[];
 };
+
+/**
+ * A deliberate defect of the catalogue shipped as `defects.json`: one way an
+ * adapter can be wrong that a correct runner answers for. RUNNER.md states
+ * what each pins.
+ */
+export type Defect =
+  | 'output-truncated'
+  | 'output-trimmed'
+  | 'answers-nothing'
+  | 'raises'
+  | 'reports-dropped'
+  | 'reports-extra'
+  | 'reports-reversed'
+  | 'report-code-changed'
+  | 'report-origin-changed'
+  | 'report-id-changed'
+  | 'report-limit-changed'
+  | 'formats-wrong'
+  | 'reports-unobserved'
+  | 'claims-core-only'
+  | 'unexpressible-declared'
+  | 'claims-no-core'
+  | 'claims-unknown-level'
+  | 'claims-no-limits';
+
+/**
+ * What a correct runner answers where a defect is present: it rejects the
+ * adapter before anything runs, it fails a case, it leaves a case out, or it
+ * passes a case while saying the reports went unchecked.
+ */
+export type Verdict = 'error' | 'fail' | 'skip' | 'unobserved';
+
+/** One defect of the catalogue, as `defects.json` writes it. */
+export type DefectEntry = {
+  id: Defect;
+  description: string;
+  section?: Section;
+  expects: Verdict;
+};
+
+/** The catalogue shipped as `defects.json`. */
+export type Catalogue = {
+  format: 'curly-message-1';
+  defects: DefectEntry[];
+};
+
+/**
+ * A defect carried by an adapter: the adapter carrying it, and whether the
+ * defect reached the runner at all. A defect of what an adapter never answers
+ * — a report field its implementation does not carry, a level it does not
+ * claim — changes nothing, and a runner that answers nothing for it has not
+ * been measured rather than been found wanting.
+ */
+export type Mutation = {
+  adapter: Adapter;
+  reached: () => boolean;
+};
+
+/** What the audit made of one defect. */
+export type Audited = DefectEntry & {
+  /** What the runner answered; `none` where the defect changed nothing it reported. */
+  observed: Verdict | 'none';
+  outcome: 'caught' | 'missed' | 'unreachable';
+};

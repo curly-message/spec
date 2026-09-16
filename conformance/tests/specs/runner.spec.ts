@@ -69,6 +69,17 @@ describe('plan', () => {
     expect(() => plan(cannot({ NumberFormat: [1] }))).toThrow('The adapter must name what it cannot express of a NumberFormat request as a list of property names.');
   });
 
+  it('refuses a fixture file targeting a format this set does not read', () => {
+    const targeting = (format: string) => {
+      const [{ name, file: contents }] = [file('core', [concrete('a/one')])];
+
+      return [{ name, file: { ...contents, format: format as 'curly-message-1' } }];
+    };
+
+    expect(() => plan(adapter(echo), { fixtures: targeting('curly-message-2') })).toThrow('The fixture file core.json targets the format "curly-message-2"; this set reads curly-message-1.');
+    expect(() => plan(adapter(echo), { fixtures: targeting('curly-message-1') })).not.toThrow();
+  });
+
   it('rejects a generated case naming no construction, the prototype\'s names included', () => {
     const generated = (generate: string) => ({ id: 'a/generated', description: 'Pins nothing.', generate } as unknown as Case);
 

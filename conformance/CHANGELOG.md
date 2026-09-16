@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-An implementation whose locale data is not the runner's can now conform at the
-intl level.
+Two things a set written in one language could not give an implementation in
+another: the request a locale-dependent case pins, and a way to tell whether the
+runner reading the set is reading it right.
 
 * An adapter MAY answer with `formats`, the formatting requests the resolution
   made — what section 11.2 has always permitted an implementation to expose and
@@ -14,6 +15,25 @@ intl level.
 * An adapter MAY declare `unexpressible`, the formatting properties its host's
   facility cannot express, under the request that reads them. Every case whose
   request reads one is skipped rather than failed.
+* `RUNNER.md` states what a runner is held to, so a second one can be written
+  against the contract rather than against a reading of this package's source:
+  what it decodes, what it plans, the order it compares in, what it leaves out
+  and why, and what it does not get to decide.
+* `defects.json` is the catalogue a runner is audited with: ways an adapter can
+  be wrong, each with what a correct runner answers where it is present. A
+  runner that compares nothing passes every implementation and reports the same
+  summary either way, and until now nothing said so. `schema/defect.schema.json`
+  describes the file; `defects()` reads it, `mutations` carries it, and `audit`
+  runs it against an adapter that passes the set and answers, defect by defect,
+  whether this runner caught it, missed it, or was never given anything to
+  catch.
+* The release archive carries the catalogue, both schemas and both documents
+  beside the fixtures, so a language npm does not reach gets the whole contract
+  rather than the data alone.
+* A fixture file targeting a format this set does not read is refused rather
+  than run, which is what `RUNNER.md` says a runner does. `--fixtures` may point
+  at a set of another version, and a run over one this set could not read was
+  reported as a run that passed.
 
 ## 1.0.1
 

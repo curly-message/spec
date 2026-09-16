@@ -10,7 +10,9 @@
       "default": "./dist/index.js"
     },
     "./index.json": "./index.json",
+    "./defects.json": "./defects.json",
     "./fixtures/*.json": "./fixtures/*.json",
+    "./schema/defect.schema.json": "./schema/defect.schema.json",
     "./schema/fixture.schema.json": "./schema/fixture.schema.json",
     "./package.json": "./package.json"
   },
@@ -34,7 +36,9 @@
     "prepare": "cd .. && simple-git-hooks conformance/.simple-git-hooks.json"
   },
   "files": [
+    "RUNNER.md",
     "bin",
+    "defects.json",
     "dist",
     "fixtures",
     "index.json",

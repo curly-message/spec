@@ -20,12 +20,15 @@ jobs:
     with:
       package: conformance
       packed: |
+        RUNNER.md
         bin/conformance.js
         bin/manifest.js
+        defects.json
         dist/index.js
         dist/index.d.ts
         fixtures/grammar.json
         index.json
+        schema/defect.schema.json
         schema/fixture.schema.json
 
   publish:
@@ -38,10 +41,16 @@ jobs:
       package: conformance
       release: ${{ inputs.release }}
       # The set itself, as the release carries it for an implementation in a
-      # language npm does not reach.
+      # language npm does not reach: the fixtures and what reads them, the
+      # defect catalogue a runner is audited against, and the two documents
+      # that state what both are.
       assets: |
+        README.md
+        RUNNER.md
+        defects.json
         fixtures
         index.json
+        schema/defect.schema.json
         schema/fixture.schema.json
     secrets:
       APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}

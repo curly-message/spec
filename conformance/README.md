@@ -3,6 +3,7 @@
 The conformance set of the [Curly Message Format](../SPEC.md): fixtures that
 an implementation in any language is measured against, and a JavaScript runner
 that drives one through the adapter of section 14.3.
+[RUNNER.md](./RUNNER.md) states what a runner in another language is held to.
 
 A fixture is a resolution written out — the inputs section 4 lists, and the
 output and the reports they must produce. The set is derived from the
@@ -37,8 +38,9 @@ reads it.
 
 Those files are the set. Nothing in them is JavaScript, so an implementation in
 another language needs nothing else from this package: every release carries
-them as `conformance-<version>.zip` — the fixtures, the manifest and the schema
-under one directory, with its digest in the release notes — attached to the
+them as `conformance-<version>.zip` — the fixtures, the manifest, the defect
+catalogue, both schemas and the two documents that state what they hold, under
+one directory, with its digest in the release notes — attached to the
 [release](https://github.com/curly-message/spec/releases) that named it.
 
 A file has a `format`, the versioned identifier of the format it targets; a
@@ -272,6 +274,31 @@ npx curly-message-conformance ./adapter.mjs --fixtures ./my-fixtures
 The command prints one line per failure and a summary, and exits non-zero where
 anything failed. `--fixtures` points at a directory of fixture files, so a set
 under development runs against an implementation before it ships.
+
+## Auditing a runner
+
+A runner is trusted with a verdict, so it needs one of its own: a runner that
+compares nothing passes every implementation, including the ones that are
+wrong, and reports the same summary either way. `defects.json` is the catalogue
+of ways an adapter can be wrong, each with what a correct runner answers where
+it is present, and `schema/defect.schema.json` describes the file.
+
+```ts
+import { audit } from '@curly-message/conformance';
+
+const missed = audit(adapter).filter(({ outcome }) => outcome !== 'caught');
+```
+
+`audit` takes an adapter that passes the set, applies each defect to it in
+turn, and answers one entry per defect: what the catalogue expected, what this
+runner observed, and whether that counts as `caught`, `missed` or
+`unreachable`. The last is for a defect the adapter gives the runner nothing to
+catch — what an implementation that observes no reports does to every defect of
+its reports, and one that claims Core alone to every defect of a level it does
+not claim. `defects()` reads the catalogue and `mutations` carries it, so a
+runner's own tests can reach one defect without running them all.
+
+[RUNNER.md](./RUNNER.md) states what each defect pins.
 
 ## Writing a fixture
 

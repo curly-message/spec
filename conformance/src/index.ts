@@ -2,12 +2,14 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { executeConcrete, executeGenerated } from './cases';
-import type { Adapter, Case, Fixture, FixtureFile, FormatApi, Level, Limits, Options, Plan, Planned, Result, Skipped } from './types';
+import { defects, mutations } from './defects';
+import type { Adapter, Audited, Case, Fixture, FixtureFile, FormatApi, Level, Limits, Options, Plan, Planned, Result, Skipped, Verdict } from './types';
 
 export type * from './types';
 
 export { behaviours } from './behaviours';
 export { decode } from './decode';
+export { defects, mutations } from './defects';
 
 /** The fixture files of a directory, sorted by name. */
 export const load = (directory: string): Fixture[] => readdirSync(directory)
@@ -27,6 +29,9 @@ const LEVELS: readonly Level[] = ['core', 'intl', 'extensions'];
 const LIMITS = ['passes', 'output', 'conversion'] as const;
 
 const APIS: readonly FormatApi[] = ['NumberFormat', 'DateTimeFormat', 'RelativeTimeFormat'];
+
+// The versioned identifier of the format this set reads.
+const FORMAT = 'curly-message-1';
 
 // The third statement an adapter makes about itself (section 11.2), held to
 // the same vocabulary as the other two before anything runs.
@@ -109,11 +114,23 @@ const reason = (c: Case, level: Level, adapter: Adapter, options: Options) => {
   return unexpressible(c, adapter);
 };
 
+// A file whose format this set does not read is refused rather than skipped:
+// what a runner could not read is not what an implementation passed.
+const readable = (set: Fixture[]) => {
+  const unreadable = set.find(({ file }) => file.format !== FORMAT);
+
+  if (unreadable) throw new Error(`The fixture file ${unreadable.name} targets the format ${JSON.stringify(unreadable.file.format)}; this set reads ${FORMAT}.`);
+};
+
 /** One entry per case the adapter's levels require, each ready to run, beside the cases left out and why. */
 export const plan = (adapter: Adapter, options: Options = {}): Plan => {
   claims(adapter, options);
 
-  const entries = (options.fixtures ?? fixtures()).flatMap(({ name, file }) => file.cases.map((c) => ({
+  const set = options.fixtures ?? fixtures();
+
+  readable(set);
+
+  const entries = set.flatMap(({ name, file }) => file.cases.map((c) => ({
     c,
     identity: { id: c.id, file: name, level: file.level, section: c.section ?? file.section, description: c.description },
     skip: reason(c, file.level, adapter, options),
@@ -167,6 +184,48 @@ export const summarize = (result: Result) => {
   const unobserved = result.unobserved.length ? `, ${result.unobserved.length} passed with reports unobserved` : '';
 
   return [...result.failed.map(failed), ...result.skipped.map(skipped), `${counts}${unobserved}`].join('\n');
+};
+
+// What the runner answered for a defect, read against what it answered
+// without one: a case that failed, a case left out, or a case that passed with
+// its reports unchecked, where the run without the defect had none of those.
+const verdict = (result: Result, baseline: Result): Verdict | 'none' => {
+  if (result.failed.length > baseline.failed.length) return 'fail';
+
+  if (result.skipped.length > baseline.skipped.length) return 'skip';
+
+  if (result.unobserved.length > baseline.unobserved.length) return 'unobserved';
+
+  return 'none';
+};
+
+/**
+ * Runs the defect catalogue against an adapter that passes the set, and
+ * answers what this runner made of each defect: it caught it, it missed it, or
+ * the defect never reached it. RUNNER.md states what the catalogue is for — a
+ * runner that answers nothing where an adapter is wrong measures nothing — and
+ * what each defect pins.
+ */
+export const audit = (adapter: Adapter, options: Options = {}): Audited[] => {
+  const baseline = run(adapter, options);
+
+  if (baseline.failed.length) throw new Error(`The audit needs an adapter that passes the set; this one fails ${baseline.failed.length} of ${baseline.passed.length + baseline.failed.length} cases.`);
+
+  return defects().map((entry) => {
+    if (!Object.hasOwn(mutations, entry.id)) throw new Error(`The catalogue names a defect this runner does not carry: ${JSON.stringify(entry.id)}.`);
+
+    const { adapter: defective, reached } = mutations[entry.id](adapter);
+
+    let observed: Verdict | 'none';
+
+    try {
+      observed = verdict(run(defective, options), baseline);
+    } catch {
+      observed = 'error';
+    }
+
+    return { ...entry, observed, outcome: !reached() ? 'unreachable' : observed === entry.expects ? 'caught' : 'missed' };
+  });
 };
 
 /** Runs the set and throws where anything failed, listing every failure. */

@@ -1,0 +1,113 @@
+{
+  "format": "curly-message-1",
+  "defects": [
+    {
+      "id": "output-truncated",
+      "description": "Drops the last character of every output that is not empty.",
+      "section": "9",
+      "expects": "fail"
+    },
+    {
+      "id": "output-trimmed",
+      "description": "Strips the whitespace from both ends of every output.",
+      "section": "8",
+      "expects": "fail"
+    },
+    {
+      "id": "answers-nothing",
+      "description": "Answers with no resolution at all.",
+      "section": "14.3",
+      "expects": "fail"
+    },
+    {
+      "id": "raises",
+      "description": "Raises instead of answering.",
+      "section": "14.3",
+      "expects": "fail"
+    },
+    {
+      "id": "reports-dropped",
+      "description": "Answers with an empty list of reports wherever the implementation produced any.",
+      "section": "14.3",
+      "expects": "fail"
+    },
+    {
+      "id": "reports-extra",
+      "description": "Appends one report to every list it answers with.",
+      "section": "14.3",
+      "expects": "fail"
+    },
+    {
+      "id": "reports-reversed",
+      "description": "Answers with the reports in the reverse of the order they were produced.",
+      "section": "14.3",
+      "expects": "fail"
+    },
+    {
+      "id": "report-code-changed",
+      "description": "Answers every report under a code other than the one the condition names.",
+      "section": "14.2",
+      "expects": "fail"
+    },
+    {
+      "id": "report-origin-changed",
+      "description": "Answers every report that carries an origin under the other one.",
+      "section": "14.2",
+      "expects": "fail"
+    },
+    {
+      "id": "report-id-changed",
+      "description": "Answers every report that carries an id under an id no case names.",
+      "section": "14.3",
+      "expects": "fail"
+    },
+    {
+      "id": "report-limit-changed",
+      "description": "Answers every report that carries a limit one higher than the limit it declared.",
+      "section": "13",
+      "expects": "fail"
+    },
+    {
+      "id": "formats-wrong",
+      "description": "Answers with the output the implementation produced and states that one formatting request was made that was not.",
+      "section": "11.2",
+      "expects": "fail"
+    },
+    {
+      "id": "reports-unobserved",
+      "description": "Stops answering with reports at all, though the implementation produces them.",
+      "section": "14.3",
+      "expects": "unobserved"
+    },
+    {
+      "id": "claims-core-only",
+      "description": "Claims the core level alone, though the implementation satisfies more.",
+      "section": "2",
+      "expects": "skip"
+    },
+    {
+      "id": "unexpressible-declared",
+      "description": "Declares a formatting property it cannot express that the set asks for.",
+      "section": "11.2",
+      "expects": "skip"
+    },
+    {
+      "id": "claims-no-core",
+      "description": "Claims no core level.",
+      "section": "2",
+      "expects": "error"
+    },
+    {
+      "id": "claims-unknown-level",
+      "description": "Claims a level section 2 does not name.",
+      "section": "2",
+      "expects": "error"
+    },
+    {
+      "id": "claims-no-limits",
+      "description": "Declares a limit that is not a positive count.",
+      "section": "13",
+      "expects": "error"
+    }
+  ]
+}
