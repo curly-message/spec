@@ -75,13 +75,13 @@ not it shares any code with it.
 
 The format's public site is built from this repository by the **Site** workflow
 (`.github/workflows/site.yml`) and served from GitHub Pages. Its pages are
-`SPEC.md`, `conformance/README.md` and `brand/README.md` rendered as they
-stand, plus a landing page and a playground written for it, so a change to any
-of those documents is a change to the site. The playground resolves a message
-in the reader's browser against the release of `@curly-message/parser` the
-site's lockfile pins, and shows the reports and the parameters alongside the
-string. [`site/README.md`](./site/README.md) says how it is built and what it
-needs.
+`SPEC.md`, `conformance/README.md`, `conformance/RUNNER.md` and
+`brand/README.md` rendered as they stand, plus a landing page and a playground
+written for it, so a change to any of those documents is a change to the site.
+The playground resolves a message in the reader's browser against the release
+of `@curly-message/parser` the site's lockfile pins, and shows the reports and
+the parameters alongside the string. [`site/README.md`](./site/README.md) says
+how it is built and what it needs.
 
 ## Releasing the specification
 
