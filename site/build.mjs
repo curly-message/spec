@@ -55,6 +55,15 @@ const PAGES = [
       'The implementation-independent conformance set: what an implementation is driven through, what it must produce, and how to run it in any language.',
   },
   {
+    from: 'conformance/RUNNER.md',
+    to: 'runner/index.html',
+    nav: 'Runner',
+    tab: 'Writing a runner',
+    toc: true,
+    description:
+      'What a conformance runner in any language is held to: what it decodes, what it plans and leaves out, the order it compares in, and the catalogue of deliberately wrong adapters it is audited against.',
+  },
+  {
     from: 'site/playground.html',
     to: 'playground/index.html',
     nav: 'Playground',
@@ -84,6 +93,7 @@ const ONSITE = new Map([
   ['SPEC.md', 'spec/index.html'],
   ['conformance', 'conformance/index.html'],
   ['conformance/README.md', 'conformance/index.html'],
+  ['conformance/RUNNER.md', 'runner/index.html'],
   ['brand', 'brand/index.html'],
   ['brand/README.md', 'brand/index.html'],
   ['site/playground.html', 'playground/index.html'],
@@ -104,6 +114,14 @@ const ASSETS = [
 
 const escape = (s) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+// A heading reaches the renderer as HTML, and is wanted back as text twice
+// over: as the slug an anchor links to, and as the label the sidebar shows,
+// which escapes what it is given a second time. One pass, so an escaped
+// ampersand does not read as the entity it spells.
+const ENTITIES = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" };
+
+const unescape = (s) => s.replace(/&(?:amp|lt|gt|quot|#39);/g, (entity) => ENTITIES[entity]);
 
 // A path on the site, as the given page has to spell it: relative, and with
 // the index file left off so a directory reads as one.
@@ -145,7 +163,7 @@ const render = (markdown, page) => {
     renderer: {
       heading({ tokens, depth }) {
         const html = this.parser.parseInline(tokens);
-        const text = html.replace(/<[^>]*>/g, '');
+        const text = unescape(html.replace(/<[^>]*>/g, ''));
         if (depth === 1 && title === null) {
           title = text;
           return '';
