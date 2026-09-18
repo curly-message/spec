@@ -87,8 +87,11 @@ jobs:
           npm version $bump --no-git-tag-version
           # Read back from package.json: a version script prints while npm version runs.
           version=$(node -p "require('./package.json').version")
-          grep -Eqx '## Unreleased( \((patch|minor|major)\))?' CHANGELOG.md || { echo "::error::CHANGELOG.md has no '## Unreleased' section to release as $version."; exit 1; }
-          sed -i -E "s/^## Unreleased( \((patch|minor|major)\))?$/## $version/" CHANGELOG.md
+          # One spelling of the heading, read by the gate and by the rewrite:
+          # a widening either of them missed would pass one and not the other.
+          heading='## Unreleased( \((patch|minor|major)\))?'
+          grep -Eqx "$heading" CHANGELOG.md || { echo "::error::CHANGELOG.md has no section to release as $version. The heading is '## Unreleased', optionally naming the expected bump as '## Unreleased (patch|minor|major)'."; exit 1; }
+          sed -i -E "s/^$heading$/## $version/" CHANGELOG.md
           echo "name=$(node -p "require('./package.json').name")" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"

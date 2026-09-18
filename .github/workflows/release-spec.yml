@@ -70,8 +70,11 @@ jobs:
           format=$(sed -n 's/^| Versioned identifier | `curly-message-\([0-9]\{1,\}\)` |$/\1/p' SPEC.md)
           [ -n "$format" ] || { echo "::error::SPEC.md names no versioned identifier to read v$VERSION against."; exit 1; }
           [ "${VERSION%%.*}" = "$format" ] || { echo "::error::SPEC.md specifies curly-message-$format; v$VERSION would name version ${VERSION%%.*} of the format."; exit 1; }
-          grep -Eqx '## Unreleased( \((patch|minor|major)\))?' CHANGELOG.md || { echo "::error::CHANGELOG.md has no '## Unreleased' section to release as $VERSION."; exit 1; }
-          sed -i -E "s/^## Unreleased( \((patch|minor|major)\))?$/## $VERSION/" CHANGELOG.md
+          # One spelling of the heading, read by the gate and by the rewrite:
+          # a widening either of them missed would pass one and not the other.
+          heading='## Unreleased( \((patch|minor|major)\))?'
+          grep -Eqx "$heading" CHANGELOG.md || { echo "::error::CHANGELOG.md has no section to release as $VERSION. The heading is '## Unreleased', optionally naming the expected bump as '## Unreleased (patch|minor|major)'."; exit 1; }
+          sed -i -E "s/^$heading$/## $VERSION/" CHANGELOG.md
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       # One atomic push carries the commit and the tag: either both land or
