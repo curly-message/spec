@@ -46,6 +46,15 @@ const PAGES = [
       'The normative specification of version 1 of the Curly Message Format: grammar, escaping, whitespace, resolution order, modifiers, the fallback chain and error behavior.',
   },
   {
+    from: 'CST.md',
+    to: 'cst/index.html',
+    nav: 'Syntax tree',
+    tab: 'Concrete syntax tree',
+    toc: true,
+    description:
+      'The concrete syntax tree for a Curly message: the spans a tool that shows a message rather than resolving it reads, the properties every tree holds, and the nodes it is built from.',
+  },
+  {
     from: 'conformance/README.md',
     to: 'conformance/index.html',
     nav: 'Conformance',
@@ -91,6 +100,7 @@ const PAGES = [
 // does not carry still goes somewhere rather than dying quietly.
 const ONSITE = new Map([
   ['SPEC.md', 'spec/index.html'],
+  ['CST.md', 'cst/index.html'],
   ['conformance', 'conformance/index.html'],
   ['conformance/README.md', 'conformance/index.html'],
   ['conformance/RUNNER.md', 'runner/index.html'],

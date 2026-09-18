@@ -8,7 +8,9 @@ on:
       # The pages are rendered from these, so a change to one is a change to
       # the site even when nothing under site/ moved.
       - SPEC.md
+      - CST.md
       - conformance/README.md
+      - conformance/RUNNER.md
       - brand/**
       - .github/workflows/site.yml
   workflow_dispatch:

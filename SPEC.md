@@ -37,6 +37,12 @@ payload, props and a locale (section 4). It does not specify a host API, a file
 format for message catalogues, an id-namespacing scheme, or how an
 implementation reports diagnostics.
 
+It describes a message as text to be resolved. A companion document,
+[`CST.md`](./CST.md), describes the same message as text to be shown: a
+concrete syntax tree over the grammar of section 6, for a tool that highlights,
+completes or lints a message rather than resolving it. It adds nothing this
+document requires, and an implementation conforms without offering a tree.
+
 The format is deliberately small. It has no plural categories, no gender
 selection and no nested argument syntax. Formatting that depends on a locale is
 delegated to the host platform's internationalization facilities.

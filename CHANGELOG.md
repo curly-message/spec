@@ -15,9 +15,19 @@ the document may be revised without it moving.
 
 ## Unreleased (minor)
 
-Nothing a message resolves to changes. What changes is what a document written
-against one language left an implementation in another to guess.
+Nothing a message resolves to changes. A companion document is added, and what
+otherwise changes is what a document written against one language left an
+implementation in another to guess.
 
+* `CST.md` is added: a concrete syntax tree for a message, for a tool that
+  shows a message rather than resolving it — a highlighter, an editor that
+  completes a key, a linter, a formatter. It is a companion to `SPEC.md` and
+  adds nothing to the format: sections 6, 7 and 8 already say where every
+  character of a message belongs, and the tree only gives that answer a shape
+  two implementations can hand to the same tool. It is not one of the
+  conformance levels of section 2, and an implementation conforms without
+  offering a tree. Section 1 points to it, and it travels with revisions of
+  this document rather than on a line of its own.
 * Section 4 no longer defines a plain object in ECMAScript alone. The reading
   is stated as what that test is an instance of — a value of the type a host
   offers for arbitrary keyed data, carrying no meaning beyond the entries it
