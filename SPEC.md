@@ -188,9 +188,12 @@ be reported (section 14.2).
 How many times a value is converted while a message resolves is itself bounded
 (section 13).
 
-The text a conversion produces is data, and nothing removes escape sequences
-from it (section 7). A backslash it carries is a backslash, so a serialization
-reaches the output parsable as the format it was made in.
+The text a value's conversion produces is data, and nothing removes escape
+sequences from it (section 7). A backslash it carries is a backslash, so a
+serialization reaches the output parsable as the format it was made in. A
+message is the exception, because it is not a value the walk reads but the
+text the walk is over: section 5 converts it before anything reads it, and
+what the conversion produced is then the message's own text.
 
 Wherever a value is compared numerically, the implementation MUST convert it
 using the host's ordinary numeric conversion, and a conversion that does not
