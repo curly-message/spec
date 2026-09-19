@@ -1,10 +1,11 @@
 # Changelog
 
 Revisions of the specification, tagged `v<version>` in this repository. The
-major is the version of the format: within `curly-message-1` what a message
-resolves to does not change, so a revision under it adds only what leaves the
-messages written today alone — a modifier under a name no earlier revision
-defined, a conformance level an implementation opts into, and wording that
+major is the version of the format: within one version of it what a message
+resolves to does not change, so a revision under that version adds only what
+leaves the messages written for it alone — a modifier under a name no earlier
+revision
+defines, a conformance level an implementation opts into, and wording that
 states more precisely what the body already required. That promise is about
 messages: what an implementation answers where there is no message to resolve
 is outside it.
@@ -12,6 +13,78 @@ is outside it.
 The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
+
+### 2.0.0 (Unreleased)
+
+**Version 2 of the format. It is not compatible with version 1.**
+
+Message text is syntax, and payload text is data. Version 1 resolved a message
+by repeated passes of substitution over the whole current text, so whatever a
+payload value contributed was read back as message source on the next pass: a
+value could name a payload entry the message never named, add an option to a
+construct the message wrote, or close that construct early. Version 2 resolves
+a message in one walk and reads nothing it has emitted, and a placeholder nests
+where the message spells it nesting rather than where a payload arranges one.
+
+Appendix C of `SPEC.md` is the migration, and lists every change with what each
+costs a message written against version 1. In short: stop composing messages
+through the payload, stop building a key, an option key or a modifier name out
+of it, and stop escaping payload values — those backslashes now render.
+
+* Section 5 is rewritten. A message is resolved in **one walk**: section 6
+  parses it once, and the walk emits the message's own text and what section 9
+  resolves each placeholder to. The walk reaches the outermost placeholders
+  first, and a placeholder written inside an option value is reached only where
+  the enclosing placeholder selects the option holding it — so an option the
+  modifier passes over is never rendered, nothing in it is resolved, no payload
+  entry it names is read, no modifier it names is called, and no report it
+  would have made is made.
+* Section 6's `value` production admits a placeholder, and two notes are added.
+  Note 10 says a placeholder derives inside an option value and nowhere else,
+  so a `{{` in a key, an option key or a modifier name opens none; and that a
+  `{{` in a value must open a **complete** placeholder or the construct around
+  it does not derive at all. Nesting is not otherwise limited. Note 11 says a
+  verdict is final — whether a placeholder derives at a position is a function
+  of the message and that position alone — which licenses the record that keeps
+  the scan linear in the length of the message.
+* Section 7 gains **Payload text is not escaped text**. Escape sequences are
+  removed once, when the message is parsed, from the message's own text and the
+  names it writes, and from nothing else. A value, a props value, a payload
+  `default`, a wrapper's `default` and a modifier's answer are data, and a
+  backslash any of them carries is a backslash. A serialization therefore
+  reaches the output parsable as the conversion made it, where version 1 read
+  its backslashes as escape sequences; section 4 says so too.
+* Section 8 reads its rules over the **spelling**, before anything is resolved.
+  A placeholder an option value holds is content wherever it stands, and the
+  text it resolves to is never padding however it is spelled.
+* Sections 9.2 to 9.4 and section 11 make an option's value and the inline
+  default **lazy**: collecting an option does not read its value, and a value
+  and the default reach a modifier unread. What a modifier answers with is
+  data, and nothing parses or unescapes it.
+* Section 12 is rewritten around nesting the message spells, and says which
+  construct a semicolon belongs to.
+* Section 13 states **four** limits: output, read, conversion and nesting. The
+  **pass limit is gone**, and with it the `pass-limit` report code — one walk
+  has no passes, and what the limit held back a payload can no longer do. A
+  **read limit** bounds the value text a resolution reads whether or not any of
+  it reaches the output. A **nesting limit** of at least eight levels bounds
+  resolution and not derivation: a placeholder nested deeper is a message error
+  that takes its fallback chain. No limit raises and none ends the walk.
+* Section 14.1 adds two properties: **Data is not syntax**, and **Bounded
+  work** — an implementation must derive a message in time bounded by a
+  polynomial in the length of that message.
+* Section 14.2 states **eight** report codes where it stated seven:
+  `unknown-modifier`, `missing-options` and `nesting-limit` declare the origin
+  `message`; `failed-modifier`, `unserializable-value` and `missing-locale`
+  declare `payload`; `output-limit` and `read-limit` declare `limit`.
+* Section 14.3 identifies a placeholder for every condition, limits included,
+  fixes the order reports are emitted in as **walk order**, and bounds the
+  count by the message: at most one report per placeholder per condition.
+* Appendix C is added: what changed from version 1.
+* `CST.md` revises with the document. An `option-value` node carries children,
+  `placeholder` among them, and no longer carries `name`; the name kinds are
+  `key`, `modifier` and `option-key`. Agreement and determinism cover every
+  level of nesting, and the tree does not depend on a host's nesting limit.
 
 ## 1.1.0
 

@@ -20,21 +20,28 @@ inbox     { count: 1 }       ->  "You have 1 message."
 inbox     { count: 1234 }    ->  "You have 1,234 messages."
 ```
 
-The format is deliberately small. It has no plural categories and no nested
-argument syntax; formatting that depends on a locale — `number`, `date`,
-`currency`, `ago` — is delegated to the host platform's internationalization
-facilities, and renders the empty string where the caller supplied no locale,
-which is why the example above names one.
+The format is deliberately small. It has no plural categories, and a
+placeholder holds a placeholder in an option value and nowhere else; formatting
+that depends on a locale — `number`, `date`, `currency`, `ago` — is delegated
+to the host platform's internationalization facilities, and renders the empty
+string where the caller supplied no locale, which is why the example above
+names one.
 
 ## Status
 
-The specification is **stable**. Version 1 of the format is settled: within
-`curly-message-1`, what a message resolves to does not change, and an amendment
+The specification is **stable**. Version 2 of the format is settled: within
+`curly-message-2`, what a message resolves to does not change, and an amendment
 that would change it belongs to a later version of the format rather than to
 this one. The promise is about messages: a caller that supplied none wrote
 nothing for the document to settle. Revisions of the document are tagged in this
 repository, beginning at `v1.0.0`, and [`CHANGELOG.md`](./CHANGELOG.md) says
 what each one changed.
+
+**Version 2 is not compatible with version 1.** Message text is syntax and
+payload text is data: a message is resolved in one walk, nothing it emits is
+read back, and a placeholder nests where the message spells it nesting rather
+than where a payload arranges one. Appendix C of [`SPEC.md`](./SPEC.md) lists
+every change and what each costs a message written against version 1.
 
 The conformance set and the reference implementation are on npm. Each releases
 on a line of its own, against the revision of this document its own changelog
@@ -60,9 +67,12 @@ Appendix A of [`SPEC.md`](./SPEC.md) records each behavior of the pre-3.0
 implementation the document was written against, together with the ruling that
 resolved it. Those rulings are accepted and already stated in the body of the
 document; the appendix is a historical record, not a second set of requirements.
+Appendix C is the other historical document: it says what version 2 changed
+from version 1, and is where a message written against version 1 is migrated
+from.
 
 The machine-readable identifier for the format is `curly-message`; versioned
-references use `curly-message-1`, and so on.
+references use `curly-message-2`, and so on.
 
 ## Reference implementation
 
@@ -94,7 +104,7 @@ it back against the document: a revision already tagged is refused, and so is
 one whose major is not the version of the format `SPEC.md` specifies. It runs
 the conformance set — which is what holds every section a fixture cites to a
 heading of the document — turns the changelog's pending section into the
-revision's, commits, tags (`v1.0.0`), pushes, and publishes a GitHub release
+revision's, commits, tags (`v2.0.0`), pushes, and publishes a GitHub release
 carrying that changelog section. That section names the revision it will be
 cut as — `### 1.1.0 (Unreleased)` — so a revision is settled in the commit
 that writes the section rather than in the dispatch: a run dispatched as
@@ -119,7 +129,7 @@ publishes a prerelease of that same version — `1.1.0-next.0`, then `.1` — un
 the `next` dist-tag and leaves the section open, because a prerelease has not
 released what the section names. The workflow runs the package's test matrix,
 bumps the version, cuts the section where the release closes it, commits, tags
-(`conformance-v1.0.0`), pushes, publishes to npm, and publishes a GitHub
+(`conformance-v3.0.0`), pushes, publishes to npm, and publishes a GitHub
 release carrying that changelog section.
 
 That release also carries the set as a file: `conformance-<version>.zip`,
