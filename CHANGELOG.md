@@ -53,7 +53,10 @@ of it, and stop escaping payload values — those backslashes now render.
   `default`, a wrapper's `default` and a modifier's answer are data, and a
   backslash any of them carries is a backslash. A serialization therefore
   reaches the output parsable as the conversion made it, where version 1 read
-  its backslashes as escape sequences; section 4 says so too.
+  its backslashes as escape sequences; section 4 says so too, and names the
+  one exception: a message is not a value the walk reads but the text the walk
+  is over, so what section 5 converted it to is the message's own text and is
+  parsed and unescaped like any other.
 * Section 8 reads its rules over the **spelling**, before anything is resolved.
   A placeholder an option value holds is content wherever it stands, and the
   text it resolves to is never padding however it is spelled.
