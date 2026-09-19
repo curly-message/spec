@@ -107,9 +107,46 @@ export type Adapter = {
    */
   unexpressible?: Partial<Record<FormatApi, readonly string[]>>;
   resolve: (input: Resolution) => Resolved;
+  /**
+   * The concrete syntax tree, where the implementation offers one (CST.md).
+   * An implementation conforms without it, and an adapter that leaves it out
+   * has the tree cases left out with that reason rather than failed.
+   */
+  cst?: Cst;
 };
 
-/** A section reference: a heading number of SPEC.md, such as `9.2` or `A.4`. */
+/** The unit an implementation counts its spans in, which CST.md section 4 requires it to state. */
+export type SpanUnit = 'utf-8' | 'utf-16' | 'code-point';
+
+/**
+ * What an implementation supplies so the set can read its tree: the unit its
+ * spans are in, and the call that produces one. The unit is a statement about
+ * the implementation in the way `levels` and `limits` are — a tree whose unit
+ * is unstated says nothing about where anything is.
+ */
+export type Cst = {
+  unit: SpanUnit;
+  parse: (message: string) => unknown;
+};
+
+/** A node kind of the tree (CST.md section 6). */
+export type NodeType = 'message' | 'placeholder' | 'open' | 'close' | 'separator' | 'space' | 'key' | 'modifier' | 'option-key' | 'option-value' | 'text' | 'escape';
+
+/**
+ * A node as an implementation answers with it (CST.md section 8), in the unit
+ * the adapter declared. Nothing here is required of the answer at run time:
+ * what an adapter hands back is checked before it is read.
+ */
+export type Node = {
+  type: NodeType;
+  start: number;
+  end: number;
+  nodes?: Node[];
+  name?: string;
+  cancels?: boolean;
+};
+
+/** A section reference: a heading number, such as `9.2` or `A.4`, of SPEC.md or — for the tree — of CST.md. */
 export type Section = string;
 
 /** The host facility a formatting modifier delegates to (section 11.2). */
@@ -163,12 +200,64 @@ export type GeneratedCase = {
 
 export type Case = ConcreteCase | GeneratedCase;
 
-export type FixtureFile = {
+/**
+ * What a tree case expects of one node: what it is and what it spells, never
+ * where it is. A span is in the implementation's own unit (CST.md section 4),
+ * so a case that wrote numbers would pin one implementation's unit on every
+ * other; the runner reads the spans the implementation answered with and
+ * compares the text they cover.
+ */
+export type ExpectedNode = {
+  type: NodeType;
+  /** The text the node spans. */
+  text: string;
+  /** For a name: the span unescaped (CST.md section 7). */
+  name?: string;
+  /** For an escape: which reading of section 7 the sequence takes. */
+  cancels?: boolean;
+  /** The children, in order. Required of every node that has any. */
+  nodes?: ExpectedNode[];
+};
+
+/** A case that puts a message to the implementation's tree and compares what came back. */
+export type TreeCase = {
+  id: string;
+  description: string;
+  /** A heading of CST.md, where the case pins one more specific than the file's. */
+  section?: Section;
+  message: string;
+  /** The children of the root, in order. */
+  expected: ExpectedNode[];
+  /**
+   * What the same message resolves to over no payload, where the case pins
+   * that the two readings of it agree (CST.md section 5, property 4). The
+   * message then names no modifier, so the expectation holds at Core.
+   */
+  resolves?: string;
+};
+
+/** A file of cases that pin a resolution: the set as it was before the tree. */
+export type ResolutionFixtureFile = {
   format: 'curly-message-1';
+  kind?: 'resolution';
   level: Level;
   section: Section;
   cases: Case[];
 };
+
+/**
+ * A file of cases that pin the tree. It declares no level: CST.md section 2 is
+ * not one of the conformance levels of section 2 of the specification, and its
+ * cases run where the adapter offers a tree.
+ */
+export type TreeFixtureFile = {
+  format: 'curly-message-1';
+  kind: 'tree';
+  section: Section;
+  cases: TreeCase[];
+};
+
+export type FixtureFile = ResolutionFixtureFile | TreeFixtureFile;
 
 /** A fixture file together with the name it is shipped under. */
 export type Fixture = {
@@ -176,11 +265,16 @@ export type Fixture = {
   file: FixtureFile;
 };
 
+/** One file as the manifest lists it: a level where it pins a resolution, and the kind where it pins the tree. */
+export type ManifestEntry =
+  | { path: string; level: Level; section: Section; cases: number }
+  | { path: string; kind: 'tree'; section: Section; cases: number };
+
 /** The manifest shipped as `index.json`. */
 export type Manifest = {
   format: 'curly-message-1';
   version: string;
-  files: { path: string; level: Level; section: Section; cases: number }[];
+  files: ManifestEntry[];
 };
 
 export type Failure = {
@@ -197,23 +291,27 @@ export type Failure = {
  */
 export type Outcome = { ok: true; unobserved?: 'reports' } | Failure;
 
-/** A case ready to run: what identifies it, and the call that runs it. */
-export type Planned = {
+/**
+ * What identifies a case wherever it came from. `level` is absent on a tree
+ * case, which has none, and `document` names CST.md there, because `section`
+ * reads against that document rather than the specification.
+ */
+export type Identity = {
   id: string;
   file: string;
-  level: Level;
+  level?: Level;
+  document?: Document;
   section: Section;
   description: string;
+};
+
+/** A case ready to run: what identifies it, and the call that runs it. */
+export type Planned = Identity & {
   execute: () => Outcome;
 };
 
 /** A case the plan left out, and why. */
-export type Skipped = {
-  id: string;
-  file: string;
-  level: Level;
-  section: Section;
-  description: string;
+export type Skipped = Identity & {
   reason: string;
 };
 
@@ -260,7 +358,15 @@ export type Defect =
   | 'unexpressible-declared'
   | 'claims-no-core'
   | 'claims-unknown-level'
-  | 'claims-no-limits';
+  | 'claims-no-limits'
+  | 'tree-unoffered'
+  | 'tree-node-dropped'
+  | 'tree-node-retyped'
+  | 'tree-span-shifted'
+  | 'tree-name-raw'
+  | 'tree-cancels-inverted'
+  | 'tree-unit-changed'
+  | 'tree-unit-unknown';
 
 /**
  * What a correct runner answers where a defect is present: it rejects the
@@ -269,10 +375,15 @@ export type Defect =
  */
 export type Verdict = 'error' | 'fail' | 'skip' | 'unobserved';
 
+/** The document a section reference reads against. */
+export type Document = 'SPEC.md' | 'CST.md';
+
 /** One defect of the catalogue, as `defects.json` writes it. */
 export type DefectEntry = {
   id: Defect;
   description: string;
+  /** The document `section` is a heading of; SPEC.md where it is left out. */
+  document?: Document;
   section?: Section;
   expects: Verdict;
 };

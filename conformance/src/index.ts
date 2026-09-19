@@ -3,7 +3,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { executeConcrete, executeGenerated } from './cases';
 import { defects, mutations } from './defects';
-import type { Adapter, Audited, Case, Fixture, FixtureFile, FormatApi, Level, Limits, Options, Plan, Planned, Result, Skipped, Verdict } from './types';
+import { UNITS, executeTree } from './tree';
+import type { Adapter, Audited, Case, Fixture, FixtureFile, FormatApi, Identity, Level, Limits, Options, Outcome, Plan, Planned, Result, Skipped, TreeFixtureFile, Verdict } from './types';
 
 export type * from './types';
 
@@ -49,6 +50,20 @@ const unexpressibleClaim = (adapter: Adapter) => {
   }
 };
 
+// The statement CST.md section 4 requires of an implementation that offers a
+// tree: the unit its spans are counted in. A tree whose unit is unstated says
+// nothing about where anything is, so an adapter that offers one without it is
+// refused the way an unknown level is.
+const treeClaim = (adapter: Adapter) => {
+  const cst = adapter.cst;
+
+  if (cst === undefined) return;
+
+  if (typeof cst !== 'object' || cst === null || typeof cst.parse !== 'function') throw new Error('An adapter that offers a tree must supply the call that produces one as cst.parse.');
+
+  if (!UNITS.includes(cst.unit)) throw new Error(`The adapter counts its spans in ${JSON.stringify(cst.unit)}; the units are ${UNITS.join(', ')}.`);
+};
+
 // The adapter's statements about itself, and the levels option, are held to
 // the vocabulary of sections 2, 11.2 and 13 before anything runs: a level that
 // is not one of the three, or a limit that is not a count, is an error, not a
@@ -80,6 +95,7 @@ const claims = (adapter: Adapter, options: Options) => {
   if (undeclared) throw new Error(`The adapter must declare its ${undeclared} limit as a positive integer.`);
 
   unexpressibleClaim(adapter);
+  treeClaim(adapter);
 };
 
 // A case whose request reads a property the adapter documented it cannot
@@ -122,6 +138,25 @@ const readable = (set: Fixture[]) => {
   if (unreadable) throw new Error(`The fixture file ${unreadable.name} targets the format ${JSON.stringify(unreadable.file.format)}; this set reads ${FORMAT}.`);
 };
 
+// A tree file declares no level, because CST.md section 2 is not one of them:
+// its cases run where the adapter offers a tree, and are left out where it does
+// not, the way an unclaimed level's are.
+const isTree = (file: FixtureFile): file is TreeFixtureFile => file.kind === 'tree';
+
+type Entry = { identity: Identity; execute: () => Outcome; skip: string | undefined };
+
+const entries = (adapter: Adapter, options: Options, { name, file }: Fixture): Entry[] => isTree(file)
+  ? file.cases.map((c) => ({
+    identity: { id: c.id, file: name, document: 'CST.md', section: c.section ?? file.section, description: c.description },
+    execute: () => executeTree(adapter, c),
+    skip: adapter.cst ? undefined : 'The adapter offers no concrete syntax tree.',
+  }))
+  : file.cases.map((c) => ({
+    identity: { id: c.id, file: name, level: file.level, section: c.section ?? file.section, description: c.description },
+    execute: () => 'generate' in c ? executeGenerated(adapter, c) : executeConcrete(adapter, c),
+    skip: reason(c, file.level, adapter, options),
+  }));
+
 /** One entry per case the adapter's levels require, each ready to run, beside the cases left out and why. */
 export const plan = (adapter: Adapter, options: Options = {}): Plan => {
   claims(adapter, options);
@@ -130,17 +165,10 @@ export const plan = (adapter: Adapter, options: Options = {}): Plan => {
 
   readable(set);
 
-  const entries = set.flatMap(({ name, file }) => file.cases.map((c) => ({
-    c,
-    identity: { id: c.id, file: name, level: file.level, section: c.section ?? file.section, description: c.description },
-    skip: reason(c, file.level, adapter, options),
-  })));
+  const planned = set.flatMap((fixture) => entries(adapter, options, fixture));
 
-  const cases: Planned[] = entries.filter(({ skip }) => !skip).map(({ c, identity }) => ({
-    ...identity,
-    execute: () => 'generate' in c ? executeGenerated(adapter, c) : executeConcrete(adapter, c),
-  }));
-  const skipped: Skipped[] = entries.flatMap(({ identity, skip }) => skip ? [{ ...identity, reason: skip }] : []);
+  const cases: Planned[] = planned.filter(({ skip }) => !skip).map(({ identity, execute }) => ({ ...identity, execute }));
+  const skipped: Skipped[] = planned.flatMap(({ identity, skip }) => skip ? [{ ...identity, reason: skip }] : []);
 
   return { cases, skipped };
 };
@@ -174,9 +202,14 @@ const show = (value: unknown) => {
   return text.length > SHOWN ? `${text.slice(0, SHOWN)}...` : text;
 };
 
-const failed = ({ id, section, description, outcome }: Result['failed'][number]) => `FAIL ${id} (section ${section}): ${outcome.reason} Expected ${show(outcome.expected)}, actual ${show(outcome.actual)}. ${description}`;
+// Where the sentence a case pins is written. The document is named only where
+// it is not the specification, so that a line about a resolution reads as it
+// always has.
+const where = ({ document, section }: Identity) => document ? `${document} section ${section}` : `section ${section}`;
 
-const skipped = ({ id, section, reason: why }: Skipped) => `SKIP ${id} (section ${section}): ${why}`;
+const failed = (result: Result['failed'][number]) => `FAIL ${result.id} (${where(result)}): ${result.outcome.reason} Expected ${show(result.outcome.expected)}, actual ${show(result.outcome.actual)}. ${result.description}`;
+
+const skipped = (planned: Skipped) => `SKIP ${planned.id} (${where(planned)}): ${planned.reason}`;
 
 /** The text the command prints: one line per failure and per skipped case, then the counts. */
 export const summarize = (result: Result) => {

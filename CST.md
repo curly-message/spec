@@ -69,6 +69,12 @@ with, or MUST otherwise establish that the two agree (property 4 below). A
 second scan, written separately, is the divergence this document exists to
 prevent.
 
+The [conformance set](./conformance) carries the fixtures that hold an
+implementation to this document: a message, the nodes the tree describes it
+with, and — where the two readings of it can be compared — what it resolves to.
+A case states the text a node spans rather than a number, so an implementation
+is measured in the unit it declares rather than in one the fixtures chose.
+
 **Status.** This document is settled against one implementation. Until a second
 offers a tree, a node name or an arrangement MAY change in a revision of it;
 the properties below are what will not, because they are the reason to have a

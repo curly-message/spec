@@ -13,10 +13,13 @@ const read = (path) => JSON.parse(readFileSync(path, 'utf8'));
 
 const { version } = read(join(root, 'package.json'));
 
+// A file that pins the tree declares no level, and is listed under the kind
+// it declares instead; CST.md section 2 is not one of the conformance levels.
 const files = readdirSync(directory).filter((name) => name.endsWith('.json')).sort().map((name) => {
-  const { level, section, cases } = read(join(directory, name));
+  const { kind, level, section, cases } = read(join(directory, name));
+  const pins = kind === 'tree' ? { kind } : { level };
 
-  return { path: `fixtures/${name}`, level, section, cases: cases.length };
+  return { path: `fixtures/${name}`, ...pins, section, cases: cases.length };
 });
 
 const manifest = { format: 'curly-message-1', version, files };

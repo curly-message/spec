@@ -26,8 +26,9 @@ implementation in another to guess.
   character of a message belongs, and the tree only gives that answer a shape
   two implementations can hand to the same tool. It is not one of the
   conformance levels of section 2, and an implementation conforms without
-  offering a tree. Section 1 points to it, and it travels with revisions of
-  this document rather than on a line of its own.
+  offering a tree. Section 1 points to it, section 2 of it points at the
+  conformance set that holds an implementation to it, and it travels with
+  revisions of this document rather than on a line of its own.
 * Section 4 no longer defines a plain object in ECMAScript alone. The reading
   is stated as what that test is an instance of — a value of the type a host
   offers for arbitrary keyed data, carrying no meaning beyond the entries it

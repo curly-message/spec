@@ -1,0 +1,1789 @@
+{
+  "format": "curly-message-1",
+  "kind": "tree",
+  "section": "6",
+  "cases": [
+    {
+      "id": "cst/text-only",
+      "description": "A message with no placeholder is one text node.",
+      "section": "6.1",
+      "message": "Hello",
+      "expected": [
+        {
+          "type": "text",
+          "text": "Hello"
+        }
+      ]
+    },
+    {
+      "id": "cst/empty-message",
+      "description": "An empty message is a root with no children.",
+      "section": "6.1",
+      "message": "",
+      "expected": []
+    },
+    {
+      "id": "cst/text-around-placeholder",
+      "description": "The text on either side of a placeholder is a node of its own.",
+      "section": "6.1",
+      "message": "Hi {{name}}!",
+      "expected": [
+        {
+          "type": "text",
+          "text": "Hi "
+        },
+        {
+          "type": "placeholder",
+          "text": "{{name}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "name",
+              "name": "name",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "name"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "!"
+        }
+      ],
+      "resolves": "Hi !"
+    },
+    {
+      "id": "cst/worked-example",
+      "description": "The worked example of the document, with its trailing empty segment.",
+      "section": "6.2",
+      "message": "Hi {{name; default:you;}}",
+      "expected": [
+        {
+          "type": "text",
+          "text": "Hi "
+        },
+        {
+          "type": "placeholder",
+          "text": "{{name; default:you;}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "name",
+              "name": "name",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "name"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "option-key",
+              "text": "default",
+              "name": "default",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "default"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "option-value",
+              "text": "you",
+              "name": "you",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "you"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "option-key",
+              "text": "",
+              "name": "",
+              "nodes": []
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ],
+      "resolves": "Hi you"
+    },
+    {
+      "id": "cst/unclosed-pair-is-text",
+      "description": "A pair that never closes derives no placeholder and is text.",
+      "section": "6.1",
+      "message": "{{a",
+      "expected": [
+        {
+          "type": "text",
+          "text": "{{a"
+        }
+      ],
+      "resolves": "{{a"
+    },
+    {
+      "id": "cst/scan-resumes-after-one-brace",
+      "description": "An opening pair that does not complete leaves one brace behind and the scan resumes at the next code point.",
+      "section": "6.1",
+      "message": "{{a{{b}}",
+      "expected": [
+        {
+          "type": "text",
+          "text": "{{a"
+        },
+        {
+          "type": "placeholder",
+          "text": "{{b}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "b",
+              "name": "b",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "b"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ],
+      "resolves": "{{a"
+    },
+    {
+      "id": "cst/brace-run",
+      "description": "A run of braces opens the placeholder at the last pair, so the key begins with a brace.",
+      "section": "6.1",
+      "message": "{{{{a}}",
+      "expected": [
+        {
+          "type": "text",
+          "text": "{"
+        },
+        {
+          "type": "placeholder",
+          "text": "{{{a}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "{a",
+              "name": "{a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "{a"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ],
+      "resolves": "{"
+    },
+    {
+      "id": "cst/enclosing-construct",
+      "description": "A construct enclosing another is text; the inner one is the placeholder.",
+      "section": "A.1",
+      "message": "{{count:gt; 0:{{count:number;}}; default:no;}}",
+      "expected": [
+        {
+          "type": "text",
+          "text": "{{count:gt; 0:"
+        },
+        {
+          "type": "placeholder",
+          "text": "{{count:number;}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "count",
+              "name": "count",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "count"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "modifier",
+              "text": "number",
+              "name": "number",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "number"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "option-key",
+              "text": "",
+              "name": "",
+              "nodes": []
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "text": "; default:no;}}"
+        }
+      ]
+    },
+    {
+      "id": "cst/key-only",
+      "description": "A placeholder that names a key alone: an opening pair, the key, a closing pair.",
+      "section": "6.2",
+      "message": "{{a}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ],
+      "resolves": ""
+    },
+    {
+      "id": "cst/selector-modifier",
+      "description": "A selector that names a modifier carries a separator and a modifier name.",
+      "section": "6.2",
+      "message": "{{a:b}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a:b}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "modifier",
+              "text": "b",
+              "name": "b",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "b"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/modifier-runs-on",
+      "description": "The selector’s colon is the first unescaped one and the modifier name runs to the end of the selector.",
+      "section": "6.2",
+      "message": "{{a:b:c}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a:b:c}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "modifier",
+              "text": "b:c",
+              "name": "b:c",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "b:c"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/segment-with-value",
+      "description": "A segment that states a value carries an option key, a separator and an option value.",
+      "section": "6.2",
+      "message": "{{a; x:y}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a; x:y}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "option-key",
+              "text": "x",
+              "name": "x",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "x"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "option-value",
+              "text": "y",
+              "name": "y",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "y"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/segment-without-value",
+      "description": "A segment that states no value contributes no option value node.",
+      "section": "6.2",
+      "message": "{{a; x}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a; x}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "option-key",
+              "text": "x",
+              "name": "x",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "x"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/trailing-empty-segment",
+      "description": "A trailing semicolon opens a segment of no width, which is described rather than dropped.",
+      "section": "6.2",
+      "message": "{{a; x:y;}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a; x:y;}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "option-key",
+              "text": "x",
+              "name": "x",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "x"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "option-value",
+              "text": "y",
+              "name": "y",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "y"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "option-key",
+              "text": "",
+              "name": "",
+              "nodes": []
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/value-runs-on",
+      "description": "A segment’s colon is the first unescaped one and the value runs to the end of the segment.",
+      "section": "6.2",
+      "message": "{{a; x:y:z}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a; x:y:z}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "option-key",
+              "text": "x",
+              "name": "x",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "x"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "option-value",
+              "text": "y:z",
+              "name": "y:z",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "y:z"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/padding",
+      "description": "Padding around each name is a node of its own rather than width the name covers.",
+      "section": "6.2",
+      "message": "{{ a : b ; x : y ; }}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{ a : b ; x : y ; }}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "modifier",
+              "text": "b",
+              "name": "b",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "b"
+                }
+              ]
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "option-key",
+              "text": "x",
+              "name": "x",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "x"
+                }
+              ]
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "option-value",
+              "text": "y",
+              "name": "y",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "y"
+                }
+              ]
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "option-key",
+              "text": "",
+              "name": "",
+              "nodes": []
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/worked-padding",
+      "description": "The worked padding example of the document.",
+      "section": "A.4",
+      "message": "{{ v : number ;}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{ v : number ;}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "key",
+              "text": "v",
+              "name": "v",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "v"
+                }
+              ]
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "modifier",
+              "text": "number",
+              "name": "number",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "number"
+                }
+              ]
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "option-key",
+              "text": "",
+              "name": "",
+              "nodes": []
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/colon-content",
+      "description": "Every construct’s colon is its first unclaimed one and what follows runs to the end.",
+      "section": "A.3",
+      "message": "{{a:b:c; d:e:f;}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a:b:c; d:e:f;}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "modifier",
+              "text": "b:c",
+              "name": "b:c",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "b:c"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "option-key",
+              "text": "d",
+              "name": "d",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "d"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "option-value",
+              "text": "e:f",
+              "name": "e:f",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "e:f"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "option-key",
+              "text": "",
+              "name": "",
+              "nodes": []
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/escaped-backslash-before-pair",
+      "description": "An escape that consumes a backslash leaves the opening pair to stand, so the placeholder derives.",
+      "section": "6.1",
+      "message": "a\\\\{{v}}",
+      "expected": [
+        {
+          "type": "text",
+          "text": "a"
+        },
+        {
+          "type": "escape",
+          "text": "\\\\",
+          "cancels": true
+        },
+        {
+          "type": "placeholder",
+          "text": "{{v}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "v",
+              "name": "v",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "v"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ],
+      "resolves": "a\\"
+    },
+    {
+      "id": "cst/empty-placeholder",
+      "description": "A placeholder that names no key carries a key node of no width.",
+      "section": "6.3",
+      "message": "{{}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "",
+              "name": "",
+              "nodes": []
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ],
+      "resolves": ""
+    },
+    {
+      "id": "cst/all-padding-name",
+      "description": "A name whose whole span is padding is empty and anchored at the start of that span.",
+      "section": "A.5",
+      "message": "{{  }}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{  }}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "",
+              "name": "",
+              "nodes": []
+            },
+            {
+              "type": "space",
+              "text": "  "
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ],
+      "resolves": ""
+    },
+    {
+      "id": "cst/name-with-escape",
+      "description": "A name carries the span unescaped beside the nodes the message spells it with.",
+      "section": "7",
+      "message": "{{my\\;key}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{my\\;key}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "my\\;key",
+              "name": "my;key",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "my"
+                },
+                {
+                  "type": "escape",
+                  "text": "\\;",
+                  "cancels": true
+                },
+                {
+                  "type": "text",
+                  "text": "key"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/option-key-with-escape",
+      "description": "An option key is unescaped the same way a key is.",
+      "section": "7",
+      "message": "{{a; k\\:1:v}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a; k\\:1:v}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "option-key",
+              "text": "k\\:1",
+              "name": "k:1",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "k"
+                },
+                {
+                  "type": "escape",
+                  "text": "\\:",
+                  "cancels": true
+                },
+                {
+                  "type": "text",
+                  "text": "1"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "option-value",
+              "text": "v",
+              "name": "v",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "v"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/option-value-with-escape",
+      "description": "An option value carries the span unescaped, which is what it renders as.",
+      "section": "7",
+      "message": "{{a; x:1\\:2}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a; x:1\\:2}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "option-key",
+              "text": "x",
+              "name": "x",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "x"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "option-value",
+              "text": "1\\:2",
+              "name": "1:2",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "1"
+                },
+                {
+                  "type": "escape",
+                  "text": "\\:",
+                  "cancels": true
+                },
+                {
+                  "type": "text",
+                  "text": "2"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/key-ends-in-brace",
+      "description": "A backslash takes the first closing brace and the remaining two close the placeholder.",
+      "section": "A.2",
+      "message": "{{v\\}}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{v\\}}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "v\\}",
+              "name": "v}",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "v"
+                },
+                {
+                  "type": "escape",
+                  "text": "\\}",
+                  "cancels": true
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ],
+      "resolves": ""
+    },
+    {
+      "id": "cst/key-opens-with-brace",
+      "description": "A backslash inside the opening run takes only the third brace, so the pair stands and the key begins with a brace.",
+      "section": "6.1",
+      "message": "{{\\{v}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{\\{v}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "\\{v",
+              "name": "{v",
+              "nodes": [
+                {
+                  "type": "escape",
+                  "text": "\\{",
+                  "cancels": true
+                },
+                {
+                  "type": "text",
+                  "text": "v"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ],
+      "resolves": ""
+    },
+    {
+      "id": "cst/unescaped-brace-in-key",
+      "description": "A closing brace that starts no pair needs no escape and is part of the key.",
+      "section": "6.1",
+      "message": "{{a}b}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a}b}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a}b",
+              "name": "a}b",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a}b"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ],
+      "resolves": ""
+    },
+    {
+      "id": "cst/empty-option-value",
+      "description": "A segment whose colon ends it carries an option value of no width.",
+      "section": "6.3",
+      "message": "{{a; x:}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a; x:}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a",
+              "name": "a",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ";"
+            },
+            {
+              "type": "space",
+              "text": " "
+            },
+            {
+              "type": "option-key",
+              "text": "x",
+              "name": "x",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "x"
+                }
+              ]
+            },
+            {
+              "type": "separator",
+              "text": ":"
+            },
+            {
+              "type": "option-value",
+              "text": "",
+              "name": "",
+              "nodes": []
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/cancels-colon",
+      "description": "A backslash before a colon cancels a structural meaning.",
+      "section": "6.4",
+      "message": "a\\:b",
+      "expected": [
+        {
+          "type": "text",
+          "text": "a"
+        },
+        {
+          "type": "escape",
+          "text": "\\:",
+          "cancels": true
+        },
+        {
+          "type": "text",
+          "text": "b"
+        }
+      ]
+    },
+    {
+      "id": "cst/cancels-semicolon",
+      "description": "A backslash before a semicolon cancels a structural meaning.",
+      "section": "6.4",
+      "message": "a\\;b",
+      "expected": [
+        {
+          "type": "text",
+          "text": "a"
+        },
+        {
+          "type": "escape",
+          "text": "\\;",
+          "cancels": true
+        },
+        {
+          "type": "text",
+          "text": "b"
+        }
+      ]
+    },
+    {
+      "id": "cst/cancels-opening-brace",
+      "description": "A backslash before an opening brace cancels a structural meaning.",
+      "section": "6.4",
+      "message": "a\\{b",
+      "expected": [
+        {
+          "type": "text",
+          "text": "a"
+        },
+        {
+          "type": "escape",
+          "text": "\\{",
+          "cancels": true
+        },
+        {
+          "type": "text",
+          "text": "b"
+        }
+      ]
+    },
+    {
+      "id": "cst/cancels-closing-brace",
+      "description": "A backslash before a closing brace cancels a structural meaning.",
+      "section": "6.4",
+      "message": "a\\}b",
+      "expected": [
+        {
+          "type": "text",
+          "text": "a"
+        },
+        {
+          "type": "escape",
+          "text": "\\}",
+          "cancels": true
+        },
+        {
+          "type": "text",
+          "text": "b"
+        }
+      ]
+    },
+    {
+      "id": "cst/cancels-backslash",
+      "description": "A backslash before a backslash cancels a structural meaning.",
+      "section": "6.4",
+      "message": "a\\\\b",
+      "expected": [
+        {
+          "type": "text",
+          "text": "a"
+        },
+        {
+          "type": "escape",
+          "text": "\\\\",
+          "cancels": true
+        },
+        {
+          "type": "text",
+          "text": "b"
+        }
+      ]
+    },
+    {
+      "id": "cst/cancels-space",
+      "description": "A backslash before a space cancels a structural meaning: a space is of the whitespace class.",
+      "section": "6.4",
+      "message": "a\\ b",
+      "expected": [
+        {
+          "type": "text",
+          "text": "a"
+        },
+        {
+          "type": "escape",
+          "text": "\\ ",
+          "cancels": true
+        },
+        {
+          "type": "text",
+          "text": "b"
+        }
+      ]
+    },
+    {
+      "id": "cst/cancels-no-break-space",
+      "description": "The whitespace class reaches past ASCII, so a backslash before U+00A0 cancels as well.",
+      "section": "6.4",
+      "message": "a\\ b",
+      "expected": [
+        {
+          "type": "text",
+          "text": "a"
+        },
+        {
+          "type": "escape",
+          "text": "\\ ",
+          "cancels": true
+        },
+        {
+          "type": "text",
+          "text": "b"
+        }
+      ]
+    },
+    {
+      "id": "cst/denotes-itself",
+      "description": "A backslash before a character with no structural meaning denotes itself and both characters stand.",
+      "section": "6.4",
+      "message": "a\\db",
+      "expected": [
+        {
+          "type": "text",
+          "text": "a"
+        },
+        {
+          "type": "escape",
+          "text": "\\d",
+          "cancels": false
+        },
+        {
+          "type": "text",
+          "text": "b"
+        }
+      ]
+    },
+    {
+      "id": "cst/trailing-backslash",
+      "description": "A backslash with nothing to consume is text.",
+      "section": "6.4",
+      "message": "a\\",
+      "expected": [
+        {
+          "type": "text",
+          "text": "a\\"
+        }
+      ]
+    },
+    {
+      "id": "cst/astral-escape",
+      "description": "A backslash consumes a code point, so an escape before a character outside the basic plane claims the pair whole.",
+      "section": "A.7",
+      "message": "\\😀",
+      "expected": [
+        {
+          "type": "escape",
+          "text": "\\😀",
+          "cancels": false
+        }
+      ]
+    },
+    {
+      "id": "cst/escape-inside-name",
+      "description": "A name is divided into text and escape nodes the way the message is.",
+      "section": "6.3",
+      "message": "{{a\\:b}}",
+      "expected": [
+        {
+          "type": "placeholder",
+          "text": "{{a\\:b}}",
+          "nodes": [
+            {
+              "type": "open",
+              "text": "{{"
+            },
+            {
+              "type": "key",
+              "text": "a\\:b",
+              "name": "a:b",
+              "nodes": [
+                {
+                  "type": "text",
+                  "text": "a"
+                },
+                {
+                  "type": "escape",
+                  "text": "\\:",
+                  "cancels": true
+                },
+                {
+                  "type": "text",
+                  "text": "b"
+                }
+              ]
+            },
+            {
+              "type": "close",
+              "text": "}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cst/suppressed-opening-pair",
+      "description": "A backslash before the opening pair takes one brace, so the pair never forms.",
+      "section": "A.2",
+      "message": "\\{{v}}",
+      "expected": [
+        {
+          "type": "escape",
+          "text": "\\{",
+          "cancels": true
+        },
+        {
+          "type": "text",
+          "text": "{v}}"
+        }
+      ],
+      "resolves": "{{v}}"
+    },
+    {
+      "id": "cst/consumed-closing-brace",
+      "description": "A backslash before the closing pair takes one brace, so the placeholder never closes.",
+      "section": "A.2",
+      "message": "{{v\\}}",
+      "expected": [
+        {
+          "type": "text",
+          "text": "{{v"
+        },
+        {
+          "type": "escape",
+          "text": "\\}",
+          "cancels": true
+        },
+        {
+          "type": "text",
+          "text": "}"
+        }
+      ],
+      "resolves": "{{v}}"
+    },
+    {
+      "id": "cst/interchange-example",
+      "description": "The worked encoding of the document: a cancelling escape and the text after it.",
+      "section": "8",
+      "message": "\\{world",
+      "expected": [
+        {
+          "type": "escape",
+          "text": "\\{",
+          "cancels": true
+        },
+        {
+          "type": "text",
+          "text": "world"
+        }
+      ],
+      "resolves": "{world"
+    },
+    {
+      "id": "cst/line-terminator",
+      "description": "A construct spanning a line terminator is text in full.",
+      "section": "A.6",
+      "message": "{{v\n}}",
+      "expected": [
+        {
+          "type": "text",
+          "text": "{{v\n}}"
+        }
+      ],
+      "resolves": "{{v\n}}"
+    },
+    {
+      "id": "cst/escaped-line-terminator",
+      "description": "Escaping the terminator does not make the construct a placeholder.",
+      "section": "A.6",
+      "message": "{{v\\\n}}",
+      "expected": [
+        {
+          "type": "text",
+          "text": "{{v"
+        },
+        {
+          "type": "escape",
+          "text": "\\\n",
+          "cancels": true
+        },
+        {
+          "type": "text",
+          "text": "}}"
+        }
+      ],
+      "resolves": "{{v\n}}"
+    }
+  ]
+}

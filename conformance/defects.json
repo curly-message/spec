@@ -108,6 +108,62 @@
       "description": "Declares a limit that is not a positive count.",
       "section": "13",
       "expects": "error"
+    },
+    {
+      "id": "tree-unoffered",
+      "description": "Offers no tree, though the implementation produces one.",
+      "document": "CST.md",
+      "section": "2",
+      "expects": "skip"
+    },
+    {
+      "id": "tree-node-dropped",
+      "description": "Drops the last child of the first node that has any.",
+      "document": "CST.md",
+      "section": "5",
+      "expects": "fail"
+    },
+    {
+      "id": "tree-node-retyped",
+      "description": "Answers with every separator node as a text node.",
+      "document": "CST.md",
+      "section": "6",
+      "expects": "fail"
+    },
+    {
+      "id": "tree-span-shifted",
+      "description": "Moves the start of every placeholder node one unit later.",
+      "document": "CST.md",
+      "section": "4",
+      "expects": "fail"
+    },
+    {
+      "id": "tree-name-raw",
+      "description": "Answers with every name as the message spells it rather than unescaped.",
+      "document": "CST.md",
+      "section": "7",
+      "expects": "fail"
+    },
+    {
+      "id": "tree-cancels-inverted",
+      "description": "Answers with the other reading of every escape sequence.",
+      "document": "CST.md",
+      "section": "6.4",
+      "expects": "fail"
+    },
+    {
+      "id": "tree-unit-changed",
+      "description": "Declares its spans in code points, though it counts them in another unit.",
+      "document": "CST.md",
+      "section": "4",
+      "expects": "fail"
+    },
+    {
+      "id": "tree-unit-unknown",
+      "description": "Declares its spans in a unit the document does not name.",
+      "document": "CST.md",
+      "section": "4",
+      "expects": "error"
     }
   ]
 }

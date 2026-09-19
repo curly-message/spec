@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { fixtures, type Case, type Manifest } from '../../src';
+import { fixtures, type Case, type ExpectedNode, type Manifest } from '../../src';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
@@ -13,12 +13,27 @@ const read = (path: string) => JSON.parse(readFileSync(path, 'utf8')) as unknown
 
 const set = fixtures();
 
-const cases = set.flatMap(({ name, file }) => file.cases.map((c) => ({ name, c })));
+// A file pins a resolution or it pins the tree, and the two are read against
+// different documents, so they are told apart once here.
+const resolutions = set.flatMap(({ name, file }) => file.kind === 'tree' ? [] : file.cases.map((c) => ({ name, c })));
 
-// A heading of SPEC.md is numbered like "## 9. Resolution", "### 9.2 Look up
-// the value" or "### A.4 Valueless options"; the number is what a section
-// reference names.
-const headings = new Set([...readFileSync(join(root, '..', 'SPEC.md'), 'utf8').matchAll(/^#{2,3} (\d+\.\d+|\d+|A\.\d+)\b/gm)].map(([, number]) => number));
+const trees = set.flatMap(({ name, file }) => file.kind === 'tree' ? file.cases.map((c) => ({ name, c })) : []);
+
+const cases = [...resolutions, ...trees];
+
+// A heading is numbered like "## 9. Resolution", "### 9.2 Look up the value"
+// or "### A.4 Valueless options"; the number is what a section reference
+// names.
+const headings = (document: string) => new Set([...readFileSync(join(root, '..', document), 'utf8').matchAll(/^#{2,3} (\d+\.\d+|\d+|A\.\d+)\b/gm)].map(([, number]) => number));
+
+const SPEC = headings('SPEC.md');
+
+const CST = headings('CST.md');
+
+// Every node of a case's expectation, and the text the leaves of it spell.
+const flatten = (nodes: ExpectedNode[]): ExpectedNode[] => nodes.flatMap((node) => [node, ...flatten(node.nodes ?? [])]);
+
+const spelled = (nodes: ExpectedNode[]): string => nodes.map((node) => node.nodes?.length ? spelled(node.nodes) : node.text).join('');
 
 describe('the shipped set', () => {
   it('validates against the schema', () => {
@@ -40,11 +55,16 @@ describe('the shipped set', () => {
     expect(astray.map(({ name, c }) => `${name}: ${c.id}`)).toEqual([]);
   });
 
-  it('pins a heading of SPEC.md with every section', () => {
-    const sections = [...set.map(({ name, file }) => ({ where: name, section: file.section })), ...cases.flatMap(({ c }) => c.section === undefined ? [] : [{ where: c.id, section: c.section }])];
+  it('pins a heading of the document a file reads against with every section', () => {
+    const named = (entries: { name: string; c: { id: string; section?: string } }[], file: (fixture: typeof set[number]) => boolean) => [
+      ...set.filter(file).map(({ name, file: f }) => ({ where: name, section: f.section })),
+      ...entries.flatMap(({ c }) => c.section === undefined ? [] : [{ where: c.id, section: c.section }]),
+    ];
 
-    expect(headings.size).toBeGreaterThan(40);
-    expect(sections.filter(({ section }) => !headings.has(section))).toEqual([]);
+    expect(SPEC.size).toBeGreaterThan(40);
+    expect(CST.size).toBeGreaterThan(10);
+    expect(named(resolutions, ({ file }) => file.kind !== 'tree').filter(({ section }) => !SPEC.has(section))).toEqual([]);
+    expect(named(trees, ({ file }) => file.kind === 'tree').filter(({ section }) => !CST.has(section))).toEqual([]);
   });
 
   it('is listed by index.json as the manifest script generates it', () => {
@@ -55,11 +75,11 @@ describe('the shipped set', () => {
     expect(status).toBe(0);
     expect(read(join(root, 'index.json'))).toEqual(generated);
     expect(generated).toMatchObject({ format: 'curly-message-1', version: (read(join(root, 'package.json')) as { version: string }).version });
-    expect(generated.files).toEqual(set.map(({ name, file }) => ({ path: `fixtures/${name}`, level: file.level, section: file.section, cases: file.cases.length })));
+    expect(generated.files).toEqual(set.map(({ name, file }) => ({ path: `fixtures/${name}`, ...file.kind === 'tree' ? { kind: file.kind } : { level: file.level }, section: file.section, cases: file.cases.length })));
   });
 
   it('writes a locale-dependent case as the placeholder alone, in its own locale, a date request naming a timeZone', () => {
-    const requests = cases.flatMap(({ c }) => 'expected' in c && c.expected.format ? [{ id: c.id, message: c.message, locale: c.locale, format: c.expected.format }] : []);
+    const requests = resolutions.flatMap(({ c }) => 'expected' in c && c.expected.format ? [{ id: c.id, message: c.message, locale: c.locale, format: c.expected.format }] : []);
     const placeholder = /^\{\{(?:(?!\{\{|\}\}).)*\}\}$/s;
 
     expect(requests.length).toBeGreaterThan(0);
@@ -69,8 +89,25 @@ describe('the shipped set', () => {
   });
 
   it('writes its generated cases as the runner builds them', () => {
-    const generated = cases.filter((entry): entry is { name: string; c: Extract<Case, { generate: string }> } => 'generate' in entry.c);
+    const generated = resolutions.filter((entry): entry is { name: string; c: Extract<Case, { generate: string }> } => 'generate' in entry.c);
 
     expect(generated.filter(({ c }) => !['passes-at-limit', 'passes-over-limit', 'output-at-limit', 'output-over-limit', 'output-over-limit-stops', 'conversion-over-limit'].includes(c.generate))).toEqual([]);
+  });
+
+  // What the runner holds an implementation to, held to the file itself: an
+  // expectation whose leaves do not spell the message back asks for a tree
+  // CST.md forbids, and would fail every implementation that answered right.
+  it('spells the message back from the leaves of every tree expectation', () => {
+    expect(trees.length).toBeGreaterThan(0);
+    expect(trees.filter(({ c }) => spelled(c.expected) !== c.message).map(({ c }) => c.id)).toEqual([]);
+  });
+
+  it('states a name on every name node of a tree expectation, and a reading on every escape', () => {
+    const named = ['key', 'modifier', 'option-key', 'option-value'];
+    const nodes = trees.flatMap(({ c }) => flatten(c.expected).map((node) => ({ id: c.id, node })));
+
+    expect(nodes.filter(({ node }) => named.includes(node.type) && node.name === undefined).map(({ id }) => id)).toEqual([]);
+    expect(nodes.filter(({ node }) => node.type === 'escape' && node.cancels === undefined).map(({ id }) => id)).toEqual([]);
+    expect(nodes.filter(({ node }) => !named.includes(node.type) && node.name !== undefined).map(({ id }) => id)).toEqual([]);
   });
 });

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { fixtures, type FixtureFile } from '../../src';
+import { fixtures, type ResolutionFixtureFile } from '../../src';
 
 // The command imports the built package, so these run against dist/.
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -17,14 +17,14 @@ export const adapter = { levels: ['core'], limits: { passes: 10, output: 100000,
 
 const DEFAULT_EXPORT = `${ADAPTER}\nexport default adapter;\nexport { adapter as named };`;
 
-const fixture = (output: string, level: FixtureFile['level'] = 'core'): FixtureFile => ({
+const fixture = (output: string, level: ResolutionFixtureFile['level'] = 'core'): ResolutionFixtureFile => ({
   format: 'curly-message-1',
   level,
   section: '9',
   cases: [{ id: 'cli/case', description: 'Pins the command.', message: 'Hi {{v}}', payload: { v: 'x' }, expected: { output } }],
 });
 
-const setup = (files: Record<string, FixtureFile>, adapter = ADAPTER) => {
+const setup = (files: Record<string, ResolutionFixtureFile>, adapter = ADAPTER) => {
   const directory = mkdtempSync(join(tmpdir(), 'curly-conformance-cli-'));
   const fixtures = join(directory, 'fixtures');
 
@@ -67,15 +67,20 @@ describe('the command', () => {
     expect(stdout).toBe('SKIP cli/case (section 9): The adapter does not claim the intl level.\n1 passed, 0 failed, 1 skipped\n');
   });
 
+  // The adapter of this file offers no tree, so every case of the tree file is
+  // among the cases the run leaves out, beside the levels it does not claim.
   it('reads the shipped set through the built package where --fixtures is not given', () => {
     const { directory } = setup({});
     const { status, stdout } = conformance(directory, './adapter.mjs');
     const [, passed, failed, skipped] = /^(\d+) passed, (\d+) failed, (\d+) skipped/.exec(stdout.trimEnd().split('\n').at(-1) ?? '') ?? [];
-    const shipped = fixtures().flatMap(({ file }) => file.cases);
+    const shipped = fixtures().reduce((count, { file }) => count + file.cases.length, 0);
+    const left = fixtures().reduce((count, { file }) => count + (file.kind === 'tree'
+      ? file.cases.length
+      : file.cases.filter((c) => file.level !== 'core' || ('generate' in c && c.generate === 'output-over-limit-stops')).length), 0);
 
     expect([0, 1]).toContain(status);
-    expect(Number(passed) + Number(failed) + Number(skipped)).toBe(shipped.length);
-    expect(Number(skipped)).toBe(fixtures().flatMap(({ file }) => file.cases.filter((c) => file.level !== 'core' || ('generate' in c && c.generate === 'output-over-limit-stops'))).length);
+    expect(Number(passed) + Number(failed) + Number(skipped)).toBe(shipped);
+    expect(Number(skipped)).toBe(left);
   });
 
   it('exits 2 on a usage error, with the reason', () => {

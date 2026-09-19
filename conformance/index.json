@@ -15,6 +15,12 @@
       "cases": 24
     },
     {
+      "path": "fixtures/cst.json",
+      "kind": "tree",
+      "section": "6",
+      "cases": 44
+    },
+    {
       "path": "fixtures/escaping-extensions.json",
       "level": "extensions",
       "section": "7",

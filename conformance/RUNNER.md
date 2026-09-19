@@ -27,8 +27,9 @@ runner is kept honest.
 
 ## Reading the set
 
-The set ships as JSON: `index.json` lists the fixture files with their level,
-their section and their case count, and each file under `fixtures/` holds the
+The set ships as JSON: `index.json` lists the fixture files with their level —
+or, for a file that pins the tree rather than a resolution, their kind — their
+section and their case count, and each file under `fixtures/` holds the
 cases. `schema/fixture.schema.json` describes a file. A runner reads the
 manifest, or the directory; both are sorted by file name, and a runner reports
 in that order so two runs of the same set line up.
@@ -71,10 +72,14 @@ what a runner reads before it runs anything:
 * `limits` builds the generated cases.
 * `unexpressible`, where the adapter supplies it, leaves out the cases whose
   formatting request reads a property the host's facility cannot express.
+* `cst`, where the adapter supplies it, is the tree of [`CST.md`](../CST.md):
+  the `unit` its spans are counted in, and the call that produces one. An
+  adapter that supplies none has the tree cases left out.
 
-A claim outside the vocabulary of sections 2, 11.2 and 13 — a level that is not
-one of the three, a limit that is not a positive count, a facility the format
-does not name — is an error, and the runner refuses the whole run. It is not a
+A claim outside the vocabulary of sections 2, 11.2 and 13, or of section 4 of
+`CST.md` — a level that is not one of the three, a limit that is not a positive
+count, a facility the format does not name, a span unit that document does not
+name — is an error, and the runner refuses the whole run. It is not a
 skip and not a failure: an adapter that cannot say what it satisfies has not
 been measured, and a run that reports a number for it reports a number that
 means nothing.
@@ -86,7 +91,7 @@ is listed with the reason it was left out, never dropped silently: a set whose
 skipped cases are invisible is a set whose coverage cannot be read off the
 summary.
 
-Three reasons leave a case out, and no others:
+Four reasons leave a case out, and no others:
 
 * Its level is one the adapter does not claim, or one the caller excluded.
 * It is the `output-over-limit-stops` construction and the Extensions level is
@@ -94,6 +99,9 @@ Three reasons leave a case out, and no others:
   needs Extensions whatever the level of the file it is written in.
 * Its formatting request reads a property the adapter declared it cannot
   express (section 11.2).
+* It pins the tree and the adapter offers none. A tree file declares no level,
+  because `CST.md` is not one of them; whether the adapter offers a tree is
+  what selects its cases.
 
 ## Building a generated case
 
@@ -173,6 +181,51 @@ about reports is then skipped — and said to be. A case that passed without its
 reports checked passed less than one that passed with them, and a runner that
 reports the two alike overstates what it measured.
 
+## Executing a tree case
+
+A file whose `kind` is `tree` pins the concrete syntax tree of
+[`CST.md`](../CST.md) rather than a resolution. Its cases run wherever the
+adapter offers a tree. A runner puts the message to that tree and compares what
+came back, in this order; again, the first mismatch is the failure.
+
+1. **The answer's shape.** An adapter that raised, or answered with something
+   that is not a `message` node, has failed that case.
+2. **The root's span**, which is the whole message.
+3. **Every node**, in document order: its kind is one section 6 of that
+   document names, its span is a pair of offsets whose `end` is at or after its
+   `start`, it lies within the message and within the node that holds it,
+   neither boundary falls inside a code point, a name kind carries a `name`,
+   and an escape carries `cancels`.
+4. **The properties of section 5**: the leaves tile the message in order and
+   spell it back.
+5. **The case's own expectation**, node by node.
+6. **Determinism**: the same message put to the tree again answers the same
+   tree.
+7. **Agreement**, where the case states `resolves`: the same message put
+   through `resolve` produces that output. The tree and the resolution then
+   read the same placeholders, which is what property 4 requires and what a
+   second scan written separately is how an implementation loses.
+
+The order is what makes a failure legible. A tree whose leaves do not tile the
+message is wrong about the message whatever the case says of its nodes, so that
+is what the failure names.
+
+Two of those need care in a port.
+
+**A runner reads spans in the unit the adapter declared, and in no other.** A
+case states the text a node spans rather than a number, so that one
+implementation's unit is not pinned on every other. A runner turns the declared
+unit into offsets into the string its own host holds, once per message, and
+reads each span through that; where a boundary has no offset, because it falls
+inside a code point, the case fails, which is what section 4 requires. An
+implementation that counts one unit and declares another fails on the first
+message that tells the two apart.
+
+**A tree is a structure the implementation supplies, and nothing stops it
+holding itself.** A runner walks it under a bound derived from the message — a
+tree describes the message, so it holds no more nodes than the message can
+spell — and a cyclic answer fails that case rather than hanging the run.
+
 ## Outcomes
 
 A runner answers one of four things for a case, and a summary that cannot say
@@ -186,8 +239,10 @@ which is a summary that cannot be acted on:
 | Skipped | The case was left out, and why. |
 
 A failure names the section, because a failure is a disagreement with a
-sentence and the section is where that sentence is. A failure that only says
-which case failed makes the reader find it.
+sentence and the section is where that sentence is, and names the document too
+wherever that is `CST.md` rather than the specification — the two number their
+sections separately. A failure that only says which case failed makes the
+reader find it.
 
 ## Auditing the runner
 
@@ -219,11 +274,15 @@ hunting for holes that are not there. The catalogue is most informative against
 an adapter that claims every level its implementation satisfies and observes
 what it reports.
 
-The defects are in `defects.json`, a sentence each, in four families: whether
+The defects are in `defects.json`, a sentence each, in five families: whether
 an adapter answers at all (it raises, or answers with nothing), what it answers
 for the output (truncated, trimmed), what it answers for the reports (dropped,
-added, reordered, each field altered in turn, or withheld entirely), and what
-it states about itself and about a formatting request. Each one pins a decision
+added, reordered, each field altered in turn, or withheld entirely), what it
+states about itself and about a formatting request, and what it answers for the
+tree (a node dropped, a node retyped, a span moved, a name left as the message
+spells it, an escape read the other way, and the unit misdeclared or unnamed).
+Each defect names the `section` it pins, and a defect of the tree names the
+`document` that section is a heading of. Each one pins a decision
 a runner makes, and a runner that misses one is a runner making that decision
 by not making it.
 

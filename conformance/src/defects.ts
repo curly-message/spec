@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import type { Adapter, Catalogue, Defect, FormatRequest, Level, Mutation, Report, ReportCode, ReportOrigin, Resolved } from './types';
+import { NAMED, boundaries } from './tree';
+import type { Adapter, Catalogue, Defect, FormatRequest, Level, Mutation, Node, Report, ReportCode, ReportOrigin, Resolved, SpanUnit } from './types';
 
 /** The catalogue shipped with this package; RUNNER.md states what each defect pins. */
 export const defects = () => (JSON.parse(readFileSync(fileURLToPath(new URL('../defects.json', import.meta.url)), 'utf8')) as Catalogue).defects;
@@ -45,6 +46,65 @@ const instead = (resolve: Adapter['resolve']) => (adapter: Adapter): Mutation =>
 // before anything runs, so such a defect reaches the runner wherever the
 // claim it alters was one the adapter made.
 const claiming = (adapter: Adapter, claims: Partial<Adapter>, reached: () => boolean = () => true): Mutation => ({ adapter: { ...adapter, ...claims }, reached });
+
+// A defect of the tree, which an implementation need not offer at all. An
+// adapter that offers none carries nothing to alter, so the defect is
+// unreachable rather than missed.
+const parsing = (adapter: Adapter, change: (tree: Node, message: string) => Node | undefined): Mutation => {
+  const cst = adapter.cst;
+
+  if (!cst) return { adapter, reached: () => false };
+
+  let reached = false;
+
+  return {
+    adapter: {
+      ...adapter,
+      cst: {
+        ...cst,
+        parse: (message) => {
+          const tree = cst.parse(message) as Node;
+          const changed = change(tree, message);
+
+          if (changed === undefined) return tree;
+
+          reached = true;
+
+          return changed;
+        },
+      },
+    },
+    reached: () => reached,
+  };
+};
+
+// A defect applied to every node it recognizes, which reaches the runner where
+// it recognized at least one.
+const everywhere = (adapter: Adapter, change: (node: Node, message: string) => Node) => parsing(adapter, (tree, message) => {
+  let altered = false;
+  const apply = (node: Node): Node => {
+    const changed = change(node, message);
+
+    if (changed !== node) altered = true;
+
+    const nodes = changed.nodes?.map(apply);
+
+    return nodes ? { ...changed, nodes } : changed;
+  };
+  const result = apply(tree);
+
+  return altered ? result : undefined;
+});
+
+// The text a span covers, in the unit the adapter declared: what a name reads
+// as before it is unescaped.
+const spelling = (message: string, unit: SpanUnit, node: Node) => {
+  const offsets = boundaries(message, unit);
+  const from = offsets[node.start];
+  const to = offsets[node.end];
+
+  return from === undefined || to === undefined ? undefined : message.slice(from, to);
+};
 
 const otherCode = (code: ReportCode): ReportCode => code === 'unknown-modifier' ? 'failed-modifier' : 'unknown-modifier';
 
@@ -116,4 +176,48 @@ export const mutations: Record<Defect, (adapter: Adapter) => Mutation> = {
   'claims-unknown-level': (adapter) => claiming(adapter, { levels: [...adapter.levels, 'ecmascript' as Level] }),
 
   'claims-no-limits': (adapter) => claiming(adapter, { limits: { ...adapter.limits, passes: 0 } }),
+
+  'tree-unoffered': (adapter) => claiming(adapter, { cst: undefined }, () => adapter.cst !== undefined),
+
+  'tree-node-dropped': (adapter) => parsing(adapter, (tree) => {
+    let dropped = false;
+    const drop = (node: Node): Node => {
+      if (!node.nodes?.length) return node;
+
+      const kept = dropped ? node.nodes : node.nodes.slice(0, -1);
+
+      dropped = true;
+
+      return { ...node, nodes: kept.map(drop) };
+    };
+    const changed = drop(tree);
+
+    return dropped ? changed : undefined;
+  }),
+
+  'tree-node-retyped': (adapter) => everywhere(adapter, (node) => node.type === 'separator' ? { ...node, type: 'text' } : node),
+
+  'tree-span-shifted': (adapter) => everywhere(adapter, (node) => node.type === 'placeholder' ? { ...node, start: node.start + 1 } : node),
+
+  'tree-name-raw': (adapter) => everywhere(adapter, (node, message) => {
+    if (!NAMED.includes(node.type) || !adapter.cst) return node;
+
+    const spelled = spelling(message, adapter.cst.unit, node);
+
+    return spelled === undefined || spelled === node.name ? node : { ...node, name: spelled };
+  }),
+
+  'tree-cancels-inverted': (adapter) => everywhere(adapter, (node) => node.type === 'escape' ? { ...node, cancels: !node.cancels } : node),
+
+  'tree-unit-changed': (adapter) => claiming(
+    adapter,
+    adapter.cst ? { cst: { ...adapter.cst, unit: 'code-point' } } : {},
+    () => adapter.cst !== undefined && adapter.cst.unit !== 'code-point',
+  ),
+
+  'tree-unit-unknown': (adapter) => claiming(
+    adapter,
+    adapter.cst ? { cst: { ...adapter.cst, unit: 'utf-32' as SpanUnit } } : {},
+    () => adapter.cst !== undefined,
+  ),
 };

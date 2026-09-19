@@ -2,36 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:curly-message:conformance:fixture",
   "title": "Curly Message Format conformance fixture file",
-  "description": "One file of the conformance set: cases pinning one section of the specification at one conformance level. README.md in this package states what each field means.",
+  "description": "One file of the conformance set: cases pinning one section of the specification at one conformance level, or cases pinning one section of CST.md against the tree an implementation offers. README.md in this package states what each field means.",
   "type": "object",
-  "required": [
-    "format",
-    "level",
-    "section",
-    "cases"
-  ],
-  "additionalProperties": false,
-  "properties": {
-    "format": {
-      "description": "The versioned identifier of the format the file targets.",
-      "const": "curly-message-1"
+  "oneOf": [
+    {
+      "$ref": "#/$defs/resolutionFile"
     },
-    "level": {
-      "description": "The conformance level (section 2) that requires every case in the file.",
-      "$ref": "#/$defs/level"
-    },
-    "section": {
-      "description": "The section of SPEC.md the file pins; a case may name a more specific one.",
-      "$ref": "#/$defs/section"
-    },
-    "cases": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "$ref": "#/$defs/case"
-      }
+    {
+      "$ref": "#/$defs/treeFile"
     }
-  },
+  ],
   "$defs": {
     "level": {
       "enum": [
@@ -41,7 +21,7 @@
       ]
     },
     "section": {
-      "description": "A heading number of SPEC.md: a section (\"7\"), a subsection (\"9.2\") or an appendix entry (\"A.4\").",
+      "description": "A heading number: a section (\"7\"), a subsection (\"9.2\") or an appendix entry (\"A.4\"). A file that pins a resolution names a heading of SPEC.md, one that pins the tree a heading of CST.md.",
       "type": "string",
       "pattern": "^([0-9]+(\\.[0-9]+)?|A\\.[0-9]+)$"
     },
@@ -258,6 +238,161 @@
         "id": {
           "type": "string",
           "description": "The id the report must name, where the adapter's reports carry one. Text, and compared as written: tagged values (see the package README) are read on a case's inputs and not in its expectations, so a case whose id is not text leaves this out and the id goes unobserved."
+        }
+      }
+    },
+    "resolutionFile": {
+      "description": "A file of cases that pin a resolution: what a message, over inputs, must produce.",
+      "type": "object",
+      "required": [
+        "format",
+        "level",
+        "section",
+        "cases"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "description": "The versioned identifier of the format the file targets.",
+          "const": "curly-message-1"
+        },
+        "kind": {
+          "description": "What the file pins. Omitted, it pins a resolution.",
+          "const": "resolution"
+        },
+        "level": {
+          "description": "The conformance level (section 2) that requires every case in the file.",
+          "$ref": "#/$defs/level"
+        },
+        "section": {
+          "description": "The section of SPEC.md the file pins; a case may name a more specific one.",
+          "$ref": "#/$defs/section"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/case"
+          }
+        }
+      }
+    },
+    "treeFile": {
+      "description": "A file of cases that pin the tree of CST.md. It declares no level: that document is not one of the conformance levels of section 2, and its cases run where the implementation offers a tree.",
+      "type": "object",
+      "required": [
+        "format",
+        "kind",
+        "section",
+        "cases"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "description": "The versioned identifier of the format the file targets.",
+          "const": "curly-message-1"
+        },
+        "kind": {
+          "description": "What the file pins.",
+          "const": "tree"
+        },
+        "section": {
+          "description": "The section of CST.md the file pins; a case may name a more specific one.",
+          "$ref": "#/$defs/section"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/treeCase"
+          }
+        }
+      }
+    },
+    "nodeType": {
+      "description": "A node kind of the tree (CST.md section 6).",
+      "enum": [
+        "message",
+        "placeholder",
+        "open",
+        "close",
+        "separator",
+        "space",
+        "key",
+        "modifier",
+        "option-key",
+        "option-value",
+        "text",
+        "escape"
+      ]
+    },
+    "expectedNode": {
+      "description": "What a case expects of one node: what it is and what it spells, never where it is. A span is in the implementation's own unit (CST.md section 4), so a case that wrote numbers would pin one implementation's unit on every other.",
+      "type": "object",
+      "required": [
+        "type",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/nodeType"
+        },
+        "text": {
+          "description": "The text the node spans, which the runner reads off the span the implementation answered with.",
+          "type": "string"
+        },
+        "name": {
+          "description": "For a name kind: the span unescaped (CST.md section 7).",
+          "type": "string"
+        },
+        "cancels": {
+          "description": "For an escape: which of the two readings of section 7 the sequence takes.",
+          "type": "boolean"
+        },
+        "nodes": {
+          "description": "The children, in order. Stated for every node the case reads into.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/expectedNode"
+          }
+        }
+      }
+    },
+    "treeCase": {
+      "description": "A message put to the implementation's tree, and the children of the root it must answer with.",
+      "type": "object",
+      "required": [
+        "id",
+        "description",
+        "message",
+        "expected"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "description": {
+          "$ref": "#/$defs/description"
+        },
+        "section": {
+          "$ref": "#/$defs/section"
+        },
+        "message": {
+          "description": "The message, as text. A tree is a description of the source, so a message a host wrote as something else has none.",
+          "type": "string"
+        },
+        "expected": {
+          "description": "The children of the message node, in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/expectedNode"
+          }
+        },
+        "resolves": {
+          "description": "What the same message resolves to over no payload, where the case pins that the two readings of it agree (CST.md section 5, property 4). The message then names no modifier, so the expectation holds at the core level.",
+          "type": "string"
         }
       }
     }

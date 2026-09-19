@@ -21,6 +21,11 @@ the sentence the implementation disagrees with.
 }
 ```
 
+A second kind of file pins the concrete syntax tree of [CST.md](../CST.md)
+rather than a resolution: the same message, and the nodes an implementation
+that offers a tree describes it with. An implementation conforms without
+offering one, and those cases are then left out.
+
 ## Status
 
 **Stable**, on npm as `@curly-message/conformance`. The set lives in the
@@ -31,10 +36,10 @@ version 1 of the set targets version 1 of the format.
 ## The fixture files
 
 `fixtures/*.json` groups the cases by the section of the specification they
-pin, one file per group, and `index.json` lists the files with the level and
-section each covers. `schema/fixture.schema.json` is the JSON Schema every file
-validates against, so a runner in another language checks the set before it
-reads it.
+pin, one file per group, and `index.json` lists the files with the level or the
+kind, and the section, each covers. `schema/fixture.schema.json` is the JSON
+Schema every file validates against, so a runner in another language checks the
+set before it reads it.
 
 Those files are the set. Nothing in them is JavaScript, so an implementation in
 another language needs nothing else from this package: every release carries
@@ -46,6 +51,8 @@ one directory, with its digest in the release notes — attached to the
 A file has a `format`, the versioned identifier of the format it targets; a
 `level`, the conformance level of section 2 that requires every case in it;
 a `section`, the heading of the specification the file pins; and its `cases`.
+A file that pins the tree declares `kind` as `tree` and no level — `CST.md` is
+not one of the levels — and its `section` is a heading of that document.
 
 A case is either written out or generated. A written-out case has:
 
@@ -170,6 +177,45 @@ the bounds it documents. `P` is the declared pass limit, `L` the output limit,
 An adapter whose reports carry a `limit` is held to the declared limit on the
 `pass-limit` and `output-limit` reports.
 
+### Tree cases
+
+A file whose `kind` is `tree` pins the concrete syntax tree of
+[`CST.md`](../CST.md): what an implementation that offers one answers for a
+message. Such a case carries no input beyond the message, because a tree is a
+function of the message alone.
+
+| Field | Meaning |
+| --- | --- |
+| `id`, `description`, `section` | As above, except that the `section` is a heading of `CST.md`. |
+| `message` | The message, as text. |
+| `expected` | The children of the root node, in order. |
+| `resolves` | What the same message resolves to over no payload, where the case pins that the tree and the resolution read the same placeholders (section 5, property 4). The message then names no modifier, so the expectation holds at the Core level. |
+
+A node of `expected` states what it is and what it spells, never where it is:
+
+| Field | Meaning |
+| --- | --- |
+| `type` | The kind, as section 6 of `CST.md` spells it. |
+| `text` | The text the node spans. |
+| `name` | For a name kind: the span unescaped. |
+| `cancels` | For an escape: which of the two readings of section 7 the sequence takes. |
+| `nodes` | The children, in order, wherever the case reads into the node. |
+
+The span is the one thing a case does not write. Section 4 of `CST.md` lets an
+implementation count its spans in whatever unit its strings are indexed by, so
+a case that wrote numbers would pin one implementation's unit on every other.
+A case writes the text instead, and the runner reads that text off the span the
+implementation answered with, in the unit the adapter declared. The declaration
+is thereby observable: an implementation that counts UTF-16 code units and
+states it counts code points fails the case whose message holds a character
+outside the basic multilingual plane.
+
+The properties of section 5 are checked on every tree case before its own
+expectation is compared, because a tree that is wrong about the message is
+wrong whatever the case says of its nodes: the leaves tile the message in order
+and spell it back, no span boundary falls inside a code point, no node lies
+outside the one that holds it, and two parses of one message agree.
+
 ## The adapter
 
 Section 14.3 has the conformance set observe an implementation through an
@@ -196,6 +242,14 @@ MAY make a third statement, `unexpressible`: the formatting properties the
 host's facility cannot express (section 11.2), under the request that reads
 them, which leaves out the cases that would measure the host rather than the
 implementation.
+
+An adapter MAY offer a fourth thing, `cst`: the concrete syntax tree of
+[`CST.md`](../CST.md), as the `unit` its spans are counted in — `utf-8`,
+`utf-16` or `code-point` — and the `parse` that produces one. An adapter that
+leaves it out has every tree case left out with that reason rather than failed,
+because an implementation conforms without offering a tree. A `cst` whose unit
+is none of the three is an error rather than a skip, the way an unknown level
+is: a tree whose unit is unstated says nothing about where anything is.
 
 `resolve` is handed one resolution's inputs, decoded into host values, and
 answers with the `output` and the `reports` the implementation produced. The
@@ -244,16 +298,18 @@ for (const planned of plan(adapter).cases) {
 ```
 
 `plan` is for a test framework: one entry per case the adapter's levels
-require, each carrying its `id`, `file`, `level`, `section`, `description` and
-an `execute` that runs it and answers with an outcome — `{ ok: true }`, or the
-reason it failed beside what was expected and what came back. `run` executes a
+require, each carrying its `id`, `file`, `section`, `description`, the `level`
+and the `document` where the case has them, and an `execute` that runs it and
+answers with an outcome — `{ ok: true }`, or the reason it failed beside what was expected and
+what came back. `run` executes a
 plan and sorts the outcomes. Both take options: `fixtures`, to run a set other
 than the shipped one, and `levels`, to run a subset of the levels the adapter
 claims. An adapter must claim `core`, and `levels` must name only levels it
 claims; anything else is an error rather than a skip. A case at a level that
 does not run is skipped with a reason naming the level, and so is
 `output-over-limit-stops` wherever `extensions` does not run, whatever the
-level of its file.
+level of its file. A tree case is skipped wherever the adapter offers no
+`cst`.
 
 The package also exports what those are built from: `fixtures()` reads the
 shipped set and `load(directory)` any directory of fixture files, both sorted
@@ -294,9 +350,12 @@ turn, and answers one entry per defect: what the catalogue expected, what this
 runner observed, and whether that counts as `caught`, `missed` or
 `unreachable`. The last is for a defect the adapter gives the runner nothing to
 catch — what an implementation that observes no reports does to every defect of
-its reports, and one that claims Core alone to every defect of a level it does
-not claim. `defects()` reads the catalogue and `mutations` carries it, so a
-runner's own tests can reach one defect without running them all.
+its reports, one that claims Core alone to every defect of a level it does not
+claim, and one that offers no tree to every defect of the tree. A defect names
+the `section` it pins and, where that is a heading of `CST.md` rather than of
+the specification, the `document` it is a heading of. `defects()` reads the
+catalogue and `mutations` carries it, so a runner's own tests can reach one
+defect without running them all.
 
 [RUNNER.md](./RUNNER.md) states what each defect pins.
 
@@ -317,7 +376,7 @@ the two disagree, the specification decides which is wrong.
 `npm run manifest` regenerates `index.json` from the files, and a version bump
 runs it; the tests fail where it is stale, where an `id` repeats, where a file
 does not validate against the schema, or where a `section` names no heading of
-`SPEC.md`.
+the document its file reads against.
 
 ## Development
 

@@ -4,7 +4,24 @@
 
 Two things a set written in one language could not give an implementation in
 another: the request a locale-dependent case pins, and a way to tell whether the
-runner reading the set is reading it right.
+runner reading the set is reading it right. The set also reaches a second
+document, `CST.md`, which until now had nothing holding an implementation to it.
+
+* `fixtures/cst.json` pins the concrete syntax tree of `CST.md`: the nodes an
+  implementation that offers a tree describes a message with. A file declares
+  `kind: "tree"` and no level, because that document is not one of the
+  conformance levels of section 2; its cases run wherever the adapter offers a
+  `cst` and are left out, with that reason, wherever it does not. A case states
+  the text a node spans rather than a number, so an implementation is measured
+  in the unit it declares rather than in the one the set was written in — which
+  is what makes that declaration observable at all.
+* An adapter MAY offer `cst`: the unit its spans are counted in and the call
+  that produces a tree. A unit outside the three `CST.md` names is an error
+  rather than a skip, the way an unknown level is.
+* The catalogue gains a fifth family, the defects of the tree: a node dropped,
+  a node retyped, a span moved, a name left as the message spells it, an escape
+  read the other way, and the unit misdeclared or unnamed. A defect now names
+  the `document` its section is a heading of, where that is not `SPEC.md`.
 
 * An adapter MAY answer with `formats`, the formatting requests the resolution
   made — what section 11.2 has always permitted an implementation to expose and
