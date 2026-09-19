@@ -63,7 +63,7 @@
   "bugs": {
     "url": "https://github.com/curly-message/spec/issues"
   },
-  "homepage": "https://github.com/curly-message/spec/tree/main/conformance#readme",
+  "homepage": "https://curlymessage.dev/conformance/",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
