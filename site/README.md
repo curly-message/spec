@@ -38,9 +38,11 @@ package's lockfile pins it.
 The output is static HTML. The playground is the one page that carries a
 script — it runs the parser rather than describing it — and both of its
 modules are served from the site, so nothing is fetched at runtime there
-either. Every link is spelled relative to the page it is on, so the same build
-serves from a project path and from the root of a domain without being told
-which.
+either. Every link a reader follows is spelled relative to the page it is on,
+so the same build serves from a project path and from the root of a domain
+without being told which. Two addresses are absolute, because they name a copy
+rather than follow one: a page's `canonical` link and its `og:url` both point
+at `https://curlymessage.dev/`, the copy to index and to share.
 
 ## The playground
 
@@ -82,7 +84,8 @@ the repository's Pages source set to **GitHub Actions**; with the source left
 at a branch, the build succeeds and the deployment fails.
 
 The site carries no `CNAME`: it serves from wherever Pages puts it. Pointing a
-domain at it is a setting and one file, and no link in the build has to change.
+domain at it is a setting, and the one place the build spells a domain is the
+`SITE` constant the canonical link and the link preview are built from.
 
 ## Look
 
