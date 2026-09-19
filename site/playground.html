@@ -13,7 +13,22 @@ a link reproduces it exactly.</p>
   <form class="inputs" id="inputs" novalidate>
     <div class="field">
       <label for="message">Message</label>
-      <textarea id="message" rows="3" spellcheck="false" autocapitalize="off"></textarea>
+      <!-- The block under the control draws the message; the control itself is
+           on top with its text made transparent. Both hold the same string and
+           wrap it the same way, so the colouring sits exactly under what is
+           typed. -->
+      <div class="editor">
+        <pre class="ink" id="ink" aria-hidden="true"></pre>
+        <textarea id="message" rows="3" spellcheck="false" autocapitalize="off"></textarea>
+      </div>
+      <ul class="legend">
+        <li><span class="ink-brace">{{&nbsp;;&nbsp;:&nbsp;}}</span> Structure</li>
+        <li><span class="ink-key">key</span> Payload entry</li>
+        <li><span class="ink-modifier">modifier</span> Modifier</li>
+        <li><span class="ink-option-key">option</span> Option key</li>
+        <li><span class="ink-escape">\</span> Escape</li>
+        <li><span class="ink-escape ink-inert">\</span> Cancels nothing</li>
+      </ul>
       <p class="hint under">The message as a host's translations hold it. An empty message is
         still a message, and resolves to the empty string — as does a call a host makes with
         no message at all, which has nothing to resolve.</p>
@@ -69,6 +84,17 @@ a link reproduces it exactly.</p>
 </noscript>
 
 <div class="notes">
+<h2 id="the-colours">The colours</h2>
+
+<p>The message is coloured from the same parser that resolves it, by the tree
+<a href="../cst/">CST.md</a> specifies: one span per leaf, and the leaves tile
+the message. So the colouring cannot disagree with the parse — what is drawn as
+a placeholder is what resolution will read as one, and text the parser never
+found a placeholder in stays the colour of text. The two escapes are drawn
+apart on purpose: <code>\{</code> cancels a brace and leaves one behind, while
+<code>\n</code> cancels nothing and both characters stay. An editor that
+colours them alike is lying about one of them.</p>
+
 <h2 id="placeholders-inside-placeholders">Placeholders inside placeholders</h2>
 
 <p>No placeholder derives inside another. Where one encloses another, the inner
@@ -79,9 +105,10 @@ a pass apart, not one: <code>{{count:number;}}</code> resolves to
 <code>0</code>, and the next pass reads
 <code>{{count:gt; 0:0; default:no;}}</code>, finds no key less than the value
 and takes the fallback. Raise the count and the same message selects the number
-the inner placeholder formatted. <a href="../spec/#12-nesting">Section 12</a>
-states the rule, <a href="../spec/#13-limits">section 13</a> the limits that
-bound it.</p>
+the inner placeholder formatted. The colouring says as much: only the inner
+placeholder is drawn as one, and what encloses it is text until a pass has
+emptied it. <a href="../spec/#12-nesting">Section 12</a> states the rule,
+<a href="../spec/#13-limits">section 13</a> the limits that bound it.</p>
 
 <h2 id="what-you-are-running">What you are running</h2>
 

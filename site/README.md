@@ -49,6 +49,14 @@ It makes one call — `resolve()` — and shows the three things the call answer
 with: the string, the reports (section 14.3 of the specification) and, from
 the same package's extractor, the parameters the message names.
 
+It also colours the message, from `cst()` of the same package and so from the
+tree [`CST.md`](../CST.md) specifies. The walk emits one span per leaf: the
+leaves tile the message and spell it back, so nothing tracks a position and
+the colouring cannot drift from the parse. What draws the colours is a block
+under a control whose own text is transparent — both hold the same string and
+are given the same font, size, line height, padding and wrapping, which is the
+whole of what makes them agree on where a line breaks.
+
 The build vendors `@curly-message/parser` out of `node_modules` and prints the
 version it took; the page names that version to the reader. A release the
 lockfile does not name cannot reach the page, and a runtime CDN would make a
@@ -83,6 +91,13 @@ page takes whichever the reader's system asks for, and the theme colour of that
 ground is the only colour on it. Headings are set in Outfit, the wordmark's own
 face; the prose is Literata; code, and every field of the playground, takes the
 reader's own monospace.
+
+The coloured message is the one place that spends more than the theme colour,
+because there it is the content: five hues that have to stay apart from one
+another, on both grounds. They are the site's and not the brand's — a mark is
+read at a glance and a message is read closely, so they are not answering the
+same question. Each is a token stated once per ground beside the rest, so a
+ground is still read from one place.
 
 The masthead carries the whole lockup on one line: the wordmark without its
 tagline, which is the file `brand/` prescribes at this size, then a hairline
