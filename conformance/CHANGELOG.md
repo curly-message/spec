@@ -1,6 +1,6 @@
 # Changelog
 
-### 4.0.0 (Unreleased)
+## 4.0.0
 
 The set targets `curly-message-3`. A runner that reads only `curly-message-2`
 refuses it rather than skipping it, which is why this is a major release even
