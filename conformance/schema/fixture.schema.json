@@ -117,12 +117,14 @@
         },
         "generate": {
           "enum": [
-            "passes-at-limit",
-            "passes-over-limit",
             "output-at-limit",
             "output-over-limit",
-            "output-over-limit-stops",
-            "conversion-over-limit"
+            "output-over-limit-continues",
+            "read-at-limit",
+            "read-over-limit",
+            "conversion-over-limit",
+            "nesting-at-limit",
+            "nesting-over-limit"
           ]
         }
       }
@@ -224,8 +226,9 @@
             "missing-options",
             "unserializable-value",
             "missing-locale",
-            "pass-limit",
-            "output-limit"
+            "nesting-limit",
+            "output-limit",
+            "read-limit"
           ]
         },
         "origin": {
@@ -254,7 +257,7 @@
       "properties": {
         "format": {
           "description": "The versioned identifier of the format the file targets.",
-          "const": "curly-message-1"
+          "const": "curly-message-2"
         },
         "kind": {
           "description": "What the file pins. Omitted, it pins a resolution.",
@@ -290,7 +293,7 @@
       "properties": {
         "format": {
           "description": "The versioned identifier of the format the file targets.",
-          "const": "curly-message-1"
+          "const": "curly-message-2"
         },
         "kind": {
           "description": "What the file pins.",

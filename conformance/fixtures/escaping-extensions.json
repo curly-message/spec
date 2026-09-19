@@ -1,5 +1,5 @@
 {
-  "format": "curly-message-1",
+  "format": "curly-message-2",
   "level": "extensions",
   "section": "7",
   "cases": [
@@ -49,9 +49,9 @@
       }
     },
     {
-      "id": "escaping-extensions/modifier-reads-serialization",
-      "description": "A modifier reads its input before the removal runs, so it receives the serialization the conversion produced and the output unescapes it once.",
-      "section": "7",
+      "id": "escaping-extensions/modifier-answer-not-unescaped",
+      "description": "A modifier answers with the placeholder's result, which is data: the serialization it was handed reaches the output as the conversion made it.",
+      "section": "5",
       "message": "{{v:echo}}",
       "payload": {
         "v": {
@@ -62,12 +62,12 @@
         "echo": "echo"
       },
       "expected": {
-        "output": "{\"a\":\"x\\:\"}"
+        "output": "{\"a\":\"x\\\\:\"}"
       }
     },
     {
-      "id": "escaping-extensions/options-handed-unescaped-key",
-      "description": "A host-defined modifier is handed an option key unescaped and a valueless option value as its source spelling, which the output unescapes once.",
+      "id": "escaping-extensions/options-handed-unescaped",
+      "description": "A host-defined modifier is handed an option key and an option value both unescaped, because an option value is the message's own text; what it answers with is data and is not unescaped again.",
       "section": "7",
       "message": "{{v:opts; a\\\\\\\\b}}",
       "payload": {
@@ -77,7 +77,7 @@
         "opts": "options"
       },
       "expected": {
-        "output": "a\\b=a\\\\b"
+        "output": "a\\\\b=a\\\\b"
       }
     }
   ]

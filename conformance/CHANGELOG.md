@@ -1,5 +1,40 @@
 # Changelog
 
+### 3.0.0 (Unreleased)
+
+The set targets `curly-message-2`. Version 2 resolves a message in one walk
+over its own text, so every case that turned on a payload value being read as
+syntax states the opposite now, and the limits are four rather than three.
+An implementation that passes version 1 of the set does not pass this one.
+
+* Every file targets `curly-message-2`, and a runner that reads only
+  `curly-message-1` refuses the set rather than skipping it.
+* An adapter declares four limits — `output`, `read`, `conversion` and
+  `nesting` — in place of `passes`, `output` and `conversion`, and the
+  generated constructions are eight rather than six: each limit is built at
+  its bound and one past it. Each construction spends one budget alone, so a
+  case built at one limit cannot be failed by another.
+* The report codes `output-limit` and `pass-limit` become `output-limit`,
+  `read-limit` and `nesting-limit`. A nesting limit is a defect of the
+  message, so its report declares the `message` origin; the other two declare
+  `limit`.
+* `output-over-limit-stops` is gone, and with it the one check the comparison
+  could not make: a result the output has no room for is now the empty string
+  and what follows it still resolves, which is observable in the output.
+  A case is left out for three reasons rather than four.
+* `fixtures/nesting.json` and `fixtures/escaping.json` are rewritten around
+  the rule that a value is data: a placeholder a payload value spells is text
+  the output carries, and nothing unescapes a value. `fixtures/grammar.json`
+  pins where a placeholder derives — inside an option value and nowhere else
+  — and that a refused construct resumes the scan at the very next code point.
+* `fixtures/reports.json` pins the walk order of section 14.3: where neither
+  of two reporting placeholders holds the other, the one the message writes
+  first reports first, and where one holds the other, the inner reports while
+  the outer's value is being read.
+* `fixtures/cst.json` states no `name` on an `option-value`: a value answers
+  to nobody, so it carries the subtree the message spells and no string to
+  compare. The runner compares a name on `key`, `modifier` and `option-key`.
+
 ## 1.1.0
 
 Two things a set written in one language could not give an implementation in

@@ -12,13 +12,13 @@ const command = join(root, 'bin', 'conformance.js');
 
 const ADAPTER = `
 const resolve = ({ message, payload }) => ({ output: String(message).replace(/\\{\\{(\\w+)\\}\\}/g, (_, key) => payload[key]), reports: [] });
-export const adapter = { levels: ['core'], limits: { passes: 10, output: 100000, conversion: 100000 }, resolve };
+export const adapter = { levels: ['core'], limits: { output: 100000, read: 100000, conversion: 100000, nesting: 8 }, resolve };
 `;
 
 const DEFAULT_EXPORT = `${ADAPTER}\nexport default adapter;\nexport { adapter as named };`;
 
 const fixture = (output: string, level: ResolutionFixtureFile['level'] = 'core'): ResolutionFixtureFile => ({
-  format: 'curly-message-1',
+  format: 'curly-message-2',
   level,
   section: '9',
   cases: [{ id: 'cli/case', description: 'Pins the command.', message: 'Hi {{v}}', payload: { v: 'x' }, expected: { output } }],
@@ -74,9 +74,7 @@ describe('the command', () => {
     const { status, stdout } = conformance(directory, './adapter.mjs');
     const [, passed, failed, skipped] = /^(\d+) passed, (\d+) failed, (\d+) skipped/.exec(stdout.trimEnd().split('\n').at(-1) ?? '') ?? [];
     const shipped = fixtures().reduce((count, { file }) => count + file.cases.length, 0);
-    const left = fixtures().reduce((count, { file }) => count + (file.kind === 'tree'
-      ? file.cases.length
-      : file.cases.filter((c) => file.level !== 'core' || ('generate' in c && c.generate === 'output-over-limit-stops')).length), 0);
+    const left = fixtures().reduce((count, { file }) => count + (file.kind === 'tree' || file.level !== 'core' ? file.cases.length : 0), 0);
 
     expect([0, 1]).toContain(status);
     expect(Number(passed) + Number(failed) + Number(skipped)).toBe(shipped);

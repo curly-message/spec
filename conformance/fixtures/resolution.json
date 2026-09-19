@@ -1,5 +1,5 @@
 {
-  "format": "curly-message-1",
+  "format": "curly-message-2",
   "level": "core",
   "section": "9",
   "cases": [
@@ -235,8 +235,8 @@
       }
     },
     {
-      "id": "resolution/json-placeholder-next-pass",
-      "description": "A placeholder a serialized value carries is found and resolved on the following pass.",
+      "id": "resolution/json-placeholder-is-data",
+      "description": "A serialization is data like any other value, so a placeholder it carries is not resolved.",
       "section": "9.2",
       "message": "{{v}}",
       "payload": {
@@ -246,7 +246,7 @@
         "n": "N"
       },
       "expected": {
-        "output": "{\"a\":\"N\"}"
+        "output": "{\"a\":\"{{n}}\"}"
       }
     },
     {
@@ -265,9 +265,9 @@
       "id": "resolution/key-non-ascii",
       "description": "A key may be non-ASCII text and is matched by code-point equality.",
       "section": "9.2",
-      "message": "{{jm\u00e9no}}",
+      "message": "{{jméno}}",
       "payload": {
-        "jm\u00e9no": "Ann"
+        "jméno": "Ann"
       },
       "expected": {
         "output": "Ann"
@@ -277,9 +277,9 @@
       "id": "resolution/key-not-normalized",
       "description": "Matching is by code point and not by normalization, so a decomposed spelling names no entry the precomposed one does.",
       "section": "9.2",
-      "message": "{{e\u0301; default:D}}",
+      "message": "{{é; default:D}}",
       "payload": {
-        "\u00e9": "x"
+        "é": "x"
       },
       "expected": {
         "output": "D"

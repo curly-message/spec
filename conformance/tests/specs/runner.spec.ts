@@ -6,9 +6,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { behaviours, check, fixtures, load, plan, run, summarize, type Adapter, type Case, type ConcreteCase, type Fixture, type Level, type Resolved } from '../../src';
 import { format } from '../../src/cases';
 
-const LIMITS = { passes: 10, output: 100000, conversion: 100000 };
+const LIMITS = { output: 100000, read: 100000, conversion: 100000, nesting: 8 };
 
-const file = (level: Level, cases: Case[], section = '9'): Fixture => ({ name: `${level}.json`, file: { format: 'curly-message-1', level, section, cases } });
+const file = (level: Level, cases: Case[], section = '9'): Fixture => ({ name: `${level}.json`, file: { format: 'curly-message-2', level, section, cases } });
 
 const concrete = (id: string, over: Partial<ConcreteCase> = {}): ConcreteCase => ({ id, description: `Pins ${id}.`, message: '{{v}}', payload: { v: 'x' }, expected: { output: 'x' }, ...over });
 
@@ -41,10 +41,10 @@ describe('plan', () => {
     const shaped = (over: object) => ({ ...adapter(echo), ...over });
 
     expect(() => plan(shaped({ levels: undefined }))).toThrow('The adapter must list the levels it claims.');
-    expect(() => plan(shaped({ limits: undefined }))).toThrow('The adapter must declare its passes limit as a positive integer.');
-    expect(() => plan(shaped({ limits: { passes: 10, output: 100000 } }))).toThrow('The adapter must declare its conversion limit as a positive integer.');
-    expect(() => plan(shaped({ limits: { passes: 2.5, output: 100000, conversion: 100000 } }))).toThrow('The adapter must declare its passes limit as a positive integer.');
-    expect(() => plan(shaped({ limits: { passes: 10, output: 0, conversion: 100000 } }))).toThrow('The adapter must declare its output limit as a positive integer.');
+    expect(() => plan(shaped({ limits: undefined }))).toThrow('The adapter must declare its output limit as a positive integer.');
+    expect(() => plan(shaped({ limits: { ...LIMITS, nesting: undefined } }))).toThrow('The adapter must declare its nesting limit as a positive integer.');
+    expect(() => plan(shaped({ limits: { ...LIMITS, read: 2.5 } }))).toThrow('The adapter must declare its read limit as a positive integer.');
+    expect(() => plan(shaped({ limits: { ...LIMITS, conversion: 0 } }))).toThrow('The adapter must declare its conversion limit as a positive integer.');
   });
 
   it('leaves out a case whose request reads a property the adapter documented it cannot express', () => {
@@ -73,11 +73,11 @@ describe('plan', () => {
     const targeting = (format: string) => {
       const [{ name, file: contents }] = [file('core', [concrete('a/one')])];
 
-      return [{ name, file: { ...contents, format: format as 'curly-message-1' } }];
+      return [{ name, file: { ...contents, format: format as 'curly-message-2' } }];
     };
 
-    expect(() => plan(adapter(echo), { fixtures: targeting('curly-message-2') })).toThrow('The fixture file core.json targets the format "curly-message-2"; this set reads curly-message-1.');
-    expect(() => plan(adapter(echo), { fixtures: targeting('curly-message-1') })).not.toThrow();
+    expect(() => plan(adapter(echo), { fixtures: targeting('curly-message-1') })).toThrow('The fixture file core.json targets the format "curly-message-1"; this set reads curly-message-2.');
+    expect(() => plan(adapter(echo), { fixtures: targeting('curly-message-2') })).not.toThrow();
   });
 
   it('rejects a generated case naming no construction, the prototype\'s names included', () => {
@@ -108,15 +108,6 @@ describe('plan', () => {
 
     expect(cases.map(({ id }) => id)).toEqual(['a/one']);
     expect(skipped.map(({ id, reason }) => ({ id, reason }))).toEqual([{ id: 'b/one', reason: 'The intl level is not among the levels being run.' }]);
-  });
-
-  it('plans output-over-limit-stops only where the extensions level runs, whatever the file level', () => {
-    const stops: Case = { id: 'limits/stops', description: 'Pins the stop.', generate: 'output-over-limit-stops' };
-    const set = [file('core', [stops], '13')];
-
-    expect(plan(adapter(echo), { fixtures: set }).skipped.map(({ id, reason }) => ({ id, reason }))).toEqual([{ id: 'limits/stops', reason: 'The case registers a host-defined modifier, which needs the extensions level.' }]);
-    expect(plan(adapter(echo, ['core', 'extensions']), { levels: ['core'], fixtures: set }).skipped.map(({ id }) => id)).toEqual(['limits/stops']);
-    expect(plan(adapter(echo, ['core', 'extensions']), { fixtures: set }).cases.map(({ id }) => id)).toEqual(['limits/stops']);
   });
 
   it('hands the adapter the decoded inputs and the behaviours the case names', () => {

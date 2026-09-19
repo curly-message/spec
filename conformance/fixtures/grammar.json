@@ -1,5 +1,5 @@
 {
-  "format": "curly-message-1",
+  "format": "curly-message-2",
   "level": "core",
   "section": "6",
   "cases": [
@@ -38,196 +38,196 @@
       "id": "grammar/line-terminator-inside-key-lf",
       "description": "A construct whose key holds a line feed is literal text.",
       "section": "A.10",
-      "message": "{{v\u000ax}}",
+      "message": "{{v\nx}}",
       "payload": {
-        "v\u000ax": "HIT"
+        "v\nx": "HIT"
       },
       "expected": {
-        "output": "{{v\u000ax}}"
+        "output": "{{v\nx}}"
       }
     },
     {
       "id": "grammar/line-terminator-beside-resolved-lf",
       "description": "Whether a construct is a placeholder does not depend on what another resolved to: one spanning a line feed stays literal beside a resolved one.",
       "section": "A.10",
-      "message": "{{a}} {{\u000av\u000a}}",
+      "message": "{{a}} {{\nv\n}}",
       "payload": {
         "a": "A",
         "v": "HIT"
       },
       "expected": {
-        "output": "A {{\u000av\u000a}}"
+        "output": "A {{\nv\n}}"
       }
     },
     {
       "id": "grammar/line-terminator-in-value-lf",
       "description": "A construct whose option value holds a line feed is literal text.",
       "section": "6",
-      "message": "{{v; a:\u000ab; default:D}}",
+      "message": "{{v; a:\nb; default:D}}",
       "payload": {
         "v": "HIT"
       },
       "expected": {
-        "output": "{{v; a:\u000ab; default:D}}"
+        "output": "{{v; a:\nb; default:D}}"
       }
     },
     {
       "id": "grammar/line-terminator-escaped-lf",
       "description": "Escaping a line feed does not admit it into a placeholder: the construct is literal text, and the escape is removed from it.",
       "section": "6",
-      "message": "{{v\\\u000ax}}",
+      "message": "{{v\\\nx}}",
       "payload": {
-        "v\u000ax": "HIT"
+        "v\nx": "HIT"
       },
       "expected": {
-        "output": "{{v\u000ax}}"
+        "output": "{{v\nx}}"
       }
     },
     {
       "id": "grammar/line-terminator-inside-key-cr",
       "description": "A construct whose key holds a carriage return is literal text.",
       "section": "A.10",
-      "message": "{{v\u000dx}}",
+      "message": "{{v\rx}}",
       "payload": {
-        "v\u000dx": "HIT"
+        "v\rx": "HIT"
       },
       "expected": {
-        "output": "{{v\u000dx}}"
+        "output": "{{v\rx}}"
       }
     },
     {
       "id": "grammar/line-terminator-beside-resolved-cr",
       "description": "Whether a construct is a placeholder does not depend on what another resolved to: one spanning a carriage return stays literal beside a resolved one.",
       "section": "6",
-      "message": "{{a}} {{\u000dv\u000d}}",
+      "message": "{{a}} {{\rv\r}}",
       "payload": {
         "a": "A",
         "v": "HIT"
       },
       "expected": {
-        "output": "A {{\u000dv\u000d}}"
+        "output": "A {{\rv\r}}"
       }
     },
     {
       "id": "grammar/line-terminator-in-value-cr",
       "description": "A construct whose option value holds a carriage return is literal text.",
       "section": "6",
-      "message": "{{v; a:\u000db; default:D}}",
+      "message": "{{v; a:\rb; default:D}}",
       "payload": {
         "v": "HIT"
       },
       "expected": {
-        "output": "{{v; a:\u000db; default:D}}"
+        "output": "{{v; a:\rb; default:D}}"
       }
     },
     {
       "id": "grammar/line-terminator-escaped-cr",
       "description": "Escaping a carriage return does not admit it into a placeholder: the construct is literal text, and the escape is removed from it.",
       "section": "6",
-      "message": "{{v\\\u000dx}}",
+      "message": "{{v\\\rx}}",
       "payload": {
-        "v\u000dx": "HIT"
+        "v\rx": "HIT"
       },
       "expected": {
-        "output": "{{v\u000dx}}"
+        "output": "{{v\rx}}"
       }
     },
     {
       "id": "grammar/line-terminator-inside-key-ls",
       "description": "A construct whose key holds a line separator (U+2028) is literal text.",
       "section": "A.10",
-      "message": "{{v\u2028x}}",
+      "message": "{{v x}}",
       "payload": {
-        "v\u2028x": "HIT"
+        "v x": "HIT"
       },
       "expected": {
-        "output": "{{v\u2028x}}"
+        "output": "{{v x}}"
       }
     },
     {
       "id": "grammar/line-terminator-beside-resolved-ls",
       "description": "Whether a construct is a placeholder does not depend on what another resolved to: one spanning a line separator (U+2028) stays literal beside a resolved one.",
       "section": "6",
-      "message": "{{a}} {{\u2028v\u2028}}",
+      "message": "{{a}} {{ v }}",
       "payload": {
         "a": "A",
         "v": "HIT"
       },
       "expected": {
-        "output": "A {{\u2028v\u2028}}"
+        "output": "A {{ v }}"
       }
     },
     {
       "id": "grammar/line-terminator-in-value-ls",
       "description": "A construct whose option value holds a line separator (U+2028) is literal text.",
       "section": "6",
-      "message": "{{v; a:\u2028b; default:D}}",
+      "message": "{{v; a: b; default:D}}",
       "payload": {
         "v": "HIT"
       },
       "expected": {
-        "output": "{{v; a:\u2028b; default:D}}"
+        "output": "{{v; a: b; default:D}}"
       }
     },
     {
       "id": "grammar/line-terminator-escaped-ls",
       "description": "Escaping a line separator (U+2028) does not admit it into a placeholder: the construct is literal text, and the escape is removed from it.",
       "section": "6",
-      "message": "{{v\\\u2028x}}",
+      "message": "{{v\\ x}}",
       "payload": {
-        "v\u2028x": "HIT"
+        "v x": "HIT"
       },
       "expected": {
-        "output": "{{v\u2028x}}"
+        "output": "{{v x}}"
       }
     },
     {
       "id": "grammar/line-terminator-inside-key-ps",
       "description": "A construct whose key holds a paragraph separator (U+2029) is literal text.",
       "section": "A.10",
-      "message": "{{v\u2029x}}",
+      "message": "{{v x}}",
       "payload": {
-        "v\u2029x": "HIT"
+        "v x": "HIT"
       },
       "expected": {
-        "output": "{{v\u2029x}}"
+        "output": "{{v x}}"
       }
     },
     {
       "id": "grammar/line-terminator-beside-resolved-ps",
       "description": "Whether a construct is a placeholder does not depend on what another resolved to: one spanning a paragraph separator (U+2029) stays literal beside a resolved one.",
       "section": "6",
-      "message": "{{a}} {{\u2029v\u2029}}",
+      "message": "{{a}} {{ v }}",
       "payload": {
         "a": "A",
         "v": "HIT"
       },
       "expected": {
-        "output": "A {{\u2029v\u2029}}"
+        "output": "A {{ v }}"
       }
     },
     {
       "id": "grammar/line-terminator-in-value-ps",
       "description": "A construct whose option value holds a paragraph separator (U+2029) is literal text.",
       "section": "6",
-      "message": "{{v; a:\u2029b; default:D}}",
+      "message": "{{v; a: b; default:D}}",
       "payload": {
         "v": "HIT"
       },
       "expected": {
-        "output": "{{v; a:\u2029b; default:D}}"
+        "output": "{{v; a: b; default:D}}"
       }
     },
     {
       "id": "grammar/line-terminator-escaped-ps",
       "description": "Escaping a paragraph separator (U+2029) does not admit it into a placeholder: the construct is literal text, and the escape is removed from it.",
       "section": "6",
-      "message": "{{v\\\u2029x}}",
+      "message": "{{v\\ x}}",
       "payload": {
-        "v\u2029x": "HIT"
+        "v x": "HIT"
       },
       "expected": {
-        "output": "{{v\u2029x}}"
+        "output": "{{v x}}"
       }
     },
     {
@@ -259,9 +259,9 @@
       "id": "grammar/key-any-character",
       "description": "A key may hold spaces, dots, digits and non-ASCII text.",
       "section": "6",
-      "message": "{{a b.c1 \u00fc}}",
+      "message": "{{a b.c1 ü}}",
       "payload": {
-        "a b.c1 \u00fc": "HIT"
+        "a b.c1 ü": "HIT"
       },
       "expected": {
         "output": "HIT"
@@ -271,9 +271,9 @@
       "id": "grammar/key-astral-code-point",
       "description": "The grammar is defined over code points, so a key may be a character outside the Basic Multilingual Plane.",
       "section": "6",
-      "message": "{{\ud83d\ude00; default:D}}",
+      "message": "{{😀; default:D}}",
       "payload": {
-        "\ud83d\ude00": "HIT"
+        "😀": "HIT"
       },
       "expected": {
         "output": "HIT"
@@ -283,9 +283,9 @@
       "id": "grammar/key-exact-code-points",
       "description": "Keys are compared by exact code-point equality, so a decomposed spelling does not match a precomposed key.",
       "section": "6",
-      "message": "{{caf\u00e9; default:D}}",
+      "message": "{{café; default:D}}",
       "payload": {
-        "cafe\u0301": "X"
+        "café": "X"
       },
       "expected": {
         "output": "D"
@@ -745,8 +745,8 @@
       }
     },
     {
-      "id": "grammar/inline-default-encloses",
-      "description": "An inline default written around a placeholder resolves through the inner one first, and the enclosing construct derives on the next pass.",
+      "id": "grammar/inline-default-holds-placeholder",
+      "description": "An inline default is the message's own text, so a placeholder written in it derives and resolves there.",
       "section": "12",
       "message": "{{v; default:{{w}}}}",
       "payload": {
@@ -757,8 +757,8 @@
       }
     },
     {
-      "id": "grammar/option-value-encloses",
-      "description": "An option value written around a placeholder resolves through the inner one first, and the enclosing construct derives on the next pass.",
+      "id": "grammar/option-value-holds-placeholder",
+      "description": "An option value is the message's own text, so a placeholder written in it derives and resolves where the modifier selects it.",
       "section": "12",
       "message": "{{v; a:{{w}}}}",
       "payload": {
@@ -771,7 +771,7 @@
     },
     {
       "id": "grammar/option-key-encloses",
-      "description": "An option key written around a placeholder resolves through the inner one first, and the enclosing construct derives on the next pass.",
+      "description": "A placeholder derives in an option value and nowhere else, so a construct whose option key writes one does not derive: its braces are literal and the placeholder the key holds resolves on its own.",
       "section": "12",
       "message": "{{v; {{k}}:X; default:D}}",
       "payload": {
@@ -779,12 +779,12 @@
         "k": "a"
       },
       "expected": {
-        "output": "X"
+        "output": "{{v; a:X; default:D}}"
       }
     },
     {
       "id": "grammar/modifier-name-encloses",
-      "description": "A modifier name written around a placeholder resolves through the inner one first, and the enclosing construct derives on the next pass.",
+      "description": "A construct whose modifier name writes a placeholder does not derive either: its braces are literal and the placeholder the name holds resolves on its own.",
       "section": "12",
       "message": "{{v:{{m}}; a:A; default:D}}",
       "payload": {
@@ -792,12 +792,12 @@
         "m": "eq"
       },
       "expected": {
-        "output": "A"
+        "output": "{{v:eq; a:A; default:D}}"
       }
     },
     {
-      "id": "grammar/enclosing-derives-on-later-pass",
-      "description": "A construct enclosing another is not a placeholder; the inner one resolves first, and the enclosing one is scanned again over what it resolved to.",
+      "id": "grammar/key-encloses",
+      "description": "A construct whose key writes a placeholder does not derive, and the scan resumes at the very next code point, where the inner placeholder does; the key the two would have spelled is never read.",
       "section": "12",
       "message": "{{a{{b}}c}}",
       "payload": {
@@ -805,12 +805,12 @@
         "axc": "HIT"
       },
       "expected": {
-        "output": "HIT"
+        "output": "{{axc}}"
       }
     },
     {
-      "id": "grammar/inner-value-closes-early",
-      "description": "A value carrying a closing pair closes the enclosing construct early on the next pass.",
+      "id": "grammar/inner-result-closes-nothing",
+      "description": "What a placeholder resolves to is data, so a closing pair it carries closes no construct and the key it would have completed is never read.",
       "section": "12",
       "message": "{{a{{b}}c}}",
       "payload": {
@@ -818,12 +818,12 @@
         "ax": "HIT"
       },
       "expected": {
-        "output": "HITc}}"
+        "output": "{{ax}}c}}"
       }
     },
     {
-      "id": "grammar/inner-value-opens-pair",
-      "description": "A value carrying an opening pair keeps the enclosing construct from deriving at all.",
+      "id": "grammar/inner-result-opens-nothing",
+      "description": "An opening pair a placeholder's result carries opens no construct, so the key it would have named is never read.",
       "section": "12",
       "message": "{{a{{b}}c}}",
       "payload": {
@@ -831,12 +831,25 @@
         "c": "C"
       },
       "expected": {
-        "output": "{{aC"
+        "output": "{{a{{c}}"
+      }
+    },
+    {
+      "id": "grammar/value-opens-what-never-closes",
+      "description": "A construct whose value opens a placeholder that never closes does not derive at all, so its braces are literal and the placeholder inside it is the one that resolves.",
+      "section": "12",
+      "message": "{{a; x:{{b}}",
+      "payload": {
+        "a": "x",
+        "b": "B"
+      },
+      "expected": {
+        "output": "{{a; x:B"
       }
     },
     {
       "id": "grammar/value-carrying-opening-pair",
-      "description": "A value carrying an opening pair alone leaves nothing to derive on the following pass.",
+      "description": "An opening pair a value carries is data and derives nothing, so it reaches the output as it stands.",
       "section": "12",
       "message": "[{{v}}]",
       "payload": {
@@ -848,7 +861,7 @@
     },
     {
       "id": "grammar/value-carrying-closing-pair",
-      "description": "A value carrying a closing pair alone leaves nothing to derive on the following pass.",
+      "description": "A closing pair a value carries is data and derives nothing, so it reaches the output as it stands.",
       "section": "12",
       "message": "[{{v}}]",
       "payload": {
@@ -860,15 +873,15 @@
     },
     {
       "id": "grammar/resolved-text-is-ordinary",
-      "description": "What a placeholder resolved to is ordinary text to the next pass, so a line terminator it carried keeps the enclosing construct literal.",
+      "description": "What a placeholder resolved to is never read as message text, so a construct is not derived over it whatever it carries.",
       "section": "12",
       "message": "{{a{{b}}c}}",
       "payload": {
-        "b": "\u000a",
-        "a\u000ac": "LEAKED"
+        "b": "\n",
+        "a\nc": "LEAKED"
       },
       "expected": {
-        "output": "{{a\u000ac}}"
+        "output": "{{a\nc}}"
       }
     }
   ]

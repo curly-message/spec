@@ -21,18 +21,14 @@ export const load = (directory: string): Fixture[] => readdirSync(directory)
 /** The set shipped with this package. */
 export const fixtures = () => load(fileURLToPath(new URL('../fixtures/', import.meta.url)));
 
-// The one construction that registers a modifier, so it runs at the
-// Extensions level whatever the level of the file it is written in.
-const REGISTERING = 'output-over-limit-stops';
-
 const LEVELS: readonly Level[] = ['core', 'intl', 'extensions'];
 
-const LIMITS = ['passes', 'output', 'conversion'] as const;
+const LIMITS = ['output', 'read', 'conversion', 'nesting'] as const;
 
 const APIS: readonly FormatApi[] = ['NumberFormat', 'DateTimeFormat', 'RelativeTimeFormat'];
 
 // The versioned identifier of the format this set reads.
-const FORMAT = 'curly-message-1';
+const FORMAT = 'curly-message-2';
 
 // The third statement an adapter makes about itself (section 11.2), held to
 // the same vocabulary as the other two before anything runs.
@@ -124,8 +120,6 @@ const reason = (c: Case, level: Level, adapter: Adapter, options: Options) => {
   const excluded = exclusion(level, adapter, options);
 
   if (excluded) return excluded;
-
-  if ('generate' in c && c.generate === REGISTERING && exclusion('extensions', adapter, options)) return 'The case registers a host-defined modifier, which needs the extensions level.';
 
   return unexpressible(c, adapter);
 };
