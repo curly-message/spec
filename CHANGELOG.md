@@ -14,6 +14,16 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
+### 2.1.0 (Unreleased)
+
+Section 4.1 asks an implementation to offer a way to turn wrapper recognition
+off for a resolution, and section 14.1's rule about untrusted data now names
+it. The rule was already there — a caller that passes untrusted data must not
+pass it where a wrapper is recognized — but the document never said there was
+anywhere else to pass it, so a caller that had to obey had nothing to obey
+with. Nothing a message resolves to changes: with recognition on, which is
+where a caller that says nothing stands, a payload reads exactly as it did.
+
 ## 2.0.0
 
 **Version 2 of the format. It is not compatible with version 1.**
