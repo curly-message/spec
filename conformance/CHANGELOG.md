@@ -1,6 +1,6 @@
 # Changelog
 
-### 3.0.0 (Unreleased)
+## 3.0.0
 
 The set targets `curly-message-2`. Version 2 resolves a message in one walk
 over its own text, so every case that turned on a payload value being read as

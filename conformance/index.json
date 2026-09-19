@@ -1,6 +1,6 @@
 {
   "format": "curly-message-2",
-  "version": "1.1.0",
+  "version": "3.0.0",
   "files": [
     {
       "path": "fixtures/comparisons.json",
