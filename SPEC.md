@@ -1,16 +1,16 @@
 # Curly Message Format
 
-**Version 2 — Stable**
+**Version 3 — Stable**
 
 | | |
 | --- | --- |
 | Format name | Curly Message Format |
 | Machine-readable identifier | `curly-message` |
-| Versioned identifier | `curly-message-2` |
+| Versioned identifier | `curly-message-3` |
 | Status | Stable |
 
-> **Version 2 is stable.** The body of this document is normative: it states
-> what a conforming implementation must do. Within `curly-message-2`, what a
+> **Version 3 is stable.** The body of this document is normative: it states
+> what a conforming implementation must do. Within `curly-message-3`, what a
 > message resolves to is settled — a message written against this document
 > resolves the same way against every later revision of it, and an amendment
 > that would change that belongs to a later version of the format rather than
@@ -21,15 +21,27 @@
 > earlier revision defined, a conformance level an implementation opts into, and
 > wording that states more precisely what the body already required.
 >
-> **Version 2 is not compatible with version 1**, and the one sentence that says
-> why is section 14.1's: *message text is syntax, and payload text is data.* In
-> version 1 a resolution was repeated passes of substitution over the whole
-> current text, so whatever a payload value contributed was read back as message
-> source on the next pass — a value could name a payload entry the message never
-> named, add an option to a construct the message wrote, or close that construct
-> early. Version 2 resolves a message in one walk and reads nothing it has
-> emitted. Placeholders nest where the message spells them nesting, and nowhere
-> else. Appendix C lists every change and what each costs a message that was
+> **Version 3 is not compatible with version 2**, and the one sentence that says
+> why is section 4's: *a plain array is read as narrowly as a plain object.* In
+> version 2 the narrow reading was written for keyed data alone, so a value of
+> any array type serialized as JSON while a value of a keyed type an application
+> declared converted as a string. Version 3 holds both shapes to one test, so a
+> sequence type an application derived — and an array built in another realm —
+> converts as a string, as its keyed counterpart already did. Appendix D lists
+> what that costs a payload written against version 2. Nothing else changes:
+> the walk, the grammar, the escaping, the limits and the tree are version 2's
+> unaltered, and a message written against version 2 resolves the same way here.
+>
+> **Version 2 was not compatible with version 1**, and the one sentence that
+> said why is section 14.1's: *message text is syntax, and payload text is
+> data.* In version 1 a resolution was repeated passes of substitution over the
+> whole current text, so whatever a payload value contributed was read back as
+> message source on the next pass — a value could name a payload entry the
+> message never named, add an option to a construct the message wrote, or close
+> that construct early. Version 2 resolves a message in one walk and reads
+> nothing it has emitted. Placeholders nest where the message spells them
+> nesting, and nowhere else. That walk is this version's too, and Appendix C
+> lists every change version 2 made and what each cost a message that was
 > written against version 1.
 >
 > Appendix A records the divergences found while this document was written
@@ -157,24 +169,28 @@ Everything the format carries is text. A payload value MAY be of any host type,
 but it reaches a modifier, an option comparison and the output as text, never at
 the type it was authored with.
 
-A value that is a plain object or an array MUST be converted using the host's
-JSON serialization, so that a structured value survives into a host-defined
-modifier that reads it back. Every other value MUST be converted using the
-host's ordinary string conversion, so a date, a pattern, a set or a class
-instance keeps whatever text it describes itself as.
+A value that is a plain object or a plain array MUST be converted using the
+host's JSON serialization, so that a structured value survives into a
+host-defined modifier that reads it back. Every other value MUST be converted
+using the host's ordinary string conversion, so a date, a pattern, a set or a
+class instance keeps whatever text it describes itself as.
 
-**Plain object** MUST be read narrowly, and by the value's own type: a value of
-the type a host offers for arbitrary keyed data, carrying no meaning beyond the
-entries it holds. A type an application declared for data of its own — a class,
-a struct, a record — is not one, and neither is a type the host offers for
-something more specific than data, so a date, a pattern and a set convert as
-strings however the host would serialize them. A host that offers no such type
-has no plain objects, and every value it carries converts as a string.
+**Plain object** and **plain array** MUST both be read narrowly, and by the
+value's own type: a value of the type a host offers for arbitrary keyed data,
+or of the type it offers for an arbitrary ordered sequence, carrying no meaning
+beyond the entries it holds. A type an application declared for data of its own
+— a class, a struct, a record, a sequence derived from the host's own — is not
+one, and neither is a type the host offers for something more specific than
+data, so a date, a pattern and a set convert as strings however the host would
+serialize them. Where a host offers no such type it holds no value of that
+shape, and what one would have carried converts as a string like everything
+else.
 
 In ECMAScript that reading is the prototype: an object whose prototype is the
-running realm's `Object.prototype`, or null. An object built in another realm
-has a prototype of its own by that test, whatever it was authored as, and
-converts like every other value.
+running realm's `Object.prototype`, or null, and an array whose prototype is
+the running realm's `Array.prototype`. A value built in another realm has a
+prototype of its own by that test, whatever it was authored as, and so does one
+of a type an application derived; both convert like every other value.
 
 The narrow reading is what keeps a value authored as a date instance formattable
 by `date` (section 11.2), and section 4.1 recognizes a wrapper by the same
@@ -578,10 +594,10 @@ The key is matched whole, by exact code-point equality after unescaping
 (section 6, note 2). It is a name and not a path: `{{user.name}}` names the
 payload key `user.name`, and a payload carrying a `user` entry with a `name`
 inside it owns no entry under that name, so the placeholder takes the fallback
-chain. No placeholder reaches inside a value either — one that is a plain object
-or an array resolves whole, as the text section 4 converts it to. That text is
-data: it is emitted as it stands, so a `{{` it carries opens no placeholder and
-a backslash it carries is a backslash (sections 5, 7).
+chain. No placeholder reaches inside a value either — one that is a plain
+object or a plain array resolves whole, as the text section 4 converts it to.
+That text is data: it is emitted as it stands, so a `{{` it carries opens no
+placeholder and a backslash it carries is a backslash (sections 5, 7).
 
 The lookup MUST consider only the payload's **own** entries. Members inherited
 from a prototype, class or base mapping MUST NOT resolve. In a host where
@@ -2143,6 +2159,56 @@ The vocabulary is eight codes where it was seven. An implementation that emits
 `placeholder` children, and it no longer carries `name` — with a placeholder
 inside it there is no fixed text for that field to hold. The name kinds are
 `key`, `modifier` and `option-key`.
+
+## Appendix D: what changed from version 2
+
+Version 2 read **plain object** narrowly and by the value's own type, so a
+value of a keyed type an application declared converted as a string rather than
+as JSON. It said nothing of the kind about an array: a value of any array type
+serialized. Version 3 holds both shapes to one test (section 4).
+
+### What changes
+
+| A payload value of | Version 2 | Version 3 |
+| --- | --- | --- |
+| the host's own sequence type | serializes | serializes |
+| a sequence type derived from it | serializes | converts as a string |
+| a sequence built in another realm | serializes | converts as a string |
+| the host's own keyed type | serializes | serializes |
+| a class, a struct, a record | converts as a string | converts as a string |
+
+Nothing else changes. The walk of section 5, the grammar of section 6, the
+escaping of section 7, the limits of section 13 and the tree `CST.md`
+describes are version 2's unaltered, and a message written against version 2
+resolves the same way here. Appendix C, which records what version 2 changed,
+stands as it was written.
+
+### What it costs
+
+A payload that passes a value of a derived sequence type where a modifier reads
+its JSON back gets the host's ordinary string conversion of it instead: in
+ECMAScript a value of a class extending `Array` holding `a` and `b` converts to
+`a,b` where it serialized to `["a","b"]`. A caller that wants the serialization
+passes the host's own type — copying the entries into one is enough — and a
+value that already is one is untouched.
+
+An option comparison over such a value compares that same text (section 4), so
+an option key written against the serialization no longer matches it.
+
+Nothing a message spells changes, so no message needs migrating and no
+extraction, tree or report reads differently. The cost falls on a payload, and
+only on one carrying a value of a type it derived or built elsewhere.
+
+### Why
+
+A narrow reading exists so that a type carrying meaning of its own keeps the
+text it describes itself as, rather than being flattened into the entries it
+happens to hold (section 4). A type an application derived from the host's
+sequence carries such meaning as surely as a class does, and a value built in
+another realm was authored against a document this one cannot see. Version 2
+guarded keyed data against both and left sequences unguarded; the reading is
+one reading now, and section 4.1 recognizes a wrapper by the keyed half of it
+as before.
 
 ## License
 
