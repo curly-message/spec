@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (minor)
+### 1.1.0 (Unreleased)
 
 Two things a set written in one language could not give an implementation in
 another: the request a locale-dependent case pins, and a way to tell whether the

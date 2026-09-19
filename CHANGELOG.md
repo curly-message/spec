@@ -13,7 +13,7 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
-## Unreleased (minor)
+### 1.1.0 (Unreleased)
 
 Nothing a message resolves to changes. A companion document is added, and what
 otherwise changes is what a document written against one language left an
