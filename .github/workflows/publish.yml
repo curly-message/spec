@@ -71,11 +71,13 @@ jobs:
       # The changelog's pending section names the version it will be released
       # as, so a version is settled in the commit that writes the section
       # rather than in the dispatch. `patch`, `minor` and `major` cut that
-      # section under the `latest` dist-tag and must arrive at the version it
-      # names, which over an open prerelease line is the bump that drops the
-      # prerelease rather than the one that opened it (1.1.0-next.3 reaches
-      # 1.1.0 under `patch`). `next` publishes a prerelease of that version
-      # (1.1.0-next.0,
+      # section under the `latest` dist-tag, and the dispatch names the step
+      # the section is a step of: the version it names is the next one of that
+      # kind, or one further along the same field, because a version number
+      # spent on a release that was withdrawn cannot be published again. Over
+      # an open prerelease line the step is the one that drops the prerelease
+      # rather than the one that opened it (1.1.0-next.3 reaches 1.1.0 under
+      # `patch`). `next` publishes a prerelease of that version (1.1.0-next.0,
       # then .1) under the `next` dist-tag and leaves the section open, because
       # a prerelease has not released what the section names.
       - name: Bump the version
@@ -108,7 +110,26 @@ jobs:
           version=$(node -p "require('./package.json').version")
           section="### $declared (Unreleased)"
           if [ "$tag" = latest ]; then
-            [ "$version" = "$declared" ] || { echo "::error::$RELEASE over $before is $version, and CHANGELOG.md's pending section names $declared. Release what the section names, or rewrite its heading."; exit 1; }
+            case "$RELEASE" in major) field=1 ;; minor) field=2 ;; patch) field=3 ;; esac
+            # The declared version is that step or further along it: equal in
+            # every field before the one the step bumps, at or past the bump
+            # in that field, and zero in the fields after it.
+            part() { printf '%s' "$1" | cut -d. -f"$2" | cut -d- -f1; }
+            for index in 1 2 3; do
+              want=$(part "$version" "$index")
+              got=$(part "$declared" "$index")
+              fits=yes
+              if [ "$index" -lt "$field" ]; then
+                [ "$got" = "$want" ] || fits=no
+              elif [ "$index" = "$field" ]; then
+                [ "$got" -ge "$want" ] || fits=no
+              else
+                [ "$got" = 0 ] || fits=no
+              fi
+              [ "$fits" = yes ] || { echo "::error::$RELEASE over $before reaches $version, and CHANGELOG.md's pending section names $declared, which is not that step or further along it. Release a version the step reaches, or rewrite the heading."; exit 1; }
+            done
+            npm version "$declared" --allow-same-version --no-git-tag-version
+            version=$declared
             sed -i -E "s/^$heading$/## \1/" CHANGELOG.md
             section="## $version"
           fi
