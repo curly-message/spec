@@ -43,7 +43,7 @@ const PAGES = [
     tab: 'Specification',
     toc: true,
     description:
-      'The normative specification of version 1 of the Curly Message Format: grammar, escaping, whitespace, resolution order, modifiers, the fallback chain and error behavior.',
+      'The normative specification of version 2 of the Curly Message Format: grammar, escaping, whitespace, resolution order, modifiers, nesting, the fallback chain and error behavior.',
   },
   {
     from: 'CST.md',
@@ -273,7 +273,7 @@ ${body}
 </article>
 </main>
 <footer>
-  <p class="status"><b>Version 1</b> · stable · identifier <code>curly-message-1</code></p>
+  <p class="status"><b>Version 2</b> · stable · identifier <code>curly-message-2</code></p>
   <ul class="elsewhere">
     <li><a href="${REPO}">Specification repository</a></li>
     <li><a href="${PARSERS}">Implementations</a></li>
