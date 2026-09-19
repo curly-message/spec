@@ -18,7 +18,7 @@ export const adapter = { levels: ['core'], limits: { output: 100000, read: 10000
 const DEFAULT_EXPORT = `${ADAPTER}\nexport default adapter;\nexport { adapter as named };`;
 
 const fixture = (output: string, level: ResolutionFixtureFile['level'] = 'core'): ResolutionFixtureFile => ({
-  format: 'curly-message-2',
+  format: 'curly-message-3',
   level,
   section: '9',
   cases: [{ id: 'cli/case', description: 'Pins the command.', message: 'Hi {{v}}', payload: { v: 'x' }, expected: { output } }],

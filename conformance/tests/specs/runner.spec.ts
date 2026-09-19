@@ -8,7 +8,7 @@ import { format } from '../../src/cases';
 
 const LIMITS = { output: 100000, read: 100000, conversion: 100000, nesting: 8 };
 
-const file = (level: Level, cases: Case[], section = '9'): Fixture => ({ name: `${level}.json`, file: { format: 'curly-message-2', level, section, cases } });
+const file = (level: Level, cases: Case[], section = '9'): Fixture => ({ name: `${level}.json`, file: { format: 'curly-message-3', level, section, cases } });
 
 const concrete = (id: string, over: Partial<ConcreteCase> = {}): ConcreteCase => ({ id, description: `Pins ${id}.`, message: '{{v}}', payload: { v: 'x' }, expected: { output: 'x' }, ...over });
 
@@ -73,11 +73,11 @@ describe('plan', () => {
     const targeting = (format: string) => {
       const [{ name, file: contents }] = [file('core', [concrete('a/one')])];
 
-      return [{ name, file: { ...contents, format: format as 'curly-message-2' } }];
+      return [{ name, file: { ...contents, format: format as 'curly-message-3' } }];
     };
 
-    expect(() => plan(adapter(echo), { fixtures: targeting('curly-message-1') })).toThrow('The fixture file core.json targets the format "curly-message-1"; this set reads curly-message-2.');
-    expect(() => plan(adapter(echo), { fixtures: targeting('curly-message-2') })).not.toThrow();
+    expect(() => plan(adapter(echo), { fixtures: targeting('curly-message-2') })).toThrow('The fixture file core.json targets the format "curly-message-2"; this set reads curly-message-3.');
+    expect(() => plan(adapter(echo), { fixtures: targeting('curly-message-3') })).not.toThrow();
   });
 
   it('rejects a generated case naming no construction, the prototype\'s names included', () => {

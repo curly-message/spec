@@ -31,7 +31,7 @@ offering one, and those cases are then left out.
 **Stable**, on npm as `@curly-message/conformance`. The set lives in the
 specification's repository because its fixtures are artifacts of the format,
 not of any one implementation, and every file states the format version it
-targets: this set targets `curly-message-2`. The set carries a version line of
+targets: this set targets `curly-message-3`. The set carries a version line of
 its own, because a case may be corrected without the format changing.
 
 ## The fixture files
@@ -375,6 +375,12 @@ to the host — how its numeric conversion reads a literal, which text its date
 parsing accepts, what a host type converts to — is not a case. Where the
 specification lets two conforming implementations differ, the set does not
 choose between them.
+
+The narrow reading of section 4 falls there as well. That a value of a type an
+application declared or derived converts as a string rather than as JSON is
+normative, but the string is the host's own, and a case that stated one would
+pin it on every other host. So the set pins the values that do serialize, and
+an implementation that reads section 4 too widely passes it.
 
 The reference implementation is what the set is checked against before it
 lands, and the set is what the reference is checked against in turn. Where

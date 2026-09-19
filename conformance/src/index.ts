@@ -28,7 +28,7 @@ const LIMITS = ['output', 'read', 'conversion', 'nesting'] as const;
 const APIS: readonly FormatApi[] = ['NumberFormat', 'DateTimeFormat', 'RelativeTimeFormat'];
 
 // The versioned identifier of the format this set reads.
-const FORMAT = 'curly-message-2';
+const FORMAT = 'curly-message-3';
 
 // The third statement an adapter makes about itself (section 11.2), held to
 // the same vocabulary as the other two before anything runs.

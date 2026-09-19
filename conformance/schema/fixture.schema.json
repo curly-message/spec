@@ -257,7 +257,7 @@
       "properties": {
         "format": {
           "description": "The versioned identifier of the format the file targets.",
-          "const": "curly-message-2"
+          "const": "curly-message-3"
         },
         "kind": {
           "description": "What the file pins. Omitted, it pins a resolution.",
@@ -293,7 +293,7 @@
       "properties": {
         "format": {
           "description": "The versioned identifier of the format the file targets.",
-          "const": "curly-message-2"
+          "const": "curly-message-3"
         },
         "kind": {
           "description": "What the file pins.",
