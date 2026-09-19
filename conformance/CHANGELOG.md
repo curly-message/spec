@@ -14,10 +14,10 @@ though no case changed.
   serialize. A case's inputs are JSON and its expectations are text, so neither
   value can be written down, and neither conversion has a text a case could
   state without pinning one host's string conversion on every other. The narrow
-  reading of a plain object, which version 2 introduced, is absent from the set
-  for the same reason. An implementation that passed the set against version 2
-  passes it against version 3, and the set does not measure what version 3
-  changed.
+  reading of a plain object, which the document has carried since revision
+  1.0.0, is absent from the set for the same reason. An implementation that
+  passed the set against version 2 passes it against version 3, and the set
+  does not measure what version 3 changed.
 * What the set still pins is the half that did not move: a value of the host's
   own sequence type serializes, its serialization is what reaches the output,
   and it is that text an option comparison sees.

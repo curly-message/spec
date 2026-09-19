@@ -30,7 +30,8 @@
 > converts as a string, as its keyed counterpart already did. Appendix D lists
 > what that costs a payload written against version 2. Nothing else changes:
 > the walk, the grammar, the escaping, the limits and the tree are version 2's
-> unaltered, and a message written against version 2 resolves the same way here.
+> unaltered, and nothing a message spells changes, so no message needs
+> migrating.
 >
 > **Version 2 was not compatible with version 1**, and the one sentence that
 > said why is section 14.1's: *message text is syntax, and payload text is
@@ -2179,8 +2180,8 @@ serialized. Version 3 holds both shapes to one test (section 4).
 
 Nothing else changes. The walk of section 5, the grammar of section 6, the
 escaping of section 7, the limits of section 13 and the tree `CST.md`
-describes are version 2's unaltered, and a message written against version 2
-resolves the same way here. Appendix C, which records what version 2 changed,
+describes are version 2's unaltered, and nothing a message spells changes, so
+no message needs migrating. Appendix C, which records what version 2 changed,
 stands as it was written.
 
 ### What it costs
@@ -2195,9 +2196,18 @@ value that already is one is untouched.
 An option comparison over such a value compares that same text (section 4), so
 an option key written against the serialization no longer matches it.
 
-Nothing a message spells changes, so no message needs migrating and no
-extraction, tree or report reads differently. The cost falls on a payload, and
-only on one carrying a value of a type it derived or built elsewhere.
+Which conversion describes a value is also which one may fail to, so a report
+can move with it. A value the serialization could not describe — one that holds
+itself, or one that visits more nodes than section 13 allows — is one the
+string conversion may describe perfectly well, and is a value here where it was
+absent and reported; a value whose string conversion raises is absent and
+reported here where it serialized. What moved is which conversion is asked:
+section 4 treats either failure as absence and section 14.2 reports either, as
+both already did.
+
+The parameters a message names and the tree describing it read as they did, and
+the cost falls on a payload alone — on one carrying a sequence that is not of
+the host's own type, and on nothing else.
 
 ### Why
 

@@ -19,15 +19,15 @@ the document may be revised without it moving.
 **Version 3 of the format. It is not compatible with version 2.**
 
 Section 4 reads a plain array as narrowly as it already read a plain object.
-Version 2 narrowed the reading of keyed data by the value's own type — a class,
-a struct or a record converts as a string rather than as JSON — and said
-nothing of the kind about an array, so a value of any array type serialized,
-one of a type an application derived and one built in another realm included.
-Both shapes are held to one test now, and a value that is not of the host's own
-type converts as a string. Appendix D says what that costs a payload, section
-9.2 names the pair, and `CST.md` records that the tree is version 2's unchanged.
-Nothing a message spells changes, so no message needs migrating and the cost
-falls on a payload alone.
+The reading of keyed data has been narrow since revision 1.0.0 and narrows by
+the value's own type — a class, a struct or a record converts as a string
+rather than as JSON — while nothing of the kind was ever written about an
+array, so a value of any array type serialized, one of a type an application
+derived and one built in another realm included. Both shapes are held to one
+test now, and a sequence that is not of the host's own type converts as a
+string. Appendix D says what that costs a payload, section 9.2 names the pair,
+and `CST.md` records that the tree is unchanged. Nothing a message spells
+changes, so no message needs migrating.
 
 Section 4.1 asks an implementation to offer a way to turn wrapper recognition
 off for a resolution, and section 14.1's rule about untrusted data now names
