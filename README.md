@@ -106,7 +106,7 @@ the conformance set — which is what holds every section a fixture cites to a
 heading of the document — turns the changelog's pending section into the
 revision's, commits, tags (`v2.0.0`), pushes, and publishes a GitHub release
 carrying that changelog section. That section names the revision it will be
-cut as — `### 1.1.0 (Unreleased)` — so a revision is settled in the commit
+cut as — `### 2.0.0 (Unreleased)` — so a revision is settled in the commit
 that writes the section rather than in the dispatch: a run dispatched as
 anything else is refused, and so is a changelog that holds no such section.
 
@@ -119,16 +119,20 @@ without the set moving. Each keeps its own changelog.
 `@curly-message/conformance` is released from `main` by the **Conformance
 package publish** workflow (`.github/workflows/publish-conformance.yml`,
 started by hand). The changelog's pending section names the version it will be
-released as — `### 1.1.0 (Unreleased)` — so a version is settled in the commit
+released as — `### 3.0.0 (Unreleased)` — so a version is settled in the commit
 that writes the section rather than in the dispatch. `patch`, `minor` and
-`major` cut that section under the `latest` dist-tag, and the run is refused
-unless the bump arrives at the version the section names — over an open
-prerelease line that is the bump which drops the prerelease rather than the one
-that opened it, so `1.1.0-next.3` reaches `1.1.0` under `patch`. `next`
-publishes a prerelease of that same version — `1.1.0-next.0`, then `.1` — under
-the `next` dist-tag and leaves the section open, because a prerelease has not
-released what the section names. The workflow runs the package's test matrix,
-bumps the version, cuts the section where the release closes it, commits, tags
+`major` cut that section under the `latest` dist-tag, and the dispatch names
+the step that section is a step of: the run is refused unless the section names
+the version the step reaches or one further along the same field. It is the
+same field because a number spent on a release that was withdrawn cannot be
+published again, so the line has to step over it — which is why `major` over
+`1.1.0` released `3.0.0` rather than `2.0.0`. Over an open prerelease line the
+step is the one that drops the prerelease rather than the one that opened it,
+so `1.1.0-next.3` reaches `1.1.0` under `patch`. `next` publishes a prerelease
+of the version the section names — `3.0.0-next.0`, then `.1` — under the `next`
+dist-tag and leaves the section open, because a prerelease has not released
+what the section names. The workflow runs the package's test matrix, bumps the
+version, cuts the section where the release closes it, commits, tags
 (`conformance-v3.0.0`), pushes, publishes to npm, and publishes a GitHub
 release carrying that changelog section.
 
