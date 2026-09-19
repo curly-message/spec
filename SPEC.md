@@ -1307,11 +1307,16 @@ resolution that was reporting MUST carry on and MUST NOT raise. That holds for
 a handler that fails any other way too: a channel is where diagnostics go, and
 a message does not fail to render because one could not be logged.
 
-A report SHOULD identify the unresolved text. Because that text is derived from
-the payload, a report MUST bound its length and MUST NOT emit line terminators
-from it, so that payload content cannot forge additional log lines. A cut that
-would fall between the two halves of a surrogate pair SHOULD fall before the
-pair instead, so that the excerpt ends on a whole character.
+A report SHOULD identify the unresolved text. A report MUST bound that text's
+length and MUST NOT emit line terminators from it, so that nothing it carries
+can forge additional log lines. The bound is written over the text a report
+carries rather than over where that text came from: under section 5 the text a
+report identifies is the placeholder the message spells rather than anything a
+placeholder resolved to, and a message is written in a catalogue by hands that
+are not the host's, so an implementation is held to the bound whether or not it
+carries payload-derived text as well. A cut that would fall between the two
+halves of a surrogate pair SHOULD fall before the pair instead, so that the
+excerpt ends on a whole character.
 
 ## 14. Security properties and error behavior
 
@@ -1463,8 +1468,7 @@ This specification does not prescribe a reporting channel. Reports SHOULD
 identify the message id and the placeholder. Every condition this document names
 is met at a placeholder, limits included: a limit is reached while a particular
 placeholder is being resolved, and that is the one to name (section 13). Section
-13's bounds on report content apply to every report that includes
-payload-derived text.
+13's bounds on report content apply to every report, whatever text it carries.
 
 An implementation that reports emits one report for each placeholder that met
 the condition, where the walk met it. A message naming an unknown modifier at
@@ -1768,8 +1772,14 @@ tool can honor — and a static grammar is a prerequisite for extracting a
 message's parameters at build time.
 
 Whether a later version should admit a placeholder that spans lines — decidably,
-in that same single scan (section 6, note 7) — is deferred to
-[issue #3](https://github.com/curly-message/spec/issues/3).
+in that same single scan (section 6, note 7) — was asked in
+[issue #3](https://github.com/curly-message/spec/issues/3) and answered no for
+this version. Note 7 already contains an opening pair that does not complete:
+the brace is a `literal-char` and the scan resumes one code point along, so
+nothing runs away. What the line terminator bounds is the reading that decides
+it — forward to a closing pair, and recursively, because an option value may
+hold a placeholder (note 10). A version that admitted terminators would have to
+end that reading some other way, and would reopen note 2 and section 7 with it.
 
 ---
 

@@ -24,6 +24,16 @@ anywhere else to pass it, so a caller that had to obey had nothing to obey
 with. Nothing a message resolves to changes: with recognition on, which is
 where a caller that says nothing stands, a payload reads exactly as it did.
 
+Two passages left over from version 1 now say what version 2 requires. Section
+13's bound on the text a report identifies gave its reason as that text being
+derived from the payload; under section 5 that text is the placeholder the
+message spells, so the bound is restated over the text a report carries rather
+than over where it came from, and section 14.3 no longer reads as though a
+report only has to be bounded where it carries payload text. The requirement is
+the one it always was. Appendix A.10 records that the question it deferred to
+issue #3 — whether a later version should admit a placeholder that spans lines
+— was answered no for this version, and why.
+
 ## 2.0.0
 
 **Version 2 of the format. It is not compatible with version 1.**
