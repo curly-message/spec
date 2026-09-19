@@ -1,16 +1,16 @@
 # Curly Message Format
 
-**Version 1 — Stable**
+**Version 2 — Stable**
 
 | | |
 | --- | --- |
 | Format name | Curly Message Format |
 | Machine-readable identifier | `curly-message` |
-| Versioned identifier | `curly-message-1` |
+| Versioned identifier | `curly-message-2` |
 | Status | Stable |
 
-> **Version 1 is stable.** The body of this document is normative: it states
-> what a conforming implementation must do. Within `curly-message-1`, what a
+> **Version 2 is stable.** The body of this document is normative: it states
+> what a conforming implementation must do. Within `curly-message-2`, what a
 > message resolves to is settled — a message written against this document
 > resolves the same way against every later revision of it, and an amendment
 > that would change that belongs to a later version of the format rather than
@@ -20,6 +20,17 @@
 > what leaves the messages written today alone: a modifier under a name no
 > earlier revision defined, a conformance level an implementation opts into, and
 > wording that states more precisely what the body already required.
+>
+> **Version 2 is not compatible with version 1**, and the one sentence that says
+> why is section 14.1's: *message text is syntax, and payload text is data.* In
+> version 1 a resolution was repeated passes of substitution over the whole
+> current text, so whatever a payload value contributed was read back as message
+> source on the next pass — a value could name a payload entry the message never
+> named, add an option to a construct the message wrote, or close that construct
+> early. Version 2 resolves a message in one walk and reads nothing it has
+> emitted. Placeholders nest where the message spells them nesting, and nowhere
+> else. Appendix C lists every change and what each costs a message that was
+> written against version 1.
 >
 > Appendix A records the divergences found while this document was written
 > against the pre-3.0 reference parser, and the ruling that resolved each one.
@@ -43,9 +54,12 @@ concrete syntax tree over the grammar of section 6, for a tool that highlights,
 completes or lints a message rather than resolving it. It adds nothing this
 document requires, and an implementation conforms without offering a tree.
 
-The format is deliberately small. It has no plural categories, no gender
-selection and no nested argument syntax. Formatting that depends on a locale is
-delegated to the host platform's internationalization facilities.
+The format is deliberately small. It has no plural categories and no gender
+selection. Formatting that depends on a locale is delegated to the host
+platform's internationalization facilities. A placeholder may hold a placeholder
+in an option value, and there it is one construct holding another rather than an
+argument syntax: what is nested is written in the message, never supplied with
+the payload (sections 12, 14.1).
 
 ## 2. Conformance
 
@@ -174,9 +188,9 @@ be reported (section 14.2).
 How many times a value is converted while a message resolves is itself bounded
 (section 13).
 
-The text a conversion produces is text: a backslash it carries is read like any
-other at the single removal of escape sequences (section 7), so a serialization
-does not necessarily reach the output parsable as the format it was made in.
+The text a conversion produces is data, and nothing removes escape sequences
+from it (section 7). A backslash it carries is a backslash, so a serialization
+reaches the output parsable as the format it was made in.
 
 Wherever a value is compared numerically, the implementation MUST convert it
 using the host's ordinary numeric conversion, and a conversion that does not
@@ -219,23 +233,32 @@ is data, and it must stay data.
 
 ## 5. Interpolation model
 
-A message is resolved by repeated passes. Each pass replaces every placeholder
-in the current text with its resolved value (section 9). The output of a pass
-becomes the input of the next, so a value that itself contains a placeholder is
-resolved in turn.
+A message is resolved in **one walk**. Section 6 parses it once into the text it
+is written with and the placeholders it declares; the walk then emits that text
+and, for each placeholder, what section 9 resolves it to.
 
-A message reaches the first pass as text: it is converted by section 4's rules
-before anything reads it, not after everything has. A host that wrote its
-message as something other than a string therefore gets it interpolated and
-unescaped like any other, exactly as a payload value always has been.
+The walk reaches the outermost placeholders first. A placeholder written inside
+an option value (section 12) is reached only where the enclosing placeholder
+selects the option that holds it, so an option the modifier passes over is never
+rendered: a placeholder in it is not resolved, a payload entry it names is not
+read, and a modifier it names is not called.
 
-The process stops when a pass produces text containing no placeholders, or when
-a limit in section 13 is reached.
+A message reaches that walk as text: it is converted by section 4's rules before
+anything reads it, not after everything has. A host that wrote its message as
+something other than a string therefore gets it parsed and unescaped like any
+other.
 
-Escape sequences (section 7) are removed **once**, from the final text, after
-the last pass. An escape sequence introduced by a payload value is therefore
-still an escape sequence when the next pass runs, and a value containing `\{\{`
-does not become a placeholder.
+**Message text is syntax. Payload text is data.** What a placeholder resolves to
+is emitted as it stands. It is not parsed, so a `{{` it contains opens no
+placeholder and a `;` it contains ends no segment; and it is not unescaped, so a
+backslash it contains stands for itself. Escape sequences (section 7) are
+removed from the message's own text and from the names the message writes, where
+section 6 derives them, and from nothing else.
+
+That is the whole of the model, and the rest of this document leans on it. The
+walk emits each part of the message once and reads nothing it has emitted, so
+there is no second pass to perform and nothing for one to find. What bounds the
+walk is section 13.
 
 ## 6. Grammar
 
@@ -253,7 +276,7 @@ segment        = option-key , [ ":" , value ] ;
 key            = { text-unit } ;
 option-key     = { text-unit } ;
 modifier-name  = { value-unit } ;
-value          = { value-unit } ;
+value          = { value-unit | placeholder } ;
 
 text-unit      = inner-escape | text-char ;
 value-unit     = inner-escape | value-char ;
@@ -285,11 +308,11 @@ Notes on the grammar, all normative:
 1. **A placeholder MUST NOT contain a line terminator.** A `{{ … }}` construct
    spanning a line terminator is literal text, and escaping the terminator does
    not make it a placeholder: only `inner-escape` occurs inside one, and
-   `inner-char` excludes every line terminator. Which substrings of the text a
-   pass is given are placeholders MUST NOT depend on the payload, or on what
-   any other placeholder in that text resolves to (note 7); what a placeholder
-   resolved to on an earlier pass is ordinary text to the next one
-   (section 12). (Appendix A.10.)
+   `inner-char` excludes every line terminator. A nested placeholder (note 10)
+   is bound by the same characters, being a placeholder itself. Which substrings
+   of a message are placeholders MUST NOT depend on the payload, or on what any
+   placeholder resolves to (note 7), and what a placeholder resolved to is never
+   read as message text at all (section 5). (Appendix A.10.)
 
 2. **A key MAY contain a colon or a semicolon only as an escape sequence**
    (`\:`, `\;`), and a brace only where it does not form a delimiter (note 6).
@@ -309,7 +332,10 @@ Notes on the grammar, all normative:
    Everything after it, up to the segment's end, is the value. A value MAY
    therefore contain unescaped colons. (Appendix A.7.)
 
-5. **A value MUST NOT contain an unescaped semicolon**, which ends the segment.
+5. **A value MUST NOT contain an unescaped semicolon** outside a placeholder it
+   holds, which ends the segment. A semicolon within a nested placeholder is
+   that placeholder's own separator and ends nothing in the segment around it
+   (note 10).
 
 6. **A backslash consumes the character that follows it**, so a brace it
    consumed is text and cannot be half of a delimiter. `{{` and `}}` are
@@ -332,19 +358,21 @@ Notes on the grammar, all normative:
    needs a character to consume, so a backslash at the end of a message consumes
    nothing and is a `literal-char` itself. And a placeholder begins only where a
    **complete** one derives: the scan reads forward from the opening pair and
-   either reaches a closing pair or does not. Where it does not, the opening
-   brace is a `literal-char` and the scan resumes at the very next code point —
-   one brace, not two — so `{{a{{b}}` is the literal text `{{a` followed by the
-   placeholder `{{b}}`, while `{{{{a}}` is the literal text `{` followed by a
-   placeholder whose key is `{a`.
+   either reaches a closing pair or does not. That reading is recursive, because
+   an option value may hold a placeholder (note 10) and the inner construct must
+   derive completely or the enclosing one does not derive. Where it does not,
+   the opening brace is a `literal-char` and the scan resumes at the very next
+   code point — one brace, not two — so `{{a{{b}}` is the literal text `{{a`
+   followed by the placeholder `{{b}}`, while `{{{{a}}` is the literal text `{`
+   followed by a placeholder whose key is `{a`.
 
    Inside a placeholder every boundary is forced by a character class rather
    than by choice: `text-char` excludes `:`, so the selector's colon is the
    first one no backslash consumed; `text-char` and `value-char` both exclude
    `;`, so a segment ends at the first semicolon; and both exclude a code point
-   that starts `}}`, so the closing pair is the first one left standing.
-   Nothing in the scan consults the payload, or what any other placeholder
-   resolves to, so a pass over the same text always yields the same
+   that starts `}}`, so the closing pair is the first one left standing that no
+   nested placeholder has claimed. Nothing in the scan consults the payload, or
+   what any placeholder resolves to, so the same message always yields the same
    placeholders.
 
 8. **The whitespace class is fixed by this document.** It is the twenty-five
@@ -362,6 +390,40 @@ Notes on the grammar, all normative:
    as `text-unit`, which is what leaves that placeholder one derivation
    (note 7). Section 8 decides which whitespace a placeholder's parts keep, and
    section 7 decides which of it an escape sequence makes text.
+
+10. **A placeholder derives inside an option value and nowhere else.** `value`
+    is the only production that admits one, so a `{{` in a key, in an option key
+    or in a modifier name opens no placeholder. That is deliberate: it keeps all
+    three readable without a payload, which is what lets a tool answer which
+    entries a message names and which modifiers it calls before anything is
+    resolved (section 12).
+
+    A `{{` in a value must open a **complete** placeholder or the enclosing
+    construct does not derive at all, because `value-char` excludes a code point
+    that starts `{{`. There is no third reading in which the braces are content:
+    to write a delimiter as text, escape both of its braces (note 6). So
+    `{{v; a:{{n}}; default:D}}` is one placeholder holding another, while
+    `{{v; a:{{n}}` is the literal text `{{v; a:` followed by the placeholder
+    `{{n}}` (note 7).
+
+    Nesting is not otherwise limited: a placeholder MAY hold a placeholder to
+    any depth, and how deep a message nests is a fact about the message alone.
+    What an implementation resolves is bounded by section 13, which bounds
+    resolution and not derivation.
+
+11. **A verdict is final.** Whether a complete placeholder derives at a given
+    position is a function of the message and that position alone. It does not
+    depend on where the scan reached the position from, on how deeply the
+    construct is nested, or on anything an implementation configures. A scan
+    that has answered once for a position therefore answers the same way at
+    every later attempt, and an implementation MAY record that answer.
+
+    It should. Note 7 has the scan resume at the very next code point where a
+    placeholder does not derive, so the attempts overlap; without the record, a
+    message that nests deeply costs time growing faster than any polynomial in
+    its length, and an attacker writes one in a few hundred characters. With it,
+    the scan costs time proportional to the length of the message. Section 14.1
+    requires the bound, not the technique.
 
 ## 7. Escaping
 
@@ -404,45 +466,42 @@ characters in a JSON source file:
 A literal backslash in front of a structural character is written by escaping
 both — `\\\:` yields `\:`.
 
-Implementations MUST remove escape sequences exactly once, from the final text,
-after interpolation has finished (section 5). Implementations MUST NOT remove
-them from intermediate results. Removing one leaves what the first paragraph of
-this section says it denotes: the escaped character alone where the backslash
-cancelled a structural meaning, and both characters where it cancelled none, so
-`\a` renders as `\a`.
+Implementations MUST remove escape sequences from the **message**, and from
+nothing else. A sequence is removed where section 6 derives it — in the text of
+the message and in the names a placeholder writes — and it is removed once, when
+the message is parsed, before anything is resolved (section 5). Removing one
+leaves what the first paragraph of this section says it denotes: the escaped
+character alone where the backslash cancelled a structural meaning, and both
+characters where it cancelled none, so `\a` renders as `\a`.
 
-That rule governs the text a message resolves to, not the spellings it reaches
-it by. A **key** and a **modifier name** are each matched by name against
-something a host wrote — a payload entry, a registered modifier — so each is
-compared by exact code-point equality after unescaping (section 6, note 2). An
-**option key** is unescaped the same way, but it looks nothing up: it is
-compared against the value, and that comparison belongs to the modifier that
-performs it (section 11.1). All three are what their author wrote, not the
-spelling a reserved character forced; unescaping one is not the removal this
-rule bounds, because none of the three reaches the output. Where an option key
-stands for its own value (section 9.4), that value is the source spelling and is
-unescaped once with the rest of the output, like any other value.
+That rule governs the message, not the spellings it reaches its parts by. A
+**key** and a **modifier name** are each matched by name against something a
+host wrote — a payload entry, a registered modifier — so each is compared by
+exact code-point equality against the name the single removal above left
+(section 6, note 2); nothing unescapes a name a second time. An **option key**
+is unescaped the same way, but it looks nothing up: it is compared against the
+value, and that comparison belongs to the modifier that performs it
+(section 11.1). All three are what their author wrote, not the spelling a
+reserved character forced. An **option value** is unescaped by the same single
+removal, and where an option key stands for its own value (section 9.4) that
+value is the message's own text and is unescaped with the rest of it.
 
-Text a value's conversion produces (section 4) is text like any other: it
-reaches the output through the single removal above, and nothing exempts a
-serialization from it. So the JSON serialization of a value carrying a
-backslash is not guaranteed to be parsable as JSON once it is in the output,
-because the two characters JSON writes for that backslash are an escape
-sequence, and this section's removal takes one of them. A payload entry that is
-the plain object whose `a` holds the four characters `C:\U` therefore reaches
-the output as text no JSON parser reads:
+**Payload text is not escaped text.** A value, a props value, a payload
+`default`, a wrapper's `default` and a modifier's return value are data, and an
+implementation MUST NOT remove escape sequences from any of them (sections 5,
+14.1). A backslash a value carries is a backslash. That is what lets a value
+hold a Windows path, a regular expression or a serialization without the
+message's escaping rules reaching into it, and it is why the text section 4
+produces is the text the output carries:
 
 ```
-{ a: 'C:\U' }   serializes to  {"a":"C:\\U"}   and renders  {"a":"C:\U"}
+{ a: 'C:\U' }   serializes to  {"a":"C:\\U"}   and renders  {"a":"C:\\U"}
 ```
 
-A caller that needs a machine-readable serialization in the result passes it as
-a string it escaped itself: it serializes the value, doubles every backslash
-that text carries, and supplies the result as an ordinary string value, which
-this removal returns to the serialization it was made from. A modifier is
-unaffected, because it reads its input before the removal runs (section 5): a
-host-defined modifier that reads a serialized value back (section 4) receives
-the serialization the conversion produced.
+A caller that needs a machine-readable serialization in the result therefore
+needs to do nothing for it: what the conversion produced is what the output
+carries, parsable as the conversion made it. A host-defined modifier that reads
+a serialized value back (section 4) receives that same text.
 
 ## 8. Whitespace
 
@@ -462,6 +521,15 @@ different key, and an option value that holds only one is not empty.
 Whitespace that an escape sequence claims is text, not padding: it belongs to
 the key, the option key or the value it appears in, and the rules above do not
 remove it (section 7).
+
+These rules are read over the **spelling**, before anything is resolved. What
+is padding is decided by the characters the message writes, so a placeholder an
+option value holds is content wherever it stands, and the text it resolves to is
+never padding however it is spelled: in `{{a; x: {{b}} {{c}} ;}}` the space
+before `{{b}}` and the one after `{{c}}` are padding, the one between them is
+content, and a value of `{{b}}` that resolves to three spaces contributes three
+spaces. That is what keeps section 5's rule whole — a value cannot be trimmed by
+a rule it was never text for.
 
 An option value that consists only of unescaped whitespace therefore trims away
 to nothing, so `x:` and `x: ` are equivalent: both declare the empty string
@@ -501,8 +569,8 @@ payload key `user.name`, and a payload carrying a `user` entry with a `name`
 inside it owns no entry under that name, so the placeholder takes the fallback
 chain. No placeholder reaches inside a value either — one that is a plain object
 or an array resolves whole, as the text section 4 converts it to. That text is
-what the following pass reads, so a placeholder it carries is found and resolved
-there like any other (sections 5, 12).
+data: it is emitted as it stands, so a `{{` it carries opens no placeholder and
+a backslash it carries is a backslash (sections 5, 7).
 
 The lookup MUST consider only the payload's **own** entries. Members inherited
 from a prototype, class or base mapping MUST NOT resolve. In a host where
@@ -542,6 +610,10 @@ yields text. The payload's `default` takes precedence over the inline
 names where the default comes from, not when the chain is walked: section 10
 walks it only where the placeholder uses its result.
 
+The inline default is an option value, so it may hold a placeholder (section 6,
+note 10) and it is read the way section 9.4 reads any option's value: only where
+the placeholder uses it. A default nobody falls back to is never rendered.
+
 If no link yields text, the default is the empty string.
 
 ### 9.4 Collect the options
@@ -560,6 +632,14 @@ nothing (section 8) declares no option, with or without a value.
   by key (section 11.1). Collection keeps every option in source order,
   duplicates included, so a host-defined modifier is handed the list as the
   placeholder wrote it.
+
+Collecting an option does not read its value. An option's value is the text the
+message writes there with its escape sequences removed and the placeholders it
+holds resolved (section 6, note 10), and that text is produced only where
+something reads it — which, for a selection, is the one option the modifier
+chose (section 11). An option the modifier passes over costs nothing: no payload
+entry a placeholder in it names is read, no modifier such a placeholder names is
+called, and no report it would have made is made.
 
 The reserved key `default` MUST NOT appear among the options.
 
@@ -618,7 +698,19 @@ skipped.
 The chain is read only where the placeholder uses its result. A placeholder that
 resolves to a value never reaches it, and a modifier that answers without its
 default leaves it unread, so a link nothing needed is neither converted (section
-13) nor reported for a value it cannot describe (section 14.2).
+13) nor reported for a value it cannot describe (section 14.2). Nor is a
+placeholder inside link 3 resolved there (section 12).
+
+The links are not all the same kind of text. Links 1 and 2 come from the payload
+and are data: each is emitted as it stands, unscanned and unescaped (sections 5,
+7, 14.1). Link 3 is the message's own — an option value like any other — so its
+escape sequences are removed with the rest of the message's and a placeholder it
+holds is resolved where the chain reaches it (sections 7, 12).
+
+A link **yields text** where it is present and can be described. The empty
+string is text: an inline `default:` declaring nothing, or a wrapper `default`
+holding the empty string, yields it and the chain stops there rather than
+stepping past.
 
 The payload outranks the message: a message declares the default it was written
 with, and the application overrides that default where it needs to, so the more
@@ -645,6 +737,15 @@ payload {}                                    ->  "Hello, Guest!"
 A modifier receives the value, the options, the default, the locale and the
 props, and returns an answer.
 
+An option's value and the default reach it **unread**. Producing either is work
+— an option value may hold a placeholder (section 6, note 10), and the default
+is a chain to walk (section 10) — and a modifier that selects one option does
+not pay for the rest. So an implementation MUST NOT resolve a placeholder inside
+an option's value, MUST NOT call a modifier such a placeholder names, and MUST
+NOT walk the fallback chain, except where the modifier reads that value or that
+default. A comparison reads one option's value; a modifier that reads every
+option's value is entitled to, and pays for all of them.
+
 The value and the default both reach the modifier as text (section 4): the
 default is the text the chain in section 10 resolved to, and the value is the
 text the payload entry converted to. No modifier sees a value at the type it was
@@ -656,6 +757,11 @@ the host calls an object, so a modifier writes the text a payload value of that
 shape would. Neither an answer no conversion can describe nor an answer that is
 nothing at all is an answer, and the placeholder takes the fallback chain
 (section 10) — the treatment a value that is not a value gets.
+
+That text is **data**, like a payload value: it is emitted as it stands, never
+parsed and never unescaped (sections 5, 7, 14.1). A modifier that builds its
+answer out of the value it was handed therefore cannot build syntax with it,
+and a host extension is not a way around the rule that data is not syntax.
 
 Modifier names are **case-sensitive**. `eq` is a modifier; `EQ` is not.
 (Appendix A.2.)
@@ -680,9 +786,16 @@ tailor the conversion to a locale. The comparison modifiers are Core
 (section 2), so they resolve alike in every locale and where no locale is
 available at all — a conversion a locale tailors reads `I` and `i` as one text
 in most languages and as two in Turkish, and a Core selection cannot turn on
-which. The mapping also leaves apart what a case fold would join: the lower
-case of `STRASSE` is `strasse` and not `straße`, so an option keyed `STRASSE`
-does not select for the value `straße`.
+which. The mapping is not a case fold, and it does not always leave apart what a
+fold would join. The lower case of `STRASSE` is `strasse` and not `straße`, so
+an option keyed `STRASSE` does not select for the value `straße`. But Unicode
+gives some characters a single-character lower case that lands on another
+character, so `U+212A KELVIN SIGN` lowercases to `k`, `U+1E9E LATIN CAPITAL
+LETTER SHARP S` to `ß`, `U+2126 OHM SIGN` to `ω` and `U+212B ANGSTROM SIGN` to
+`å`, and an option keyed with either member of such a pair selects for a value
+spelled with the other. Those selections are required rather than an artifact of
+a host: the mapping is the one Unicode specifies, and an implementation MUST NOT
+narrow it to the ASCII letters.
 
 An option key is compared against the value's own text (section 11), never
 against what another placeholder makes of it. The count and the noun are two
@@ -971,64 +1084,126 @@ silently change meaning when a later version of this format defines `plural`.
 
 ## 12. Nesting
 
-Section 6 derives no placeholder inside another: a key, an option key, a
-modifier name and a value all stop at a code point that starts `{{` or `}}`. A
-`{{ … }}` construct that encloses another is therefore not a placeholder at all
-— the inner one is found on its own, and only on a later pass is the enclosing
-construct scanned again, over text that now carries what the inner one resolved
-to. Whether it derives then is decided by that text like any other: a value
-carrying `}}` closes the enclosing construct early, and one carrying `{{` keeps
-it from deriving at all.
+A placeholder MAY hold a placeholder, in an option value and nowhere else
+(section 6, note 10). The inner one is part of the message, found by the same
+scan, and resolved by section 9 like any other — but only where the option that
+holds it is the one selected (sections 5, 11).
 
-A value, an option value, an inline default, a payload `default` or a wrapper's
-`default` (section 4.1) MAY likewise **resolve to text that contains**
-placeholders; those are found and resolved on the following pass (section 5).
+```
+{{count:gt; 0:{{count:number;}} items; default:no items;}}
+```
 
-Nesting is bounded by section 13.
+Over `{ count: 5 }` the comparison selects the option keyed `0`, that option's
+value is read, and reading it resolves `{{count:number;}}`, so the message
+renders `5 items` at an English locale. Over `{ count: 0 }` the comparison
+selects nothing, the default is read instead, and the inner placeholder is never
+resolved: no payload entry is read for it, no formatting modifier is called, and
+no report it would have made is made. Note also which construct the semicolon
+in `{{count:number;}}` belongs to — the inner placeholder writes it, so it is
+the inner one's separator and ends no segment of the outer.
+
+A key, an option key and a modifier name hold no placeholder, so what a message
+looks up and what it calls are readable without a payload. A tool can answer
+which payload entries a message names and which modifiers it calls from the
+message alone, and its answer covers the nested placeholders as it covers the
+enclosing ones.
+
+**What a placeholder resolves to is never nested in anything.** A value, a props
+value, a payload `default`, a wrapper's `default` and a modifier's answer are
+data (sections 5, 7, 14.1). A value holding the nine characters `{{count}}`
+renders those nine characters; a value holding `;` ends no segment; a value
+holding `}}` closes nothing. So what a message resolves to cannot change what
+the message means, and no payload can reach a branch the message did not select
+for it, or write a construct the message did not spell.
+
+```
+{{state:eq; draft:{{note}}; live:Published; default:?;}}
+```
+
+Over `{ state: 'live', note: 'X; live:Leaked' }` this renders `Published`, and
+`note` is never read. Version 1 substituted the whole message repeatedly, so
+`note` was read first and the segment its text wrote outranked the one the
+message spelled: the same payload rendered `Leaked` (Appendix C).
+
+How deeply a message nests is a fact about the message alone, and nothing in
+section 6 bounds it. What an implementation resolves is bounded by section 13.
 
 ## 13. Limits
 
-Interpolation is bounded, because a payload is frequently attacker-influenced
-and a self-referential or self-multiplying value would otherwise not terminate.
+Resolution is bounded. A payload is frequently attacker-influenced, and so
+sometimes is a message — a host that takes translations from its users takes
+message text from them — so neither may buy unbounded work.
 
-An implementation MUST enforce all three of the following:
+An implementation MUST enforce all four of the following:
 
-- **A pass limit.** At least **10** passes MUST be performed before stopping.
-- **An output limit.** At least **100 000** characters of output MUST be
-  permitted, counted in the unit the host measures its strings in — a UTF-16
-  code unit in ECMAScript, so a character outside the Basic Multilingual Plane
-  counts twice. A pass whose output would exceed the limit MUST be discarded
-  whole; the result is the last text that stayed within the limit. A pass is
-  not performed past the limit either: a placeholder is reached only while the
-  text the pass has produced ahead of it is within the limit, so one past that
-  point is neither resolved nor reported, and a host-defined modifier it names
-  is not called.
+- **An output limit.** At least **100 000** characters of placeholder result
+  MUST be permitted, counted in the unit the host measures its strings in — a
+  UTF-16 code unit in ECMAScript, so a character outside the Basic Multilingual
+  Plane counts twice. A placeholder whose result would carry the total past the
+  limit resolves to the **empty string** instead, and the walk carries on. The
+  message's own text is not counted against it and always renders: that text is
+  the caller's and is bounded by the message it was read from, while a
+  placeholder's result is bounded only by the payload. Section 5 builds the
+  output once, so nothing is discarded and nothing is cut mid-character.
+- **A read limit.** At least **100 000** characters of value text MUST be
+  permitted, in the same unit, counting every text a placeholder reads whether
+  or not any of it reaches the output. Output alone bounds no work: a thousand
+  placeholders that each read a hundred-thousand-character value and select
+  nothing from it produce nothing and read a hundred million characters. A
+  placeholder reached once the limit is spent resolves to the empty string, and
+  the walk carries on. What a modifier answers with is not value text and is
+  not counted here: it is the placeholder's result, and the output limit above
+  is what bounds it.
 - **A conversion limit.** At least **100 000** nodes MUST be visited before a
   value's serialization is abandoned. A serialization that reaches the limit
   MUST be treated as a conversion that cannot describe the value (section 4).
+- **A nesting limit.** At least **8** levels of nested placeholder MUST be
+  resolved (section 12). A placeholder nested deeper than an implementation
+  resolves is a **message error** (section 14.2): it takes the fallback chain,
+  and the walk carries on. Only a placeholder the walk reaches counts: an
+  option the modifier passed over is never read, so however deeply it nests it
+  costs nothing, reports nothing and reaches no limit (section 9.4).
 
 These are minima. An implementation MAY permit more, and MUST document what it
 permits.
 
-On reaching the pass limit or the output limit the implementation MUST return
-the last settled text with its placeholders unresolved, MUST NOT raise, and
-SHOULD report that a limit was reached. A limit ends the process the way a pass
-producing no placeholders does, so what it settles is the last text within the
-limits — the output of a pass, or the message as it reached the first pass
-where that pass was the one discarded — and section 5's single removal of
-escape sequences still runs over that text before it is returned.
+A placeholder reaches at most one of the first two. One reached once the read
+limit is spent resolves to the empty string and produces nothing, so it cannot
+also reach the output limit, and one that reaches the output limit had the read
+budget to be resolved. The conversion limit is not reached by a placeholder at
+all: it is met inside a conversion, and what the placeholder sees is a value no
+conversion can describe (section 4).
 
-The conversion limit bounds the work of producing a text, which the other two
-cannot: both measure a string that already exists. Serialization follows a
-shared reference again every time it meets one, so a value naming the same
-child twice at each of twenty-four levels holds twenty-five objects and
+The nesting limit bounds resolution and not derivation. Section 6 admits nesting
+to any depth, and note 11 is what keeps the scan linear in the length of the
+message without a bound to lean on, so which constructs are placeholders stays a
+fact about the message and never about the implementation. Were it otherwise,
+two conforming implementations would disagree about where a placeholder ends:
+the content of a construct nested too deep would be read as further segments of
+the construct around it, a different option would be selected, and the braces
+the scan refused would stand in the output. A message error is contained
+instead — one placeholder takes its fallback chain, and every other part of the
+message resolves as written.
+
+No limit here raises, and none of them ends the walk. On reaching one an
+implementation MUST resolve the placeholder that met it — to the empty string,
+or to its fallback chain for the nesting limit — MUST NOT raise, and SHOULD
+report that a limit was reached (section 14.2). The walk then carries on, so
+every part of the message no limit reached still renders. A single walk has
+nowhere to leave an unresolved placeholder, and an unresolved placeholder in the
+output is the message's own syntax reaching a reader.
+
+The conversion limit bounds the work of producing a text, which the other three
+cannot: each of them measures a string that already exists. Serialization
+follows a shared reference again every time it meets one, so a value naming the
+same child twice at each of twenty-four levels holds twenty-five objects and
 describes sixteen million leaves — nothing circular, so nothing a serializer
 refuses. The limit is what a single conversion may spend: a value that visits
 more nodes than a resolvable output could hold is read as one no conversion can
-describe, which is where it takes the output limit's number from. The two do
-not measure each other, though — a serialization visits a member it then omits,
-so a value can visit any number of nodes and still describe itself in two
-characters — and the output limit cannot stand in for a bound on the work.
+describe, which is where it takes the output limit's number from. The two do not
+measure each other, though — a serialization visits a member it then omits, so a
+value can visit any number of nodes and still describe itself in two characters
+— and the output limit cannot stand in for a bound on the work.
 
 A **node**, for that count, is a value the walk visits: the value being
 converted, and then every member it reaches, counted once for each time it
@@ -1041,7 +1216,7 @@ rather than recording where it has been — which is what makes the twenty-five
 objects above twenty-five distinct values and more than sixteen million visits.
 
 One conversion is not a resolution. A value is read once for every placeholder
-that names it, on every pass, so a limit on a single conversion bounds a
+that names it and reaches it, so a limit on a single conversion bounds a
 resolution only if its conversions cannot multiply with its reads:
 **resolving a message MUST NOT convert a given value twice observably**, and
 every later read of that value MUST answer with the text the first conversion
@@ -1082,32 +1257,34 @@ placeholder pays for it once per placeholder.
 A resolution may begin while another is running: a host-defined modifier
 (section 11.3), a reporting handler (section 14.3) and any host code a
 conversion runs (section 4) all reach the implementation, and any of them may
-ask it to resolve a message. Each of the three limits belongs to the resolution
-that reached it, so a resolution begun inside another owns its own pass count,
-its own output budget and its own record of what it has converted. Neither can
-reach a bound the other owns: an inner resolution that stops at the pass limit
-leaves the outer walking the passes it has left, and one that spends the whole
-output limit leaves the outer free to produce its own. A value both of them read
-is converted once for each of them, because the record the requirement above
-asks for belongs to a resolution and not to the implementation. And a report
-names the id the resolution it came from was given, not the id of the resolution
-around that one (section 14.3).
+ask it to resolve a message. Each of the four limits belongs to the resolution
+that reached it, so a resolution begun inside another owns its own output and
+read budgets, its own nesting count, and its own record of what it has
+converted. Neither can reach a bound the other owns: an inner resolution that
+spends its whole output limit leaves the outer free to produce its own, and one
+whose message nests past its nesting limit says nothing about how deep the
+outer message may nest. A value both of them read is converted once for each of
+them, because the record the requirement above asks for belongs to a resolution
+and not to the implementation. And a report names the id the resolution it came
+from was given, not the id of the resolution around that one (section 14.3).
 
-Nothing here bounds how deep that nesting goes, and the three limits being
-per-resolution is exactly what leaves it unbounded. What ends a resolution that
-reaches itself without end is therefore the host's own limit on how deep it will
-go, not anything this document states. Reaching that limit is a failure inside
+That nesting is not section 12's. A message holding a message is one resolution
+calling another through host code, where section 12's is one message holding a
+construct, and the nesting limit above counts the second and not the first.
+Nothing here bounds the first, and the four limits being per-resolution is
+exactly what leaves it unbounded. What ends a resolution that reaches itself
+without end is therefore the host's own limit on how deep it will go, not
+anything this document states. Reaching that limit is a failure inside
 host code the implementation called, and MUST be contained the way section 14.2
 contains every other: the placeholder whose modifier or whose value did not come
 back resolves to its fallback chain (section 10), and the resolution around it
 MUST NOT raise. A reporting handler is the third of those callers and has no
 placeholder waiting on it: what a placeholder resolves to is settled by the
-condition being reported and not by the handler's answer, and where that
-condition is a limit there is no placeholder to identify at all (section 14.3). So a handler that does not
-come back leaves its report undelivered and the resolution that was reporting
-MUST carry on and MUST NOT raise. That holds for a handler that fails any
-other way too: a channel is where diagnostics go, and a message does not fail
-to render because one could not be logged.
+condition being reported and not by the handler's answer (section 14.3). So a
+handler that does not come back leaves its report undelivered and the
+resolution that was reporting MUST carry on and MUST NOT raise. That holds for
+a handler that fails any other way too: a channel is where diagnostics go, and
+a message does not fail to render because one could not be logged.
 
 A report SHOULD identify the unresolved text. Because that text is derived from
 the payload, a report MUST bound its length and MUST NOT emit line terminators
@@ -1119,7 +1296,7 @@ pair instead, so that the excerpt ends on a whole character.
 
 ### 14.1 Security properties
 
-A conforming implementation MUST provide both of the following. They are
+A conforming implementation MUST provide all three of the following. They are
 requirements, not permissions.
 
 **Own-property lookup.** Placeholder resolution MUST NOT reach inherited
@@ -1143,22 +1320,60 @@ A container read through its prototype lets a polluted prototype supply the
 payload a caller passed none of, which is the whole of section 9.2's protection
 undone one level above the payload.
 
-**Bounded interpolation.** Section 13 MUST bound the work an attacker-supplied
-payload can force. Without its limits, a payload value of `'{{value}}{{value}}'`
-grows geometrically, and a value that merely shares a reference with itself
-serializes for longer than any caller will wait — a message carrying no
-placeholder at all reaches the conversion but never the interpolation loop, so
-the conversion limit is the only one that holds it. That limit holds one
-conversion; what keeps a message from buying as many of them as it has
-placeholders is section 13's requirement that a resolution convert a value
-once.
+**Data is not syntax.** What a resolution reads from its caller MUST NOT be read
+as message text. A payload value, a props value, a payload `default`, a
+wrapper's `default` and a modifier's answer are data: an implementation MUST
+emit each as it stands, MUST NOT scan any of them for placeholders, and MUST NOT
+remove escape sequences from any of them (sections 5, 7, 11, 12).
 
-An implementation MUST NOT provide configuration that disables either property.
+Without this a payload writes the message. A value of `{{apiKey}}` reads a
+payload entry the message never named; a value of `; live:DELETED` adds an
+option to a construct the message wrote, and so selects a branch its author
+never offered; a modifier's answer does either through the one extension point a
+host has. Each is a payload deciding what the message means, and this property
+is the whole of what keeps a translation catalogue from being an execution
+surface.
+
+It bounds the work too, which is why the section after it is as short as it is:
+nothing a value contributes is ever read again, so there is no growth to bound
+and a resolution terminates because the message is finite.
+
+Data is not configuration either, and this property does not make it so. A
+payload entry shaped like a wrapper (section 4.1) is read as one, and the
+`props` it carries join above the caller's own (section 11.2), so an untrusted
+value of that shape reconfigures every formatting and host-defined modifier the
+placeholder reaches without spelling any syntax at all. An implementation cannot
+tell such an entry from one a caller meant; a caller that passes untrusted data
+MUST NOT pass it where a wrapper is recognized.
+
+**Bounded work.** Section 13 MUST bound the work a resolution can be made to do,
+by a payload and by a message alike.
+
+A payload buys work by being large and being read often, which the output and
+read limits bound, and by being expensive to describe, which the conversion
+limit bounds — a message carrying no placeholder at all reaches a conversion and
+nothing else, so the conversion limit is the only one that holds it. That limit
+holds one conversion; what keeps a message from buying as many of them as it has
+placeholders is section 13's requirement that a resolution convert a value once.
+
+A message buys work by nesting, and no limit of section 13 can bound it, because
+the cost is paid deriving the message and none of those limits has anything to
+measure until there is output. An implementation MUST derive a message in time
+bounded by a polynomial in the length of that message. Section 6 note 11 is how:
+the scan resumes at the very next code point where a placeholder does not
+derive, so the attempts overlap, and an implementation that records the verdict
+it reached for a position costs time proportional to the message's length where
+one that does not costs time growing faster than any polynomial in it — a denial
+of service an attacker writes in a few hundred characters.
+
+An implementation MUST NOT provide configuration that disables any of these
+properties.
 
 ### 14.2 Message errors
 
-A *message error* is a defect in the message: an unknown modifier (11.4), or a
-selection that names a comparison and no options (9.5).
+A *message error* is a defect in the message: an unknown modifier (11.4), a
+selection that names a comparison and no options (9.5), or a placeholder nested
+deeper than the implementation resolves (13).
 
 On a message error an implementation MUST resolve the placeholder to the
 fallback chain (section 10), MUST NOT raise, and SHOULD report the error.
@@ -1193,23 +1408,28 @@ permits, so what repairs it is asking for less or permitting more (section 13).
 The three are the taxonomy this section states, named: the message error and the
 payload defect above are the first two, and section 13's limits are the third.
 
-The vocabulary is seven codes. `unknown-modifier` is a modifier name that is
+The vocabulary is eight codes. `unknown-modifier` is a modifier name that is
 neither specified nor registered (section 11.4); `missing-options` is a
 selection that names one of this format's comparison modifiers, one no host
-replaced, and declares no option (section 9.5). Those two declare the origin
-`message`. `failed-modifier` is a modifier that cannot process its input
-(sections 11.2, 11.3); `unserializable-value` is a value no conversion can
-describe (section 4); `missing-locale` is a formatting modifier reached where no
-locale is available (section 11.2). Those three declare the origin `payload`.
-`pass-limit` and `output-limit` are the two bounds of section 13 whose reaching
-ends a resolution, and both declare the origin `limit`. The conversion limit is
-not among them: a value whose serialization reaches it is a value no conversion
-can describe (section 4), and is reported as one.
+replaced, and declares no option (section 9.5); `nesting-limit` is a placeholder
+nested deeper than the implementation resolves (section 13). Those three declare
+the origin `message`. The third is a limit and still declares `message`, because
+how deeply a message nests is a fact about the message alone (section 12): the
+payload asked for none of it, and what repairs it is rewriting the message or
+choosing an implementation that resolves further. `failed-modifier` is a
+modifier that cannot process its input (sections 11.2, 11.3);
+`unserializable-value` is a value no conversion can describe (section 4);
+`missing-locale` is a formatting modifier reached where no locale is available
+(section 11.2). Those three declare the origin `payload`. `output-limit` and
+`read-limit` are the two bounds of section 13 the message and the payload reach
+together, and both declare the origin `limit`. The conversion limit is not among
+them: a value whose serialization reaches it is a value no conversion can
+describe (section 4), and is reported as one.
 
 An implementation that reports MUST name the condition with the code this
 section gives it, and where a report carries an origin it MUST be the one that
 code declares. The set is closed: this document defines no code beyond these
-seven, and a code a later version of this format defines declares its origin
+eight, and a code a later version of this format defines declares its origin
 with it.
 
 Rendering must not fail because one translation is wrong. A single malformed
@@ -1218,20 +1438,32 @@ message must not take down the page that contains it.
 ### 14.3 Reports
 
 This specification does not prescribe a reporting channel. Reports SHOULD
-identify the message id and the placeholder; where the condition is a limit
-(section 13) there is no placeholder to identify, and the id is what says which
-message went looking. Section 13's bounds on report content apply to every
-report that includes payload-derived text.
+identify the message id and the placeholder. Every condition this document names
+is met at a placeholder, limits included: a limit is reached while a particular
+placeholder is being resolved, and that is the one to name (section 13). Section
+13's bounds on report content apply to every report that includes
+payload-derived text.
 
 An implementation that reports emits one report for each placeholder that met
-the condition, in the pass where it met it. A message naming an unknown
-modifier at three placeholders therefore reports three times, and a placeholder
-a later pass finds again — because what an earlier pass resolved carried it
-(section 12) — met the condition again and is reported again. Nothing but
-section 13 bounds the count: the pass limit and the output limit bound how many
-placeholders a resolution reaches, and the reports follow them. A limit is met
-by the resolution rather than at a placeholder, and a resolution that reaches
-one stops there (section 13), so it reports that limit once.
+the condition, where the walk met it. A message naming an unknown modifier at
+three placeholders therefore reports three times. A placeholder is reached at
+most once (section 5), so it meets a condition at most once and is reported at
+most once, and a placeholder the walk never reaches — one in an option the
+modifier passed over — meets no condition and is reported not at all.
+
+Reports are emitted in the order the walk meets the conditions. Section 5
+resolves a message in one walk and section 9 fixes the steps a placeholder
+takes, so where neither of two reporting placeholders holds the other, the one
+the message writes first reports first; and where one holds the other, the
+inner reports while the outer's value is being read — after the outer's
+selector was resolved and before its result was produced. An implementation
+MUST NOT reorder reports by condition, by origin or by severity.
+
+The count is therefore bounded by the message: a resolution emits at most one
+report per placeholder per condition, and a message holds fewer placeholders
+than it holds characters. Nothing a payload supplies multiplies that, which is
+what a model of repeated passes could not say. Each report's content is bounded
+separately, by section 13.
 
 The conformance set observes reports through an adapter an implementation
 supplies for it; this document still prescribes no channel. The same adapter
@@ -1398,13 +1630,20 @@ The output limit discarded the offending pass whole rather than truncating to
 the limit, so the result was the last text that stayed within it — not a 100 000
 character prefix.
 
-**Ruling.** Specify both as normative minima (section 13), not as
+**Ruling.** Specify the bounds as normative minima (section 13), not as
 implementation details.
 
-They are a denial-of-service bound on attacker-influenced payloads, which makes
+They are a denial-of-service bound on attacker-influenced input, which makes
 them a property of the format: a message that renders on one conforming
 implementation must not hang another. Stating them as minima leaves
 implementations free to be more generous while guaranteeing a floor.
+
+The pass limit the observation names is not among them. This format resolves a
+message in one walk and repeats nothing (section 5), so there are no passes to
+count — and what a pass limit was holding back was a payload writing message
+text, which section 14.1 forbids outright. Section 13 states four bounds
+instead: an output limit, a read limit, a conversion limit and a nesting
+limit.
 
 ---
 
@@ -1501,10 +1740,10 @@ the key rather than around it stays literal in both cases.
 position. Such a construct is literal text unconditionally (section 6, note 1).
 
 Which substrings of a message are placeholders must be fixed by the message
-text alone. The current behavior makes it depend on how many interpolation
-passes have run, and so on the payload, which no static tool can honor — and a
-static grammar is a prerequisite for extracting a message's parameters at build
-time.
+text alone. The behavior observed above makes it depend on whether some other
+placeholder in the message resolved, and so on the payload, which no static
+tool can honor — and a static grammar is a prerequisite for extracting a
+message's parameters at build time.
 
 Whether a later version should admit a placeholder that spans lines — decidably,
 in that same single scan (section 6, note 7) — is deferred to
@@ -1687,7 +1926,7 @@ that does not exist:
 key "{{name}}"  payload { name: "Alice" }  ->  "Alice"
 key "{{name}}"  no payload                 ->  ""
 key "a\;b"      no payload                 ->  "a;b"
-key "{{a}}"     payload { a: "{{a}}" }     ->  "{{a}}", and a pass-limit report
+key "{{a}}"     payload { a: "{{a}}" }     ->  "{{a}}", and a limit reported
 key "{{name}}"  payload { default: <circular> }  ->  "", and a second report
 ```
 
@@ -1777,6 +2016,101 @@ implementation is reached through.
 The published `@sveltekit-i18n/parser-default` 1.x line predates this
 specification. Where it differs, this document governs and the 1.x behavior is
 informative only.
+
+## Appendix C: what changed from version 1
+
+Version 1 resolved a message by repeated passes of substitution over the whole
+current text. Version 2 resolves it in one walk and reads nothing it has
+emitted. Everything below follows from that.
+
+### What a payload can no longer do
+
+| A value carrying | Version 1 | Version 2 |
+| --- | --- | --- |
+| `{{apiKey}}` | read that payload entry | renders `{{apiKey}}` |
+| `; live:DELETED` | added an option to the construct around it | renders as text |
+| `}}` | closed the enclosing construct early | renders as text |
+| `{{` | kept the enclosing construct from deriving | renders as text |
+| `\;`, `\:`, `\\` | the backslash was removed | renders as written |
+| a trailing `\` | it escaped the next message character | renders as written |
+
+```
+{{state:eq; draft:{{note}}; live:Published; default:?;}}
+```
+
+Over `{ state: 'live', note: 'X; live:Leaked' }` version 1 rendered `Leaked`
+and version 2 renders `Published`. Version 1 substituted the payload's text
+first, and the option that text wrote outranked the one the message spelled;
+version 2 never reads `note` at all, because the option holding it was not the
+one selected.
+
+The same holds of a props value, a payload `default`, a wrapper's `default` and
+a modifier's answer (section 14.1). A caller that escaped its payload values to
+protect them from the format MUST stop: those backslashes now render.
+
+### What a message can now do
+
+A placeholder may hold a placeholder in an option value (section 12). In version
+1 such a construct was not a placeholder at all — the inner one resolved first
+and the outer was scanned again on a later pass, over text the payload had a
+hand in. Most such messages rendered correctly and still do, but three things
+change for them:
+
+- An option the modifier passes over is no longer evaluated. A placeholder in it
+  is not resolved, a modifier it names is not called, and a report it would have
+  made is not made (sections 5, 11).
+- The enclosing key is now extractable. A tool reading a message statically
+  reports every key it names, nested and enclosing alike, where version 1 could
+  see only the innermost.
+- What the message renders no longer depends on what the payload happens to
+  contain.
+
+### What breaks
+
+A `{{` in a **key**, an **option key** or a **modifier name** opens no
+placeholder (section 6, note 10), and the construct around it does not derive.
+Version 1 resolved the inner construct and then re-read the result as a
+placeholder, so these rendered:
+
+```
+{{a; {{b}}:x;}}    payload { a: 'k', b: 'k' }    v1 "x"    v2 "{{a; k:x;}}"
+{{a:{{m}};}}       payload { a: 'A', m: 'eq' }   v1 ""     v2 "{{a:eq;}}"
+```
+
+Both were a payload choosing a message's structure, which is what this version
+exists to stop. A message that wrote either must name its key, its option key
+and its modifier itself.
+
+An option value that resolves to nothing but whitespace is no longer trimmed
+away, because section 8 now reads the spelling: `{{a; x:{{b}};}}` over a `b` of
+three spaces renders three spaces where version 1 rendered none.
+
+### Limits and reports
+
+- The **pass limit** is gone, and so is the `pass-limit` report code. One walk
+  has no passes, and what the limit held back — a payload multiplying itself —
+  a payload can no longer do.
+- A **read limit** and a **nesting limit** are added, with the codes
+  `read-limit` (origin `limit`) and `nesting-limit` (origin `message`).
+- The **output limit** no longer discards a pass whole. A placeholder whose
+  result would carry the output past it resolves to the empty string and the
+  walk carries on, so the message's own text still renders (section 13).
+- A condition is reported at most once per placeholder, and a placeholder the
+  walk never reaches is never reported (section 14.3).
+- Reports are emitted in **walk order** (section 14.3). Version 1 ordered them
+  by the pass that met the condition and then by source position, so a report
+  from a placeholder the payload had written could precede one the message
+  spelled. There are no passes to order by now.
+
+The vocabulary is eight codes where it was seven. An implementation that emits
+`pass-limit` does not conform to this version.
+
+### The tree
+
+`CST.md` revises with this document. An `option-value` node may now carry
+`placeholder` children, and it no longer carries `name` — with a placeholder
+inside it there is no fixed text for that field to hold. The name kinds are
+`key`, `modifier` and `option-key`.
 
 ## License
 
