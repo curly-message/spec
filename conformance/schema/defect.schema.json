@@ -12,7 +12,7 @@
   "properties": {
     "format": {
       "description": "The versioned identifier of the format the catalogue targets.",
-      "const": "curly-message-1"
+      "const": "curly-message-2"
     },
     "defects": {
       "type": "array",

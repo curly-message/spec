@@ -8,7 +8,7 @@ import { format } from '../../src/cases';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
-const LIMITS = { passes: 3, output: 5, conversion: 7 };
+const LIMITS = { output: 5, read: 7, conversion: 7, nesting: 3 };
 
 const REQUEST = { api: 'NumberFormat', options: { maximumFractionDigits: 2 }, input: 1234.5678 } as const;
 
@@ -20,7 +20,7 @@ const CASES: Record<string, Case> = {
   'a.spaced': { id: 'a/spaced', description: 'Pins an output whose ends are whitespace.', message: ' {{v}} ', messageId: 'a.spaced', expected: { output: ' x ' } },
   'a.report': { id: 'a/report', description: 'Pins a report.', message: '{{v:none}}', messageId: 'a.report', expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message', id: 'a.report' }] } },
   'a.order': { id: 'a/order', description: 'Pins the order of two reports.', message: '{{v:none}}{{w; eq:}}', messageId: 'a.order', expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message', id: 'a.order' }, { code: 'missing-options', origin: 'payload', id: 'a.order' }] } },
-  limits: { id: 'limits/over', description: 'Pins the declared pass limit.', generate: 'passes-over-limit' },
+  limits: { id: 'limits/over', description: 'Pins the declared nesting limit.', generate: 'nesting-over-limit' },
   'b.format': { id: 'b/format', description: 'Pins a request.', message: '{{n:number}}', messageId: 'b.format', locale: 'de', expected: { format: REQUEST } },
 };
 
@@ -31,13 +31,13 @@ const ANSWERS: Record<string, Resolved> = {
   'a.spaced': { output: ' x ', reports: [] },
   'a.report': { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message', id: 'a.report' }] },
   'a.order': { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message', id: 'a.order' }, { code: 'missing-options', origin: 'payload', id: 'a.order' }] },
-  limits: { output: '{{p4}}', reports: [{ code: 'pass-limit', origin: 'limit', id: 'limits', limit: LIMITS.passes }] },
+  limits: { output: 'fallback', reports: [{ code: 'nesting-limit', origin: 'message', id: 'limits', limit: LIMITS.nesting }] },
   'b.format': { output: format(REQUEST, 'de'), reports: [] },
 };
 
 const file = (name: string, level: ResolutionFixtureFile['level'], ids: string[]): Fixture => ({
   name,
-  file: { format: 'curly-message-1', level, section: level === 'intl' ? '11.2' : '9', cases: ids.map((id) => CASES[id]) },
+  file: { format: 'curly-message-2', level, section: level === 'intl' ? '11.2' : '9', cases: ids.map((id) => CASES[id]) },
 });
 
 // One message per thing a defect of the tree can reach: a separator, a name
@@ -51,7 +51,7 @@ const TREES: Record<string, ExpectedNode[]> = {
     { type: 'space', text: ' ' },
     { type: 'option-key', text: 'x', name: 'x', nodes: [{ type: 'text', text: 'x' }] },
     { type: 'separator', text: ':' },
-    { type: 'option-value', text: 'y', name: 'y', nodes: [{ type: 'text', text: 'y' }] },
+    { type: 'option-value', text: 'y', nodes: [{ type: 'text', text: 'y' }] },
     { type: 'close', text: '}}' },
   ] }],
   '{{a\\;b}}': [{ type: 'placeholder', text: '{{a\\;b}}', nodes: [
@@ -96,7 +96,7 @@ const CST = {
 const trees: Fixture = {
   name: 'tree.json',
   file: {
-    format: 'curly-message-1',
+    format: 'curly-message-2',
     kind: 'tree',
     section: '6',
     cases: Object.entries(TREES).map(([message, expected], index) => ({ id: `tree/case-${index + 1}`, description: 'Pins one tree.', message, expected })),
@@ -203,7 +203,7 @@ describe('audit', () => {
 
   it('calls a defect missed where it reached the runner and the runner answered nothing', () => {
     const anonymous: ConcreteCase = { id: 'a/anonymous', description: 'Pins a report no expectation names an id of.', message: '{{v:none}}', messageId: 'a.report', expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message' }] } };
-    const set: Fixture[] = [{ name: 'core.json', file: { format: 'curly-message-1', level: 'core', section: '9', cases: [anonymous] } }, SET[1]];
+    const set: Fixture[] = [{ name: 'core.json', file: { format: 'curly-message-2', level: 'core', section: '9', cases: [anonymous] } }, SET[1]];
 
     expect(outcomes(conforming(), set)).toMatchObject({ 'report-id-changed': 'missed', 'report-code-changed': 'caught' });
     expect(audited(conforming(), set)['report-id-changed']).toMatchObject({ expects: 'fail', observed: 'none' });

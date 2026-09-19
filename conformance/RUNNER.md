@@ -35,7 +35,7 @@ manifest, or the directory; both are sorted by file name, and a runner reports
 in that order so two runs of the same set line up.
 
 `format` in every file is the versioned identifier of the format the file
-targets, and is `curly-message-1` for version 1. A file whose `format` a runner
+targets, and is `curly-message-2` for version 2. A file whose `format` a runner
 does not know is a file it must refuse rather than skip: a set a runner could
 not read is not a set an implementation passed.
 
@@ -91,12 +91,9 @@ is listed with the reason it was left out, never dropped silently: a set whose
 skipped cases are invisible is a set whose coverage cannot be read off the
 summary.
 
-Four reasons leave a case out, and no others:
+Three reasons leave a case out, and no others:
 
 * Its level is one the adapter does not claim, or one the caller excluded.
-* It is the `output-over-limit-stops` construction and the Extensions level is
-  not running. That construction registers a host-defined modifier, so it
-  needs Extensions whatever the level of the file it is written in.
 * Its formatting request reads a property the adapter declared it cannot
   express (section 11.2).
 * It pins the tree and the adapter offers none. A tree file declares no level,
@@ -107,17 +104,18 @@ Four reasons leave a case out, and no others:
 
 Section 13 states minima and requires an implementation to document what it
 permits, so a case at a limit cannot be written out: the runner builds it from
-the limits the adapter declared. README.md gives the six constructions, the
+the limits the adapter declared. README.md gives the eight constructions, the
 message and payload each builds, and what each expects. A runner builds them
 from the adapter's own numbers, not from section 13's minima; an
 implementation that permits more is exercised at what it documents.
 
-One of the six carries a check the comparison cannot make.
-`output-over-limit-stops` registers a modifier on a placeholder past the output
-limit and requires that the modifier is never called: an implementation that
-resolves the pass and then discards it produces the same text as one that
-stopped, and only the call tells them apart. A runner that omits the check
-passes both.
+Each of the four limits is built at its bound and one past it, and each
+construction is shaped so that it spends one budget alone. The output
+constructions write their text from an option value, which is the message's
+own text and so costs no reading; the read construction hands over a long
+value the placeholder selects nothing from, so almost nothing of it reaches
+the output. A construction that spent two budgets would fail an implementation
+for the limit the case was not about.
 
 ## Executing a case
 
@@ -163,11 +161,12 @@ describes makes exactly one request: more than one, or none, is a failure.
 
 ### The reports
 
-Reports are compared in order. Section 14.3 has an implementation report in the
-pass where the condition was met, and section 9 resolves a pass in source
-order, so the order is part of what a case pins and comparing them as a set
-loses it. The count is compared as written: a report more is a failure, and so
-is a report fewer.
+Reports are compared in order. Section 14.3 has an implementation report in
+walk order: where neither of two reporting placeholders holds the other, the
+one the message writes first reports first, and where one holds the other, the
+inner reports while the outer's value is being read. The order is part of what
+a case pins, and comparing them as a set loses it. The count is compared as
+written: a report more is a failure, and so is a report fewer.
 
 A report is compared by its `code`, always. Its `origin`, its `id` and its
 `limit` are compared where the adapter's report carries them and the case

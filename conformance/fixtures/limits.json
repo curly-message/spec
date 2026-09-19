@@ -1,37 +1,37 @@
 {
-  "format": "curly-message-1",
+  "format": "curly-message-2",
   "level": "core",
   "section": "13",
   "cases": [
     {
-      "id": "limits/passes-at-limit",
-      "description": "At least the declared number of passes is performed: a chain that settles in exactly that many passes settles, with nothing to report.",
-      "section": "13",
-      "generate": "passes-at-limit"
-    },
-    {
-      "id": "limits/passes-over-limit",
-      "description": "On reaching the pass limit the last settled text is returned with its placeholder unresolved, nothing raises, and pass-limit is reported once with origin limit.",
-      "section": "13",
-      "generate": "passes-over-limit"
-    },
-    {
       "id": "limits/output-at-limit",
-      "description": "At least the declared number of characters of output is permitted: an output of exactly that length is produced whole, with nothing to report.",
+      "description": "At least the declared number of characters of placeholder result is permitted: a placeholder whose result is exactly that long produces it whole, with nothing to report.",
       "section": "13",
       "generate": "output-at-limit"
     },
     {
       "id": "limits/output-over-limit",
-      "description": "A pass whose output would exceed the limit is discarded whole, so the message as it reached the first pass is what settles, and output-limit is reported once with origin limit.",
+      "description": "A placeholder whose result would carry the output past the limit resolves to the empty string instead, output-limit is reported once with origin limit, and the message's own text around it still renders.",
       "section": "13",
       "generate": "output-over-limit"
     },
     {
-      "id": "limits/output-over-limit-stops",
-      "description": "A placeholder past the output limit is neither resolved nor reported, and the host-defined modifier it names is not called.",
+      "id": "limits/output-over-limit-continues",
+      "description": "The walk carries on past the output limit, and a result the output had no room for spends none of the budget, so the placeholder after it resolves and is carried.",
       "section": "13",
-      "generate": "output-over-limit-stops"
+      "generate": "output-over-limit-continues"
+    },
+    {
+      "id": "limits/read-at-limit",
+      "description": "At least the declared number of characters of value text is permitted, whether or not any of it reaches the output: a placeholder reading exactly that much and selecting nothing from it resolves, with nothing to report.",
+      "section": "13",
+      "generate": "read-at-limit"
+    },
+    {
+      "id": "limits/read-over-limit",
+      "description": "The read limit is tested before a placeholder reads, so one that found a budget and spent it past the limit still resolves; the next resolves to the empty string, and read-limit is reported once with origin limit.",
+      "section": "13",
+      "generate": "read-over-limit"
     },
     {
       "id": "limits/conversion-over-limit",
@@ -40,24 +40,16 @@
       "generate": "conversion-over-limit"
     },
     {
-      "id": "limits/pass-limit-unescapes-settled-text",
-      "description": "A limit ends the process the way a settling pass does, so the single removal of escape sequences still runs over the text the pass limit stopped, which a self-referential value reaches whatever the limit is.",
+      "id": "limits/nesting-at-limit",
+      "description": "At least the declared number of levels of placeholder is resolved, counting the outermost as the first: a message nesting exactly that many resolves through to the innermost, with nothing to report.",
       "section": "13",
-      "message": "a\\;b {{v}}",
-      "payload": {
-        "v": "{{v}}"
-      },
-      "messageId": "limits.self-reference",
-      "expected": {
-        "output": "a;b {{v}}",
-        "reports": [
-          {
-            "code": "pass-limit",
-            "origin": "limit",
-            "id": "limits.self-reference"
-          }
-        ]
-      }
+      "generate": "nesting-at-limit"
+    },
+    {
+      "id": "limits/nesting-over-limit",
+      "description": "A placeholder nested deeper than the implementation resolves is a message error: it takes its fallback chain, the walk carries on, and nesting-limit is reported once with origin message.",
+      "section": "13",
+      "generate": "nesting-over-limit"
     }
   ]
 }

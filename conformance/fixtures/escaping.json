@@ -1,5 +1,5 @@
 {
-  "format": "curly-message-1",
+  "format": "curly-message-2",
   "level": "core",
   "section": "7",
   "cases": [
@@ -64,9 +64,9 @@
       "id": "escaping/every-whitespace-member",
       "description": "Every member of the whitespace class escapes, the line terminators among them: the backslash before each of the twenty-five is removed.",
       "section": "7",
-      "message": "\\\u0009|\\\u000a|\\\u000b|\\\u000c|\\\u000d|\\ |\\\u00a0|\\\u1680|\\\u2000|\\\u2001|\\\u2002|\\\u2003|\\\u2004|\\\u2005|\\\u2006|\\\u2007|\\\u2008|\\\u2009|\\\u200a|\\\u2028|\\\u2029|\\\u202f|\\\u205f|\\\u3000|\\\ufeff",
+      "message": "\\\t|\\\n|\\\u000b|\\\f|\\\r|\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\ |\\　|\\﻿",
       "expected": {
-        "output": "\u0009|\u000a|\u000b|\u000c|\u000d| |\u00a0|\u1680|\u2000|\u2001|\u2002|\u2003|\u2004|\u2005|\u2006|\u2007|\u2008|\u2009|\u200a|\u2028|\u2029|\u202f|\u205f|\u3000|\ufeff"
+        "output": "\t|\n|\u000b|\f|\r| | | | | | | | | | | | | | | | | | |　|﻿"
       }
     },
     {
@@ -118,27 +118,27 @@
       }
     },
     {
-      "id": "escaping/value-backslash-joins-text",
-      "description": "A backslash a value ends in consumes the message character after it, because the removal runs over the final text.",
-      "section": "7",
+      "id": "escaping/value-backslash-consumes-nothing",
+      "description": "A backslash a value ends with is data and consumes nothing, so the message's own text after the placeholder stands beside it.",
+      "section": "5",
       "message": "{{v}};",
       "payload": {
         "v": "x\\"
       },
       "expected": {
-        "output": "x;"
+        "output": "x\\;"
       }
     },
     {
       "id": "escaping/key-colon-and-semicolon",
-      "description": "A key carries a colon and a semicolon as escape sequences and is matched after unescaping.",
+      "description": "A key is unescaped once and then matched by code-point equality, so one holding a colon and a semicolon is written with escapes and found; the value it holds is data and keeps its backslashes.",
       "section": "7",
       "message": "{{pl\\:ace\\;holder}}",
       "payload": {
         "pl:ace;holder": "TEST \\{\\{VALUE\\}\\}"
       },
       "expected": {
-        "output": "TEST {{VALUE}}"
+        "output": "TEST \\{\\{VALUE\\}\\}"
       }
     },
     {
@@ -195,13 +195,13 @@
       "id": "escaping/key-line-terminator",
       "description": "A line terminator is escapable, but an escape sequence carrying one is never inside a placeholder, so the construct is literal text.",
       "section": "7",
-      "message": "{{v\\\u000a}}",
+      "message": "{{v\\\n}}",
       "payload": {
         "v": "HIT",
-        "v\u000a": "TERMINATOR"
+        "v\n": "TERMINATOR"
       },
       "expected": {
-        "output": "{{v\u000a}}"
+        "output": "{{v\n}}"
       }
     },
     {
@@ -418,32 +418,32 @@
       }
     },
     {
-      "id": "escaping/value-unescaped-like-message",
-      "description": "The text a value converts to is unescaped like the message: an escaped backslash becomes one and a backslash before a letter stands.",
-      "section": "7",
+      "id": "escaping/value-not-unescaped",
+      "description": "A value is not unescaped, so a path it carries reaches the output as the caller wrote it.",
+      "section": "5",
       "message": "{{v}}",
       "payload": {
         "v": "\\\\server\\share"
       },
       "expected": {
-        "output": "\\server\\share"
+        "output": "\\\\server\\share"
       }
     },
     {
-      "id": "escaping/value-removed-once",
-      "description": "Escape sequences are removed exactly once, from the final text, never from the result of a pass.",
-      "section": "7",
+      "id": "escaping/value-backslashes-stand",
+      "description": "Nothing removes escape sequences from a value, so a caller that doubled its backslashes sees both of them.",
+      "section": "5",
       "message": "{{v}}",
       "payload": {
         "v": "a\\\\\\\\b"
       },
       "expected": {
-        "output": "a\\\\b"
+        "output": "a\\\\\\\\b"
       }
     },
     {
-      "id": "escaping/value-escaped-pair",
-      "description": "A value containing an escaped opening pair does not become a placeholder.",
+      "id": "escaping/value-escaped-pair-stands",
+      "description": "An escaped pair a value carries is neither unescaped nor parsed, so the backslashes and the braces both stand.",
       "section": "5",
       "message": "{{v}}",
       "payload": {
@@ -451,12 +451,12 @@
         "n": "N"
       },
       "expected": {
-        "output": "{{n}}"
+        "output": "\\{\\{n\\}\\}"
       }
     },
     {
-      "id": "escaping/value-suppressed-opening-pair",
-      "description": "A backslash a value puts before an opening pair is still an escape sequence on the next pass, so the pair does not open.",
+      "id": "escaping/value-backslash-suppresses-nothing",
+      "description": "A backslash a value carries suppresses nothing, because nothing in a value opens a placeholder to suppress.",
       "section": "5",
       "message": "{{v}}",
       "payload": {
@@ -464,12 +464,12 @@
         "n": "N"
       },
       "expected": {
-        "output": "{{n}}"
+        "output": "\\{{n}}"
       }
     },
     {
-      "id": "escaping/value-escaped-backslash-before-pair",
-      "description": "An escaped backslash a value introduces is consumed as a pair on the next pass, so the opening pair after it stands and resolves.",
+      "id": "escaping/value-backslash-before-pair-stands",
+      "description": "A doubled backslash before a pair a value carries is data on both counts: the backslashes stand and the pair opens nothing.",
       "section": "5",
       "message": "{{v}}",
       "payload": {
@@ -477,13 +477,13 @@
         "n": "N"
       },
       "expected": {
-        "output": "\\N"
+        "output": "\\\\{{n}}"
       }
     },
     {
-      "id": "escaping/serialization-not-parsable",
-      "description": "A serialized value carrying a backslash reaches the output through the single removal, so it is no longer parsable as JSON.",
-      "section": "7",
+      "id": "escaping/serialization-reaches-the-output-parsable",
+      "description": "A serialization reaches the output as the host made it, so the backslash it doubled is doubled there and the text parses back as the JSON it was made from.",
+      "section": "5",
       "message": "{{v}}",
       "payload": {
         "v": {
@@ -491,19 +491,19 @@
         }
       },
       "expected": {
-        "output": "{\"a\":\"C:\\U\"}"
+        "output": "{\"a\":\"C:\\\\U\"}"
       }
     },
     {
-      "id": "escaping/serialization-doubled-by-caller",
-      "description": "A caller that doubles every backslash of a serialization gets that serialization back from the removal.",
-      "section": "7",
+      "id": "escaping/serialization-needs-no-doubling",
+      "description": "A caller that doubled a serialization's backslashes to survive a removal sees all four, because nothing removes them.",
+      "section": "5",
       "message": "{{v}}",
       "payload": {
         "v": "{\"a\":\"C:\\\\\\\\U\"}"
       },
       "expected": {
-        "output": "{\"a\":\"C:\\\\U\"}"
+        "output": "{\"a\":\"C:\\\\\\\\U\"}"
       }
     },
     {

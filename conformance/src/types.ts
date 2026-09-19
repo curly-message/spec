@@ -13,13 +13,20 @@ export type Level = 'core' | 'intl' | 'extensions';
 
 /**
  * The limits of section 13 an implementation permits, as it documents them:
- * the passes it performs, the output it holds in the host's own string unit,
- * and the nodes one conversion may visit. Section 13 states the minima.
+ * the placeholder result its output holds and the value text it reads, both
+ * in the host's own string unit, the nodes one conversion may visit, and the
+ * levels of placeholder it resolves. Section 13 states the minima.
+ *
+ * The constructions that sit at the output boundary write their output from
+ * the message rather than from the payload, and the ones at the read boundary
+ * read a value they select nothing from, so neither spends the other's budget
+ * and an implementation is measured against each on its own.
  */
 export type Limits = {
-  passes: number;
   output: number;
+  read: number;
   conversion: number;
+  nesting: number;
 };
 
 /**
@@ -59,7 +66,7 @@ export type Resolution = {
   defaults?: unknown;
 };
 
-export type ReportCode = 'unknown-modifier' | 'failed-modifier' | 'missing-options' | 'unserializable-value' | 'missing-locale' | 'pass-limit' | 'output-limit';
+export type ReportCode = 'unknown-modifier' | 'failed-modifier' | 'missing-options' | 'unserializable-value' | 'missing-locale' | 'nesting-limit' | 'output-limit' | 'read-limit';
 
 export type ReportOrigin = 'message' | 'payload' | 'limit';
 
@@ -188,7 +195,7 @@ export type ConcreteCase = {
   expected: Expected;
 };
 
-export type Generator = 'passes-at-limit' | 'passes-over-limit' | 'output-at-limit' | 'output-over-limit' | 'output-over-limit-stops' | 'conversion-over-limit';
+export type Generator = 'output-at-limit' | 'output-over-limit' | 'output-over-limit-continues' | 'read-at-limit' | 'read-over-limit' | 'conversion-over-limit' | 'nesting-at-limit' | 'nesting-over-limit';
 
 /** A case the runner builds from the adapter's limits. */
 export type GeneratedCase = {
@@ -238,7 +245,7 @@ export type TreeCase = {
 
 /** A file of cases that pin a resolution: the set as it was before the tree. */
 export type ResolutionFixtureFile = {
-  format: 'curly-message-1';
+  format: 'curly-message-2';
   kind?: 'resolution';
   level: Level;
   section: Section;
@@ -251,7 +258,7 @@ export type ResolutionFixtureFile = {
  * cases run where the adapter offers a tree.
  */
 export type TreeFixtureFile = {
-  format: 'curly-message-1';
+  format: 'curly-message-2';
   kind: 'tree';
   section: Section;
   cases: TreeCase[];
@@ -272,7 +279,7 @@ export type ManifestEntry =
 
 /** The manifest shipped as `index.json`. */
 export type Manifest = {
-  format: 'curly-message-1';
+  format: 'curly-message-2';
   version: string;
   files: ManifestEntry[];
 };
@@ -390,7 +397,7 @@ export type DefectEntry = {
 
 /** The catalogue shipped as `defects.json`. */
 export type Catalogue = {
-  format: 'curly-message-1';
+  format: 'curly-message-2';
   defects: DefectEntry[];
 };
 

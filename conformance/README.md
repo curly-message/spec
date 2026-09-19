@@ -30,8 +30,9 @@ offering one, and those cases are then left out.
 
 **Stable**, on npm as `@curly-message/conformance`. The set lives in the
 specification's repository because its fixtures are artifacts of the format,
-not of any one implementation, and it is versioned against the specification:
-version 1 of the set targets version 1 of the format.
+not of any one implementation, and every file states the format version it
+targets: this set targets `curly-message-2`. The set carries a version line of
+its own, because a case may be corrected without the format changing.
 
 ## The fixture files
 
@@ -161,21 +162,29 @@ level's cases are.
 Section 13 lets an implementation permit more than its minima and requires it
 to document what it permits, so a case at a limit cannot be written out: it is
 built from the limits the adapter declares, and exercises the implementation at
-the bounds it documents. `P` is the declared pass limit, `L` the output limit,
-`C` the conversion limit, and every generated case reports under the id
-`limits`.
+the bounds it documents. `L` is the declared output limit, `R` the read limit,
+`C` the conversion limit, `N` the nesting limit, and every generated case
+reports under the id `limits`.
+
+Each construction spends one budget and leaves the others room, so a case
+built at one limit cannot be failed by another: the output constructions write
+from an option value, which is the message's own text and costs no reading,
+and the read construction selects nothing, so the value it spends the read
+budget on never reaches the output.
 
 | `generate` | Message and payload | Expected |
 | --- | --- | --- |
-| `passes-at-limit` | `{{p1}}`, with `p1` … `p<P-1>` each holding the placeholder of the next, and `p<P>` holding `settled`. Settling takes exactly `P` passes. | `settled`, no reports. |
-| `passes-over-limit` | The same chain one link longer: `p<P>` holds `{{p<P+1>}}` and `p<P+1>` holds `settled`. | `{{p<P+1>}}` — the last settled text, its placeholder unresolved — and one `pass-limit` report of origin `limit`. |
-| `output-at-limit` | `{{v}}`, with `v` holding `x` repeated `L` times. | That text, no reports. |
-| `output-over-limit` | `{{v}}`, with `v` holding `x` repeated `L + 1` times. | `{{v}}` — the pass was discarded whole, so the message as it reached the first pass is what settled — and one `output-limit` report of origin `limit`. |
-| `output-over-limit-stops` | `{{v}}{{w:raise}}`, with `v` as above, `w` holding `w`, and `raise` registered under that name. | `{{v}}{{w:raise}}` and one `output-limit` report: a placeholder past the limit is neither resolved nor reported, and the modifier it names is not called. This case is at the Extensions level. |
+| `output-at-limit` | `{{v; a:<x × L>;}}`, with `v` holding `a`. | `x` repeated `L` times, no reports. |
+| `output-over-limit` | `A{{v; a:<x × (L + 1)>;}}B`, with `v` holding `a`. | `AB` — the placeholder resolved to the empty string, and the message's own text around it is the caller's and counts against nothing — and one `output-limit` report of origin `limit`. |
+| `output-over-limit-continues` | The same placeholder followed by `{{w}}`, with `w` holding `tail`. | `tail` and one `output-limit` report: a result the output has no room for spends nothing, so what follows it still resolves. |
+| `read-at-limit` | `{{v:eq; nomatch:X; default:ok;}}`, with `v` holding `x` repeated `R` times. | `ok`, no reports. |
+| `read-over-limit` | The same placeholder followed by `{{w}}`, with `v` one character longer and `w` holding `tail`. | `ok` and one `read-limit` report of origin `limit`: the budget is tested before a placeholder reads, so the one that spent it past the limit still resolves and the one after it pays. |
 | `conversion-over-limit` | `{{v; default:D}}`, with `v` a `nodes` value of `C + 1`. | `D` and one `unserializable-value` report of origin `payload`: a serialization that reaches the limit describes nothing, so the placeholder takes the chain. |
+| `nesting-at-limit` | `N` placeholders, each selecting the option that holds the next; the innermost is `{{v; a:settled; default:fallback;}}`. `v` holds `a`. | `settled`, no reports. |
+| `nesting-over-limit` | The same nesting one level deeper. | `fallback` and one `nesting-limit` report of origin `message`: the innermost placeholder is refused and takes its fallback chain, and every level around it selects the option that holds it. |
 
 An adapter whose reports carry a `limit` is held to the declared limit on the
-`pass-limit` and `output-limit` reports.
+`output-limit`, `read-limit` and `nesting-limit` reports.
 
 ### Tree cases
 
@@ -226,7 +235,7 @@ import type { Adapter } from '@curly-message/conformance';
 
 export const adapter: Adapter = {
   levels: ['core', 'intl', 'extensions'],
-  limits: { passes: 10, output: 100000, conversion: 100000 },
+  limits: { output: 100000, read: 100000, conversion: 100000, nesting: 8 },
   resolve: ({ message, payload, props, locale, id, modifiers, defaults }) => {
     // Call the implementation and answer with what it produced.
     return { output, reports };
@@ -306,10 +315,8 @@ plan and sorts the outcomes. Both take options: `fixtures`, to run a set other
 than the shipped one, and `levels`, to run a subset of the levels the adapter
 claims. An adapter must claim `core`, and `levels` must name only levels it
 claims; anything else is an error rather than a skip. A case at a level that
-does not run is skipped with a reason naming the level, and so is
-`output-over-limit-stops` wherever `extensions` does not run, whatever the
-level of its file. A tree case is skipped wherever the adapter offers no
-`cst`.
+does not run is skipped with a reason naming the level, and a tree case is
+skipped wherever the adapter offers no `cst`.
 
 The package also exports what those are built from: `fixtures()` reads the
 shipped set and `load(directory)` any directory of fixture files, both sorted

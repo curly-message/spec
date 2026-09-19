@@ -175,7 +175,7 @@ export const mutations: Record<Defect, (adapter: Adapter) => Mutation> = {
 
   'claims-unknown-level': (adapter) => claiming(adapter, { levels: [...adapter.levels, 'ecmascript' as Level] }),
 
-  'claims-no-limits': (adapter) => claiming(adapter, { limits: { ...adapter.limits, passes: 0 } }),
+  'claims-no-limits': (adapter) => claiming(adapter, { limits: { ...adapter.limits, nesting: 0 } }),
 
   'tree-unoffered': (adapter) => claiming(adapter, { cst: undefined }, () => adapter.cst !== undefined),
 

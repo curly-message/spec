@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { fixtures, type Case, type ExpectedNode, type Manifest } from '../../src';
+import { NAMED } from '../../src/tree';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
@@ -74,7 +75,7 @@ describe('the shipped set', () => {
 
     expect(status).toBe(0);
     expect(read(join(root, 'index.json'))).toEqual(generated);
-    expect(generated).toMatchObject({ format: 'curly-message-1', version: (read(join(root, 'package.json')) as { version: string }).version });
+    expect(generated).toMatchObject({ format: 'curly-message-2', version: (read(join(root, 'package.json')) as { version: string }).version });
     expect(generated.files).toEqual(set.map(({ name, file }) => ({ path: `fixtures/${name}`, ...file.kind === 'tree' ? { kind: file.kind } : { level: file.level }, section: file.section, cases: file.cases.length })));
   });
 
@@ -91,7 +92,7 @@ describe('the shipped set', () => {
   it('writes its generated cases as the runner builds them', () => {
     const generated = resolutions.filter((entry): entry is { name: string; c: Extract<Case, { generate: string }> } => 'generate' in entry.c);
 
-    expect(generated.filter(({ c }) => !['passes-at-limit', 'passes-over-limit', 'output-at-limit', 'output-over-limit', 'output-over-limit-stops', 'conversion-over-limit'].includes(c.generate))).toEqual([]);
+    expect(generated.filter(({ c }) => !['output-at-limit', 'output-over-limit', 'output-over-limit-continues', 'read-at-limit', 'read-over-limit', 'conversion-over-limit', 'nesting-at-limit', 'nesting-over-limit'].includes(c.generate))).toEqual([]);
   });
 
   // What the runner holds an implementation to, held to the file itself: an
@@ -103,7 +104,9 @@ describe('the shipped set', () => {
   });
 
   it('states a name on every name node of a tree expectation, and a reading on every escape', () => {
-    const named = ['key', 'modifier', 'option-key', 'option-value'];
+    // The kinds the runner compares a name on, read off the runner's own list
+    // so a kind that stops being one is not asked for here.
+    const named: readonly string[] = NAMED;
     const nodes = trees.flatMap(({ c }) => flatten(c.expected).map((node) => ({ id: c.id, node })));
 
     expect(nodes.filter(({ node }) => named.includes(node.type) && node.name === undefined).map(({ id }) => id)).toEqual([]);

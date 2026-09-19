@@ -1,5 +1,5 @@
 {
-  "format": "curly-message-1",
+  "format": "curly-message-2",
   "defects": [
     {
       "id": "output-truncated",

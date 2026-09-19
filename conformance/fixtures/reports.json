@@ -1,5 +1,5 @@
 {
-  "format": "curly-message-1",
+  "format": "curly-message-2",
   "level": "core",
   "section": "14",
   "cases": [
@@ -403,13 +403,11 @@
       }
     },
     {
-      "id": "reports/later-pass-reports-again",
-      "description": "A placeholder a later pass finds again, because a value carried it, met the condition again and is reported again.",
+      "id": "reports/each-placeholder-reports-for-itself",
+      "description": "A condition is reported by each placeholder that meets it, so a message writing the same placeholder twice reports twice.",
       "section": "14.3",
-      "message": "{{v:zz; default:D}} {{w}}",
-      "payload": {
-        "w": "{{v:zz; default:D}}"
-      },
+      "message": "{{v:zz; default:D}} {{v:zz; default:D}}",
+      "payload": {},
       "messageId": "reports.id",
       "expected": {
         "output": "D D",
@@ -460,16 +458,14 @@
       }
     },
     {
-      "id": "reports/pass-order-before-source-order",
-      "description": "A report is emitted in the pass where the condition was met, so a placeholder found on the second pass reports after one met on the first however the two sit in the text.",
+      "id": "reports/walk-order-is-source-order",
+      "description": "Reports are emitted in the order the walk meets the conditions, so where neither placeholder holds the other the one the message writes first reports first.",
       "section": "14.3",
-      "message": "{{w}}{{a:zz; default:A}}",
-      "payload": {
-        "w": "{{b:eq; default:B}}"
-      },
+      "message": "{{a:zz; default:A}}{{b:eq; default:B}}",
+      "payload": {},
       "messageId": "reports.id",
       "expected": {
-        "output": "BA",
+        "output": "AB",
         "reports": [
           {
             "code": "unknown-modifier",
@@ -478,6 +474,54 @@
           },
           {
             "code": "missing-options",
+            "origin": "message",
+            "id": "reports.id"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/inner-reports-while-the-value-is-read",
+      "description": "Where one placeholder holds another, the inner reports while the outer's value is being read: after the outer's own condition and before its result is produced.",
+      "section": "14.3",
+      "message": "{{v:zz; default:{{n:eq;}};}}",
+      "payload": {},
+      "messageId": "reports.id",
+      "expected": {
+        "output": "",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "id": "reports.id"
+          },
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "id": "reports.id"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/inner-reports-before-what-follows-it",
+      "description": "A placeholder inside an option the modifier selected reports where the walk reaches it, which is before every placeholder the message writes after the one holding it.",
+      "section": "14.3",
+      "message": "{{v:eq; x:{{n:zz; default:N;}}; default:D;}}{{m:yy; default:M;}}",
+      "payload": {
+        "v": "x"
+      },
+      "messageId": "reports.id",
+      "expected": {
+        "output": "NM",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "id": "reports.id"
+          },
+          {
+            "code": "unknown-modifier",
             "origin": "message",
             "id": "reports.id"
           }

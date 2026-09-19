@@ -10,12 +10,10 @@ type Expectation = {
   reports: (ExpectedReport & { limit?: number })[];
 };
 
-// A case with its inputs built and its expectation computed, plus a check that
-// only the run can answer, where the case has one.
+// A case with its inputs built and its expectation computed.
 type Prepared = {
   input: Resolution;
   expected: Expectation;
-  verify?: () => Failure | undefined;
 };
 
 const failure = (reason: string, expected: unknown, actual: unknown): Failure => ({ ok: false, reason, expected, actual });
@@ -63,49 +61,65 @@ const concrete = (c: ConcreteCase): Prepared => ({
 // Every generated case reports under this id.
 const ID = 'limits';
 
-// `p1` … `p<links-1>` each hold the placeholder of the next; the last holds
-// the text the chain settles to.
-const chain = (links: number) => Object.fromEntries(Array.from({ length: links }, (_, index) => [`p${index + 1}`, index + 1 < links ? `{{p${index + 2}}}` : 'settled']));
+// An output of the stated length written entirely by the message: the
+// placeholder selects an option, and an option value is the message's own
+// text, so what reaches the output is the placeholder's result while the
+// payload was read for one character.
+const writes = (length: number) => `{{v; a:${'x'.repeat(length)};}}`;
 
-const limit = (code: 'pass-limit' | 'output-limit', declared: number): Expectation['reports'][number] => ({ code, origin: 'limit', id: ID, limit: declared });
+// A value of the stated length the placeholder selects nothing from: the read
+// budget is spent whole and two characters reach the output.
+const reads = '{{v:eq; nomatch:X; default:ok;}}';
+
+// A message nesting the stated number of levels, each selecting the option
+// that holds the next. The innermost declares a fallback, so a level the
+// nesting limit refuses is visible as the chain it takes.
+const nest = (levels: number): string => (levels <= 1 ? '{{v; a:settled; default:fallback;}}' : `{{v; a:${nest(levels - 1)};}}`);
+
+const limit = (code: 'nesting-limit' | 'output-limit' | 'read-limit', origin: ExpectedReport['origin'], declared: number): Expectation['reports'][number] => ({ code, origin, id: ID, limit: declared });
 
 const generators: Record<Generator, (limits: Limits) => Prepared> = {
-  'passes-at-limit': ({ passes }) => ({
-    input: { message: '{{p1}}', payload: chain(passes), id: ID },
-    expected: { output: 'settled', reports: [] },
-  }),
-  'passes-over-limit': ({ passes }) => ({
-    input: { message: '{{p1}}', payload: chain(passes + 1), id: ID },
-    expected: { output: `{{p${passes + 1}}}`, reports: [limit('pass-limit', passes)] },
-  }),
   'output-at-limit': ({ output: length }) => ({
-    input: { message: '{{v}}', payload: { v: 'x'.repeat(length) }, id: ID },
+    input: { message: writes(length), payload: { v: 'a' }, id: ID },
     expected: { output: 'x'.repeat(length), reports: [] },
   }),
   'output-over-limit': ({ output: length }) => ({
-    input: { message: '{{v}}', payload: { v: 'x'.repeat(length + 1) }, id: ID },
-    expected: { output: '{{v}}', reports: [limit('output-limit', length)] },
+    input: { message: `A${writes(length + 1)}B`, payload: { v: 'a' }, id: ID },
+    // The placeholder resolves to the empty string and the message's own text
+    // still renders, because that text is the caller's and is counted against
+    // no limit.
+    expected: { output: 'AB', reports: [limit('output-limit', 'limit', length)] },
   }),
-  'output-over-limit-stops': ({ output: length }) => {
-    // The placeholder past the limit must not reach its modifier, which no
-    // output shows: an implementation that resolves the pass before
-    // discarding it renders the same text.
-    let called = false;
-    const raise = (input: Parameters<typeof behaviours.raise>[0]) => {
-      called = true;
-
-      return behaviours.raise(input);
-    };
-
-    return {
-      input: { message: '{{v}}{{w:raise}}', payload: { v: 'x'.repeat(length + 1), w: 'w' }, id: ID, modifiers: { raise } },
-      expected: { output: '{{v}}{{w:raise}}', reports: [limit('output-limit', length)] },
-      verify: () => called ? failure('The modifier past the output limit was called.', 'not called', 'called') : undefined,
-    };
-  },
+  'output-over-limit-continues': ({ output: length }) => ({
+    input: { message: `${writes(length + 1)}{{w}}`, payload: { v: 'a', w: 'tail' }, id: ID },
+    // A result the output has no room for spends nothing, so the placeholder
+    // after it is resolved and carried.
+    expected: { output: 'tail', reports: [limit('output-limit', 'limit', length)] },
+  }),
+  'read-at-limit': ({ read }) => ({
+    input: { message: reads, payload: { v: 'x'.repeat(read) }, id: ID },
+    expected: { output: 'ok', reports: [] },
+  }),
+  'read-over-limit': ({ read }) => ({
+    input: { message: `${reads}{{w}}`, payload: { v: 'x'.repeat(read + 1), w: 'tail' }, id: ID },
+    // The budget is tested before a placeholder reads, so the one that spent
+    // it past the limit still resolves and the one after it pays.
+    expected: { output: 'ok', reports: [limit('read-limit', 'limit', read)] },
+  }),
   'conversion-over-limit': ({ conversion }) => ({
     input: { message: '{{v; default:D}}', payload: { v: nodes(conversion + 1) }, id: ID },
     expected: { output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', id: ID }] },
+  }),
+  'nesting-at-limit': ({ nesting }) => ({
+    input: { message: nest(nesting), payload: { v: 'a' }, id: ID },
+    expected: { output: 'settled', reports: [] },
+  }),
+  'nesting-over-limit': ({ nesting }) => ({
+    input: { message: nest(nesting + 1), payload: { v: 'a' }, id: ID },
+    // The innermost placeholder is the one refused, and a nesting limit is a
+    // defect of the message: it takes its fallback chain, and every level
+    // around it selects the option that holds it.
+    expected: { output: 'fallback', reports: [limit('nesting-limit', 'message', nesting)] },
   }),
 };
 
@@ -195,7 +209,7 @@ const answer = (adapter: Adapter, input: Resolution, output: string): Resolved |
   return resolved as Resolved;
 };
 
-const execute = (adapter: Adapter, { input, expected, verify }: Prepared): Outcome => {
+const execute = (adapter: Adapter, { input, expected }: Prepared): Outcome => {
   const resolved = answer(adapter, input, expected.output);
 
   if ('ok' in resolved) return resolved;
@@ -205,10 +219,6 @@ const execute = (adapter: Adapter, { input, expected, verify }: Prepared): Outco
     : resolved.output === expected.output ? undefined : failure('The output differs.', expected.output, resolved.output);
 
   if (produced) return produced;
-
-  const verified = verify?.();
-
-  if (verified) return verified;
 
   if (resolved.reports === undefined) return { ok: true, unobserved: 'reports' };
 

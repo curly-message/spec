@@ -6,11 +6,12 @@ export const UNITS: readonly SpanUnit[] = ['utf-8', 'utf-16', 'code-point'];
 const TYPES: readonly NodeType[] = ['message', 'placeholder', 'open', 'close', 'separator', 'space', 'key', 'modifier', 'option-key', 'option-value', 'text', 'escape'];
 
 // The kinds that carry a name, and the one that carries `cancels` (CST.md
-// section 8). A kind that must carry a field and does not has answered less
-// than the document requires; a field a kind does not take is not policed,
-// because that table describes the interchange encoding and an adapter hands
-// back a host value.
-export const NAMED: readonly NodeType[] = ['key', 'modifier', 'option-key', 'option-value'];
+// section 8). An `option-value` is not one of them: it answers to nobody, so
+// it carries the subtree the message spells and no string to compare. A kind
+// that must carry a field and does not has answered less than the document
+// requires; a field a kind does not take is not policed, because that table
+// describes the interchange encoding and an adapter hands back a host value.
+export const NAMED: readonly NodeType[] = ['key', 'modifier', 'option-key'];
 
 const failure = (reason: string, expected: unknown, actual: unknown): Failure => ({ ok: false, reason, expected, actual });
 
