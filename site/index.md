@@ -46,9 +46,14 @@ wrong should show as a translation that is wrong, not as a blank page.
   Grammar, escaping, whitespace, resolution order, the modifiers, the fallback
   chain and the error behavior — all of version 1, in one document.
 
+- **[The syntax tree](../CST.md)**
+  A companion document: where the parts of a message are, for a tool that shows
+  a message rather than resolving it. It adds nothing to the format.
+
 - **[The conformance set](../conformance)**
   Fixtures in JSON, each pinned to the section it tests: the inputs a resolution
-  takes and the output and the reports it must produce.
+  takes and the output and the reports it must produce, and the tree an
+  implementation that offers one describes a message with.
 
 - **[An implementation](https://github.com/curly-message/parsers)**
   `@curly-message/parser` in JavaScript, released on npm. It is a reference, not
@@ -67,10 +72,10 @@ The specification is **stable**. Version 1 of the format is settled: within
 that would change it belongs to a later version of the format rather than to
 this one. Revisions of the document are tagged, beginning at `v1.0.0`.
 
-The conformance set and the reference implementation are on npm as `1.0.1`,
-released against this document. An implementation in any language that
-satisfies section 2 conforms, whether or not it shares any code with the
-reference.
+The conformance set and the reference implementation are on npm, each released
+on a line of its own against the revision of this document its own changelog
+names. An implementation in any language that satisfies section 2 conforms,
+whether or not it shares any code with the reference.
 
 ## Where it came from
 

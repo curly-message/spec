@@ -2,17 +2,19 @@
 
 Source of the format's public site.
 
-Five pages. Four of them are rendered from a markdown file that already lives
+Seven pages. Six of them are rendered from a markdown file that already lives
 in this repository, so the site says what the repository says or it does not
-say it at all; the fifth runs the parser:
+say it at all; the seventh runs the parser:
 
 | Page | Built from |
 | --- | --- |
 | `/` | [`site/index.md`](./index.md) |
 | `/spec/` | [`SPEC.md`](../SPEC.md) |
+| `/cst/` | [`CST.md`](../CST.md) |
 | `/conformance/` | [`conformance/README.md`](../conformance/README.md) |
-| `/brand/` | [`brand/README.md`](../brand/README.md) |
+| `/runner/` | [`conformance/RUNNER.md`](../conformance/RUNNER.md) |
 | `/playground/` | [`site/playground.html`](./playground.html) + [`site/playground.js`](./playground.js) |
+| `/brand/` | [`brand/README.md`](../brand/README.md) |
 
 `index.md` and the playground are the only pages written for the site.
 Everything else is a document that stands on its own; changing one of them
