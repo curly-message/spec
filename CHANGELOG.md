@@ -14,7 +14,7 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
-### 2.0.0 (Unreleased)
+## 2.0.0
 
 **Version 2 of the format. It is not compatible with version 1.**
 
