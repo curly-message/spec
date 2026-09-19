@@ -6,8 +6,10 @@
 // describing it: it is written as HTML and carries the one script the site
 // has. Nothing is fetched at runtime — the parser is vendored out of
 // node_modules at build time, from the version this package pins — and every
-// link is relative, so the same build serves from a project path and from the
-// root of a domain without being told which.
+// link a reader follows is relative, so the same build serves from a project
+// path and from the root of a domain without being told which. The canonical
+// URL and the link preview are the exception, because they have to name one
+// copy rather than whichever one they were fetched from.
 
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -21,6 +23,10 @@ const out = join(here, '_site');
 
 const REPO = 'https://github.com/curly-message/spec';
 const PARSERS = 'https://github.com/curly-message/parsers';
+
+// Where the site is published. The build also serves from a project path, so
+// a page says which copy is the one to index and to share.
+const SITE = 'https://curlymessage.dev/';
 
 // The pages, in navigation order. `from` is a path in the repository and `to`
 // the file the site serves it as; `toc` gives the page the sidebar its own
@@ -133,6 +139,13 @@ const ENTITIES = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;
 
 const unescape = (s) => s.replace(/&(?:amp|lt|gt|quot|#39);/g, (entity) => ENTITIES[entity]);
 
+// What a page calls itself, in the tab and in a link preview alike. The home
+// page is the format, so it does not repeat the name after its own heading.
+const tab = (page) => (page.to === 'index.html' ? page.tab : `${page.tab} — Curly Message Format`);
+
+// The one address a page claims, whichever copy served it.
+const canonical = (page) => SITE + page.to.replace(/(^|\/)index\.html$/, '$1');
+
 // A path on the site, as the given page has to spell it: relative, and with
 // the index file left off so a directory reads as one.
 const href = (target, page) => {
@@ -240,9 +253,16 @@ const shell = ({ page, glyph, title, body, sidebar }) => `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escape(page.to === 'index.html' ? page.tab : `${page.tab} — Curly Message Format`)}</title>
+<title>${escape(tab(page))}</title>
 <meta name="description" content="${escape(page.description)}">
 <meta name="color-scheme" content="light dark">
+<link rel="canonical" href="${escape(canonical(page))}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Curly Message Format">
+<meta property="og:url" content="${escape(canonical(page))}">
+<meta property="og:title" content="${escape(tab(page))}">
+<meta property="og:description" content="${escape(page.description)}">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="${href('favicon.svg', page)}" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
