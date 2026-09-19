@@ -22,6 +22,6 @@ const files = readdirSync(directory).filter((name) => name.endsWith('.json')).so
   return { path: `fixtures/${name}`, ...pins, section, cases: cases.length };
 });
 
-const manifest = { format: 'curly-message-2', version, files };
+const manifest = { format: 'curly-message-3', version, files };
 
 writeFileSync(process.argv[2] ?? join(root, 'index.json'), `${JSON.stringify(manifest, null, 2)}\n`);

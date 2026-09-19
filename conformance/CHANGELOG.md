@@ -1,5 +1,27 @@
 # Changelog
 
+### 4.0.0 (Unreleased)
+
+The set targets `curly-message-3`. A runner that reads only `curly-message-2`
+refuses it rather than skipping it, which is why this is a major release even
+though no case changed.
+
+* Every fixture file, the manifest and the defect catalogue declare
+  `curly-message-3`, and both schemas hold them to it.
+* **No case changed.** What version 3 revises is which values serialize as
+  JSON (specification, section 4): a value of a sequence type an application
+  derived, or one built in another realm, converts as a string where it used to
+  serialize. A case's inputs are JSON and its expectations are text, so neither
+  value can be written down, and neither conversion has a text a case could
+  state without pinning one host's string conversion on every other. The narrow
+  reading of a plain object, which version 2 introduced, is absent from the set
+  for the same reason. An implementation that passed the set against version 2
+  passes it against version 3, and the set does not measure what version 3
+  changed.
+* What the set still pins is the half that did not move: a value of the host's
+  own sequence type serializes, its serialization is what reaches the output,
+  and it is that text an option comparison sees.
+
 ## 3.0.0
 
 The set targets `curly-message-2`. Version 2 resolves a message in one walk

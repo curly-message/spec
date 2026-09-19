@@ -75,7 +75,7 @@ describe('the shipped set', () => {
 
     expect(status).toBe(0);
     expect(read(join(root, 'index.json'))).toEqual(generated);
-    expect(generated).toMatchObject({ format: 'curly-message-2', version: (read(join(root, 'package.json')) as { version: string }).version });
+    expect(generated).toMatchObject({ format: 'curly-message-3', version: (read(join(root, 'package.json')) as { version: string }).version });
     expect(generated.files).toEqual(set.map(({ name, file }) => ({ path: `fixtures/${name}`, ...file.kind === 'tree' ? { kind: file.kind } : { level: file.level }, section: file.section, cases: file.cases.length })));
   });
 
