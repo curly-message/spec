@@ -245,7 +245,7 @@ export type TreeCase = {
 
 /** A file of cases that pin a resolution: the set as it was before the tree. */
 export type ResolutionFixtureFile = {
-  format: 'curly-message-2';
+  format: 'curly-message-3';
   kind?: 'resolution';
   level: Level;
   section: Section;
@@ -258,7 +258,7 @@ export type ResolutionFixtureFile = {
  * cases run where the adapter offers a tree.
  */
 export type TreeFixtureFile = {
-  format: 'curly-message-2';
+  format: 'curly-message-3';
   kind: 'tree';
   section: Section;
   cases: TreeCase[];
@@ -279,7 +279,7 @@ export type ManifestEntry =
 
 /** The manifest shipped as `index.json`. */
 export type Manifest = {
-  format: 'curly-message-2';
+  format: 'curly-message-3';
   version: string;
   files: ManifestEntry[];
 };
@@ -397,7 +397,7 @@ export type DefectEntry = {
 
 /** The catalogue shipped as `defects.json`. */
 export type Catalogue = {
-  format: 'curly-message-2';
+  format: 'curly-message-3';
   defects: DefectEntry[];
 };
 

@@ -5,7 +5,7 @@ const limits = { output: 5, read: 7, conversion: 7, nesting: 3 };
 
 const fixture = (generate: Generator): Fixture => ({
   name: 'limits.json',
-  file: { format: 'curly-message-2', level: 'core', section: '13', cases: [{ id: `limits/${generate}`, description: `Pins ${generate}.`, generate }] },
+  file: { format: 'curly-message-3', level: 'core', section: '13', cases: [{ id: `limits/${generate}`, description: `Pins ${generate}.`, generate }] },
 });
 
 // Runs one construction through an adapter that answers as scripted, and

@@ -35,7 +35,7 @@ manifest, or the directory; both are sorted by file name, and a runner reports
 in that order so two runs of the same set line up.
 
 `format` in every file is the versioned identifier of the format the file
-targets, and is `curly-message-2` for version 2. A file whose `format` a runner
+targets, and is `curly-message-3` for version 3. A file whose `format` a runner
 does not know is a file it must refuse rather than skip: a set a runner could
 not read is not a set an implementation passed.
 

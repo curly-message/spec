@@ -37,7 +37,7 @@ const ANSWERS: Record<string, Resolved> = {
 
 const file = (name: string, level: ResolutionFixtureFile['level'], ids: string[]): Fixture => ({
   name,
-  file: { format: 'curly-message-2', level, section: level === 'intl' ? '11.2' : '9', cases: ids.map((id) => CASES[id]) },
+  file: { format: 'curly-message-3', level, section: level === 'intl' ? '11.2' : '9', cases: ids.map((id) => CASES[id]) },
 });
 
 // One message per thing a defect of the tree can reach: a separator, a name
@@ -96,7 +96,7 @@ const CST = {
 const trees: Fixture = {
   name: 'tree.json',
   file: {
-    format: 'curly-message-2',
+    format: 'curly-message-3',
     kind: 'tree',
     section: '6',
     cases: Object.entries(TREES).map(([message, expected], index) => ({ id: `tree/case-${index + 1}`, description: 'Pins one tree.', message, expected })),
@@ -203,7 +203,7 @@ describe('audit', () => {
 
   it('calls a defect missed where it reached the runner and the runner answered nothing', () => {
     const anonymous: ConcreteCase = { id: 'a/anonymous', description: 'Pins a report no expectation names an id of.', message: '{{v:none}}', messageId: 'a.report', expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message' }] } };
-    const set: Fixture[] = [{ name: 'core.json', file: { format: 'curly-message-2', level: 'core', section: '9', cases: [anonymous] } }, SET[1]];
+    const set: Fixture[] = [{ name: 'core.json', file: { format: 'curly-message-3', level: 'core', section: '9', cases: [anonymous] } }, SET[1]];
 
     expect(outcomes(conforming(), set)).toMatchObject({ 'report-id-changed': 'missed', 'report-code-changed': 'caught' });
     expect(audited(conforming(), set)['report-id-changed']).toMatchObject({ expects: 'fail', observed: 'none' });
