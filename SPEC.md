@@ -1139,30 +1139,40 @@ An implementation MUST enforce all four of the following:
 - **An output limit.** At least **100 000** characters of placeholder result
   MUST be permitted, counted in the unit the host measures its strings in — a
   UTF-16 code unit in ECMAScript, so a character outside the Basic Multilingual
-  Plane counts twice. A placeholder whose result would carry the total past the
-  limit resolves to the **empty string** instead, and the walk carries on. The
-  message's own text is not counted against it and always renders: that text is
-  the caller's and is bounded by the message it was read from, while a
-  placeholder's result is bounded only by the payload. Section 5 builds the
-  output once, so nothing is discarded and nothing is cut mid-character.
+  Plane counts twice. What is counted is what the output carries, so each
+  result is counted once: a placeholder written inside an option value reaches
+  the output through the result of the placeholder around it and is counted
+  there rather than again on its own. A placeholder whose result would carry
+  the total past the limit resolves to the **empty string** instead, and the
+  walk carries on. The message's own text is not counted against it and always
+  renders: that text is the caller's and is bounded by the message it was read
+  from, while a placeholder's result is bounded only by the payload. Section 5
+  builds the output once, so nothing is discarded and nothing is cut
+  mid-character.
 - **A read limit.** At least **100 000** characters of value text MUST be
   permitted, in the same unit, counting every text a placeholder reads whether
   or not any of it reaches the output. Output alone bounds no work: a thousand
   placeholders that each read a hundred-thousand-character value and select
   nothing from it produce nothing and read a hundred million characters. A
   placeholder reached once the limit is spent resolves to the empty string, and
-  the walk carries on. What a modifier answers with is not value text and is
-  not counted here: it is the placeholder's result, and the output limit above
-  is what bounds it.
+  the walk carries on — the limit is tested before the placeholder reads, so a
+  placeholder that finds a budget and spends it past the limit still resolves,
+  and the next one pays. Value text is what a placeholder reads from the
+  **payload**: the value it names, and each link of its fallback chain the
+  payload supplies (section 10). The message's own text is not value text — an
+  option value and an inline default are bounded by the message they were read
+  from — and neither is what a modifier answers with, which is the placeholder's
+  result and is bounded by the output limit above.
 - **A conversion limit.** At least **100 000** nodes MUST be visited before a
   value's serialization is abandoned. A serialization that reaches the limit
   MUST be treated as a conversion that cannot describe the value (section 4).
-- **A nesting limit.** At least **8** levels of nested placeholder MUST be
-  resolved (section 12). A placeholder nested deeper than an implementation
-  resolves is a **message error** (section 14.2): it takes the fallback chain,
-  and the walk carries on. Only a placeholder the walk reaches counts: an
-  option the modifier passed over is never read, so however deeply it nests it
-  costs nothing, reports nothing and reaches no limit (section 9.4).
+- **A nesting limit.** At least **8** levels of placeholder MUST be resolved
+  (section 12), counting the outermost as the first. A placeholder nested
+  deeper than an implementation resolves is a **message error** (section 14.2):
+  it takes the fallback chain, and the walk carries on. Only a placeholder the
+  walk reaches counts: an option the modifier passed over is never read, so
+  however deeply it nests it costs nothing, reports nothing and reaches no
+  limit (section 9.4).
 
 These are minima. An implementation MAY permit more, and MUST document what it
 permits.
