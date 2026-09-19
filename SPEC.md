@@ -234,6 +234,14 @@ constrained: message ids are namespaced dotted segments, and payload values are
 frequently plain objects taken straight from an API. `{ value: 1, unit: 'kg' }`
 is data, and it must stay data.
 
+Exactness is not enough on its own, because `{ value: … }` is itself a common
+shape and a caller that does not control what its payload holds cannot rule one
+out. An implementation SHOULD therefore offer a way to turn recognition off for
+a resolution. With it off an entry of that shape is a value like any other and
+converts as one (section 4), which is where a caller holding untrusted data
+passes it (section 14.1). Recognition is on where the caller says nothing: a
+payload written for this section reads as it is written.
+
 ## 5. Interpolation model
 
 A message is resolved in **one walk**. Section 6 parses it once into the text it
@@ -1357,7 +1365,8 @@ payload entry shaped like a wrapper (section 4.1) is read as one, and the
 value of that shape reconfigures every formatting and host-defined modifier the
 placeholder reaches without spelling any syntax at all. An implementation cannot
 tell such an entry from one a caller meant; a caller that passes untrusted data
-MUST NOT pass it where a wrapper is recognized.
+MUST NOT pass it where a wrapper is recognized, and section 4.1 is where
+recognition is turned off.
 
 **Bounded work.** Section 13 MUST bound the work a resolution can be made to do,
 by a payload and by a message alike.
