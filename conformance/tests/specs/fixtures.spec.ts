@@ -23,8 +23,8 @@ const trees = set.flatMap(({ name, file }) => file.kind === 'tree' ? file.cases.
 const cases = [...resolutions, ...trees];
 
 // A heading is numbered like "## 9. Resolution", "### 9.2 Look up the value"
-// or "### A.4 Valueless options"; the number is what a section reference
-// names.
+// or, in the worked examples of `CST.md`, "### A.9 A `{{` in a value"; the
+// number is what a section reference names.
 const headings = (document: string) => new Set([...readFileSync(join(root, '..', document), 'utf8').matchAll(/^#{2,3} (\d+\.\d+|\d+|A\.\d+)\b/gm)].map(([, number]) => number));
 
 const SPEC = headings('SPEC.md');
@@ -62,7 +62,7 @@ describe('the shipped set', () => {
       ...entries.flatMap(({ c }) => c.section === undefined ? [] : [{ where: c.id, section: c.section }]),
     ];
 
-    expect(SPEC.size).toBeGreaterThan(40);
+    expect(SPEC.size).toBeGreaterThan(25);
     expect(CST.size).toBeGreaterThan(10);
     expect(named(resolutions, ({ file }) => file.kind !== 'tree').filter(({ section }) => !SPEC.has(section))).toEqual([]);
     expect(named(trees, ({ file }) => file.kind === 'tree').filter(({ section }) => !CST.has(section))).toEqual([]);

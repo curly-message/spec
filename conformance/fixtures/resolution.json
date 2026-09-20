@@ -430,7 +430,7 @@
     },
     {
       "id": "resolution/default-uppercase-selects",
-      "description": "An option keyed DEFAULT selects like any other for the value that matches it, as Appendix A.1 shows.",
+      "description": "An option keyed DEFAULT selects like any other for the value that matches it, as ruling A.1 shows.",
       "section": "9.3",
       "message": "{{v; DEFAULT:D}}",
       "payload": {
@@ -442,7 +442,7 @@
     },
     {
       "id": "resolution/default-uppercase-is-not-the-fallback",
-      "description": "An option keyed DEFAULT is not the inline fallback, so an absent value renders nothing, as Appendix A.1 shows.",
+      "description": "An option keyed DEFAULT is not the inline fallback, so an absent value renders nothing, as ruling A.1 shows.",
       "section": "9.3",
       "message": "{{v; DEFAULT:D}}",
       "payload": {},
@@ -452,7 +452,7 @@
     },
     {
       "id": "resolution/default-lowercase-beside-uppercase",
-      "description": "Only the lowercase default is the inline fallback, so an absent value renders it beside an option keyed DEFAULT, as Appendix A.1 shows.",
+      "description": "Only the lowercase default is the inline fallback, so an absent value renders it beside an option keyed DEFAULT, as ruling A.1 shows.",
       "section": "9.3",
       "message": "{{v; default:LOWER; DEFAULT:UPPER}}",
       "payload": {},
@@ -474,7 +474,7 @@
     },
     {
       "id": "resolution/payload-default-uppercase-not-reserved",
-      "description": "The reserved payload key is default in lowercase only, so an entry named DEFAULT is not the fallback and an absent value renders nothing, as Appendix A.1 shows.",
+      "description": "The reserved payload key is default in lowercase only, so an entry named DEFAULT is not the fallback and an absent value renders nothing, as ruling A.1 shows.",
       "section": "9.3",
       "message": "{{v}}",
       "payload": {

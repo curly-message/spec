@@ -324,8 +324,7 @@ cache — it is encoded as JSON. A node is an object:
 | `cancels` | `escape` | `true` or `false` |
 
 A node carries no field its kind does not take. An `option-value` therefore
-carries `nodes` and no `name`; a decoder that expects a `name` there is reading
-the version 1 encoding. An encoder MUST state the unit its spans are in,
+carries `nodes` and no `name`. An encoder MUST state the unit its spans are in,
 because the encoding does not carry it.
 
 The message `\{world` — a cancelling escape and five characters of text —
@@ -466,6 +465,4 @@ closes at 12, and the construct that began at 0 is then never closed, so it
 does not derive (section 6, note 10). The scan resumes one code point after its
 opening brace, finds no opening pair until 7, and takes the verdict it already
 reached there (section 6, notes 7 and 11). So the outer braces are text and the
-construct they enclosed is the placeholder. Version 1 read the same message the
-other way round: one placeholder `[0,12)` whose option value was the text
-`{{b`.
+construct they enclosed is the placeholder.

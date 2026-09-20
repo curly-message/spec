@@ -562,7 +562,7 @@
     },
     {
       "id": "intl/number-nope-renders-nothing",
-      "description": "number over text that is not a number takes the chain, which is empty, and reports failed-modifier, as Appendix A.13 shows.",
+      "description": "number over text that is not a number takes the chain, which is empty, and reports failed-modifier, as ruling A.13 shows.",
       "section": "11.2",
       "message": "{{v:number}}",
       "payload": {
@@ -583,7 +583,7 @@
     },
     {
       "id": "intl/number-nope-takes-default",
-      "description": "number over text that is not a number takes the declared default as text and does not convert it, as Appendix A.13 shows.",
+      "description": "number over text that is not a number takes the declared default as text and does not convert it, as ruling A.13 shows.",
       "section": "11.2",
       "message": "{{v:number; default:n/a}}",
       "payload": {
@@ -604,7 +604,7 @@
     },
     {
       "id": "intl/ago-nope-renders-nothing",
-      "description": "ago over text that is not a number takes the chain, which is empty, and reports failed-modifier, as Appendix A.13 shows.",
+      "description": "ago over text that is not a number takes the chain, which is empty, and reports failed-modifier, as ruling A.13 shows.",
       "section": "11.2",
       "message": "{{v:ago}}",
       "payload": {
@@ -625,7 +625,7 @@
     },
     {
       "id": "intl/currency-nope-renders-nothing",
-      "description": "currency over text that is not a number takes the chain, which is empty, and reports failed-modifier, as Appendix A.13 shows.",
+      "description": "currency over text that is not a number takes the chain, which is empty, and reports failed-modifier, as ruling A.13 shows.",
       "section": "11.2",
       "message": "{{v:currency}}",
       "payload": {
@@ -651,7 +651,7 @@
     },
     {
       "id": "intl/number-empty-renders-nothing",
-      "description": "number over empty text takes the chain, which is empty, and reports failed-modifier, as Appendix A.13 shows.",
+      "description": "number over empty text takes the chain, which is empty, and reports failed-modifier, as ruling A.13 shows.",
       "section": "11.2",
       "message": "{{v:number}}",
       "payload": {
@@ -672,7 +672,7 @@
     },
     {
       "id": "intl/date-empty-renders-nothing",
-      "description": "date over empty text takes the chain, which is empty, and reports failed-modifier, as Appendix A.13 shows.",
+      "description": "date over empty text takes the chain, which is empty, and reports failed-modifier, as ruling A.13 shows.",
       "section": "11.2",
       "message": "{{v:date}}",
       "payload": {

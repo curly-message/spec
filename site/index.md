@@ -87,5 +87,5 @@ The syntax grew out of `@sveltekit-i18n/parser-default`, where it was defined
 implicitly — by the implementation, its README and its test suite, which diverge
 in edge cases. This specification exists to give the format a definition that
 stands on its own, so that other implementations can target it and agree on the
-edges. Appendix A of the specification records each of those divergences
-together with the ruling that resolved it.
+edges. [`RULINGS.md`](../RULINGS.md) records each of those divergences together
+with the ruling that resolved it.
