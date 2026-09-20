@@ -13,6 +13,35 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
+### 3.0.1 (Unreleased)
+
+Nothing a message resolves to changes. `SPEC.md` states the current version of
+the format and nothing else, and what it carried besides now stands beside it.
+
+* Appendix A moves to `RULINGS.md`: each behavior of the pre-3.0 reference
+  parser the format was specified against, and the ruling that resolved it. It
+  specifies nothing — every ruling it records is already stated in the body as
+  a requirement — so the eighteen citations the body made of it go with it.
+  Each pointed at the reasoning behind a requirement the sentence beside it
+  already states, and no requirement changes.
+* Appendices C and D move to `MIGRATIONS.md`, the path between versions of the
+  format: version 1 to version 2 and version 2 to version 3, each step saying
+  what it changes, what it costs a message or a payload, and what to do about
+  it. Every entry below that opens a version points at it.
+* The two paragraphs of the header that said what versions 3 and 2 each
+  changed are gone, this changelog being where a revision says what it
+  changed. Section 12 no longer draws its contrast with version 1, and its
+  example states what this version does rather than what an earlier one did;
+  `CST.md` loses two sentences on version 1's tree and its encoding for the
+  same reason.
+* Appendix B is the only appendix left, so it loses its letter, and with it a
+  paragraph about a line of the reference implementation that predates this
+  document.
+
+Neither new document is part of the specification, and neither is a page of
+the format's site, so every page it renders describes the current version
+alone.
+
 ## 3.0.0
 
 **Version 3 of the format. It is not compatible with version 2.**
