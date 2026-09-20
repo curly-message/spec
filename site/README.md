@@ -102,6 +102,10 @@ where a line breaks. The two JSON fields are scanned rather than parsed, so a
 field mid-edit still colours as far as it reads instead of waiting for the text
 to become an object.
 
+The locale is chosen from a list rather than typed, because the three it offers
+are there to be switched between: the same message and payload come out
+differently under each, which is the point the locale-dependent modifiers make.
+
 The build vendors `@curly-message/parser` out of `node_modules` and prints the
 version it took; the page names that version to the reader. A release the
 lockfile does not name cannot reach the page, and a runtime CDN would make a

@@ -41,11 +41,15 @@ a link reproduces it exactly.</p>
       </div>
       <p class="bad" id="payload-bad" hidden></p>
     </div>
-    <div class="pair">
-      <div class="field">
-        <label for="locale">Locale</label>
-        <input id="locale" type="text" spellcheck="false" autocomplete="off" autocapitalize="off">
-      </div>
+    <div class="field">
+      <label for="locale">Locale</label>
+      <select id="locale">
+        <option value="en">English (en)</option>
+        <option value="de">German (de)</option>
+        <option value="cs">Czech (cs)</option>
+      </select>
+      <p class="hint under">What a locale-dependent modifier formats for. Switch it and the
+        same message and payload come out as that locale writes them.</p>
     </div>
     <details class="props">
       <summary>Modifier properties</summary>
