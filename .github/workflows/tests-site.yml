@@ -1,0 +1,46 @@
+name: Site tests
+
+on:
+  push:
+    # Every branch: the Site workflow runs the same tests before it deploys,
+    # but only on main, which is too late to keep a change from being merged.
+    branches: ['**']
+    paths:
+      - site/**
+      # The pages are rendered from these, so a change to one changes what the
+      # tests hold the pages to, even when nothing under site/ moved.
+      - SPEC.md
+      - CST.md
+      - conformance/README.md
+      - conformance/RUNNER.md
+      - brand/**
+      - .github/workflows/tests-site.yml
+  workflow_dispatch:
+
+jobs:
+  Tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # One environment, and the one the site is built in: the pages are
+      # written by this build alone, so there is no second host to agree with.
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `pretest` builds, and the tests hold every fence on every page to the
+      # markdown it was rendered from.
+      - name: Test
+        run: npm test
