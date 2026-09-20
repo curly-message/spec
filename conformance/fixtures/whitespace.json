@@ -779,7 +779,6 @@
     {
       "id": "whitespace/nbsp-value-trims",
       "description": "U+00A0, though typed on purpose, trims away like any other member when it is the whole value.",
-      "section": "A.4",
       "message": "{{v; x:\u00a0; default:D}}",
       "payload": {
         "v": "x"
@@ -791,7 +790,6 @@
     {
       "id": "whitespace/nbsp-value-escaped",
       "description": "An author who means U+00A0 as the value escapes it.",
-      "section": "A.4",
       "message": "{{v; x:\\\u00a0; default:D}}",
       "payload": {
         "v": "x"
@@ -803,7 +801,6 @@
     {
       "id": "whitespace/ideographic-space-value-trims",
       "description": "U+3000, though typed on purpose, trims away like any other member when it is the whole value.",
-      "section": "A.4",
       "message": "{{v; x:\u3000; default:D}}",
       "payload": {
         "v": "x"
@@ -815,7 +812,6 @@
     {
       "id": "whitespace/ideographic-space-value-escaped",
       "description": "An author who means U+3000 as the value escapes it.",
-      "section": "A.4",
       "message": "{{v; x:\\\u3000; default:D}}",
       "payload": {
         "v": "x"
@@ -947,7 +943,6 @@
     {
       "id": "whitespace/line-terminator-lf-is-not-padding",
       "description": "A construct with a line feed around its key is not trimmed: a placeholder holds no line terminator, so the construct is literal text.",
-      "section": "A.10",
       "message": "{{\u000av\u000a}}",
       "payload": {
         "v": "HIT",
@@ -960,7 +955,6 @@
     {
       "id": "whitespace/line-terminator-cr-is-not-padding",
       "description": "A construct with a carriage return around its key is not trimmed: a placeholder holds no line terminator, so the construct is literal text.",
-      "section": "A.10",
       "message": "{{\u000dv\u000d}}",
       "payload": {
         "v": "HIT",
@@ -973,7 +967,6 @@
     {
       "id": "whitespace/line-terminator-ls-is-not-padding",
       "description": "A construct with a line separator (U+2028) around its key is not trimmed: a placeholder holds no line terminator, so the construct is literal text.",
-      "section": "A.10",
       "message": "{{\u2028v\u2028}}",
       "payload": {
         "v": "HIT",
@@ -986,7 +979,6 @@
     {
       "id": "whitespace/line-terminator-ps-is-not-padding",
       "description": "A construct with a paragraph separator (U+2029) around its key is not trimmed: a placeholder holds no line terminator, so the construct is literal text.",
-      "section": "A.10",
       "message": "{{\u2029v\u2029}}",
       "payload": {
         "v": "HIT",

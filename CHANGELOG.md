@@ -73,7 +73,7 @@ derived from the payload; under section 5 that text is the placeholder the
 message spells, so the bound is restated over the text a report carries rather
 than over where it came from, and section 14.3 no longer reads as though a
 report only has to be bounded where it carries payload text. The requirement is
-the one it always was. Appendix A.10 records that the question it deferred to
+the one it always was. Ruling A.10 records that the question it deferred to
 issue #3 — whether a later version should admit a placeholder that spans lines
 — was answered no for this version, and why.
 
@@ -259,12 +259,12 @@ implementation in another to guess.
   cannot express and states it to the conformance set. The section already let
   an implementation expose the request it makes; what it did not say was what to
   do where the request cannot be made in full.
-* Appendix A no longer says that nothing has been released against this
-  specification. Releases have been made against it since revision 1.0.0. What
-  the passage states is unchanged — no ruling in the appendix is a breaking
-  change to a released package, and no migration note is owed to any user —
-  because the body has carried every ruling since that first revision, so every
-  release made against this document already has them.
+* The rulings record no longer says that nothing has been released against
+  this specification. Releases have been made against it since revision 1.0.0.
+  What the passage states is unchanged — no ruling is a breaking change to a
+  released package, and no migration note is owed to any user — because the
+  body has carried every ruling since that first revision, so every release
+  made against this document already has them.
 
 ## 1.0.1
 
@@ -297,6 +297,7 @@ First stable revision. `SPEC.md` states version 1 of the Curly Message Format:
 the grammar, the escaping and whitespace rules, the order a message resolves
 in, the modifiers and what each one answers, the fallback chain, the error
 behavior, the conformance levels an implementation claims, and the adapter the
-conformance set drives an implementation through. Appendix A records each
-divergence found while the document was written against the pre-3.0 reference
-parser, together with the ruling that resolved it.
+conformance set drives an implementation through. The rulings record — now
+[`RULINGS.md`](./RULINGS.md) — carries each divergence found while the document
+was written against the pre-3.0 reference parser, and the ruling that resolved
+it.

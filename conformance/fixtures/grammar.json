@@ -37,7 +37,6 @@
     {
       "id": "grammar/line-terminator-inside-key-lf",
       "description": "A construct whose key holds a line feed is literal text.",
-      "section": "A.10",
       "message": "{{v\nx}}",
       "payload": {
         "v\nx": "HIT"
@@ -49,7 +48,6 @@
     {
       "id": "grammar/line-terminator-beside-resolved-lf",
       "description": "Whether a construct is a placeholder does not depend on what another resolved to: one spanning a line feed stays literal beside a resolved one.",
-      "section": "A.10",
       "message": "{{a}} {{\nv\n}}",
       "payload": {
         "a": "A",
@@ -86,7 +84,6 @@
     {
       "id": "grammar/line-terminator-inside-key-cr",
       "description": "A construct whose key holds a carriage return is literal text.",
-      "section": "A.10",
       "message": "{{v\rx}}",
       "payload": {
         "v\rx": "HIT"
@@ -135,7 +132,6 @@
     {
       "id": "grammar/line-terminator-inside-key-ls",
       "description": "A construct whose key holds a line separator (U+2028) is literal text.",
-      "section": "A.10",
       "message": "{{v x}}",
       "payload": {
         "v x": "HIT"
@@ -184,7 +180,6 @@
     {
       "id": "grammar/line-terminator-inside-key-ps",
       "description": "A construct whose key holds a paragraph separator (U+2029) is literal text.",
-      "section": "A.10",
       "message": "{{v x}}",
       "payload": {
         "v x": "HIT"
@@ -417,7 +412,6 @@
     {
       "id": "grammar/escaped-opening-first-brace",
       "description": "A backslash before the opening pair suppresses it, so the construct is literal text.",
-      "section": "A.15",
       "message": "\\{{v}}",
       "payload": {
         "v": "HIT"
@@ -429,7 +423,6 @@
     {
       "id": "grammar/escaped-opening-without-value",
       "description": "A suppressed opening pair renders the same over an empty payload, because nothing about it is resolved.",
-      "section": "A.15",
       "message": "\\{{v}}",
       "payload": {},
       "expected": {
@@ -463,7 +456,6 @@
     {
       "id": "grammar/escaped-closing-first-brace",
       "description": "A backslash consuming the first brace of a closing pair leaves no closing pair, so the construct is literal text.",
-      "section": "A.16",
       "message": "{{v\\}}",
       "payload": {
         "v": "HIT"
@@ -475,7 +467,6 @@
     {
       "id": "grammar/escaped-closing-not-in-key",
       "description": "The backslash before a closing brace is not read into the key: the construct is literal text whatever the payload spells.",
-      "section": "A.16",
       "message": "{{v\\}}",
       "payload": {
         "v\\": "BS",
@@ -488,7 +479,6 @@
     {
       "id": "grammar/key-ends-in-backslash",
       "description": "An escaped backslash ends a key as one backslash, a spelling distinct from an escaped brace.",
-      "section": "A.16",
       "message": "{{v\\\\}}",
       "payload": {
         "v\\": "BS",
@@ -501,7 +491,6 @@
     {
       "id": "grammar/key-ends-in-closing-brace",
       "description": "Consuming one brace disturbs no other, so a key may end in a closing brace and the remaining two close the placeholder.",
-      "section": "A.16",
       "message": "{{v\\}}}",
       "payload": {
         "v}": "HIT"
@@ -669,7 +658,6 @@
     {
       "id": "grammar/empty-placeholder-no-default",
       "description": "An empty placeholder is a placeholder and resolves to the chain, the empty string where no link yields text.",
-      "section": "A.14",
       "message": "{{}}",
       "payload": {},
       "expected": {
@@ -679,7 +667,6 @@
     {
       "id": "grammar/empty-placeholder-payload-default",
       "description": "An empty placeholder resolves to the payload's default.",
-      "section": "A.14",
       "message": "{{}}",
       "payload": {
         "default": "D"
@@ -691,7 +678,6 @@
     {
       "id": "grammar/blank-placeholder-no-default",
       "description": "A placeholder holding one space is recognized exactly as the empty one is.",
-      "section": "A.14",
       "message": "{{ }}",
       "payload": {},
       "expected": {
@@ -701,7 +687,6 @@
     {
       "id": "grammar/blank-placeholder-payload-default",
       "description": "A placeholder holding one space resolves to the payload's default exactly as the empty one does.",
-      "section": "A.14",
       "message": "{{ }}",
       "payload": {
         "default": "D"
@@ -723,7 +708,6 @@
     {
       "id": "grammar/keyless-with-option",
       "description": "A placeholder that names no key but carries an option is still a placeholder that names no key, and resolves to the chain.",
-      "section": "A.14",
       "message": "{{ ; x:1 }}",
       "payload": {
         "default": "D"
@@ -735,7 +719,6 @@
     {
       "id": "grammar/empty-pair-inside-construct",
       "description": "An empty pair inside another construct resolves as a placeholder, and the construct around it does not derive.",
-      "section": "A.14",
       "message": "{{;a:{{}}",
       "payload": {
         "default": "D"
