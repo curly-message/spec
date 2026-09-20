@@ -113,13 +113,15 @@ colours rather than waiting for the text to parse.</p>
 <code>{{count:gt; 0:{{count:number;}}; default:no;}}</code> is one placeholder
 holding another, read whole by one scan: the comparison selects among the
 options the message spelled, and the inner placeholder is resolved only where
-the option holding it is the one selected. At a count of <code>0</code> nothing
-is greater than zero, so the default is read and the inner placeholder is never
+the option holding it is the one selected. At a count of <code>1234</code> the
+comparison selects the option that holds the inner placeholder, so it is
+resolved: <code>number</code> formats the count, and the locale above decides
+how the groups are separated. Drop the count to <code>0</code> and nothing is
+greater than zero, so the default is read and the inner placeholder is never
 resolved at all &mdash; no payload entry is read for it, no modifier runs, and
-no report it would have made is made. Raise the count and the same message
-renders the number the inner placeholder formatted. The colouring says as much:
-the whole construct is drawn as a placeholder, with the inner one inside its
-option value. <a href="../spec/#12-nesting">Section 12</a> states the rule,
+no report it would have made is made. The colouring says as much: the whole
+construct is drawn as a placeholder, with the inner one inside its option
+value. <a href="../spec/#12-nesting">Section 12</a> states the rule,
 <a href="../spec/#13-limits">section 13</a> the limits that bound it.</p>
 
 <p>A <code>{{</code> in a key, in an option key or in a modifier name opens
