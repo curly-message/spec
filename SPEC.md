@@ -21,29 +21,27 @@
 > earlier revision defined, a conformance level an implementation opts into, and
 > wording that states more precisely what the body already required.
 >
-> **Version 3 is not compatible with version 2**, and the one sentence that says
-> why is section 4's: *a plain array is read as narrowly as a plain object.* In
-> version 2 the narrow reading was written for keyed data alone, so a value of
-> any array type serialized as JSON while a value of a keyed type an application
-> declared converted as a string. Version 3 holds both shapes to one test, so a
-> sequence type an application derived — and an array built in another realm —
-> converts as a string, as its keyed counterpart already did. Appendix D lists
-> what that costs a payload written against version 2. Nothing else changes:
-> the walk, the grammar, the escaping, the limits and the tree are version 2's
-> unaltered, and nothing a message spells changes, so no message needs
-> migrating.
+> **What version 3 changed is section 4's sentence**: *a plain array is read as
+> narrowly as a plain object.* In version 2 the narrow reading was written for
+> keyed data alone, so a value of any array type serialized as JSON while a
+> value of a keyed type an application declared converted as a string. Version 3
+> holds both shapes to one test, so a sequence type an application derived — and
+> an array built in another realm — converts as a string, as its keyed
+> counterpart already did. Appendix D lists what that costs a payload written
+> against version 2. Nothing else changes: the walk, the grammar, the escaping,
+> the limits and the tree are version 2's unaltered, and nothing a message
+> spells changes, so no message needs migrating.
 >
-> **Version 2 was not compatible with version 1**, and the one sentence that
-> said why is section 14.1's: *message text is syntax, and payload text is
-> data.* In version 1 a resolution was repeated passes of substitution over the
-> whole current text, so whatever a payload value contributed was read back as
-> message source on the next pass — a value could name a payload entry the
-> message never named, add an option to a construct the message wrote, or close
-> that construct early. Version 2 resolves a message in one walk and reads
-> nothing it has emitted. Placeholders nest where the message spells them
-> nesting, and nowhere else. That walk is this version's too, and Appendix C
-> lists every change version 2 made and what each cost a message that was
-> written against version 1.
+> **What version 2 changed was section 14.1's sentence**: *message text is
+> syntax, and payload text is data.* In version 1 a resolution was repeated
+> passes of substitution over the whole current text, so whatever a payload
+> value contributed was read back as message source on the next pass — a value
+> could name a payload entry the message never named, add an option to a
+> construct the message wrote, or close that construct early. Version 2 resolves
+> a message in one walk and reads nothing it has emitted. Placeholders nest
+> where the message spells them nesting, and nowhere else. That walk is this
+> version's too, and Appendix C lists every change version 2 made and what each
+> cost a message that was written against version 1.
 >
 > Appendix A records the divergences found while this document was written
 > against the pre-3.0 reference parser, and the ruling that resolved each one.

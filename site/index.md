@@ -72,18 +72,17 @@ The specification is **stable**. Version 3 of the format is settled: within
 that would change it belongs to a later version of the format rather than to
 this one. Revisions of the document are tagged, beginning at `v1.0.0`.
 
-**Version 3 is not compatible with version 2.** A plain array is read as
-narrowly as a plain object: a value of a sequence type an application derived,
-or one built in another realm, converts as a string where it used to serialize
-as JSON. Nothing a message spells changes, so the cost falls on a payload
-alone, and Appendix D of the specification says what it is.
+**Version 3 reads a plain array as narrowly as a plain object.** A value of a
+sequence type an application derived, or one built in another realm, converts as
+a string where it used to serialize as JSON. Nothing a message spells changes,
+so the cost falls on a payload alone, and Appendix D of the specification says
+what it is.
 
-**Version 2 was not compatible with version 1.** Message text is syntax and
-payload text is data: a message is resolved in one walk, nothing it emits is
-read back, and a placeholder nests where the message spells it nesting rather
-than where a payload arranges one. That walk is version 3's too, and Appendix C
-of the specification lists every change version 2 made and what each cost a
-message written against version 1.
+**Version 2 made message text syntax and payload text data.** A message is
+resolved in one walk, nothing it emits is read back, and a placeholder nests
+where the message spells it nesting rather than where a payload arranges one.
+That walk is version 3's too, and Appendix C of the specification lists every
+change version 2 made and what each cost a message written against version 1.
 
 The conformance set and the reference implementation are on npm, each released
 on a line of its own against the revision of this document its own changelog
