@@ -1,5 +1,23 @@
 # Changelog
 
+### 4.0.1 (Unreleased)
+
+Nothing a case states changes: every input, every expected output and every
+report is the one 4.0.0 shipped. What changes is where twenty-five of them
+point, the heading they pointed at having left the specification.
+
+* Twenty-five cases of `grammar.json` and `whitespace.json` pinned a ruling —
+  `section: "A.10"` and the like — as the section they test. A case's section
+  is a heading of the specification, and the specification now keeps its
+  rulings in a document of its own, so the pins go. Both files already pin a
+  section — 6 and 8 — and neither has a subsection to name more precisely, so
+  each of the twenty-five reports its file's instead. They were the only pins
+  in the set that named a ruling rather than a rule; the other 551 name a
+  section of `SPEC.md` or of `CST.md` and are untouched.
+* Twelve descriptions in `fallback-intl.json`, `intl.json` and
+  `resolution.json` name the rulings they cite as rulings rather than as
+  appendix entries.
+
 ## 4.0.0
 
 The set targets `curly-message-3`. A runner that reads only `curly-message-2`
