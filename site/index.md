@@ -72,9 +72,9 @@ The specification is **stable**. Version 3 of the format is settled: within
 that would change it belongs to a later version of the format rather than to
 this one. Revisions of the document are tagged, beginning at `v1.0.0`.
 
-The specification states version 3 and nothing else. What an earlier version of
-the format did, and what moving off it costs, is in the
-[changelog](../CHANGELOG.md).
+The specification states version 3 and nothing else. Every revision of it is in
+the [changelog](../CHANGELOG.md), and the path from an earlier version of the
+format is in [`MIGRATIONS.md`](../MIGRATIONS.md).
 
 The conformance set and the reference implementation are on npm, each released
 on a line of its own against the revision of this document its own changelog

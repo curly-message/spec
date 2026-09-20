@@ -35,8 +35,9 @@ that would change it belongs to a later version of the format rather than to
 this one. The promise is about messages: a caller that supplied none wrote
 nothing for the document to settle. Revisions of the document are tagged in this
 repository, beginning at `v1.0.0`, and [`CHANGELOG.md`](./CHANGELOG.md) says
-what each one changed — earlier versions of the format included, with what
-moving off one costs. `SPEC.md` states version 3 and nothing else.
+what each one changed. `SPEC.md` states version 3 and nothing else, and
+[`MIGRATIONS.md`](./MIGRATIONS.md) is the path from an earlier version of the
+format.
 
 The conformance set and the reference implementation are on npm. Each releases
 on a line of its own, against the revision of this document its own changelog
@@ -55,14 +56,15 @@ Contents:
 | [`SPEC.md`](./SPEC.md) | Stable | The specification: grammar, escaping, whitespace, resolution order, modifier semantics, fallback chain, error behavior |
 | [`CST.md`](./CST.md) | Settled against one implementation | A companion document: the concrete syntax tree for a message, for a tool that shows a message rather than resolving it. It adds nothing to the format — sections 6, 7 and 8 of `SPEC.md` already say where every character belongs, and the tree gives that answer a shape two implementations can hand to the same tool. It is not a conformance level, and an implementation conforms without offering a tree |
 | [`conformance/`](./conformance) | Stable, on npm | The conformance set, published as `@curly-message/conformance`: implementation-independent fixtures — the inputs a resolution takes and the output and reports it must produce, each pinned to the section it tests, and the tree of `CST.md` for an implementation that offers one — with the JSON Schema they validate against, a manifest, and a JavaScript runner that drives an implementation through the adapter of section 14.3. For the locale-dependent modifiers a fixture states the formatting request, and the runner performs it on the host it runs on. `RUNNER.md` states what a runner in another language is held to, and `defects.json` is the catalogue of deliberately wrong adapters it is audited against |
-| [`CHANGELOG.md`](./CHANGELOG.md) | Per revision | Every revision of the specification and what it changed — earlier versions of the format included, with what moving off one costs a message or a payload |
+| [`CHANGELOG.md`](./CHANGELOG.md) | Per revision | Every revision of the specification and what it changed |
+| [`MIGRATIONS.md`](./MIGRATIONS.md) | Per version of the format | The path from one version of the format to the next: what each step changes, what it costs a message or a payload, and what to do about it |
 | [`RULINGS.md`](./RULINGS.md) | Historical | Why the rules read as they do: each behavior of the pre-3.0 implementation the format was specified against, and the ruling that resolved it. It specifies nothing — every ruling is already stated in the body of `SPEC.md` |
 | [`brand/`](./brand) | Stable | The visual identity: the icon and the wordmark as SVGs, and the palette they are used in, under [their own terms](./brand/LICENSE) |
 | [`site/`](./site) | Stable | Source of the format's public site: six pages rendered from the markdown already in this repository, plus a playground that runs the reference implementation in the browser, deployed to GitHub Pages by the **Site** workflow |
 
-`SPEC.md` states the current version of the format and nothing else. The two
-documents beside it carry what it does not: what earlier versions did, and why
-its rules read as they do.
+`SPEC.md` states the current version of the format and nothing else. The three
+documents beside it carry what it does not: every revision, the path off an
+earlier version, and why the rules read as they do.
 
 The machine-readable identifier for the format is `curly-message`; versioned
 references use `curly-message-3`, and so on.
