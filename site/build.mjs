@@ -16,6 +16,8 @@ import { dirname, join } from 'node:path';
 import { posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Marked } from 'marked';
+import { cst } from '@curly-message/parser';
+import { highlight } from './highlight.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, '..');
@@ -131,6 +133,20 @@ const ASSETS = [
 const escape = (s) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+// The pieces a colouring answers with, as the markup that draws them. A piece
+// under no class is the text itself, so a fence the colouring has nothing to
+// say about carries no more markup than it did before.
+const ink = (pieces) =>
+  pieces
+    .map((piece) =>
+      piece.nodes
+        ? `<span class="${piece.cls}">${ink(piece.nodes)}</span>`
+        : piece.cls
+          ? `<span class="${piece.cls}">${escape(piece.text)}</span>`
+          : escape(piece.text),
+    )
+    .join('');
+
 // A heading reaches the renderer as HTML, and is wanted back as text twice
 // over: as the slug an anchor links to, and as the label the sidebar shows,
 // which escapes what it is given a second time. One pass, so an escaped
@@ -203,6 +219,14 @@ const render = (markdown, page) => {
       image({ href: link, title: label, text }) {
         const attr = label ? ` title="${escape(label)}"` : '';
         return `<img src="${escape(resolve(link, page))}" alt="${escape(text)}"${attr} loading="lazy">`;
+      },
+      // A fence is coloured where its language names one the site reads, and
+      // written plain where it does not — a block that is a diagram, a table
+      // of shapes or a notation of its own says so by naming no language.
+      code({ text, lang }) {
+        const drawn = highlight(text, lang, cst);
+        const attr = lang ? ` class="language-${escape(lang)}"` : '';
+        return `<pre><code${attr}>${drawn ? ink(drawn) : escape(text)}\n</code></pre>\n`;
       },
     },
   });
@@ -328,13 +352,15 @@ const build = async () => {
     console.log(`${page.from} -> ${page.to} (${headings.length} headings)`);
   }
 
-  // The playground's two modules, both from this package: the parser as the
-  // lockfile pins it, and the page's own script. A runtime CDN would make a
-  // static page depend on a third party staying up and would let the
-  // playground drift from the release it says it is running.
+  // The playground's three modules, all from this package: the parser as the
+  // lockfile pins it, the page's own script, and the colouring the pages
+  // share with it. A runtime CDN would make a static page depend on a third
+  // party staying up and would let the playground drift from the release it
+  // says it is running.
   await mkdir(join(out, 'playground'), { recursive: true });
   await cp(join(here, 'node_modules/@curly-message/parser/dist/index.js'), join(out, 'playground/parser.js'));
   await cp(join(here, 'playground.js'), join(out, 'playground/app.js'));
+  await cp(join(here, 'highlight.js'), join(out, 'playground/highlight.js'));
   console.log(`playground -> @curly-message/parser ${parser.version}`);
 
   await cp(join(here, 'style.css'), join(out, 'style.css'));

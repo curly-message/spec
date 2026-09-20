@@ -747,7 +747,7 @@ placeholder is a plain substitution (section 9.5), so it reaches the chain only
 where the value is absent, and the empty string in the second row is a value and
 not a missing one:
 
-```
+```curly-example
 Hello, {{name; default:Guest;}}!
 
 payload { name: 'Alice', default: 'Friend' }  ->  "Hello, Alice!"
@@ -1115,7 +1115,7 @@ A placeholder MAY hold a placeholder, in an option value and nowhere else
 scan, and resolved by section 9 like any other — but only where the option that
 holds it is the one selected (sections 5, 11).
 
-```
+```curly
 {{count:gt; 0:{{count:number;}} items; default:no items;}}
 ```
 
@@ -1142,7 +1142,7 @@ holding `}}` closes nothing. So what a message resolves to cannot change what
 the message means, and no payload can reach a branch the message did not select
 for it, or write a construct the message did not spell.
 
-```
+```curly
 {{state:eq; draft:{{note}}; live:Published; default:?;}}
 ```
 
@@ -1540,7 +1540,7 @@ has them. No migration note is owed to any user.
 **Observed.** The inline-default scan is case-insensitive, while the payload
 lookup and the option filter are case-sensitive.
 
-```
+```curly-example
 {{v; DEFAULT:D}}      payload {}                 ->  "D"      (parsed as an inline default)
 {{v}}                 payload { DEFAULT: 'PD' }  ->  ""       (not read as the payload default)
 {{v; DEFAULT:D}}      payload { v: 'DEFAULT' }   ->  "D"      (also kept as an eq option)
@@ -1550,7 +1550,7 @@ lookup and the option filter are case-sensitive.
 survives the option filter, which strips only the exact string `default`. Where
 both spellings appear, the first in source order wins:
 
-```
+```curly-example
 {{v; DEFAULT:UPPER; default:LOWER}}  ->  "UPPER"
 {{v; default:LOWER; DEFAULT:UPPER}}  ->  "LOWER"
 ```
@@ -1571,7 +1571,7 @@ and an option — cannot be expressed in the grammar.
 with no diagnostic. Modifier lookup was case-sensitive, so case variants fell
 back too, silently changing meaning:
 
-```
+```curly-example
 {{v:plural; 1:one; default:many}}  payload { v: 1 }  ->  "one"   (eq matched key 1)
 {{v:gt;     1:ONE; default:D}}     payload { v: 1 }  ->  "D"     (gt: 1 is not > 1)
 {{v:GT;     1:ONE; default:D}}     payload { v: 1 }  ->  "ONE"   (unknown -> eq)
@@ -1596,7 +1596,7 @@ costs that host nothing (section 11.3).
 the inline default. It proceeds to compare, and an absent value converts to the
 text `"undefined"`:
 
-```
+```curly-example
 {{v:ne; 10:V2; default:D}}         payload {}  ->  "V2"   (10 differs from "undefined")
 {{v:eq; 10:V2; default:D}}         payload {}  ->  "D"
 {{v:ne; undefined:U; default:D}}   payload {}  ->  "D"    (the option key matches the text)
@@ -1618,7 +1618,7 @@ foreign language's vocabulary.
 **Observed.** An option with no value, or with an empty value, yielded its key
 as its own value. An option whose value was whitespace was dropped instead:
 
-```
+```curly-example
 {{v:ne; z; default:DEF}}                payload {}          ->  "z"
 {{v; 1:; 5:FIVE; default:DEF}}          payload { v: 1 }    ->  "1"
 {{v; x: ; 5:FIVE; default:DEF}}         payload { v: 'x' }  ->  "DEF"   (one space after the colon)
@@ -1661,7 +1661,7 @@ conversion table, not as part of the format.
 output would exceed 100 000 characters. Both reported through `console.warn` and
 returned the last settled text. Verified:
 
-```
+```curly-example
 chain of 10 references   ->  fully resolved, no report
 chain of 11 references   ->  "{{v11}}", one report
 self-multiplying value   ->  27 968 characters, one report
@@ -1693,7 +1693,7 @@ limit.
 **Observed.** An option segment was split on every unescaped colon; the key was
 the first field and the value the **last**. Everything between was discarded:
 
-```
+```curly-example
 {{v; a:http://x; default:D}}    payload { v: 'a' }  ->  "//x"
 {{v; a:10:30;    default:D}}    payload { v: 'a' }  ->  "30"
 {{v; a:b:c:d;    default:D}}    payload { v: 'a' }  ->  "d"
@@ -1717,7 +1717,7 @@ the inconsistency with inline defaults shows it was never intended.
 **Observed.** Several places tested truthiness where they meant presence, so
 zero, empty string and `false` behaved as though the key were missing:
 
-```
+```curly-example
 {{v:number; default:99}}   payload { v: 0 }         ->  "99"       (expected "0")
 {{v:currency; default:7}}  payload { v: 0 }, currency USD  ->  "$7.00"  (expected "$0.00")
 {{v}}                      payload { default: 0 }   ->  ""         (expected "0")
@@ -1745,7 +1745,7 @@ string.
 value. Naming the default modifier, or adding a non-matching option, produces
 the empty string instead:
 
-```
+```curly-example
 {{v}}         payload { v: 'RAW' }  ->  "RAW"
 {{v:eq}}      payload { v: 'RAW' }  ->  ""
 {{v; a:A}}    payload { v: 'RAW' }  ->  ""
@@ -1804,7 +1804,7 @@ end that reading some other way, and would reopen note 2 and section 7 with it.
 returned as it arrived, so the parser's declared string return type was not
 always honored:
 
-```
+```curly-example
 parse(42)    ->  42     (the number, not "42")
 parse(null)  ->  null
 ```
@@ -1822,7 +1822,7 @@ recorded here so it is not lost.
 modifiers propagated their own. A single misconfigured placeholder aborted
 rendering of the whole message:
 
-```
+```curly-example
 {{v:currency}}   with no currency code       ->  raises TypeError
 {{v:currency}}   with an invalid code        ->  raises RangeError
 {{v:date}}       with an invalid property    ->  raises RangeError
@@ -1847,7 +1847,7 @@ in its place — or zero, where none was declared. `currency` selected with
 `value || default` instead, so a value that was not empty was multiplied by the
 ratio and formatted whatever it was:
 
-```
+```curly-example
 {{v:number}}               payload { v: 'nope' }  ->  "0"      (expected "")
 {{v:number; default:n/a}}  payload { v: 'nope' }  ->  "NaN"    (expected "n/a")
 {{v:ago}}                  payload { v: 'nope' }  ->  "now"    (expected "")
@@ -1883,7 +1883,7 @@ can tell apart from a real value.
 **Observed.** An empty placeholder was not recognized. The same construct with a
 single space between the braces was:
 
-```
+```curly-example
 {{}}     payload {}                ->  "{{}}"   (literal)
 {{}}     payload { default: 'D' }  ->  "{{}}"   (literal)
 {{ }}    payload {}                ->  ""
@@ -1916,7 +1916,7 @@ text renders `{{;a:D`.
 placeholder. It stayed where it was, to be read by the unescaping pass against
 whatever the resolved value put after it:
 
-```
+```curly-example
 \{{v}}     payload { v: 'HIT' }  ->  "\HIT"
 \{{v}}     payload {}            ->  "\"
 \\{{v}}    payload { v: 'HIT' }  ->  "\HIT"   (the two spellings agree)
@@ -1940,7 +1940,7 @@ payload value is not something the author of the message can reason about.
 backslash was taken into the key instead, so `\}` and `\\` yielded the same key
 and no key could hold a closing brace:
 
-```
+```curly-example
 {{v\}}     payload { v: 'HIT' }                  ->  ""
 {{v\}}     payload { 'v\': 'BS', v: 'V' }        ->  "BS"   (the key is read as "v\")
 {{v\\}}    payload { 'v\': 'BS', 'v\\': 'BS2' }  ->  "BS"   (the same key, a different spelling)
@@ -1969,7 +1969,7 @@ under was handed to interpolation in the message's place, so it was scanned for
 placeholders and unescaped like a message. Every line below resolves a message
 that does not exist:
 
-```
+```curly-example
 key "{{name}}"  payload { name: "Alice" }  ->  "Alice"
 key "{{name}}"  no payload                 ->  ""
 key "a\;b"      no payload                 ->  "a;b"
@@ -2009,7 +2009,7 @@ answered to its name and failed on the call rather than at registration: the
 placeholder resolved to the fallback chain and reported nothing, where a name
 nobody registered resolves there and reports.
 
-```
+```curly-example
 foo: [1, 2]   {{v:foo; default:D}}        ->  "D", no report
 foo: "text"   {{v:foo; default:D}}        ->  "D", no report
 eq:  "text"   {{v:eq; X:HIT; default:D}}  ->  "D", no report
@@ -2081,7 +2081,7 @@ emitted. Everything below follows from that.
 | `\;`, `\:`, `\\` | the backslash was removed | renders as written |
 | a trailing `\` | it escaped the next message character | renders as written |
 
-```
+```curly
 {{state:eq; draft:{{note}}; live:Published; default:?;}}
 ```
 
@@ -2119,7 +2119,7 @@ placeholder (section 6, note 10), and the construct around it does not derive.
 Version 1 resolved the inner construct and then re-read the result as a
 placeholder, so these rendered:
 
-```
+```curly-example
 {{a; {{b}}:x;}}    payload { a: 'k', b: 'k' }    v1 "x"    v2 "{{a; k:x;}}"
 {{a:{{m}};}}       payload { a: 'A', m: 'eq' }   v1 ""     v2 "{{a:eq;}}"
 ```

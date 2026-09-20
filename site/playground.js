@@ -1,10 +1,12 @@
 // The playground's script, and the only one the site carries. It drives a
 // single call — `resolve()` — and shows what that call answers with: the
 // string, the reports it made along the way, and the parameters the message
-// names. It also colours the message from the tree the same parser reads it
-// as. Both modules are served from this site; nothing is fetched.
+// names. It also colours what is typed, through the same module the pages
+// are coloured with. All three modules are served from this site; nothing is
+// fetched.
 
 import { createExtractor, createParser, cst } from './parser.js';
+import { highlight } from './highlight.js';
 
 const field = (id) => document.getElementById(id);
 
@@ -125,56 +127,25 @@ const showParams = (params) => {
   );
 };
 
-// The parts a placeholder is made of. Each holds text and escapes rather than
-// characters of its own, so a leaf under one is coloured by the part it lies
-// in rather than by being text.
-const ROLES = new Set(['key', 'modifier', 'option-key', 'option-value']);
+// The pieces a colouring answers with, as the nodes that draw them. A piece
+// under no class is text, and is written as text: the block under a control
+// holds nothing the reader did not type.
+const draw = (pieces) =>
+  pieces.map((piece) => {
+    if (piece.nodes) {
+      const box = el('span', piece.cls);
+      box.append(...draw(piece.nodes));
+      return box;
+    }
+    return piece.cls ? el('span', piece.cls, piece.text) : document.createTextNode(piece.text);
+  });
 
-// Every leaf is drawn by its own type, except text, which has no colour of
-// its own and takes the part it lies in. Whatever neither names — the spacing
-// a placeholder is allowed inside it, an empty message — is text.
-const CLASSES = {
-  open: 'ink-brace',
-  close: 'ink-brace',
-  separator: 'ink-brace',
-  key: 'ink-key',
-  modifier: 'ink-modifier',
-  'option-key': 'ink-option-key',
-  'option-value': 'ink-option-value',
-  text: 'ink-text',
-};
-
-// One span per leaf of the tree. The leaves tile the message and spell it
-// back, so the walk carries no position of its own: each leaf states the
-// slice it covers, and the spans laid end to end are the message.
-const paint = (message, node, role) => {
-  if (node.nodes?.length) {
-    const under = ROLES.has(node.type) ? node.type : role;
-    const inside = node.nodes.flatMap((child) => paint(message, child, under));
-    if (node.type !== 'placeholder') return inside;
-    const box = el('span', 'ink-ph');
-    box.append(...inside);
-    return [box];
-  }
-  const text = message.slice(node.start, node.end);
-  if (!text) return [];
-  // An escape is drawn as itself whatever it stands in, and the one that
-  // cancels nothing is drawn apart from the one that does: they leave
-  // different text behind, so colouring them alike would misstate one.
-  const className =
-    node.type === 'escape'
-      ? `ink-escape${node.cancels ? '' : ' ink-inert'}`
-      : (CLASSES[node.type === 'text' ? role : node.type] ?? 'ink-text');
-  return [el('span', className, text)];
-};
-
-const showMessage = (message) => {
-  const ink = field('ink');
-  const spans = paint(message, cst(message), 'text');
-  // A block ends at its last line, and a message ending in a line break has
-  // one more the control will hold a caret on: without it the two boxes stop
+// Draws one control's text into the block beneath it.
+const show = (ink, text, pieces) => {
+  // A block ends at its last line, and text ending in a line break has one
+  // more the control will hold a caret on: without it the two boxes stop
   // agreeing on their height.
-  fill(ink, message.endsWith('\n') ? [...spans, document.createTextNode('\n')] : spans);
+  fill(ink, text.endsWith('\n') ? [...draw(pieces), document.createTextNode('\n')] : draw(pieces));
 };
 
 const run = () => {
@@ -187,7 +158,14 @@ const run = () => {
   const reports = [];
   const parser = createParser({ onReport: (report) => reports.push(report) });
 
-  showMessage(message);
+  show(field('ink'), message, highlight(message, 'curly', cst));
+  // The two JSON fields are coloured by scanning rather than by parsing, so
+  // text that is not yet an object still colours as far as it reads.
+  for (const [name, input] of [
+    ['payload-ink', FIELDS.p],
+    ['props-ink', FIELDS.r],
+  ])
+    show(field(name), input.value, highlight(input.value, 'json'));
   showOutput(parser.resolve(message, { payload, props, locale, id }));
   showReports(reports);
   showParams(createExtractor()(message));
