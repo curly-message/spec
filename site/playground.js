@@ -145,7 +145,7 @@ const run = () => {
   const message = FIELDS.m.value;
   const payload = object(FIELDS.p, field('payload-bad'));
   const props = object(FIELDS.r, field('props-bad'));
-  const locale = FIELDS.l.value.trim() || undefined;
+  const locale = FIELDS.l.value || undefined;
 
   const reports = [];
   const parser = createParser({ onReport: (report) => reports.push(report) });
@@ -175,6 +175,10 @@ const share = () => {
 
 const load = (state) => {
   for (const [name, input] of Object.entries(FIELDS)) input.value = state[name] ?? '';
+  // A locale is chosen from a list, so a link naming one that is not on it
+  // leaves the control holding nothing. The list has no empty entry, so the
+  // first is what a case that named no locale meant.
+  if (!FIELDS.l.value) FIELDS.l.value = 'en';
   run();
 };
 
