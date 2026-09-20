@@ -89,9 +89,10 @@ the format is, so a page spends no colour it had not already spent.
 ## The playground
 
 `site/playground.html` is the page's body and `site/playground.js` drives it.
-It makes one call — `resolve()` — and shows the three things the call answers
-with: the string, the reports (section 14.3 of the specification) and, from
-the same package's extractor, the parameters the message names.
+It makes one call — `resolve()` — with the four inputs a resolution takes, and
+shows the three things the call answers with: the string, the reports (section
+14.3 of the specification) and, from the same package's extractor, the
+parameters the message names.
 
 The message, the payload and the modifier properties are all coloured as they
 are typed. What draws the colours is a block under a control whose own text is

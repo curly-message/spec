@@ -10,15 +10,13 @@ import { highlight } from './highlight.js';
 
 const field = (id) => document.getElementById(id);
 
-// The five inputs are the four a resolution takes and the message's id, under
-// the letters the shared link spells them with. The id reaches no step of
-// resolution: it is what a report names the message by.
+// The four inputs a resolution takes, under the letters the shared link
+// spells them with.
 const FIELDS = {
   m: field('message'),
   p: field('payload'),
   r: field('props'),
   l: field('locale'),
-  i: field('id'),
 };
 
 const CASES = {
@@ -27,28 +25,24 @@ const CASES = {
     p: '{\n  "name": "Alice"\n}',
     r: '',
     l: 'en',
-    i: 'greeting',
   },
   order: {
     m: 'Order {{order}} is {{status; shipped:on its way; delivered:delivered; default:still being packed;}}.',
     p: '{\n  "order": "A-2291",\n  "status": "shipped"\n}',
     r: '',
     l: 'en',
-    i: 'order',
   },
   invoice: {
     m: 'Invoice {{total:currency;}} is due {{due:date;}}.',
     p: '{\n  "total": 1290.5,\n  "due": "2026-10-01"\n}',
     r: '{\n  "currency": { "currency": "EUR" },\n  "date": { "dateStyle": "long" }\n}',
     l: 'en',
-    i: 'invoice',
   },
   nesting: {
     m: 'You have {{count:gt; 0:{{count:number;}}; default:no;}} {{count; 1:message; default:messages;}}.',
     p: '{\n  "count": 0\n}',
     r: '',
     l: 'en',
-    i: 'nesting',
   },
 };
 
@@ -99,7 +93,6 @@ const showReports = (reports) => {
       const head = el('p', 'head');
       head.append(el('code', 'code', report.code), el('span', 'origin', report.origin));
       row.append(head, el('p', 'said', report.message));
-      if (report.id !== undefined) row.append(el('p', 'at', `Id: ${report.id}`));
       if (report.limit !== undefined) row.append(el('p', 'at', `Limit: ${report.limit}`));
       if (report.text) row.append(el('pre', 'excerpt', report.text));
       return row;
@@ -153,7 +146,6 @@ const run = () => {
   const payload = object(FIELDS.p, field('payload-bad'));
   const props = object(FIELDS.r, field('props-bad'));
   const locale = FIELDS.l.value.trim() || undefined;
-  const id = FIELDS.i.value.trim() || undefined;
 
   const reports = [];
   const parser = createParser({ onReport: (report) => reports.push(report) });
@@ -166,7 +158,7 @@ const run = () => {
     ['props-ink', FIELDS.r],
   ])
     show(field(name), input.value, highlight(input.value, 'json'));
-  showOutput(parser.resolve(message, { payload, props, locale, id }));
+  showOutput(parser.resolve(message, { payload, props, locale }));
   showReports(reports);
   showParams(createExtractor()(message));
   showCases();
