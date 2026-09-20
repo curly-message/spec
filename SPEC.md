@@ -21,10 +21,11 @@
 > earlier revision defined, a conformance level an implementation opts into, and
 > wording that states more precisely what the body already required.
 >
-> This document states version 3 and nothing else. What an earlier version of
-> the format did, and what moving off it costs, is recorded in
-> [`CHANGELOG.md`](./CHANGELOG.md); why a rule reads as it does, in
-> [`RULINGS.md`](./RULINGS.md). Neither is part of this specification.
+> This document states version 3 and nothing else. Three documents beside it
+> carry what it does not, and none of them is part of this specification:
+> [`CHANGELOG.md`](./CHANGELOG.md) records every revision,
+> [`MIGRATIONS.md`](./MIGRATIONS.md) is the path from an earlier version of the
+> format, and [`RULINGS.md`](./RULINGS.md) says why a rule reads as it does.
 
 ## 1. Scope
 
