@@ -370,7 +370,7 @@ spelled out.
 
 ### A.1 A placeholder inside another
 
-```
+```curly
 {{count:gt; 0:{{count:number;}}; default:no;}}
 ```
 
@@ -386,7 +386,7 @@ highlighter shows what the message does.
 
 ### A.2 A brace a backslash consumed
 
-```
+```curly-example
 \{{v}}      no placeholder: escape [0,2), text [2,6)
 {{v\}}      no placeholder: text [0,3), escape [3,5), text [5,6)
 {{v\}}}     one placeholder [0,7), key "v}"
@@ -398,7 +398,7 @@ never forms (section 6, note 6). In the third, the backslash takes the first
 
 ### A.3 A colon that is content
 
-```
+```curly
 {{a:b:c; d:e:f;}}
 ```
 
@@ -409,7 +409,7 @@ the end (section 6, notes 3 and 4).
 
 ### A.4 Padding
 
-```
+```curly
 {{ v : number ;}}
 ```
 
@@ -420,7 +420,7 @@ the padding is dropped from them and described beside them (section 8).
 
 ### A.5 A name that is all padding
 
-```
+```curly
 {{  }}
 ```
 
@@ -430,7 +430,7 @@ with nothing to look up is still a placeholder (section 9.1).
 
 ### A.6 A line terminator
 
-```
+```curly
 {{v
 }}
 ```
@@ -448,7 +448,7 @@ meaning there.
 
 ### A.8 An option value that is more than a placeholder
 
-```
+```curly
 {{n:gt; 0:you have {{n}} left; default:none;}}
 ```
 
@@ -460,7 +460,7 @@ the value holds can be dropped.
 
 ### A.9 A `{{` in a value that opens nothing
 
-```
+```curly
 {{a; x:{{b}}
 ```
 

@@ -35,7 +35,10 @@ a link reproduces it exactly.</p>
     </div>
     <div class="field">
       <label for="payload">Payload <span class="hint">JSON</span></label>
-      <textarea id="payload" rows="5" spellcheck="false" autocapitalize="off"></textarea>
+      <div class="editor">
+        <pre class="ink" id="payload-ink" aria-hidden="true"></pre>
+        <textarea id="payload" rows="5" spellcheck="false" autocapitalize="off"></textarea>
+      </div>
       <p class="bad" id="payload-bad" hidden></p>
     </div>
     <div class="pair">
@@ -55,7 +58,10 @@ a link reproduces it exactly.</p>
         says what currency the <code>currency</code> modifier formats in.</p>
       <div class="field">
         <label class="visually-hidden" for="props">Props</label>
-        <textarea id="props" rows="4" spellcheck="false" autocapitalize="off"></textarea>
+        <div class="editor">
+          <pre class="ink" id="props-ink" aria-hidden="true"></pre>
+          <textarea id="props" rows="4" spellcheck="false" autocapitalize="off"></textarea>
+        </div>
         <p class="bad" id="props-bad" hidden></p>
       </div>
     </details>
@@ -94,6 +100,12 @@ found a placeholder in stays the colour of text. The two escapes are drawn
 apart on purpose: <code>\{</code> cancels a brace and leaves one behind, while
 <code>\n</code> cancels nothing and both characters stay. An editor that
 colours them alike is lying about one of them.</p>
+
+<p>Every message on this site is coloured by that same walk, so an example in
+the specification is drawn exactly as the message you type here would be. The
+payload and the modifier properties are JSON rather than messages, and are
+coloured as JSON — by their own reading, which is why a field mid-edit still
+colours rather than waiting for the text to parse.</p>
 
 <h2 id="placeholders-inside-placeholders">Placeholders inside placeholders</h2>
 

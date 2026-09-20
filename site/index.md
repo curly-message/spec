@@ -12,7 +12,7 @@ modifier, a set of options and a fallback. That is the whole of the syntax.
 }
 ```
 
-```
+```curly-example
 locale "en"
 
 greeting  { name: 'Alice' }  ->  "Hello, Alice!"
