@@ -25,6 +25,7 @@ changes the site.
 ```sh
 npm ci
 npm run build     # -> _site/
+npm test          # builds, then reads the pages back
 ```
 
 `build.mjs` is the whole generator: it renders the markdown with
@@ -35,6 +36,16 @@ sidebar from the headings it just rendered, and copies the marks out of
 [`brand/`](../brand). For the playground it copies three modules instead:
 `playground.js`, `highlight.js`, and `@curly-message/parser` as this package's
 lockfile pins it.
+
+`npm test` builds and then reads what the build wrote. Colouring adds markup
+and changes no character, so every fence on every page must spell its source
+back exactly: the test lifts each one out of the rendered HTML, drops the spans
+and holds what is left to the markdown it came from. The pages carry the
+specification's own examples, and a colouring that dropped, doubled or
+mis-escaped one would not fail the build — it would print a message the
+specification does not spell, and a reader would copy it. The page list is held
+too, so a page added to `build.mjs` and not to the test fails rather than
+going unchecked.
 
 The output is static HTML. The playground is the one page that carries a
 script — it runs the parser rather than describing it — and all three of its
@@ -125,8 +136,10 @@ python3 -m http.server --directory _site 8000
 
 ## Deploying
 
-The **Site** workflow (`.github/workflows/site.yml`) builds and deploys on a
-push to `main` that touches any of the sources above, and on demand. It needs
+The **Site** workflow (`.github/workflows/site.yml`) builds, checks and deploys
+on a push to `main` that touches any of the sources above, and on demand. The
+check is `npm test`, so a build whose pages no longer spell their sources back
+is not deployed. It needs
 the repository's Pages source set to **GitHub Actions**; with the source left
 at a branch, the build succeeds and the deployment fails.
 
