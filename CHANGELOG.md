@@ -13,7 +13,7 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
-### 3.0.1 (Unreleased)
+## 3.0.1
 
 Nothing a message resolves to changes. `SPEC.md` states the current version of
 the format and nothing else, and what it carried besides now stands beside it.
