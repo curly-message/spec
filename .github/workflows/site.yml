@@ -40,11 +40,14 @@ jobs:
           cache: npm
           cache-dependency-path: site/package-lock.json
 
-      - name: Build the site
+      # `pretest` builds, and the tests hold every fence on every page to the
+      # markdown it was rendered from: a colouring that changed a character
+      # fails the run rather than being deployed.
+      - name: Build and check the site
         working-directory: site
         run: |
           npm ci
-          npm run build
+          npm test
 
       - uses: actions/configure-pages@v5
 
