@@ -1,6 +1,6 @@
 # Changelog
 
-### 4.0.1 (Unreleased)
+## 4.0.1
 
 Nothing a case states changes: every input, every expected output and every
 report is the one 4.0.0 shipped. What changes is where twenty-five of them
