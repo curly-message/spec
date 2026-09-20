@@ -35,20 +35,8 @@ that would change it belongs to a later version of the format rather than to
 this one. The promise is about messages: a caller that supplied none wrote
 nothing for the document to settle. Revisions of the document are tagged in this
 repository, beginning at `v1.0.0`, and [`CHANGELOG.md`](./CHANGELOG.md) says
-what each one changed.
-
-**Version 3 reads a plain array as narrowly as a plain object.** A value of a
-sequence type an application derived, or one built in another realm, converts as
-a string where it used to serialize as JSON. Nothing a message spells changes,
-so the cost falls on a payload alone, and Appendix D of [`SPEC.md`](./SPEC.md)
-says what it is.
-
-**Version 2 made message text syntax and payload text data.** A message is
-resolved in one walk, nothing it emits is read back, and a placeholder nests
-where the message spells it nesting rather than where a payload arranges one.
-That walk is version 3's too, and Appendix C of [`SPEC.md`](./SPEC.md) lists
-every change version 2 made and what each cost a message written against version
-1.
+what each one changed — earlier versions of the format included, with what
+moving off one costs. `SPEC.md` states version 3 and nothing else.
 
 The conformance set and the reference implementation are on npm. Each releases
 on a line of its own, against the revision of this document its own changelog

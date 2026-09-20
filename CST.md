@@ -76,11 +76,8 @@ A case states the text a node spans rather than a number, so an implementation
 is measured in the unit it declares rather than in one the fixtures chose.
 
 **Status.** This revision describes version 3 of the format
-(`curly-message-3`). The tree is version 2's unchanged: version 3 revises how
-a payload value converts and spells nothing differently, so appendix D of
-[`SPEC.md`](./SPEC.md) names no node. The last revision that moved one was the
-one before it, where an option value came to hold children rather than a name
-(appendix C).
+(`curly-message-3`). Version 3 revises how a payload value converts and spells
+nothing differently, so no node here moves with it.
 
 This document is settled against one implementation. Until a second
 offers a tree, a node name or an arrangement MAY change in a revision of it;
