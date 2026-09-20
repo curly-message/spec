@@ -4,9 +4,8 @@ Revisions of the specification, tagged `v<version>` in this repository. The
 major is the version of the format: within one version of it what a message
 resolves to does not change, so a revision under that version adds only what
 leaves the messages written for it alone — a modifier under a name no earlier
-revision
-defines, a conformance level an implementation opts into, and wording that
-states more precisely what the body already required. That promise is about
+revision defines, a conformance level an implementation opts into, and wording
+that states more precisely what the body already required. That promise is about
 messages: what an implementation answers where there is no message to resolve
 is outside it.
 
