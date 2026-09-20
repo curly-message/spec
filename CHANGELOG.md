@@ -24,9 +24,40 @@ rather than as JSON — while nothing of the kind was ever written about an
 array, so a value of any array type serialized, one of a type an application
 derived and one built in another realm included. Both shapes are held to one
 test now, and a sequence that is not of the host's own type converts as a
-string. Appendix D says what that costs a payload, section 9.2 names the pair,
-and `CST.md` records that the tree is unchanged. Nothing a message spells
-changes, so no message needs migrating.
+string. Section 9.2 names the pair and `CST.md` records that the tree is
+unchanged. Nothing a message spells changes, so no message needs migrating.
+
+What a payload value converts as:
+
+| A payload value of | Version 2 | Version 3 |
+| --- | --- | --- |
+| the host's own sequence type | serializes | serializes |
+| a sequence type derived from it | serializes | converts as a string |
+| a sequence built in another realm | serializes | converts as a string |
+| the host's own keyed type | serializes | serializes |
+| a class, a struct, a record | converts as a string | converts as a string |
+
+A payload that passes a value of a derived sequence type where a modifier reads
+its JSON back gets the host's ordinary string conversion of it instead: in
+ECMAScript a value of a class extending `Array` holding `a` and `b` converts to
+`a,b` where it serialized to `["a","b"]`. A caller that wants the serialization
+passes the host's own type — copying the entries into one is enough — and a
+value that already is one is untouched. An option comparison over such a value
+compares that same text, so an option key written against the serialization no
+longer matches it.
+
+Which conversion describes a value is also which one may fail to, so a report
+can move with it. A value the serialization could not describe — one that holds
+itself, or one that visits more nodes than section 13 allows — is one the
+string conversion may describe perfectly well, and is a value here where it was
+absent and reported; a value whose string conversion raises is absent and
+reported here where it serialized. What moved is which conversion is asked:
+section 4 treats either failure as absence and section 14.2 reports either, as
+both already did.
+
+The parameters a message names and the tree describing it read as they did, and
+the cost falls on a payload alone — on one carrying a sequence that is not of
+the host's own type, and on nothing else.
 
 Section 4.1 asks an implementation to offer a way to turn wrapper recognition
 off for a resolution, and section 14.1's rule about untrusted data now names
@@ -58,10 +89,9 @@ construct the message wrote, or close that construct early. Version 2 resolves
 a message in one walk and reads nothing it has emitted, and a placeholder nests
 where the message spells it nesting rather than where a payload arranges one.
 
-Appendix C of `SPEC.md` is the migration, and lists every change with what each
-costs a message written against version 1. In short: stop composing messages
-through the payload, stop building a key, an option key or a modifier name out
-of it, and stop escaping payload values — those backslashes now render.
+In short: stop composing messages through the payload, stop building a key, an
+option key or a modifier name out of it, and stop escaping payload values —
+those backslashes now render. The migration is spelled out below the list.
 
 * Section 5 is rewritten. A message is resolved in **one walk**: section 6
   parses it once, and the walk emits the message's own text and what section 9
@@ -115,11 +145,88 @@ of it, and stop escaping payload values — those backslashes now render.
 * Section 14.3 identifies a placeholder for every condition, limits included,
   fixes the order reports are emitted in as **walk order**, and bounds the
   count by the message: at most one report per placeholder per condition.
-* Appendix C is added: what changed from version 1.
 * `CST.md` revises with the document. An `option-value` node carries children,
   `placeholder` among them, and no longer carries `name`; the name kinds are
   `key`, `modifier` and `option-key`. Agreement and determinism cover every
   level of nesting, and the tree does not depend on a host's nesting limit.
+
+### Migrating from version 1
+
+Everything below follows from the one change: version 1 resolved a message by
+repeated passes of substitution over the whole current text, and version 2
+resolves it in one walk and reads nothing it has emitted.
+
+**What a payload can no longer do.**
+
+| A value carrying | Version 1 | Version 2 |
+| --- | --- | --- |
+| `{{apiKey}}` | read that payload entry | renders `{{apiKey}}` |
+| `; live:DELETED` | added an option to the construct around it | renders as text |
+| `}}` | closed the enclosing construct early | renders as text |
+| `{{` | kept the enclosing construct from deriving | renders as text |
+| `\;`, `\:`, `\\` | the backslash was removed | renders as written |
+| a trailing `\` | it escaped the next message character | renders as written |
+
+```curly
+{{state:eq; draft:{{note}}; live:Published; default:?;}}
+```
+
+Over `{ state: 'live', note: 'X; live:Leaked' }` version 1 rendered `Leaked`
+and version 2 renders `Published`. Version 1 substituted the payload's text
+first, and the option that text wrote outranked the one the message spelled;
+version 2 never reads `note` at all, because the option holding it was not the
+one selected.
+
+The same holds of a props value, a payload `default`, a wrapper's `default` and
+a modifier's answer. A caller that escaped its payload values to protect them
+from the format must stop: those backslashes now render.
+
+**What a message can now do.** A placeholder may hold a placeholder in an
+option value. In version 1 such a construct was not a placeholder at all — the
+inner one resolved first and the outer was scanned again on a later pass, over
+text the payload had a hand in. Most such messages rendered correctly and still
+do, but three things change for them:
+
+- An option the modifier passes over is no longer evaluated. A placeholder in
+  it is not resolved, a modifier it names is not called, and a report it would
+  have made is not made.
+- The enclosing key is now extractable. A tool reading a message statically
+  reports every key it names, nested and enclosing alike, where version 1 could
+  see only the innermost.
+- What the message renders no longer depends on what the payload happens to
+  contain.
+
+**What breaks.** A `{{` in a **key**, an **option key** or a **modifier name**
+opens no placeholder, and the construct around it does not derive. Version 1
+resolved the inner construct and then re-read the result as a placeholder, so
+these rendered:
+
+```curly-example
+{{a; {{b}}:x;}}    payload { a: 'k', b: 'k' }    v1 "x"    v2 "{{a; k:x;}}"
+{{a:{{m}};}}       payload { a: 'A', m: 'eq' }   v1 ""     v2 "{{a:eq;}}"
+```
+
+Both were a payload choosing a message's structure, which is what version 2
+exists to stop. A message that wrote either must name its key, its option key
+and its modifier itself.
+
+An option value that resolves to nothing but whitespace is no longer trimmed
+away, because whitespace is read over the spelling: `{{a; x:{{b}};}}` over a
+`b` of three spaces renders three spaces where version 1 rendered none.
+
+**Limits and reports.** The **pass limit** is gone, and so is the `pass-limit`
+report code; an implementation that emits it does not conform to version 2 or
+later. A **read limit** and a **nesting limit** take its place, with the codes
+`read-limit` (origin `limit`) and `nesting-limit` (origin `message`), so the
+vocabulary is eight codes where it was seven. The **output limit** no longer
+discards a pass whole: a placeholder whose result would carry the output past
+it resolves to the empty string and the walk carries on, so the message's own
+text still renders. A condition is reported at most once per placeholder, a
+placeholder the walk never reaches is never reported, and reports are emitted
+in **walk order** — version 1 ordered them by the pass that met the condition
+and then by source position, so a report from a placeholder the payload had
+written could precede one the message spelled. There are no passes to order by
+now.
 
 ## 1.1.0
 

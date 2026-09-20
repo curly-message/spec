@@ -21,27 +21,9 @@
 > earlier revision defined, a conformance level an implementation opts into, and
 > wording that states more precisely what the body already required.
 >
-> **What version 3 changed is section 4's sentence**: *a plain array is read as
-> narrowly as a plain object.* In version 2 the narrow reading was written for
-> keyed data alone, so a value of any array type serialized as JSON while a
-> value of a keyed type an application declared converted as a string. Version 3
-> holds both shapes to one test, so a sequence type an application derived — and
-> an array built in another realm — converts as a string, as its keyed
-> counterpart already did. Appendix D lists what that costs a payload written
-> against version 2. Nothing else changes: the walk, the grammar, the escaping,
-> the limits and the tree are version 2's unaltered, and nothing a message
-> spells changes, so no message needs migrating.
->
-> **What version 2 changed was section 14.1's sentence**: *message text is
-> syntax, and payload text is data.* In version 1 a resolution was repeated
-> passes of substitution over the whole current text, so whatever a payload
-> value contributed was read back as message source on the next pass — a value
-> could name a payload entry the message never named, add an option to a
-> construct the message wrote, or close that construct early. Version 2 resolves
-> a message in one walk and reads nothing it has emitted. Placeholders nest
-> where the message spells them nesting, and nowhere else. That walk is this
-> version's too, and Appendix C lists every change version 2 made and what each
-> cost a message that was written against version 1.
+> This document states version 3 and nothing else. What an earlier version of
+> the format did, and what moving off it costs, is recorded in
+> [`CHANGELOG.md`](./CHANGELOG.md) rather than here.
 >
 > Appendix A records the divergences found while this document was written
 > against the pre-3.0 reference parser, and the ruling that resolved each one.
@@ -1147,9 +1129,8 @@ for it, or write a construct the message did not spell.
 ```
 
 Over `{ state: 'live', note: 'X; live:Leaked' }` this renders `Published`, and
-`note` is never read. Version 1 substituted the whole message repeatedly, so
-`note` was read first and the segment its text wrote outranked the one the
-message spelled: the same payload rendered `Leaked` (Appendix C).
+`note` is never read at all: the option holding it is not the one the
+comparison selected, so the segment its text spells is never a segment.
 
 How deeply a message nests is a fact about the message alone, and nothing in
 section 6 bounds it. What an implementation resolves is bounded by section 13.
@@ -2063,160 +2044,6 @@ implementation is reached through.
 The published `@sveltekit-i18n/parser-default` 1.x line predates this
 specification. Where it differs, this document governs and the 1.x behavior is
 informative only.
-
-## Appendix C: what changed from version 1
-
-Version 1 resolved a message by repeated passes of substitution over the whole
-current text. Version 2 resolves it in one walk and reads nothing it has
-emitted. Everything below follows from that.
-
-### What a payload can no longer do
-
-| A value carrying | Version 1 | Version 2 |
-| --- | --- | --- |
-| `{{apiKey}}` | read that payload entry | renders `{{apiKey}}` |
-| `; live:DELETED` | added an option to the construct around it | renders as text |
-| `}}` | closed the enclosing construct early | renders as text |
-| `{{` | kept the enclosing construct from deriving | renders as text |
-| `\;`, `\:`, `\\` | the backslash was removed | renders as written |
-| a trailing `\` | it escaped the next message character | renders as written |
-
-```curly
-{{state:eq; draft:{{note}}; live:Published; default:?;}}
-```
-
-Over `{ state: 'live', note: 'X; live:Leaked' }` version 1 rendered `Leaked`
-and version 2 renders `Published`. Version 1 substituted the payload's text
-first, and the option that text wrote outranked the one the message spelled;
-version 2 never reads `note` at all, because the option holding it was not the
-one selected.
-
-The same holds of a props value, a payload `default`, a wrapper's `default` and
-a modifier's answer (section 14.1). A caller that escaped its payload values to
-protect them from the format MUST stop: those backslashes now render.
-
-### What a message can now do
-
-A placeholder may hold a placeholder in an option value (section 12). In version
-1 such a construct was not a placeholder at all — the inner one resolved first
-and the outer was scanned again on a later pass, over text the payload had a
-hand in. Most such messages rendered correctly and still do, but three things
-change for them:
-
-- An option the modifier passes over is no longer evaluated. A placeholder in it
-  is not resolved, a modifier it names is not called, and a report it would have
-  made is not made (sections 5, 11).
-- The enclosing key is now extractable. A tool reading a message statically
-  reports every key it names, nested and enclosing alike, where version 1 could
-  see only the innermost.
-- What the message renders no longer depends on what the payload happens to
-  contain.
-
-### What breaks
-
-A `{{` in a **key**, an **option key** or a **modifier name** opens no
-placeholder (section 6, note 10), and the construct around it does not derive.
-Version 1 resolved the inner construct and then re-read the result as a
-placeholder, so these rendered:
-
-```curly-example
-{{a; {{b}}:x;}}    payload { a: 'k', b: 'k' }    v1 "x"    v2 "{{a; k:x;}}"
-{{a:{{m}};}}       payload { a: 'A', m: 'eq' }   v1 ""     v2 "{{a:eq;}}"
-```
-
-Both were a payload choosing a message's structure, which is what this version
-exists to stop. A message that wrote either must name its key, its option key
-and its modifier itself.
-
-An option value that resolves to nothing but whitespace is no longer trimmed
-away, because section 8 now reads the spelling: `{{a; x:{{b}};}}` over a `b` of
-three spaces renders three spaces where version 1 rendered none.
-
-### Limits and reports
-
-- The **pass limit** is gone, and so is the `pass-limit` report code. One walk
-  has no passes, and what the limit held back — a payload multiplying itself —
-  a payload can no longer do.
-- A **read limit** and a **nesting limit** are added, with the codes
-  `read-limit` (origin `limit`) and `nesting-limit` (origin `message`).
-- The **output limit** no longer discards a pass whole. A placeholder whose
-  result would carry the output past it resolves to the empty string and the
-  walk carries on, so the message's own text still renders (section 13).
-- A condition is reported at most once per placeholder, and a placeholder the
-  walk never reaches is never reported (section 14.3).
-- Reports are emitted in **walk order** (section 14.3). Version 1 ordered them
-  by the pass that met the condition and then by source position, so a report
-  from a placeholder the payload had written could precede one the message
-  spelled. There are no passes to order by now.
-
-The vocabulary is eight codes where it was seven. An implementation that emits
-`pass-limit` does not conform to this version.
-
-### The tree
-
-`CST.md` revises with this document. An `option-value` node may now carry
-`placeholder` children, and it no longer carries `name` — with a placeholder
-inside it there is no fixed text for that field to hold. The name kinds are
-`key`, `modifier` and `option-key`.
-
-## Appendix D: what changed from version 2
-
-Version 2 read **plain object** narrowly and by the value's own type, so a
-value of a keyed type an application declared converted as a string rather than
-as JSON. It said nothing of the kind about an array: a value of any array type
-serialized. Version 3 holds both shapes to one test (section 4).
-
-### What changes
-
-| A payload value of | Version 2 | Version 3 |
-| --- | --- | --- |
-| the host's own sequence type | serializes | serializes |
-| a sequence type derived from it | serializes | converts as a string |
-| a sequence built in another realm | serializes | converts as a string |
-| the host's own keyed type | serializes | serializes |
-| a class, a struct, a record | converts as a string | converts as a string |
-
-Nothing else changes. The walk of section 5, the grammar of section 6, the
-escaping of section 7, the limits of section 13 and the tree `CST.md`
-describes are version 2's unaltered, and nothing a message spells changes, so
-no message needs migrating. Appendix C, which records what version 2 changed,
-stands as it was written.
-
-### What it costs
-
-A payload that passes a value of a derived sequence type where a modifier reads
-its JSON back gets the host's ordinary string conversion of it instead: in
-ECMAScript a value of a class extending `Array` holding `a` and `b` converts to
-`a,b` where it serialized to `["a","b"]`. A caller that wants the serialization
-passes the host's own type — copying the entries into one is enough — and a
-value that already is one is untouched.
-
-An option comparison over such a value compares that same text (section 4), so
-an option key written against the serialization no longer matches it.
-
-Which conversion describes a value is also which one may fail to, so a report
-can move with it. A value the serialization could not describe — one that holds
-itself, or one that visits more nodes than section 13 allows — is one the
-string conversion may describe perfectly well, and is a value here where it was
-absent and reported; a value whose string conversion raises is absent and
-reported here where it serialized. What moved is which conversion is asked:
-section 4 treats either failure as absence and section 14.2 reports either, as
-both already did.
-
-The parameters a message names and the tree describing it read as they did, and
-the cost falls on a payload alone — on one carrying a sequence that is not of
-the host's own type, and on nothing else.
-
-### Why
-
-A narrow reading exists so that a type carrying meaning of its own keeps the
-text it describes itself as, rather than being flattened into the entries it
-happens to hold (section 4). A type an application derived from the host's
-sequence carries such meaning as surely as a class does, and a value built in
-another realm was authored against a document this one cannot see. Version 2
-guarded keyed data against both and left sequences unguarded; the reading is
-one reading now, and section 4.1 recognizes a wrapper by the keyed half of it
-as before.
 
 ## License
 
