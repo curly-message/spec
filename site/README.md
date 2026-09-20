@@ -47,6 +47,11 @@ specification does not spell, and a reader would copy it. The page list is held
 too, so a page added to `build.mjs` and not to the test fails rather than
 going unchecked.
 
+The **Site tests** workflow (`.github/workflows/tests-site.yml`) runs them on
+every branch that touches one of the sources above. The **Site** workflow runs
+the same tests before it deploys, but only on `main`, which is too late to keep
+a change from being merged.
+
 The output is static HTML. The playground is the one page that carries a
 script — it runs the parser rather than describing it — and all three of its
 modules are served from the site, so nothing is fetched at runtime there
