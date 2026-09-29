@@ -44,6 +44,12 @@ const CASES = {
     r: '',
     l: 'en',
   },
+  plural: {
+    m: 'Složka obsahuje {{count:number;}} {{count:plural; one:soubor; few:soubory; many:souboru; other:souborů;}}.',
+    p: '{\n  "count": 3\n}',
+    r: '',
+    l: 'cs',
+  },
 };
 
 const el = (tag, className, text) => {

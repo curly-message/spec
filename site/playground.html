@@ -7,6 +7,7 @@ a link reproduces it exactly.</p>
   <button type="button" data-case="order">A selection</button>
   <button type="button" data-case="invoice">A locale-dependent modifier</button>
   <button type="button" data-case="nesting">A nested placeholder</button>
+  <button type="button" data-case="plural">A plural selection</button>
 </div>
 
 <div class="play">
@@ -48,8 +49,8 @@ a link reproduces it exactly.</p>
         <option value="de">German (de)</option>
         <option value="cs">Czech (cs)</option>
       </select>
-      <p class="hint under">What a locale-dependent modifier formats for. Switch it and the
-        same message and payload come out as that locale writes them.</p>
+      <p class="hint under">What a locale-dependent modifier formats or selects for. Switch
+        it and the same message and payload come out as that locale writes them.</p>
     </div>
     <details class="props">
       <summary>Modifier properties</summary>
@@ -130,6 +131,30 @@ one brace along. And what a placeholder resolves to is nested in nothing &mdash;
 a payload value holding <code>{{v}}</code> renders those five characters, one
 holding <code>;</code> ends no option, and one holding <code>}}</code> closes
 nothing. Type one in and watch the colouring stay where it is.</p>
+
+<h2 id="plural-categories">Plural categories</h2>
+
+<p>English needs two forms of a noun after a number, Czech four:
+<code>1 soubor</code>, <code>3 soubory</code>, <code>1,5 souboru</code> and
+<code>5 souborů</code>. Rather than spell out which numbers take which form,
+<code>plural</code> asks the locale: the browser's plural rules put the count
+in one of the categories <code>zero</code>, <code>one</code>, <code>two</code>,
+<code>few</code>, <code>many</code> and <code>other</code>, and the option
+keyed by that category is selected. Change the count to <code>1</code>,
+<code>5</code> or <code>1.5</code> and the noun follows. Switch the locale to
+English and only <code>one</code> and <code>other</code> are ever answered, so
+<code>3</code> takes the <code>other</code> form.</p>
+
+<p>A key may also be a number, and a number selects for the value it equals
+before any category is asked for: a key <code>0</code> wins over
+<code>other</code> at zero. The category comes from the count as
+<code>number</code> shows it, so the two placeholders agree &mdash; give
+<code>number</code> a <code>maximumFractionDigits</code> of <code>0</code> in
+the modifier properties and <code>1.5</code> is shown as <code>2</code> and
+selected as <code>2</code>. <code>ordinal</code> does the same by the ordinal
+rules, for <code>1st</code>, <code>2nd</code> and <code>3rd</code>.
+<a href="../spec/#11-5-plural-selections-intl">Section 11.5</a> states the
+rules.</p>
 
 <h2 id="what-you-are-running">What you are running</h2>
 
