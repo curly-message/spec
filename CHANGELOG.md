@@ -13,7 +13,7 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
-### 3.1.0 (Unreleased)
+## 3.1.0
 
 Two modifiers are added under names no earlier revision defined. A message
 that names neither resolves as it did; one that names either was a message
