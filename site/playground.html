@@ -140,9 +140,10 @@ own copy of the format.</p>
 
 <p><strong>Locale-dependent modifiers render through this browser's own
 internationalization data.</strong> <code>number</code>, <code>date</code>,
-<code>currency</code> and <code>ago</code> ask the host to format, and hosts
-differ: the same message, payload and locale can come out differently here,
-in another browser and in Node. What this page shows is what your browser
-makes of the message — a reading, not a canonical one. Everything else the
-format specifies is the parser's own and is the same everywhere.</p>
+<code>currency</code> and <code>ago</code> ask the host to format, and
+<code>plural</code> and <code>ordinal</code> ask it which category a number
+falls in. Hosts differ: the same message, payload and locale can come out
+differently here, in another browser and in Node. What this page shows is what
+your browser makes of the message — a reading, not a canonical one. Everything
+else the format specifies is the parser's own and is the same everywhere.</p>
 </div>

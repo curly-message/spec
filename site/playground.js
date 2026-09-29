@@ -39,7 +39,7 @@ const CASES = {
     l: 'en',
   },
   nesting: {
-    m: 'You have {{count:gt; 0:{{count:number;}}; default:no;}} {{count; 1:message; default:messages;}}.',
+    m: 'You have {{count:gt; 0:{{count:number;}}; default:no;}} {{count:plural; one:message; other:messages;}}.',
     p: '{\n  "count": 1234\n}',
     r: '',
     l: 'en',
