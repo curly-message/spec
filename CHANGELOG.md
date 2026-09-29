@@ -13,6 +13,40 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
+### 3.1.0 (Unreleased)
+
+Two modifiers are added under names no earlier revision defined. A message
+that names neither resolves as it did; one that names either was a message
+error under 3.0.1, an unknown modifier that took the fallback chain and was
+reported, and now selects.
+
+* Section 11.5 adds `plural` and `ordinal`, which select an option by the
+  plural category the locale puts a number in: the categories of the Unicode
+  CLDR plural rules, cardinal and ordinal, as the host's internationalization
+  facilities expose them. An option key is a category, a number, or neither. A
+  number selects for the value it equals and wins over a category wherever the
+  two are written, and where nothing is selected the placeholder takes the
+  fallback chain. A comparison could not do this work: most languages with
+  more than two forms for a count choose among them by the remainder of the
+  count, no key a comparison orders spells a remainder, and
+  `{{n}} {{n; 1:файл; 2:файла; 3:файла; 4:файла; default:файлов;}}` rendered
+  `21 файлов` where Russian says `21 файл`.
+* `plural` takes its category from the number as `number` would show it. It
+  reads the digit properties of `number`'s layers beneath its own, so
+  `{{n:number}}` and `{{n:plural; …}}` agree on `1,0 souboru`, and on the `2`
+  that `1.999` is shown as. `ordinal` takes integers only, and a fraction is an
+  input it cannot process.
+* Both are Intl (section 2) and follow section 11.2's rule for a locale that is
+  not available. A selection naming either with no options is a message error,
+  as one naming a comparison is, and section 9.5 now says what it left
+  unstated: a selection with no options takes the fallback chain before any
+  modifier is asked, so the locale is not tested. The codes `failed-modifier`,
+  `missing-locale` and `missing-options` reach them (section 14.2), and no code
+  is added.
+* Section 1 no longer says the format has no plural categories, and section
+  11.1's worked example no longer rests on it. Section 11.4's example of a name
+  a later version may define is now `duration`.
+
 ## 3.0.1
 
 Nothing a message resolves to changes. `SPEC.md` states the current version of
