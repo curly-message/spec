@@ -8,7 +8,7 @@ modifier, a set of options and a fallback. That is the whole of the syntax.
 ```json
 {
   "greeting": "Hello, {{name; default:Guest;}}!",
-  "inbox": "You have {{count:number;}} {{count; 1:message; default:messages;}}."
+  "inbox": "You have {{count:number;}} {{count:plural; one:message; other:messages;}}."
 }
 ```
 
@@ -25,11 +25,12 @@ inbox     { count: 1234 }    ->  "You have 1,234 messages."
 
 ## Deliberately small
 
-The format has no plural categories, and a placeholder holds a placeholder in
-an option value and nowhere else. Formatting that depends on a locale —
-`number`, `date`, `currency`, `ago` — is delegated to the host platform's
-internationalization facilities, and renders the empty string where the caller
-supplied no locale, which is why the example above names one.
+A placeholder holds a placeholder in an option value and nowhere else.
+Whatever depends on a locale — formatting with `number`, `date`, `currency` and
+`ago`, and selecting by the locale's plural categories with `plural` and
+`ordinal` — is delegated to the host platform's internationalization
+facilities, and renders the empty string where the caller supplied no locale,
+which is why the example above names one.
 
 A resolution never raises and never refuses a message. Where a value is missing,
 unusable or absent, the placeholder falls through a chain that is the same four

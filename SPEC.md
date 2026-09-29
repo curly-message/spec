@@ -44,8 +44,9 @@ concrete syntax tree over the grammar of section 6, for a tool that highlights,
 completes or lints a message rather than resolving it. It adds nothing this
 document requires, and an implementation conforms without offering a tree.
 
-The format is deliberately small. It has no plural categories and no gender
-selection. Formatting that depends on a locale is delegated to the host
+The format is deliberately small. It has no gender selection, and the plural
+categories it selects by are the locale's own rather than rules a message writes
+(section 11.5). Formatting that depends on a locale is delegated to the host
 platform's internationalization facilities. A placeholder may hold a placeholder
 in an option value, and there it is one construct holding another rather than an
 argument syntax: what is nested is written in the message, never supplied with
@@ -60,13 +61,13 @@ An implementation conforms to this specification at one or more levels:
 
 | Level | Sections | Requirement |
 | --- | --- | --- |
-| **Core** | 4-10, 11 (excluding 11.2 and 11.3), 12, 13, 14 | Grammar, escaping, whitespace, resolution, the fallback chain, what a modifier receives and returns, the comparison modifiers, nesting and its limits, security properties and error behavior. |
-| **Intl** | 11.2 | The locale-dependent formatting modifiers `number`, `date`, `ago` and `currency`. |
+| **Core** | 4-10, 11 (excluding 11.2, 11.3 and 11.5), 12, 13, 14 | Grammar, escaping, whitespace, resolution, the fallback chain, what a modifier receives and returns, the comparison modifiers, nesting and its limits, security properties and error behavior. |
+| **Intl** | 11.2, 11.5 | The locale-dependent formatting modifiers `number`, `date`, `ago` and `currency`, and the plural selections `plural` and `ordinal`. |
 | **Extensions** | 11.3 | Host-defined modifiers. |
 
 Core is REQUIRED. An implementation MUST report which levels it satisfies. An
-implementation that does not satisfy Intl MUST treat the formatting modifier
-names as unknown modifiers (section 11.4), not as ordinary option keys: an
+implementation that does not satisfy Intl MUST treat the names of those six
+modifiers as unknown modifiers (section 11.4), not as ordinary option keys: an
 implementation that lacks those modifiers has not defined them, and a host is
 free to define them itself, because a host's own configuration overrides the
 format's (section 11.3).
@@ -91,14 +92,15 @@ that set through the adapter of section 14.3.
   configuration (section 4.1).
 
 **props**
-: Caller-supplied formatting properties for the formatting modifiers, grouped
-  by modifier name. Distinct from the payload: the payload carries data, props
-  carry presentation. Distinct from an option, which is written in the
-  placeholder: props are supplied by the caller (section 11.2).
+: Caller-supplied properties for the modifiers that read them — the formatting
+  modifiers, the plural selections and host-defined modifiers (sections 11.2,
+  11.3, 11.5) — grouped by modifier name. Distinct from the payload: the payload
+  carries data, props carry presentation. Distinct from an option, which is
+  written in the placeholder: props are supplied by the caller (section 11.2).
 
 **locale**
-: A language tag identifying the target language, used by the formatting
-  modifiers.
+: A language tag identifying the target language, used by the modifiers that
+  depend on one (sections 11.2, 11.5).
 
 **id** (of a message)
 : The identifier under which a message was requested. Nothing in resolution
@@ -666,17 +668,21 @@ section 9.1 and is neither a plain substitution nor a selection. A modifier
 name it carries is still subject to section 11.4: `{{:zz}}` resolves to the
 fallback chain and is a message error for naming a modifier nobody registered.
 
-A selection that names a comparison modifier (section 11.1) and no options is a
-message error (section 14.2): the author asked which option matches and offered
-none. A formatting modifier selects nothing, so `{{n:number}}` is complete as it
-stands, and whether a host-defined modifier needs options is that modifier's own
-business. A host that registered its own modifier under a comparison's name
-(section 11.3) has replaced the comparison, so a placeholder naming it asks a
-host-defined modifier: `{{v:eq}}` over that registration is no message error.
+A selection that names a comparison modifier (section 11.1) or a plural
+selection (section 11.5) and no options is a message error (section 14.2): the
+author asked which option matches and offered none. A formatting modifier
+selects nothing, so `{{n:number}}` is complete as it stands, and whether a
+host-defined modifier needs options is that modifier's own business. A host
+that registered its own modifier under one of those names (section 11.3) has
+replaced the format's, so a placeholder naming it asks a host-defined modifier:
+`{{v:eq}}` over that registration is no message error.
 
 An implementation SHOULD report that error, naming it `missing-options`
 (section 14.2), and the placeholder takes the fallback chain (section 10) as
-every message error does. What the placeholder declares is what makes the
+every message error does. It takes it before any modifier is asked, as an
+absent value does: the locale is not tested and the value is not compared, so
+`{{n:plural; default:D;}}` renders `D` where no locale is available and reports
+nothing but `missing-options`. What the placeholder declares is what makes the
 error, so the report does not turn on the payload: `{{v:eq}}` is reported over
 a payload that supplies `v` and over one that leaves it absent alike, though an
 absent value takes the chain before any modifier is asked (section 11.1). It
@@ -800,13 +806,14 @@ narrow it to the ASCII letters.
 
 An option key is compared against the value's own text (section 11), never
 against what another placeholder makes of it. The count and the noun are two
-placeholders, this format having no plural categories (section 1):
-`{{n}} {{n; 1:file; default:files;}}` renders `1 file` over `{ n: 1 }` and
-`5 files` over `{ n: 5 }`. At an English locale
+placeholders: `{{n}} {{n; 1:file; default:files;}}` renders `1 file` over
+`{ n: 1 }` and `5 files` over `{ n: 5 }`. At an English locale
 `{{n:number}} {{n; 1,000:K; default:files;}}` over `{ n: 1000 }` renders
 `1,000 files`: the grouping belongs to the placeholder that formats it, and the
 one that selects still compares against `1000`, which the key `1,000` does not
-equal.
+equal. This comparison sees only whether the count is one; a language whose
+forms turn on more than that selects by the count's plural category instead
+(section 11.5).
 
 `lt` and `lte` MUST consider options in ascending key order; `gt` and `gte` in
 descending key order. Ordering is by numeric value of the key; an option whose
@@ -1054,12 +1061,12 @@ where no layer wrote under its name it receives no properties at all.
 
 It receives the locale the caller supplied, verbatim: an empty locale reaches it
 empty, and where the caller supplied none it receives none. Section 11.2's test
-for a locale that is **not available** governs the modifiers that section names
-— the format defines those, so it must say what they do without one — and does
-not reach here. What a host-defined modifier needs of a locale is the host's
-own, and an implementation substitutes nothing for it: it supplies no locale of
-its own and does not collapse an empty one into none, so a modifier that treats
-the two differently can.
+for a locale that is **not available** governs the modifiers that section and
+section 11.5 name — the format defines those, so it must say what they do
+without one — and does not reach here. What a host-defined modifier needs of a
+locale is the host's own, and an implementation substitutes nothing for it: it
+supplies no locale of its own and does not collapse an empty one into none, so a
+modifier that treats the two differently can.
 
 Because a host's own registration overrides the format's, a name a later
 version of this format defines costs a host that already registered its own
@@ -1074,12 +1081,171 @@ to the fallback chain and the failure SHOULD be reported.
 A modifier name that is neither specified nor registered is a **message error**
 (section 14.2). The placeholder resolves to the fallback chain. A name this
 document specifies only at a level an implementation does not satisfy is not
-specified for that implementation, so the formatting modifier names are unknown
-to one that does not satisfy Intl (section 2).
+specified for that implementation, so the names sections 11.2 and 11.5 define
+are unknown to one that does not satisfy Intl (section 2).
 
 Implementations MUST NOT silently treat an unknown modifier as `eq`. A message
-written today as `{{n:plural}}` must not render as an equality selection now and
-silently change meaning when a later version of this format defines `plural`.
+written today as `{{d:duration}}` must not render as an equality selection now
+and silently change meaning when a later version of this format defines
+`duration`.
+
+### 11.5 Plural selections (Intl)
+
+`plural` and `ordinal` select an option by the plural category a locale puts a
+number in. The categories are those of the Unicode CLDR plural rules, as the
+host's internationalization facilities expose them — in ECMAScript,
+`Intl.PluralRules`. `plural` selects by the cardinal rules, which say how many
+of something there are; `ordinal` selects by the ordinal rules, which say where
+something stands. Each is a selection, as the comparisons of section 11.1 are,
+and each depends on the locale, as the formatting modifiers of section 11.2 do,
+so both are Intl (section 2).
+
+A comparison does not do their work. Most languages with more than two forms
+for a count choose among them by the remainder of the count rather than by its
+size — in Russian 1, 21 and 101 take one form, 2, 22 and 102 another, and 5, 11
+and 12 a third — and no set of keys a comparison orders can spell a remainder.
+
+There are six categories: `zero`, `one`, `two`, `few`, `many` and `other`.
+Every locale has `other`, and each has its own subset of the rest. A category
+is a form of the language rather than a number: in Latvian `zero` is 0, 10 to
+20, 30 and 100; in French `one` is 0, 1 and 1.5; and English has no `zero`, so
+0 is `other` there. Which category a number is in is the host's locale data, as
+the text a formatting modifier produces is (section 11.2).
+
+An option key is a **category**, a **number**, or neither:
+
+- A category is one of the six names, compared exactly as written: `one` is a
+  category and `One` is not, as `default` is the inline default and `DEFAULT`
+  is not (section 9.3).
+- A number is a key that section 11.2's test reads as one, applied to the key's
+  own text. `0`, `234`, `1.5`, `-1` and `1e3` are numbers; `1,000`, `Infinity`
+  and `twelve` are not.
+- A key that is neither never selects.
+
+The two kinds are not interchangeable, and a message may write both. `0`
+selects for the number zero in every locale; `zero` selects for the numbers a
+locale puts in that category, which in Latvian is not zero alone and in English
+is none.
+
+A placeholder that names either modifier, declares an option and has a present
+value resolves as follows. One that declares no option takes the fallback chain
+as section 9.5 says, and an absent value takes it before any modifier is asked
+(section 11.2).
+
+1. The locale is tested first, as section 11.2 tests it. Where none is
+   available the result is the empty string, and the implementation SHOULD
+   report `missing-locale` (section 14.2).
+2. The value MUST be a number by section 11.2's test, and for `ordinal` an
+   integer: an ordinal of a fraction names no position, and the ordinal rules
+   are written for whole numbers. A value that is not is an input the modifier
+   cannot process, so the placeholder takes the fallback chain and the
+   implementation SHOULD report `failed-modifier`.
+3. The first option in source order (section 9.4) whose key is a number equal
+   to the value, compared numerically, is selected. `2` and `2.0` are equal,
+   and the one written first wins. A key is compared with the value and not
+   with the number as it would be shown, so `2` does not select for `1.999`.
+4. Where no such option exists, the host is asked for the category the locale
+   puts the value in, with the properties below, and the first option whose key
+   is that category is selected.
+5. Where nothing is selected, the result is the fallback chain (section 10).
+
+A number therefore wins over a category wherever the two are written, which is
+the one place these modifiers depart from section 11.1's first match. `0:` is
+how a message gives zero its own text in every locale, and what it renders must
+not turn on where its author wrote it:
+
+```curly
+{{n:plural; one:{{n}} file; other:{{n}} files; 0:No files;}}
+```
+
+At an English locale this renders `No files` over `{ n: 0 }` — though 0 is
+`other` in English and `other:` is written first — `1 file` over `{ n: 1 }` and
+`5 files` over `{ n: 5 }`.
+
+The host is asked for a category at step 4 and nowhere else. A resolution that
+stops earlier — at a number that matched, a value that is not one, a locale that
+is not available — asks it nothing. An implementation that exposes the
+formatting requests it makes (section 11.2) exposes the one a plural selection
+makes the same way, with the category the host answered, because that category
+is what chose the option.
+
+`other` is a category like the rest: it selects where the locale puts the value
+in it. `default` is not a category. It is the inline default (section 9.3),
+reached through the fallback chain wherever nothing is selected — the value
+absent, no option declared, a value the modifier cannot take (for `ordinal`, a
+number that is not an integer), a request the host cannot make, or a category
+the placeholder writes no option for — and never where a present value meets a
+locale that is not available, which renders the empty string. Over a
+placeholder that writes every category its locale has, the two part only where
+no category is asked for, and there they say different things: `other` that the
+count is many, `default` that it is not known.
+
+```curly
+{{n:plural; one:{{n}} soubor; few:{{n}} soubory; many:{{n}} souboru; other:{{n}} souborů; default:neznámý počet;}}
+```
+
+At a Czech locale this renders `5 souborů` over `{ n: 5 }` and `1.5 souboru`
+over `{ n: 1.5 }`, and `neznámý počet` over `{}` and over `{ n: 'abc' }`. A
+default that wrote `{{n}}` would render it exactly where `n` is missing.
+
+`plural` takes its category from the number as `number` would show its digits,
+because the plural rules are written over a number as it is shown, fraction
+digits included: Czech says `1 soubor` but `1,0 souboru`, and English `1 file`
+but `1.0 files`. A count and the word that agrees with it are two placeholders
+here — `{{n:number}}` decides how the number is shown, `{{n:plural}}` which form
+the word takes — and a category taken from other digits than the ones shown
+would disagree with what the reader reads.
+
+```curly
+{{n:number}} {{n:plural; one:soubor; few:soubory; many:souboru; other:souborů;}}
+```
+
+At a Czech locale this renders `1,5 souboru` over `{ n: 1.5 }` and `2 soubory`
+over `{ n: 1.999 }`. `number` shows at most two fraction digits by default, so
+`1.999` is shown as `2`, and it is the category of `2` that is asked for; asked
+of `1.999` itself, the Czech rules answer `many`.
+
+`plural` therefore reads, from the layers of section 11.2 under the name
+`number`, the properties that decide which digits a number is shown with —
+`minimumIntegerDigits`, `minimumFractionDigits`, `maximumFractionDigits`,
+`minimumSignificantDigits`, `maximumSignificantDigits`, `roundingIncrement`,
+`roundingMode`, `roundingPriority` and `trailingZeroDisplay`, the properties
+ECMAScript's `Intl.PluralRules` takes from `Intl.NumberFormat` so that a
+selection can be made from a number as formatted — and no other property of
+`number`'s. Over them it layers the properties under its own name, composed
+from the same layers, each overriding the property of the same name from
+`number`. Every layer composes per property and is read from its own entries,
+as section 11.2 requires. `number`'s default maximum, and its widening, then
+apply to what composed as they apply to `number` (section 11.2), so that where
+no layer names a maximum the category is taken at the fraction digits `number`
+shows. A style or a notation under `number` that scales or abbreviates what it
+shows — `percent`, `compact` — is not read, and over one the category is taken
+from the value's digits rather than from the number shown.
+
+`ordinal` reads the properties under its own name and nothing of `number`'s. It
+takes integers, which show no fraction, so there is nothing for it to agree
+with.
+
+The rule type is what each modifier is rather than a property it layers, as
+`currency`'s style is (section 11.2): `plural` asks for the cardinal rules and
+`ordinal` for the ordinal rules over every layer, and a layer MUST NOT replace
+either. In ECMAScript the rule type is the `type` of `Intl.PluralRules`,
+`cardinal` or `ordinal`.
+
+A property the host's facility cannot express is treated as section 11.2 treats
+one. A selection the host cannot make — its facility refusing the properties it
+was asked with, a minimum a layer named above a maximum another named, say —
+MUST NOT raise: the placeholder takes the fallback chain and the implementation
+SHOULD report `failed-modifier`.
+
+A message that shows a count is best written to show it with `{{n:number}}`,
+which writes it in the locale's own digits and separators, and whose digits are
+what `plural` takes its category from. A plain `{{n}}` shows the value's own
+text. The two agree where that text is the number `number` shows — an integer
+written without a fraction or an exponent, under layers that neither add digits
+nor remove them — and part elsewhere: `{{n}}` over `1.999` shows `1.999`, and
+`plural` selects for the `2` that `number` would have shown; over `1.0` it shows
+`1.0`, and `plural` selects for `1`.
 
 ## 12. Nesting
 
@@ -1354,11 +1520,11 @@ and a resolution terminates because the message is finite.
 Data is not configuration either, and this property does not make it so. A
 payload entry shaped like a wrapper (section 4.1) is read as one, and the
 `props` it carries join above the caller's own (section 11.2), so an untrusted
-value of that shape reconfigures every formatting and host-defined modifier the
-placeholder reaches without spelling any syntax at all. An implementation cannot
-tell such an entry from one a caller meant; a caller that passes untrusted data
-MUST NOT pass it where a wrapper is recognized, and section 4.1 is where
-recognition is turned off.
+value of that shape reconfigures every modifier the placeholder reaches that
+reads properties (sections 11.2, 11.3, 11.5) without spelling any syntax at all.
+An implementation cannot tell such an entry from one a caller meant; a caller
+that passes untrusted data MUST NOT pass it where a wrapper is recognized, and
+section 4.1 is where recognition is turned off.
 
 **Bounded work.** Section 13 MUST bound the work a resolution can be made to do,
 by a payload and by a message alike.
@@ -1386,8 +1552,8 @@ properties.
 ### 14.2 Message errors
 
 A *message error* is a defect in the message: an unknown modifier (11.4), a
-selection that names a comparison and no options (9.5), or a placeholder nested
-deeper than the implementation resolves (13).
+selection that names a comparison or a plural selection and no options (9.5),
+or a placeholder nested deeper than the implementation resolves (13).
 
 On a message error an implementation MUST resolve the placeholder to the
 fallback chain (section 10), MUST NOT raise, and SHOULD report the error.
@@ -1398,10 +1564,10 @@ the placeholder takes the fallback chain; the implementation MUST NOT raise and
 SHOULD report the condition. The same holds for a link of the fallback chain
 that is present and cannot be described.
 
-So is an input a modifier cannot process (sections 11.2, 11.3). The value, the
-props and the locale a modifier is handed are the caller's, and so is a
-host-defined modifier that raised, so none of it is a defect the message's
-author repairs; the message can name no property a formatting modifier reads.
+So is an input a modifier cannot process (sections 11.2, 11.3, 11.5). The
+value, the props and the locale a modifier is handed are the caller's, and so is
+a host-defined modifier that raised, so none of it is a defect the message's
+author repairs; the message can name no property a modifier reads.
 The placeholder takes the fallback chain; the implementation MUST NOT raise and
 SHOULD report the failure.
 
@@ -1424,21 +1590,21 @@ payload defect above are the first two, and section 13's limits are the third.
 
 The vocabulary is eight codes. `unknown-modifier` is a modifier name that is
 neither specified nor registered (section 11.4); `missing-options` is a
-selection that names one of this format's comparison modifiers, one no host
-replaced, and declares no option (section 9.5); `nesting-limit` is a placeholder
-nested deeper than the implementation resolves (section 13). Those three declare
-the origin `message`. The third is a limit and still declares `message`, because
-how deeply a message nests is a fact about the message alone (section 12): the
-payload asked for none of it, and what repairs it is rewriting the message or
-choosing an implementation that resolves further. `failed-modifier` is a
-modifier that cannot process its input (sections 11.2, 11.3);
-`unserializable-value` is a value no conversion can describe (section 4);
-`missing-locale` is a formatting modifier reached where no locale is available
-(section 11.2). Those three declare the origin `payload`. `output-limit` and
-`read-limit` are the two bounds of section 13 the message and the payload reach
-together, and both declare the origin `limit`. The conversion limit is not among
-them: a value whose serialization reaches it is a value no conversion can
-describe (section 4), and is reported as one.
+selection that names one of this format's comparison modifiers or plural
+selections, one no host replaced, and declares no option (section 9.5);
+`nesting-limit` is a placeholder nested deeper than the implementation resolves
+(section 13). Those three declare the origin `message`. The third is a limit and
+still declares `message`, because how deeply a message nests is a fact about the
+message alone (section 12): the payload asked for none of it, and what repairs
+it is rewriting the message or choosing an implementation that resolves further.
+`failed-modifier` is a modifier that cannot process its input (sections 11.2,
+11.3, 11.5); `unserializable-value` is a value no conversion can describe
+(section 4); `missing-locale` is a modifier of section 11.2 or 11.5 reached
+where no locale is available. Those three declare the origin `payload`.
+`output-limit` and `read-limit` are the two bounds of section 13 the message and
+the payload reach together, and both declare the origin `limit`. The conversion
+limit is not among them: a value whose serialization reaches it is a value no
+conversion can describe (section 4), and is reported as one.
 
 An implementation that reports MUST name the condition with the code this
 section gives it, and where a report carries an origin it MUST be the one that
