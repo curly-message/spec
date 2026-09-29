@@ -157,8 +157,41 @@
           "type": "string"
         },
         "format": {
-          "description": "For a locale-dependent output: the formatting request whose result on the running host is the text the resolution must produce. The message is then the placeholder alone.",
+          "description": "For a locale-dependent output: the request whose result on the running host decides the text the resolution must produce — the text itself for a formatting request, and for a PluralRules request the category that selects one of the outputs categories names. The message is then the placeholder alone.",
           "$ref": "#/$defs/format"
+        },
+        "categories": {
+          "description": "For a PluralRules request: the output the resolution must produce for each category the host may answer with (section 11.5), a category the placeholder writes no option for included.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "zero",
+            "one",
+            "two",
+            "few",
+            "many",
+            "other"
+          ],
+          "properties": {
+            "zero": {
+              "type": "string"
+            },
+            "one": {
+              "type": "string"
+            },
+            "two": {
+              "type": "string"
+            },
+            "few": {
+              "type": "string"
+            },
+            "many": {
+              "type": "string"
+            },
+            "other": {
+              "type": "string"
+            }
+          }
         },
         "reports": {
           "description": "The reports the resolution must emit, in the order it emits them. Omitted, none are expected.",
@@ -185,6 +218,43 @@
             "format": true
           }
         }
+      ],
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "format"
+            ],
+            "properties": {
+              "format": {
+                "type": "object",
+                "properties": {
+                  "api": {
+                    "const": "PluralRules"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "categories"
+            ],
+            "properties": {
+              "categories": true
+            }
+          },
+          "else": {
+            "not": {
+              "required": [
+                "categories"
+              ],
+              "properties": {
+                "categories": true
+              }
+            }
+          }
+        }
       ]
     },
     "format": {
@@ -199,15 +269,16 @@
           "enum": [
             "NumberFormat",
             "DateTimeFormat",
-            "RelativeTimeFormat"
+            "RelativeTimeFormat",
+            "PluralRules"
           ]
         },
         "options": {
-          "description": "The options the request is constructed with: the properties the facility reads, as the layers of section 11.2 compose them and the modifier pins them, without the format's own ratio and format, which the input already reflects.",
+          "description": "The options the request is constructed with: the properties the facility reads, as the layers of section 11.2 compose them and the modifier pins them, without the format's own ratio and format, which the input already reflects. A PluralRules request carries the properties composed under the modifier's own name — for plural over the digit properties it reads from number, with number's default maximum — and the rule type the modifier pins (section 11.5).",
           "type": "object"
         },
         "input": {
-          "description": "What the request formats: a number for NumberFormat, milliseconds since the epoch for DateTimeFormat, a [value, unit] pair for RelativeTimeFormat."
+          "description": "What the request formats or selects for: a number for NumberFormat, milliseconds since the epoch for DateTimeFormat, a [value, unit] pair for RelativeTimeFormat, a number for PluralRules."
         }
       }
     },

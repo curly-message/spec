@@ -93,8 +93,15 @@ export type Report = {
 export type Resolved = {
   output: string;
   reports?: Report[];
-  formats?: FormatRequest[];
+  formats?: ExposedRequest[];
 };
+
+/**
+ * A request as an adapter exposes it. A selection request (section 11.5) also
+ * carries the category the host answered, because that category, and not the
+ * text of any formatting, is what chose the output.
+ */
+export type ExposedRequest = FormatRequest & { category?: Category };
 
 /**
  * The adapter of section 14.3: what an implementation supplies so the set can
@@ -156,10 +163,21 @@ export type Node = {
 /** A section reference: a heading number, such as `9.2` or `A.4`, of SPEC.md or — for the tree — of CST.md. */
 export type Section = string;
 
-/** The host facility a formatting modifier delegates to (section 11.2). */
-export type FormatApi = 'NumberFormat' | 'DateTimeFormat' | 'RelativeTimeFormat';
+/**
+ * The host facility a locale-dependent modifier delegates to: the formatting
+ * facilities of section 11.2, and the plural rules the selections of section
+ * 11.5 ask for a category.
+ */
+export type FormatApi = 'NumberFormat' | 'DateTimeFormat' | 'RelativeTimeFormat' | 'PluralRules';
 
-/** A formatting request whose result on the running host is the expected output. */
+/** A plural category of section 11.5. */
+export type Category = 'zero' | 'one' | 'two' | 'few' | 'many' | 'other';
+
+/**
+ * A request a locale-dependent case pins. A formatting request's result on the
+ * running host is the expected output; a selection request's result is a
+ * category, and the case says which output each category selects.
+ */
 export type FormatRequest = {
   api: FormatApi;
   options?: Record<string, unknown>;
@@ -176,6 +194,8 @@ export type ExpectedReport = {
 export type Expected = {
   output?: string;
   format?: FormatRequest;
+  /** For a `PluralRules` request: the output each category the host may answer with selects. */
+  categories?: Record<Category, string>;
   reports?: ExpectedReport[];
 };
 

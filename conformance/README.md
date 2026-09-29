@@ -69,7 +69,7 @@ A case is either written out or generated. A written-out case has:
 | `messageId` | The message's id (section 4), spelled out because a case's own `id` names the case. Any JSON value: no step of resolution reads it, and reports name it (section 14.3). |
 | `modifiers` | Host-defined modifiers to register (section 11.3): a name to a behaviour from the catalogue below. |
 | `defaults` | The implementation-configured defaults, the bottom formatting layer of section 11.2, grouped by modifier name. |
-| `expected` | What the resolution must produce: an `output`, or for a locale-dependent one a `format` request; and the `reports`, in the order they are emitted, none where the field is omitted. |
+| `expected` | What the resolution must produce: an `output`, or for a locale-dependent one a `format` request — for a selection request with the output each of its `categories` selects; and the `reports`, in the order they are emitted, none where the field is omitted. |
 
 A generated case has an `id`, a `description`, optionally a `section`, and a
 `generate` naming one of the constructions under *Generated cases* below. The
@@ -138,11 +138,25 @@ locale data stays the host's.
 | `NumberFormat` | a number | `Intl.NumberFormat(locale, options).format(input)` |
 | `DateTimeFormat` | milliseconds since the epoch | `Intl.DateTimeFormat(locale, options).format(input)` |
 | `RelativeTimeFormat` | `[value, unit]` | `Intl.RelativeTimeFormat(locale, options).format(value, unit)` |
+| `PluralRules` | a number | `Intl.PluralRules(locale, options).select(input)` |
 
 The locale is the case's own. The message of such a case is the placeholder
 alone, so that the whole output is the request's result. A date case names a
 `timeZone` in its props, because a request without one formats in the host's,
 which the fixture cannot know.
+
+The plural selections of section 11.5 ask the host for a category rather than
+for text, and the category chooses an option. A case for one states the
+`PluralRules` request — its options the properties composed under the modifier's
+own name, for `plural` over the digit properties it reads from `number` with
+`number`'s default maximum applied, and the rule type the modifier pins over
+them — and `categories`, the output the resolution must produce for each of the
+six categories, a category the placeholder writes no option for included: that
+one names what the fallback chain gives. The runner performs the request, reads
+the category its host answers, and expects the output the case names for it, so
+the choice of option is pinned and the category stays the host's. A case whose
+number a key matches exactly asks the host nothing, and states its output as any
+other case does.
 
 An implementation whose locale data is not the runner's cannot be held to the
 text, and section 11.2 lets it expose the request it made instead. An adapter
@@ -150,6 +164,12 @@ that answers with `formats` is measured on that: such a case compares the
 facility, the properties and the input, and the locale data on each side stays
 its own. One that leaves `formats` undefined is measured on the text, which is
 what an implementation sharing the runner's host can be held to.
+
+A selection request is exposed with the `category` the host answered, because
+that category and not any text chose the output (section 11.5). The runner
+compares the request as it compares any other, and holds the output to the one
+the case names for that category: the category is the implementation's host's,
+and the option it chose is the format's.
 
 A property the host's facility cannot express is a different matter, and
 section 11.2 has such an implementation document what it cannot express. The
@@ -275,10 +295,13 @@ such a case passes on its output alone with an outcome of
 beside `passed`, and the command counts those cases in its summary.
 
 `resolve` MAY answer with `formats` as well, the formatting requests the
-resolution made, in the order it made them. A case that states a request is
-then compared on that request rather than on the output, as the section above
-describes; a case that states an output is compared on its output whether the
-adapter answers with `formats` or not.
+resolution made, in the order it made them. A case that states a formatting
+request is then compared on that request rather than on the output, as the
+section above describes. A selection request of section 11.5 carries the
+`category` the host answered as well, and a case that states one is compared on
+the request and then on the output its category selects. A case that states an
+output is compared on its output whether the adapter answers with `formats` or
+not.
 
 ## Running the set
 

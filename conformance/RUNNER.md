@@ -76,10 +76,10 @@ what a runner reads before it runs anything:
   the `unit` its spans are counted in, and the call that produces one. An
   adapter that supplies none has the tree cases left out.
 
-A claim outside the vocabulary of sections 2, 11.2 and 13, or of section 4 of
-`CST.md` — a level that is not one of the three, a limit that is not a positive
-count, a facility the format does not name, a span unit that document does not
-name — is an error, and the runner refuses the whole run. It is not a
+A claim outside the vocabulary of sections 2, 11.2, 11.5 and 13, or of section
+4 of `CST.md` — a level that is not one of the three, a limit that is not a
+positive count, a facility the format does not name, a span unit that document
+does not name — is an error, and the runner refuses the whole run. It is not a
 skip and not a failure: an adapter that cannot say what it satisfies has not
 been measured, and a run that reports a number for it reports a number that
 means nothing.
@@ -145,7 +145,8 @@ write a runner that measures nothing, because the trimming reads as tidiness.
 A case at the Intl level states a request — the facility, its properties and
 its input — rather than the text a host makes of it. Section 11.2 lets an
 implementation expose the requests a resolution made, and where the adapter
-does, the case is compared on the request and not on the output. That is what
+does, a formatting case is compared on the request and not on the output; a
+selection case, below, is compared on both. That is what
 lets an implementation whose locale data is not the runner's conform: the
 request is what the specification pins, and the text is what two hosts' CLDR
 data would have to agree on.
@@ -158,6 +159,16 @@ A request is compared by its entries and never by the text a serialization
 makes of it, because the order of a request's properties is the host's. A case
 that states a request writes the placeholder alone, so the resolution it
 describes makes exactly one request: more than one, or none, is a failure.
+
+A selection request (section 11.5) answers with a category, not with text, and
+the case names the output each category selects. On the text reading the runner
+performs the request, takes the category its host answers and expects the
+output named for it; a category the case names nothing for is the set's defect
+and ends the run. Where the adapter exposes the request, it exposes the
+category its host answered with it, and the runner compares the request and
+then holds the output to the one named for that category. An exposed selection
+request that carries no category, or one the plural rules do not name, is a
+failure: the output would be measured against nothing.
 
 ### The reports
 

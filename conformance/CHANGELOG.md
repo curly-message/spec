@@ -1,5 +1,31 @@
 # Changelog
 
+### 4.1.0 (Unreleased)
+
+The set gains the plural selections of revision 3.1.0 of the specification,
+`plural` and `ordinal`, and the one kind of request they make: a request whose
+result is a category rather than text.
+
+* `fixtures/plural.json` pins section 11.5 at the Intl level: the cardinal
+  categories of Russian, Polish, Arabic, Czech, Latvian, French and English;
+  the ordinal ones of English, Swedish, Italian, Welsh and Czech; a number
+  winning over a category wherever it is written; keys that are neither; the
+  fallback chain where nothing is selected; the locale tested first; the digits
+  `plural` reads from `number`, from every layer, beneath its own; the rule type
+  pinned; a fraction refused by `ordinal`; and a selection declaring no option
+  as a message error.
+* A case at the Intl level may state a `PluralRules` request. Its result on the
+  running host is a category, and the case names the output each of the six
+  categories selects under `categories`, so the choice of option is pinned and
+  the category stays the host's. An adapter that exposes its requests exposes a
+  selection request with the `category` its host answered, and the output is
+  held to the one the case names for it.
+* `extensions.json` pins a host's own `plural`: it replaces the format's, is
+  handed the props under its own name alone, and is no message error declaring
+  no option.
+* Four cases of `grammar.json` and `reports.json` named `plural` as a modifier
+  nobody registered. The name is now defined, so they name `duration`.
+
 ## 4.0.1
 
 Nothing a case states changes: every input, every expected output and every

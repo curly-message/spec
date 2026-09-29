@@ -1,12 +1,13 @@
 import { behaviours } from './behaviours';
 import { decode, nodes } from './decode';
-import type { Adapter, ConcreteCase, ExpectedReport, Failure, FormatRequest, GeneratedCase, Generator, Limits, Outcome, Report, Resolution, Resolved } from './types';
+import type { Adapter, Category, ConcreteCase, ExpectedReport, ExposedRequest, Failure, FormatRequest, GeneratedCase, Generator, Limits, Outcome, Report, Resolution, Resolved } from './types';
 
 // A generated case expects of a report what a written one may, and the limit
 // the adapter declared where the report is about one.
 type Expectation = {
   output: string;
   format?: FormatRequest;
+  categories?: Record<Category, string>;
   reports: (ExpectedReport & { limit?: number })[];
 };
 
@@ -20,9 +21,15 @@ const failure = (reason: string, expected: unknown, actual: unknown): Failure =>
 
 const isObject = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object';
 
-/** The text a formatting request produces on this host, which is what a locale-dependent case expects. */
+/**
+ * What a request produces on this host: the text a formatting request makes,
+ * which is what a formatting case expects, or the category a selection request
+ * answers, which picks what a selection case expects.
+ */
 export const format = ({ api, options, input }: FormatRequest, locale?: string): string => {
   switch (api) {
+    case 'PluralRules':
+      return new Intl.PluralRules(locale, options).select(input as number);
     case 'NumberFormat':
       return new Intl.NumberFormat(locale, options).format(input as number);
     case 'DateTimeFormat':
@@ -37,7 +44,24 @@ export const format = ({ api, options, input }: FormatRequest, locale?: string):
 
 const register = (modifiers: ConcreteCase['modifiers']) => modifiers && Object.fromEntries(Object.entries(modifiers).map(([name, behaviour]) => [name, behaviours[behaviour]]));
 
+const CATEGORIES: readonly Category[] = ['zero', 'one', 'two', 'few', 'many', 'other'];
+
+// A selection case names the output of every category. One that leaves a
+// category out is the set's defect and not the implementation's, whichever
+// reading it is measured on and whichever category a host answers, so it ends
+// the run before anything is compared.
+const selects = (c: ConcreteCase, category: string) => {
+  const named = c.expected.categories;
+  const missing = CATEGORIES.find((name) => !named || typeof named[name] !== 'string' || !Object.hasOwn(named, name));
+
+  if (!named || missing !== undefined) throw new Error(`The case ${c.id} names no output for the category ${JSON.stringify(missing)}.`);
+
+  return named[category as Category];
+};
+
 const output = (c: ConcreteCase) => {
+  if (c.expected.format?.api === 'PluralRules') return selects(c, format(c.expected.format, c.locale));
+
   if (c.expected.format) return format(c.expected.format, c.locale);
 
   if (c.expected.output !== undefined) return c.expected.output;
@@ -55,7 +79,7 @@ const concrete = (c: ConcreteCase): Prepared => ({
     defaults: decode(c.defaults),
     modifiers: register(c.modifiers),
   },
-  expected: { output: output(c), format: c.expected.format, reports: c.expected.reports ?? [] },
+  expected: { output: output(c), format: c.expected.format, categories: c.expected.categories, reports: c.expected.reports ?? [] },
 });
 
 // Every generated case reports under this id.
@@ -153,6 +177,20 @@ const compareFormats = (expected: FormatRequest, actual: unknown): Failure | und
   return undefined;
 };
 
+// A selection request exposed on its own says what was asked and not what the
+// host answered, and the answer is what chose the output (section 11.5). So
+// the category it carries is read, and the output held to the one the case
+// names for it: the category is the host's, and the choice is the format's.
+const compareSelection = (expected: Expectation, actual: ExposedRequest, output: unknown): Failure | undefined => {
+  const category = actual.category;
+
+  if (typeof category !== 'string' || !CATEGORIES.includes(category)) return failure('The selection request carries no category the plural rules name.', CATEGORIES, category);
+
+  const chosen = expected.categories?.[category];
+
+  return output === chosen ? undefined : failure(`The output differs from the one the category ${category} selects.`, chosen, output);
+};
+
 const COMPARED = ['origin', 'id', 'limit'] as const;
 
 const count = (reports: unknown[]) => `${reports.length} ${reports.length === 1 ? 'report' : 'reports'}`;
@@ -215,7 +253,7 @@ const execute = (adapter: Adapter, { input, expected }: Prepared): Outcome => {
   if ('ok' in resolved) return resolved;
 
   const produced = expected.format && resolved.formats !== undefined
-    ? compareFormats(expected.format, resolved.formats)
+    ? compareFormats(expected.format, resolved.formats) ?? (expected.format.api === 'PluralRules' ? compareSelection(expected, resolved.formats[0], resolved.output) : undefined)
     : resolved.output === expected.output ? undefined : failure('The output differs.', expected.output, resolved.output);
 
   if (produced) return produced;

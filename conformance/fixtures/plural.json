@@ -1,0 +1,2256 @@
+{
+  "format": "curly-message-3",
+  "level": "intl",
+  "section": "11.5",
+  "cases": [
+    {
+      "id": "plural/ru-21-one",
+      "description": "In Russian 21 is one: the remainder of a count decides its category, not its size.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 21
+      },
+      "locale": "ru",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 21
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ru-22-few",
+      "description": "In Russian 22 is few, as 2 is.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 22
+      },
+      "locale": "ru",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 22
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ru-11-many",
+      "description": "In Russian 11 is many, though 1 is one.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 11
+      },
+      "locale": "ru",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 11
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ru-25-many",
+      "description": "In Russian 25 is many.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 25
+      },
+      "locale": "ru",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 25
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/pl-122-few",
+      "description": "In Polish 122 is few.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 122
+      },
+      "locale": "pl",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 122
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/pl-112-many",
+      "description": "In Polish 112 is many, though 122 is few.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 112
+      },
+      "locale": "pl",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 112
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ar-0-zero",
+      "description": "Arabic has all six categories, and 0 is zero.",
+      "section": "11.5",
+      "message": "{{n:plural; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 0
+      },
+      "locale": "ar",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 0
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ar-2-two",
+      "description": "In Arabic 2 is two.",
+      "section": "11.5",
+      "message": "{{n:plural; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 2
+      },
+      "locale": "ar",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 2
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ar-103-few",
+      "description": "In Arabic 103 is few, as 3 is.",
+      "section": "11.5",
+      "message": "{{n:plural; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 103
+      },
+      "locale": "ar",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 103
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ar-11-many",
+      "description": "In Arabic 11 is many.",
+      "section": "11.5",
+      "message": "{{n:plural; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 11
+      },
+      "locale": "ar",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 11
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ar-100-other",
+      "description": "In Arabic 100 is other.",
+      "section": "11.5",
+      "message": "{{n:plural; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 100
+      },
+      "locale": "ar",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 100
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/cs-2-few",
+      "description": "In Czech 2 is few.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 2
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 2
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/cs-5-other",
+      "description": "In Czech 5 is other.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 5
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 5
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/cs-fraction-many",
+      "description": "In Czech a fraction is many.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 1.5
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1.5
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/lv-10-zero",
+      "description": "In Latvian 10 is zero: a category is a form of the language, not a number.",
+      "section": "11.5",
+      "message": "{{n:plural; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 10
+      },
+      "locale": "lv",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 10
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/lv-21-one",
+      "description": "In Latvian 21 is one.",
+      "section": "11.5",
+      "message": "{{n:plural; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 21
+      },
+      "locale": "lv",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 21
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/fr-0-one",
+      "description": "In French 0 is one.",
+      "section": "11.5",
+      "message": "{{n:plural; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 0
+      },
+      "locale": "fr",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 0
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/en-0-other",
+      "description": "English has no zero, so 0 is other and a zero option is never selected.",
+      "section": "11.5",
+      "message": "{{n:plural; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 0
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 0
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/number-wins-wherever-written",
+      "description": "A number selects for the value it equals before any category is asked for, though it is written after the category the value is in.",
+      "section": "11.5",
+      "message": "{{n:plural; one:{{n}} file; other:{{n}} files; 0:No files;}}",
+      "payload": {
+        "n": 0
+      },
+      "locale": "en",
+      "expected": {
+        "output": "No files"
+      }
+    },
+    {
+      "id": "plural/number-compared-numerically",
+      "description": "A number key is compared numerically, and the first of two equal keys wins.",
+      "section": "11.5",
+      "message": "{{n:plural; 2.0:FIRST; 2:SECOND; other:OTHER;}}",
+      "payload": {
+        "n": "+2"
+      },
+      "locale": "en",
+      "expected": {
+        "output": "FIRST"
+      }
+    },
+    {
+      "id": "plural/number-with-an-exponent",
+      "description": "A key the number test reads as a number is one, an exponent included.",
+      "section": "11.5",
+      "message": "{{n:plural; 1e3:THOUSAND; other:OTHER;}}",
+      "payload": {
+        "n": 1000
+      },
+      "locale": "en",
+      "expected": {
+        "output": "THOUSAND"
+      }
+    },
+    {
+      "id": "plural/number-fraction-key",
+      "description": "A fraction is a number a key may be.",
+      "section": "11.5",
+      "message": "{{n:plural; -1:MINUS; 1.5:HALF; other:OTHER;}}",
+      "payload": {
+        "n": 1.5
+      },
+      "locale": "en",
+      "expected": {
+        "output": "HALF"
+      }
+    },
+    {
+      "id": "plural/number-negative-key",
+      "description": "A negative number is a number a key may be.",
+      "section": "11.5",
+      "message": "{{n:plural; -1:MINUS; 1.5:HALF; other:OTHER;}}",
+      "payload": {
+        "n": -1
+      },
+      "locale": "en",
+      "expected": {
+        "output": "MINUS"
+      }
+    },
+    {
+      "id": "plural/number-not-as-shown",
+      "description": "A number key is compared with the value, not with the number as number would show it: 2 does not select for 1.999, whose category is taken at 2.",
+      "section": "11.5",
+      "message": "{{n:plural; 2:TWO; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 1.999
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1.999
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/key-neither-number-nor-category",
+      "description": "A key that is neither a number nor a category never selects: 1,000 and Infinity are not numbers, and twelve is not a category.",
+      "section": "11.5",
+      "message": "{{n:plural; 1,000:GROUPED; Infinity:INF; twelve:TWELVE; other:OTHER;}}",
+      "payload": {
+        "n": 1000
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1000
+        },
+        "categories": {
+          "zero": "",
+          "one": "",
+          "two": "",
+          "few": "",
+          "many": "",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/first-category-option-wins",
+      "description": "Where two options share a category, the first wins.",
+      "section": "11.5",
+      "message": "{{n:plural; one:FIRST; one:SECOND; other:OTHER;}}",
+      "payload": {
+        "n": 1
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1
+        },
+        "categories": {
+          "zero": "",
+          "one": "FIRST",
+          "two": "",
+          "few": "",
+          "many": "",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/category-as-written",
+      "description": "A category is compared exactly as written, so One is no category and the value in one takes the chain.",
+      "section": "11.5",
+      "message": "{{n:plural; One:CAPITAL; other:OTHER; default:D;}}",
+      "payload": {
+        "n": 1
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1
+        },
+        "categories": {
+          "zero": "D",
+          "one": "D",
+          "two": "D",
+          "few": "D",
+          "many": "D",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/uncovered-category-takes-chain",
+      "description": "A number in a category the placeholder writes no option for selects nothing and takes the fallback chain.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; other:OTHER; default:D;}}",
+      "payload": {
+        "n": 1.5
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1.5
+        },
+        "categories": {
+          "zero": "D",
+          "one": "ONE",
+          "two": "D",
+          "few": "FEW",
+          "many": "D",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/other-is-not-the-inline-default",
+      "description": "other is a category and the inline default is none: a number in other with no other option takes the chain, where the payload's default outranks the inline one.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; default:D;}}",
+      "payload": {
+        "n": 5,
+        "default": "PAYLOAD"
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 5
+        },
+        "categories": {
+          "zero": "PAYLOAD",
+          "one": "ONE",
+          "two": "PAYLOAD",
+          "few": "PAYLOAD",
+          "many": "PAYLOAD",
+          "other": "PAYLOAD"
+        }
+      }
+    },
+    {
+      "id": "plural/payload-default-outranks-inline",
+      "description": "Where nothing is selected, the payload's own default outranks the message's, as for every selection.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; other:OTHER; default:D;}}",
+      "payload": {
+        "n": 1.5,
+        "default": "PAYLOAD"
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1.5
+        },
+        "categories": {
+          "zero": "PAYLOAD",
+          "one": "ONE",
+          "two": "PAYLOAD",
+          "few": "FEW",
+          "many": "PAYLOAD",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/absent-value-takes-chain",
+      "description": "An absent value takes the fallback chain before the modifier is asked, and nothing is reported.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; other:OTHER; default:D;}}",
+      "payload": {},
+      "locale": "en",
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "plural/absent-value-no-locale",
+      "description": "An absent value takes the chain before the locale is tested, so it reports no missing locale.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; other:OTHER; default:D;}}",
+      "payload": {},
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "plural/not-a-number-fails",
+      "description": "A value that is not a number is an input the modifier cannot process: the chain, and failed-modifier.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; other:OTHER; default:D;}}",
+      "payload": {
+        "n": "abc"
+      },
+      "locale": "en",
+      "messageId": "plural.not-a-number-fails",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "id": "plural.not-a-number-fails"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/blank-is-not-a-number",
+      "description": "Empty text is not a number, whatever the host converts it to.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; other:OTHER; default:D;}}",
+      "payload": {
+        "n": ""
+      },
+      "locale": "en",
+      "messageId": "plural.blank-is-not-a-number",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "id": "plural.blank-is-not-a-number"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/whitespace-is-not-a-number",
+      "description": "Text that is only whitespace is not a number.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; other:OTHER; default:D;}}",
+      "payload": {
+        "n": " "
+      },
+      "locale": "en",
+      "messageId": "plural.whitespace-is-not-a-number",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "id": "plural.whitespace-is-not-a-number"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/infinity-is-not-a-number",
+      "description": "An infinity is not a number the modifier can take.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; other:OTHER; default:D;}}",
+      "payload": {
+        "n": "Infinity"
+      },
+      "locale": "en",
+      "messageId": "plural.infinity-is-not-a-number",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "id": "plural.infinity-is-not-a-number"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/leading-number-is-not-a-number",
+      "description": "The test reads the whole value, so 12px is not a number.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; other:OTHER; default:D;}}",
+      "payload": {
+        "n": "12px"
+      },
+      "locale": "en",
+      "messageId": "plural.leading-number-is-not-a-number",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "id": "plural.leading-number-is-not-a-number"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/locale-none",
+      "description": "Where no locale is available the result is the empty string, before a number that would have matched a key exactly is compared, and missing-locale is reported.",
+      "section": "11.5",
+      "message": "[{{n:plural; 10:TEN; other:OTHER; default:D;}}]",
+      "payload": {
+        "n": 10
+      },
+      "messageId": "plural.locale-none",
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "missing-locale",
+            "origin": "payload",
+            "id": "plural.locale-none"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/locale-empty",
+      "description": "An empty locale is not available either.",
+      "section": "11.5",
+      "message": "[{{n:plural; 10:TEN; other:OTHER; default:D;}}]",
+      "payload": {
+        "n": 10
+      },
+      "locale": "",
+      "messageId": "plural.locale-empty",
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "missing-locale",
+            "origin": "payload",
+            "id": "plural.locale-empty"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/no-options",
+      "description": "A plural selection that declares no option is a message error: the chain, and missing-options against the message.",
+      "section": "11.5",
+      "message": "{{n:plural}}",
+      "payload": {
+        "n": 1
+      },
+      "locale": "en",
+      "messageId": "plural.no-options",
+      "expected": {
+        "output": "",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "id": "plural.no-options"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/no-options-no-locale",
+      "description": "A plural selection declaring no option takes the chain as every message error does, before the locale is asked anything.",
+      "section": "11.5",
+      "message": "{{n:plural; default:D}}",
+      "payload": {
+        "n": 1
+      },
+      "messageId": "plural.no-options-no-locale",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "id": "plural.no-options-no-locale"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/no-options-absent-value",
+      "description": "How the placeholder is written makes the error, so it is reported over an absent value too.",
+      "section": "11.5",
+      "message": "{{n:plural; default:D}}",
+      "payload": {},
+      "locale": "en",
+      "messageId": "plural.no-options-absent-value",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "id": "plural.no-options-absent-value"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/passed-over-option-unread",
+      "description": "An option the selection passes over is never read, so the value no conversion describes that it names is never reported.",
+      "section": "11.5",
+      "message": "{{n:plural; 0:{{a}}; other:{{b}};}}",
+      "payload": {
+        "n": 0,
+        "a": "A",
+        "b": {
+          "$curly": "unserializable"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
+      "id": "plural/digits-default-maximum",
+      "description": "plural takes its category from the number as number would show it: at most two fraction digits by default, so 1.999 is asked of as 2.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 1.999
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1.999
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/digits-from-number-props",
+      "description": "A minimum number's props name shows a fraction, so 1 is shown as 1.0 and its English category is other.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 1
+      },
+      "props": {
+        "number": {
+          "minimumFractionDigits": 1
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "minimumFractionDigits": 1,
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/digits-czech-one-point-zero",
+      "description": "In Czech 1 shown as 1,0 is many.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 1
+      },
+      "props": {
+        "number": {
+          "minimumFractionDigits": 1
+        }
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "minimumFractionDigits": 1,
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/digits-from-defaults",
+      "description": "The implementation-configured defaults of number are read as its props are.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 1
+      },
+      "defaults": {
+        "number": {
+          "minimumFractionDigits": 1
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "minimumFractionDigits": 1,
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/digits-from-wrapper",
+      "description": "A wrapper's props of number are read as the call's are.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": {
+          "value": 1,
+          "props": {
+            "number": {
+              "minimumFractionDigits": 1
+            }
+          }
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "minimumFractionDigits": 1,
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/own-props-override-number",
+      "description": "plural's own properties override number's of the same name.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 1.999
+      },
+      "props": {
+        "number": {
+          "maximumFractionDigits": 0
+        },
+        "plural": {
+          "maximumFractionDigits": 3
+        }
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 3,
+            "type": "cardinal"
+          },
+          "input": 1.999
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/own-props-compose-per-property",
+      "description": "plural's own properties override number's property by property: number's minimum stands beside plural's maximum.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 1
+      },
+      "props": {
+        "number": {
+          "minimumFractionDigits": 1
+        },
+        "plural": {
+          "maximumFractionDigits": 3
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "minimumFractionDigits": 1,
+            "maximumFractionDigits": 3,
+            "type": "cardinal"
+          },
+          "input": 1
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/own-props-over-number-from-any-layer",
+      "description": "plural's own properties, composed over every layer, override number's composed over every layer, so the call's plural overrides the wrapper's number.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": {
+          "value": 1.999,
+          "props": {
+            "number": {
+              "maximumFractionDigits": 0
+            }
+          }
+        }
+      },
+      "props": {
+        "plural": {
+          "maximumFractionDigits": 3
+        }
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 3,
+            "type": "cardinal"
+          },
+          "input": 1.999
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/own-minimum-widens",
+      "description": "plural's own minimum widens the default maximum, as number's does.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 2
+      },
+      "props": {
+        "plural": {
+          "minimumFractionDigits": 3
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "minimumFractionDigits": 3,
+            "maximumFractionDigits": 3,
+            "type": "cardinal"
+          },
+          "input": 2
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/number-digits-only",
+      "description": "Of number's properties only the digit properties are read: its maximum is, so 1.04 is asked of as 1, and its style and grouping are not.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 1.04
+      },
+      "props": {
+        "number": {
+          "style": "percent",
+          "useGrouping": false,
+          "maximumFractionDigits": 1
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "maximumFractionDigits": 1,
+            "type": "cardinal"
+          },
+          "input": 1.04
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/significant-digits",
+      "description": "The significant digits number shows are read too.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 1
+      },
+      "props": {
+        "number": {
+          "minimumSignificantDigits": 2
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "minimumSignificantDigits": 2,
+            "maximumFractionDigits": 2,
+            "type": "cardinal"
+          },
+          "input": 1
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/type-pinned",
+      "description": "The rule type is what plural is, whatever a layer names, so it asks for the cardinal rules.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; two:TWO; few:FEW; other:OTHER;}}",
+      "payload": {
+        "n": 2
+      },
+      "props": {
+        "plural": {
+          "type": "ordinal"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "cardinal",
+            "maximumFractionDigits": 2
+          },
+          "input": 2
+        },
+        "categories": {
+          "zero": "",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/request-refused-fails",
+      "description": "A selection the host cannot make is an input the modifier cannot process: the chain, and failed-modifier, where a request the host made would have selected other.",
+      "section": "11.5",
+      "message": "{{n:plural; one:ONE; other:OTHER; default:D;}}",
+      "payload": {
+        "n": 5
+      },
+      "props": {
+        "plural": {
+          "minimumFractionDigits": 3,
+          "maximumFractionDigits": 2
+        }
+      },
+      "locale": "en",
+      "messageId": "plural.request-refused-fails",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "id": "plural.request-refused-fails"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/ordinal-en-1",
+      "description": "ordinal selects by the ordinal rules: in English 1 is one.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 1
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 1
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-en-2",
+      "description": "In English ordinals 2 is two.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 2
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 2
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-en-3",
+      "description": "In English ordinals 3 is few.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 3
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 3
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-en-4",
+      "description": "In English ordinals 4 is other.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 4
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 4
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-en-11",
+      "description": "In English ordinals 11 is other, though 1 is one.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 11
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 11
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-en-12",
+      "description": "In English ordinals 12 is other, though 2 is two.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 12
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 12
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-en-13",
+      "description": "In English ordinals 13 is other, though 3 is few.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 13
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 13
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-en-21",
+      "description": "In English ordinals 21 is one.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 21
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 21
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-en-22",
+      "description": "In English ordinals 22 is two.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 22
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 22
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-en-23",
+      "description": "In English ordinals 23 is few.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 23
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 23
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-en-111",
+      "description": "In English ordinals 111 is other.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 111
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 111
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-sv-2",
+      "description": "In Swedish ordinals 2 is one.",
+      "section": "11.5",
+      "message": "{{n:ordinal; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 2
+      },
+      "locale": "sv",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 2
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-sv-12",
+      "description": "In Swedish ordinals 12 is other.",
+      "section": "11.5",
+      "message": "{{n:ordinal; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 12
+      },
+      "locale": "sv",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 12
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-sv-22",
+      "description": "In Swedish ordinals 22 is one.",
+      "section": "11.5",
+      "message": "{{n:ordinal; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 22
+      },
+      "locale": "sv",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 22
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-it-8",
+      "description": "In Italian ordinals 8 is many.",
+      "section": "11.5",
+      "message": "{{n:ordinal; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 8
+      },
+      "locale": "it",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 8
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-it-800",
+      "description": "In Italian ordinals 800 is many.",
+      "section": "11.5",
+      "message": "{{n:ordinal; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 800
+      },
+      "locale": "it",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 800
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-it-9",
+      "description": "In Italian ordinals 9 is other.",
+      "section": "11.5",
+      "message": "{{n:ordinal; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 9
+      },
+      "locale": "it",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 9
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-cy-7",
+      "description": "In Welsh ordinals 7 is zero.",
+      "section": "11.5",
+      "message": "{{n:ordinal; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 7
+      },
+      "locale": "cy",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 7
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-cy-3",
+      "description": "In Welsh ordinals 3 is few.",
+      "section": "11.5",
+      "message": "{{n:ordinal; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 3
+      },
+      "locale": "cy",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 3
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-cy-5",
+      "description": "In Welsh ordinals 5 is many.",
+      "section": "11.5",
+      "message": "{{n:ordinal; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 5
+      },
+      "locale": "cy",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 5
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-cs-other",
+      "description": "Czech ordinals are other alone, so every other category key is inert.",
+      "section": "11.5",
+      "message": "{{n:ordinal; zero:ZERO; one:ONE; two:TWO; few:FEW; many:MANY; other:OTHER;}}",
+      "payload": {
+        "n": 1
+      },
+      "locale": "cs",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 1
+        },
+        "categories": {
+          "zero": "ZERO",
+          "one": "ONE",
+          "two": "TWO",
+          "few": "FEW",
+          "many": "MANY",
+          "other": "OTHER"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-integral-text",
+      "description": "An integer written with a fractional zero is the integer.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": "3.0"
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": 3
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-negative",
+      "description": "A negative integer is taken as the ordinal rules take it.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": -1
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal"
+          },
+          "input": -1
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-fraction-fails",
+      "description": "An ordinal of a fraction names no position: the chain, and failed-modifier.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; other:TH; default:D;}}",
+      "payload": {
+        "n": 1.5
+      },
+      "locale": "en",
+      "messageId": "plural.ordinal-fraction-fails",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "id": "plural.ordinal-fraction-fails"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/ordinal-fraction-before-exact-key",
+      "description": "The integer test comes before a key is compared, so a fraction fails though a key equals it.",
+      "section": "11.5",
+      "message": "{{n:ordinal; 1.5:HALF; other:TH; default:D;}}",
+      "payload": {
+        "n": 1.5
+      },
+      "locale": "en",
+      "messageId": "plural.ordinal-fraction-before-exact-key",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "id": "plural.ordinal-fraction-before-exact-key"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/ordinal-blank-is-not-a-number",
+      "description": "Empty text is not a number an ordinal can take either.",
+      "section": "11.5",
+      "message": "{{n:ordinal; other:TH; default:D;}}",
+      "payload": {
+        "n": ""
+      },
+      "locale": "en",
+      "messageId": "plural.ordinal-blank-is-not-a-number",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "id": "plural.ordinal-blank-is-not-a-number"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/ordinal-fraction-fails-everywhere",
+      "description": "A fraction fails even where a locale's ordinal rules would give it a category.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; other:TH; default:D;}}",
+      "payload": {
+        "n": 1.5
+      },
+      "locale": "mk",
+      "messageId": "plural.ordinal-fraction-fails-everywhere",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "failed-modifier",
+            "origin": "payload",
+            "id": "plural.ordinal-fraction-fails-everywhere"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/ordinal-own-props-alone",
+      "description": "ordinal reads the properties under its own name and nothing of number's — number's significant digit would have shown 22 as 20 — and its rule type is pinned.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; two:ND; few:RD; other:TH;}}",
+      "payload": {
+        "n": 22
+      },
+      "props": {
+        "number": {
+          "maximumSignificantDigits": 1
+        },
+        "ordinal": {
+          "type": "cardinal",
+          "minimumIntegerDigits": 2
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "PluralRules",
+          "options": {
+            "type": "ordinal",
+            "minimumIntegerDigits": 2
+          },
+          "input": 22
+        },
+        "categories": {
+          "zero": "",
+          "one": "ST",
+          "two": "ND",
+          "few": "RD",
+          "many": "",
+          "other": "TH"
+        }
+      }
+    },
+    {
+      "id": "plural/ordinal-number-wins",
+      "description": "A number selects for the value it equals before any category, under ordinal too.",
+      "section": "11.5",
+      "message": "{{n:ordinal; one:ST; other:TH; 1:first;}}",
+      "payload": {
+        "n": 1
+      },
+      "locale": "en",
+      "expected": {
+        "output": "first"
+      }
+    },
+    {
+      "id": "plural/ordinal-no-options",
+      "description": "An ordinal declaring no option is a message error.",
+      "section": "11.5",
+      "message": "{{n:ordinal; default:D}}",
+      "payload": {
+        "n": 1
+      },
+      "locale": "en",
+      "messageId": "plural.ordinal-no-options",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "id": "plural.ordinal-no-options"
+          }
+        ]
+      }
+    },
+    {
+      "id": "plural/ordinal-locale-none",
+      "description": "ordinal tests the locale first as plural does.",
+      "section": "11.5",
+      "message": "[{{n:ordinal; 1:first; other:TH; default:D;}}]",
+      "payload": {
+        "n": 1
+      },
+      "messageId": "plural.ordinal-locale-none",
+      "expected": {
+        "output": "[]",
+        "reports": [
+          {
+            "code": "missing-locale",
+            "origin": "payload",
+            "id": "plural.ordinal-locale-none"
+          }
+        ]
+      }
+    }
+  ]
+}
