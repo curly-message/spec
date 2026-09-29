@@ -25,7 +25,7 @@ const LEVELS: readonly Level[] = ['core', 'intl', 'extensions'];
 
 const LIMITS = ['output', 'read', 'conversion', 'nesting'] as const;
 
-const APIS: readonly FormatApi[] = ['NumberFormat', 'DateTimeFormat', 'RelativeTimeFormat'];
+const APIS: readonly FormatApi[] = ['NumberFormat', 'DateTimeFormat', 'RelativeTimeFormat', 'PluralRules'];
 
 // The versioned identifier of the format this set reads.
 const FORMAT = 'curly-message-3';
@@ -61,9 +61,10 @@ const treeClaim = (adapter: Adapter) => {
 };
 
 // The adapter's statements about itself, and the levels option, are held to
-// the vocabulary of sections 2, 11.2 and 13 before anything runs: a level that
-// is not one of the three, or a limit that is not a count, is an error, not a
-// skip. A JavaScript adapter is not typed, so its shape is checked as well.
+// the vocabulary of sections 2, 11.2, 11.5 and 13 before anything runs: a
+// level that is not one of the three, or a limit that is not a count, is an
+// error, not a skip. A JavaScript adapter is not typed, so its shape is checked
+// as well.
 const claims = (adapter: Adapter, options: Options) => {
   const unknown = (levels: readonly Level[], where: string) => {
     const level = levels.find((name) => !LEVELS.includes(name));

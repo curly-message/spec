@@ -36,7 +36,7 @@
       "path": "fixtures/extensions.json",
       "level": "extensions",
       "section": "11.3",
-      "cases": 44
+      "cases": 45
     },
     {
       "path": "fixtures/fallback-intl.json",
@@ -73,6 +73,12 @@
       "level": "core",
       "section": "12",
       "cases": 20
+    },
+    {
+      "path": "fixtures/plural.json",
+      "level": "intl",
+      "section": "11.5",
+      "cases": 87
     },
     {
       "path": "fixtures/reports.json",

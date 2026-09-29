@@ -83,6 +83,30 @@
       }
     },
     {
+      "id": "extensions/replaces-a-plural-selection",
+      "description": "A host that registers its own plural replaces the format's: it is handed the props under its own name alone, none of number's digits, and a placeholder naming it with no options is no message error.",
+      "section": "11.3",
+      "message": "{{v:plural}}",
+      "payload": {
+        "v": 1
+      },
+      "props": {
+        "number": {
+          "minimumFractionDigits": 1
+        },
+        "plural": {
+          "own": true
+        }
+      },
+      "locale": "en",
+      "modifiers": {
+        "plural": "props"
+      },
+      "expected": {
+        "output": "own=true"
+      }
+    },
+    {
       "id": "extensions/replaced-comparison-no-options-absent-value",
       "description": "What answers to the name decides the report, not the payload: a replaced comparison without options is not reported over an absent value either.",
       "section": "9.5",

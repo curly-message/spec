@@ -203,18 +203,18 @@
       "id": "reports/unknown-modifier-takes-chain",
       "description": "An unknown modifier is a message error and never eq: the chain, and an unknown-modifier report against the message.",
       "section": "11.4",
-      "message": "{{v:plural; 1:one; default:many}}",
+      "message": "{{v:duration; 1:one; default:many}}",
       "payload": {
         "v": 1
       },
-      "messageId": "common.plural",
+      "messageId": "common.duration",
       "expected": {
         "output": "many",
         "reports": [
           {
             "code": "unknown-modifier",
             "origin": "message",
-            "id": "common.plural"
+            "id": "common.duration"
           }
         ]
       }
@@ -223,7 +223,7 @@
       "id": "reports/unknown-modifier-without-default",
       "description": "An unknown modifier takes the chain down to the empty string where nothing declares a default, and is reported.",
       "section": "11.4",
-      "message": "{{v:plural; 1:one}}",
+      "message": "{{v:duration; 1:one}}",
       "payload": {
         "v": 1
       },
@@ -243,7 +243,7 @@
       "id": "reports/unknown-modifier-over-absent-value",
       "description": "The name is the error, so an unknown modifier is reported over an absent value too.",
       "section": "11.4",
-      "message": "{{v:plural; 1:one; default:FALLBACK}}",
+      "message": "{{v:duration; 1:one; default:FALLBACK}}",
       "payload": {},
       "messageId": "reports.id",
       "expected": {

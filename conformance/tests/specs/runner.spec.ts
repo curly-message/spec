@@ -64,7 +64,7 @@ describe('plan', () => {
 
     expect(() => plan(cannot({ NumberFormat: ['useGrouping'] }), { fixtures: [] })).not.toThrow();
     expect(() => plan(cannot('useGrouping'))).toThrow('The adapter must name the properties it cannot express by the request that reads them.');
-    expect(() => plan(cannot({ Bogus: ['x'] }))).toThrow('The adapter names the facility "Bogus"; the facilities are NumberFormat, DateTimeFormat, RelativeTimeFormat.');
+    expect(() => plan(cannot({ Bogus: ['x'] }))).toThrow('The adapter names the facility "Bogus"; the facilities are NumberFormat, DateTimeFormat, RelativeTimeFormat, PluralRules.');
     expect(() => plan(cannot({ NumberFormat: 'useGrouping' }))).toThrow('The adapter must name what it cannot express of a NumberFormat request as a list of property names.');
     expect(() => plan(cannot({ NumberFormat: [1] }))).toThrow('The adapter must name what it cannot express of a NumberFormat request as a list of property names.');
   });
@@ -263,12 +263,58 @@ describe('execute', () => {
     expect(outcome(exposing('one'), c)).toMatchObject({ ok: false, reason: 'The formatting requests are not a list.' });
   });
 
+  // A selection request's result on this host is a category, and the case
+  // names the output each category selects.
+  const selection = (over: Partial<ConcreteCase> = {}) => concrete('a/plural', {
+    message: '{{n:plural; one:ONE; few:FEW; many:MANY; other:OTHER;}}',
+    payload: { n: 21 },
+    locale: 'ru',
+    expected: {
+      format: { api: 'PluralRules', options: { type: 'cardinal', maximumFractionDigits: 2 }, input: 21 },
+      categories: { zero: '', one: 'ONE', two: '', few: 'FEW', many: 'MANY', other: 'OTHER' },
+    },
+    ...over,
+  });
+
+  it('expects the output a selection request\'s category selects on this host', () => {
+    const answering = (output: string) => adapter(() => ({ output, reports: [] }));
+
+    expect(outcome(answering('ONE'), selection())).toEqual({ ok: true });
+    expect(outcome(answering('MANY'), selection())).toEqual({ ok: false, reason: 'The output differs.', expected: 'ONE', actual: 'MANY' });
+  });
+
+  it('holds an adapter that exposes a selection request to the output its category selects', () => {
+    const request = { api: 'PluralRules', options: { maximumFractionDigits: 2, type: 'cardinal' }, input: 21 } as const;
+    const exposing = (output: string, formats: unknown) => adapter(() => ({ output, reports: [], formats } as Resolved));
+
+    // The category is the host's, so one this runner's host would not have
+    // answered passes where the output is the one it selects.
+    expect(outcome(exposing('MANY', [{ ...request, category: 'many' }]), selection())).toEqual({ ok: true });
+    expect(outcome(exposing('ONE', [{ ...request, category: 'many' }]), selection())).toEqual({ ok: false, reason: 'The output differs from the one the category many selects.', expected: 'MANY', actual: 'ONE' });
+    expect(outcome(exposing('ONE', [request]), selection())).toMatchObject({ ok: false, reason: 'The selection request carries no category the plural rules name.' });
+    expect(outcome(exposing('ONE', [{ ...request, category: 'several' }]), selection())).toMatchObject({ ok: false, reason: 'The selection request carries no category the plural rules name.' });
+    expect(outcome(exposing('ONE', [{ ...request, options: { type: 'ordinal' }, category: 'one' }]), selection())).toMatchObject({ ok: false, reason: 'The properties of the request differ.' });
+  });
+
+  it('refuses a selection case that leaves a category out, whichever category a host answers', () => {
+    const lacking = selection({ expected: { format: { api: 'PluralRules', options: { type: 'cardinal' }, input: 21 }, categories: { one: 'ONE', few: 'FEW', many: 'MANY', other: 'OTHER' } as never } });
+    const exposing = adapter(() => ({ output: 'MANY', reports: [], formats: [{ api: 'PluralRules', options: { type: 'cardinal' }, input: 21, category: 'many' }] }));
+
+    expect(() => outcome(adapter(echo), lacking)).toThrow('The case a/plural names no output for the category "zero".');
+    expect(() => outcome(exposing, lacking)).toThrow('The case a/plural names no output for the category "zero".');
+  });
+
   it('rejects a case expecting neither an output nor a format', () => {
     expect(() => outcome(adapter(echo), concrete('a/neither', { expected: {} }))).toThrow('The case a/neither expects neither an output nor a format.');
   });
 });
 
 describe('format', () => {
+  it('performs a PluralRules request, answering the category', () => {
+    expect(format({ api: 'PluralRules', options: { type: 'cardinal', maximumFractionDigits: 2 }, input: 1.999 }, 'cs')).toBe('few');
+    expect(format({ api: 'PluralRules', options: { type: 'ordinal' }, input: 22 }, 'en')).toBe('two');
+  });
+
   it('performs a NumberFormat request', () => {
     expect(format({ api: 'NumberFormat', options: { style: 'currency', currency: 'EUR' }, input: 12.5 }, 'de')).toBe(new Intl.NumberFormat('de', { style: 'currency', currency: 'EUR' }).format(12.5));
     expect(format({ api: 'NumberFormat', input: 1234.5678 }, 'en')).toBe(new Intl.NumberFormat('en').format(1234.5678));

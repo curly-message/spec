@@ -335,7 +335,7 @@
       "id": "grammar/unknown-modifier-is-not-literal",
       "description": "A modifier name this format does not specify is a message error, not literal text.",
       "section": "6",
-      "message": "{{v:plural; default:D}}",
+      "message": "{{v:duration; default:D}}",
       "payload": {
         "v": "a"
       },
