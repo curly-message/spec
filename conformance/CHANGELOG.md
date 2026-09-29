@@ -1,6 +1,6 @@
 # Changelog
 
-### 4.1.0 (Unreleased)
+## 4.1.0
 
 The set gains the plural selections of revision 3.1.0 of the specification,
 `plural` and `ordinal`, and the one kind of request they make: a request whose
