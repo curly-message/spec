@@ -104,14 +104,15 @@ export const curly = (message, cst) => walk(message, cst(message), 'text');
 /* An example ---------------------------------------------------------------
  *
  * What a worked example writes beside its message: the arrow, the string an
- * outcome is quoted as, a number the payload holds, drawn as the playground
- * draws one, and the aside a line closes with. A digit inside a word is part
- * of the word. */
+ * outcome is quoted as, a number or a literal the payload holds, drawn as the
+ * playground draws one, and the aside a line closes with. A digit inside a
+ * word is part of the word. */
 const NOTE = [
   ['tok-note', /\([^)]*\)[ \t]*$/y],
   ['tok-arrow', /->/y],
   ['tok-string', /"[^"\n]*"|'[^'\n]*'/y],
   ['tok-number', /(?<![\w.-])-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?(?!\w)/y],
+  ['tok-word', /\b(?:true|false|null)\b/y],
 ];
 
 // Where a line stops being the format and starts being prose about it: a run
@@ -231,6 +232,11 @@ export const highlight = (source, language, cst) => {
       return curly(source, cst);
     case 'curly-example':
       return curlyExample(source, cst);
+    // A table of values or layers holds no message, and its braces and
+    // backslashes are the payload's own: it is read with the rules an
+    // example's prose is, and never parsed.
+    case 'notation':
+      return scan(source, NOTE);
     case 'json':
       return scan(source, JSON_RULES);
     case 'ts':

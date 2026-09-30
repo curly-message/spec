@@ -14,7 +14,7 @@ separator, a placeholder written inside another's option value. Those are
 settled in sections 6 and 7 of the specification. A tool should be able to read
 them off an implementation instead of re-deriving them.
 
-```
+```curly-example
 Hi {{name; default:you;}}
 
 message  [0,25)
