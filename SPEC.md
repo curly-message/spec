@@ -206,7 +206,7 @@ An entry is a **wrapper** when it is a plain object, owns at least one key, and
 **every** own key is one of `value`, `default` and `props`. Anything else is a
 value — including a plain object that owns any other key alongside them.
 
-```
+```notation
 { value: 1 }                  wrapper, value 1
 { value: 1, default: 'D' }    wrapper
 { default: 'D' }              wrapper, no value
@@ -501,7 +501,7 @@ hold a Windows path, a regular expression or a serialization without the
 message's escaping rules reaching into it, and it is why the text section 4
 produces is the text the output carries:
 
-```
+```notation
 { a: 'C:\U' }   serializes to  {"a":"C:\\U"}   and renders  {"a":"C:\\U"}
 ```
 
@@ -928,7 +928,7 @@ layer holds the host's null under is one it names: null is a value (section 3),
 and it is what reaches the formatting request. A property the layer holds the
 host's undefined under, like one it does not hold, is one it does not name.
 
-```
+```notation
 implementation defaults   number: { maximumFractionDigits: 4, useGrouping: false }
 props                     number: { useGrouping: true }
 wrapper props             number: { maximumFractionDigits: 1 }
