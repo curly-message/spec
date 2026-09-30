@@ -104,11 +104,14 @@ export const curly = (message, cst) => walk(message, cst(message), 'text');
 /* An example ---------------------------------------------------------------
  *
  * What a worked example writes beside its message: the arrow, the string an
- * outcome is quoted as, and the aside a line closes with. */
+ * outcome is quoted as, a number the payload holds, drawn as the playground
+ * draws one, and the aside a line closes with. A digit inside a word is part
+ * of the word. */
 const NOTE = [
   ['tok-note', /\([^)]*\)[ \t]*$/y],
   ['tok-arrow', /->/y],
   ['tok-string', /"[^"\n]*"|'[^'\n]*'/y],
+  ['tok-number', /(?<![\w.-])-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?(?!\w)/y],
 ];
 
 // Where a line stops being the format and starts being prose about it: a run
