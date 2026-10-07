@@ -44,7 +44,7 @@ Tech stack — **ground truth, do not assume otherwise**:
 | Lint | ESLint flat config with `@stylistic`, run by a pre-commit hook | none |
 | Runtime dependencies | none | none shipped; the playground runs the parser the lockfile pins |
 | Supported runtimes | Node 22+, Bun, Deno 2 | Node 22 to build; any current browser |
-| CI | `tests-conformance.yml` (calls `tests.yml`), `publish-conformance.yml` (calls `publish.yml`), `release-spec.yml` | `tests-site.yml`, `site.yml` |
+| CI | `tests-conformance.yml` (calls `tests.yml`), `bench.yml` and `bench-label.yml`, `publish-conformance.yml` (calls `publish.yml`), `release-spec.yml` | `tests-site.yml`, `site.yml` |
 
 Commands, run from the package directory:
 
@@ -53,6 +53,8 @@ Commands, run from the package directory:
 | `npm ci` | install from the lockfile |
 | `npm test` | `conformance/`: build, typecheck the source and the shipped declarations, lint, then the suite against the source and against the build; `site/`: build, then read the pages back |
 | `npm run test:bun`, `npm run test:deno` | `conformance/`: build, then the suite on Bun or Deno — what the runtime legs of CI run |
+| `npm run bench` | `conformance/`: build, then the benchmark (`bench/rows.mjs`) |
+| `npm run bench -- --compare <dir>` | `conformance/`: the same, beside the package checked out and built at `<dir>` — what `bench.yml` runs on a PR |
 | `npm run lint:fix` | `conformance/`: fix what the formatting contract reports |
 | `npm run manifest` | `conformance/`: rewrite `index.json` from the fixtures |
 | `npm run serve` | `site/`: build and serve with a rebuild on change |
@@ -67,6 +69,7 @@ Repository map:
 | `conformance/fixtures/`, `conformance/schema/`, `conformance/index.json` | the set: fixtures pinned to sections, their JSON Schema, the manifest |
 | `conformance/src/` | the JavaScript runner and the loaders the package exports |
 | `conformance/bin/` | the `curly-message-conformance` command and the manifest writer |
+| `conformance/bench/` | the rows of the benchmark, and the harness that measures them |
 | `conformance/RUNNER.md`, `conformance/defects.json` | what a runner in another language is held to, and the deliberately wrong adapters it is audited against |
 | `site/` | the site's generator, its two own pages and the playground |
 | `brand/` | the marks, under their own terms |
@@ -240,8 +243,16 @@ not apply), CI — and names any step not run.
 - **Every package has one**: `npm run bench`, and
   `npm run bench -- --compare <dir>` against the same package checked out and
   built at `<dir>`.
+- **One harness, rows per package.** A package lists its rows in
+  `bench/rows.mjs`, each reading the package's build, so each side of a
+  comparison measures its own build under the same row name.
+  `bench/harness.mjs` measures them and is the same file in every repository
+  (`lint` keeps one at its root for both workspaces): change every copy at
+  once.
 - **Counts and times.** A count (calls, instantiations) is deterministic and
-  gates; a time is measured base against change on one machine in one
+  gates, so a count is something that should not grow — never one that grows
+  with what the package legitimately holds, such as the cases of the set; a
+  time is measured base against change on one machine in one
   session, alternating over repeated samples, and reported with its spread.
   The spread leaves out the lowest and highest quarter of the samples, rounded
   down, so a busy neighbour neither hides nor flags a change.
