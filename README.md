@@ -61,6 +61,7 @@ Contents:
 | [`RULINGS.md`](./RULINGS.md) | Historical | Why the rules read as they do: each behavior of the pre-3.0 implementation the format was specified against, and the ruling that resolved it. It specifies nothing — every ruling is already stated in the body of `SPEC.md` |
 | [`brand/`](./brand) | Stable | The visual identity: the icon and the wordmark as SVGs, and the palette they are used in, under [their own terms](./brand/LICENSE) |
 | [`site/`](./site) | Stable | Source of the format's public site: six pages rendered from the markdown already in this repository, plus a playground that runs the reference implementation in the browser, deployed to GitHub Pages by the **Site** workflow |
+| [`AGENTS.md`](./AGENTS.md) | Per change | How the family's repositories are worked on: the rules every one of them follows, and what is particular to this one. Issues for every repository of the family are filed [here](https://github.com/curly-message/spec/issues) |
 
 `SPEC.md` states the current version of the format and nothing else. The three
 documents beside it carry what it does not: every revision, the path off an
