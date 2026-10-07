@@ -164,6 +164,14 @@ jobs:
           echo "name=$name.zip" >> "$GITHUB_OUTPUT"
           echo "sha=$(sha256sum "$RUNNER_TEMP/asset/$name.zip" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
 
+      # Each release records what its build costs, measured on the runner that
+      # publishes it; a row that fails stops the release here.
+      - name: Benchmark
+        run: |
+          npm run build
+          node bench/harness.mjs > BENCH.md
+          git add BENCH.md
+
       # The pre-commit hook lints the package; the tests job already did. One
       # atomic push carries the commit and the tag: either both land or neither,
       # and --follow-tags would have left a lightweight tag behind.

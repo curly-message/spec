@@ -128,8 +128,8 @@ so `1.1.0-next.3` reaches `1.1.0` under `patch`. `next` publishes a prerelease
 of the version the section names — `3.0.0-next.0`, then `.1` — under the `next`
 dist-tag and leaves the section open, because a prerelease has not released
 what the section names. The workflow runs the package's test matrix, bumps the
-version, cuts the section where the release closes it, commits, tags
-(`conformance-v3.0.0`), pushes, publishes to npm, and publishes a GitHub
+version, cuts the section where the release closes it, writes the benchmark of
+the build into `BENCH.md`, commits, tags (`conformance-v3.0.0`), pushes, publishes to npm, and publishes a GitHub
 release carrying that changelog section.
 
 That release also carries the set as a file: `conformance-<version>.zip`,
