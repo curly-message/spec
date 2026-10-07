@@ -164,10 +164,14 @@ differently.**
 - **Findings along the way.** Unrelated dead code, a bug or a stale doc is
   not fixed in the same PR, and not left in chat or in the PR's notes alone,
   where it ends with the PR. Once reproduced, a small fix that decides
-  nothing gets a PR of its own, through the whole cycle, right after the
-  current one; anything larger, or anything the user decides, gets an issue
-  in the [shared tracker](https://github.com/curly-message/spec/issues) with
-  its scenario. Both are opened without asking. The PR that found it links
+  nothing is stacked on the current PR, never opened as a separate PR after
+  it: its branch starts at the current branch's tip, its PR targets that
+  branch, and it goes through the whole cycle with the stack. The stack
+  merges into `main` bottom first; as each PR lands, the next is retargeted
+  to `main` and rebased onto it. Anything larger, or anything the user
+  decides, gets an issue in the
+  [shared tracker](https://github.com/curly-message/spec/issues) with its
+  scenario. Both are opened without asking. The PR that found it links
   either under `## Notes`. An impression not reproduced is neither. An issue
   takes the milestone of the release the current work lands in when that
   release would ship the defect (`parser 3.2.0`), and the package's open
