@@ -51,7 +51,7 @@ Commands, run from the package directory:
 | Command | What it does |
 |---------|--------------|
 | `npm ci` | install from the lockfile |
-| `npm test` | `conformance/`: build, typecheck, lint, then the suite against the source and against the build; `site/`: build, then read the pages back |
+| `npm test` | `conformance/`: build, typecheck the source and the shipped declarations, lint, then the suite against the source and against the build; `site/`: build, then read the pages back |
 | `npm run test:bun`, `npm run test:deno` | `conformance/`: build, then the suite on Bun or Deno — what the runtime legs of CI run |
 | `npm run lint:fix` | `conformance/`: fix what the formatting contract reports |
 | `npm run manifest` | `conformance/`: rewrite `index.json` from the fixtures |
@@ -457,8 +457,11 @@ realistic risks are **DoS, robustness and the prototype chain**.
   `skipLibCheck: false` against both the source and the shipped declarations.
   A type test that runs must exercise the value it types: a closure declared
   and never invoked asserts nothing.
-- **What a type costs the checker is tested by count, never by time**
-  (`getInstantiationCount()`) across inputs of two sizes.
+- **What a type costs the checker is tested by count, never by time**,
+  wherever a type computes over what a consumer passes (a generic, a
+  conditional or mapped type): `program.getInstantiationCount()` across
+  inputs of two sizes, each call site written as a consumer writes it so the
+  checker cannot reuse one call's work for the next.
 - Every repository runs the same suite on every supported runtime and OS in
   CI, plus lint without `--fix`.
 
