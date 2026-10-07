@@ -51,7 +51,7 @@ Commands, run from the package directory:
 | Command | What it does |
 |---------|--------------|
 | `npm ci` | install from the lockfile |
-| `npm test` | `conformance/`: build, typecheck, lint, then the suite; `site/`: build, then read the pages back |
+| `npm test` | `conformance/`: build, typecheck, lint, then the suite against the source and against the build; `site/`: build, then read the pages back |
 | `npm run lint:fix` | `conformance/`: fix what the formatting contract reports |
 | `npm run manifest` | `conformance/`: rewrite `index.json` from the fixtures |
 | `npm run serve` | `site/`: build and serve with a rebuild on change |
@@ -448,8 +448,9 @@ realistic risks are **DoS, robustness and the prototype chain**.
 - **Never assume what a runtime leaves unspecified** — how deep a call stack
   goes, the order `Intl` lists something in. Derive it on the runtime the test
   runs on.
-- **Test the shipped artifact**, not only the source: a separate
-  `test:dist` runs the suite against `dist/`.
+- **Test the shipped artifact**, not only the source: the suite imports the
+  package by its name, and `npm test` runs it once against the source and
+  once, under `--mode dist`, against `dist/`.
 - **Types are tested by compiling.** Type fixtures assert with
   `@ts-expect-error` and a type-level `Equal`, compiled with `tsc` at
   `skipLibCheck: false` against both the source and the shipped declarations.

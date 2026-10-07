@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { behaviours, type ModifierInput } from '../../src';
+import { behaviours, type ModifierInput } from '@curly-message/conformance';
 
 const input = (over: Partial<ModifierInput> = {}): ModifierInput => ({ value: 'v', options: [], props: {}, default: () => 'D', ...over });
 

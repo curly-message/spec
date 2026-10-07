@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
-import { behaviours, check, fixtures, load, plan, run, summarize, type Adapter, type Case, type ConcreteCase, type Fixture, type Level, type Resolved } from '../../src';
+import { behaviours, check, fixtures, load, plan, run, summarize, type Adapter, type Case, type ConcreteCase, type Fixture, type Level, type Resolved } from '@curly-message/conformance';
 import { format } from '../../src/cases';
 
 const LIMITS = { output: 100000, read: 100000, conversion: 100000, nesting: 8 };
