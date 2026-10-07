@@ -1,0 +1,75 @@
+import type * as Shipped from '@curly-message/conformance';
+import type * as Source from '../../src/index';
+
+// The declarations the build ships are the ones the source declares: an
+// export the bundler dropped, widened to `any` or rewrote fails to compile
+// here. TypeScript does not count two module namespaces identical even when
+// every member is, so each export is compared on its own, and the value
+// exports' names as a set. A new export joins the list: the set holds the
+// values' names alone, so a type left out of the list goes unchecked.
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+type Assert<T extends true> = T;
+
+export type Surface = [
+  Assert<Equal<keyof typeof Shipped, keyof typeof Source>>,
+  Assert<Equal<typeof Shipped.audit, typeof Source.audit>>,
+  Assert<Equal<typeof Shipped.behaviours, typeof Source.behaviours>>,
+  Assert<Equal<typeof Shipped.check, typeof Source.check>>,
+  Assert<Equal<typeof Shipped.decode, typeof Source.decode>>,
+  Assert<Equal<typeof Shipped.defects, typeof Source.defects>>,
+  Assert<Equal<typeof Shipped.fixtures, typeof Source.fixtures>>,
+  Assert<Equal<typeof Shipped.load, typeof Source.load>>,
+  Assert<Equal<typeof Shipped.mutations, typeof Source.mutations>>,
+  Assert<Equal<typeof Shipped.plan, typeof Source.plan>>,
+  Assert<Equal<typeof Shipped.run, typeof Source.run>>,
+  Assert<Equal<typeof Shipped.summarize, typeof Source.summarize>>,
+  Assert<Equal<Shipped.Adapter, Source.Adapter>>,
+  Assert<Equal<Shipped.Audited, Source.Audited>>,
+  Assert<Equal<Shipped.Behaviour, Source.Behaviour>>,
+  Assert<Equal<Shipped.Case, Source.Case>>,
+  Assert<Equal<Shipped.Catalogue, Source.Catalogue>>,
+  Assert<Equal<Shipped.Category, Source.Category>>,
+  Assert<Equal<Shipped.ConcreteCase, Source.ConcreteCase>>,
+  Assert<Equal<Shipped.Cst, Source.Cst>>,
+  Assert<Equal<Shipped.Defect, Source.Defect>>,
+  Assert<Equal<Shipped.DefectEntry, Source.DefectEntry>>,
+  Assert<Equal<Shipped.Document, Source.Document>>,
+  Assert<Equal<Shipped.Expected, Source.Expected>>,
+  Assert<Equal<Shipped.ExpectedNode, Source.ExpectedNode>>,
+  Assert<Equal<Shipped.ExpectedReport, Source.ExpectedReport>>,
+  Assert<Equal<Shipped.ExposedRequest, Source.ExposedRequest>>,
+  Assert<Equal<Shipped.Failure, Source.Failure>>,
+  Assert<Equal<Shipped.Fixture, Source.Fixture>>,
+  Assert<Equal<Shipped.FixtureFile, Source.FixtureFile>>,
+  Assert<Equal<Shipped.FormatApi, Source.FormatApi>>,
+  Assert<Equal<Shipped.FormatRequest, Source.FormatRequest>>,
+  Assert<Equal<Shipped.GeneratedCase, Source.GeneratedCase>>,
+  Assert<Equal<Shipped.Generator, Source.Generator>>,
+  Assert<Equal<Shipped.Identity, Source.Identity>>,
+  Assert<Equal<Shipped.Level, Source.Level>>,
+  Assert<Equal<Shipped.Limits, Source.Limits>>,
+  Assert<Equal<Shipped.Manifest, Source.Manifest>>,
+  Assert<Equal<Shipped.ManifestEntry, Source.ManifestEntry>>,
+  Assert<Equal<Shipped.ModifierBehaviour, Source.ModifierBehaviour>>,
+  Assert<Equal<Shipped.ModifierInput, Source.ModifierInput>>,
+  Assert<Equal<Shipped.Mutation, Source.Mutation>>,
+  Assert<Equal<Shipped.Node, Source.Node>>,
+  Assert<Equal<Shipped.NodeType, Source.NodeType>>,
+  Assert<Equal<Shipped.Options, Source.Options>>,
+  Assert<Equal<Shipped.Outcome, Source.Outcome>>,
+  Assert<Equal<Shipped.Plan, Source.Plan>>,
+  Assert<Equal<Shipped.Planned, Source.Planned>>,
+  Assert<Equal<Shipped.Report, Source.Report>>,
+  Assert<Equal<Shipped.ReportCode, Source.ReportCode>>,
+  Assert<Equal<Shipped.ReportOrigin, Source.ReportOrigin>>,
+  Assert<Equal<Shipped.Resolution, Source.Resolution>>,
+  Assert<Equal<Shipped.ResolutionFixtureFile, Source.ResolutionFixtureFile>>,
+  Assert<Equal<Shipped.Resolved, Source.Resolved>>,
+  Assert<Equal<Shipped.Result, Source.Result>>,
+  Assert<Equal<Shipped.Section, Source.Section>>,
+  Assert<Equal<Shipped.Skipped, Source.Skipped>>,
+  Assert<Equal<Shipped.SpanUnit, Source.SpanUnit>>,
+  Assert<Equal<Shipped.TreeCase, Source.TreeCase>>,
+  Assert<Equal<Shipped.TreeFixtureFile, Source.TreeFixtureFile>>,
+  Assert<Equal<Shipped.Verdict, Source.Verdict>>,
+];
