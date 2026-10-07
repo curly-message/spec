@@ -139,9 +139,9 @@ directory, with its digest in the notes, for an implementation in a language
 npm does not reach. It is packed before anything is pushed or published, so a
 path that has moved fails the run rather than dropping out of the archive.
 
-The commit, the tag and the release are made as a GitHub App, whose id and
-private key the repository holds as the `APP_ID` variable and the
-`APP_PRIVATE_KEY` secret. npm holds no token: the workflow is the package's
+The commit, the tag and the release are made as a GitHub App, whose client
+ID and private key the repository holds as the `APP_CLIENT_ID` variable and
+the `APP_PRIVATE_KEY` secret. npm holds no token: the workflow is the package's
 [trusted publisher](https://docs.npmjs.com/trusted-publishers), registered
 in the package's settings on npmjs.com or with
 `npm trust github --file publish-conformance.yml --repository curly-message/spec --allow-publish`

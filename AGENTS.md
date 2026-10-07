@@ -544,4 +544,5 @@ Its CI:
 - A publish workflow per package: trusted publishing, `BENCH.md` written into
   the release commit, a GitHub release per package tag.
 - Repository settings: rebase merges only; issues off, pointing to the shared
-  tracker.
+  tracker; the release App's client ID as the `APP_CLIENT_ID` variable and its
+  private key as the `APP_PRIVATE_KEY` secret.
