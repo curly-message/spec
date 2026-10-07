@@ -43,7 +43,7 @@ Tech stack — **ground truth, do not assume otherwise**:
 | Tests | vitest | `node --test` |
 | Lint | ESLint flat config with `@stylistic`, run by a pre-commit hook | none |
 | Runtime dependencies | none | none shipped; the playground runs the parser the lockfile pins |
-| Supported runtimes | Node 22+ | Node 22 to build; any current browser |
+| Supported runtimes | Node 22+, Bun, Deno 2 | Node 22 to build; any current browser |
 | CI | `tests-conformance.yml` (calls `tests.yml`), `publish-conformance.yml` (calls `publish.yml`), `release-spec.yml` | `tests-site.yml`, `site.yml` |
 
 Commands, run from the package directory:
@@ -52,6 +52,7 @@ Commands, run from the package directory:
 |---------|--------------|
 | `npm ci` | install from the lockfile |
 | `npm test` | `conformance/`: build, typecheck, lint, then the suite against the source and against the build; `site/`: build, then read the pages back |
+| `npm run test:bun`, `npm run test:deno` | `conformance/`: build, then the suite on Bun or Deno — what the runtime legs of CI run |
 | `npm run lint:fix` | `conformance/`: fix what the formatting contract reports |
 | `npm run manifest` | `conformance/`: rewrite `index.json` from the fixtures |
 | `npm run serve` | `site/`: build and serve with a rebuild on change |
@@ -119,10 +120,10 @@ name.
    types.
 3. **No host coupling** (above). A dependency on a host library is a blocking
    change.
-4. **One module format, stated runtimes:** ESM only; Node 22+. The source
-   touches no runtime-specific API beyond what the stated runtimes share, and
-   CI has a leg per runtime to keep that true. Reaching for one is a blocking
-   change.
+4. **One module format, stated runtimes:** ESM only; Node 22+, Bun and
+   Deno 2. The source touches no API beyond what the stated runtimes share —
+   the `node:` modules Bun and Deno implement among them — and CI has a leg
+   per runtime to keep that true. Reaching for one is a blocking change.
 5. **Generated output** (`dist/`, `_site/`) is never hand-edited and never
    committed.
 
@@ -523,7 +524,7 @@ imported here so they load automatically:
 Its CI:
 
 - `tests.yml`: the suite on each supported Node version × ubuntu, macOS,
-  Windows, plus a leg per further runtime, plus lint without `--fix`.
+  Windows, plus a leg each on Bun and Deno, plus lint without `--fix`.
 - `bench.yml`: the benchmark of the PR against its base, posted as a comment;
   `bench-label.yml` re-runs it when `bench-accepted` changes.
 - A publish workflow per package: trusted publishing, `BENCH.md` written into
