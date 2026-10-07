@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { fixtures, type Case, type ExpectedNode, type Manifest } from '../../src';
+import { fixtures, type Case, type ExpectedNode, type Manifest } from '@curly-message/conformance';
 import { NAMED } from '../../src/tree';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));

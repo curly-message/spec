@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { plan, type Adapter, type Fixture, type Generator, type Resolution, type Resolved } from '../../src';
+import { plan, type Adapter, type Fixture, type Generator, type Resolution, type Resolved } from '@curly-message/conformance';
 
 const limits = { output: 5, read: 7, conversion: 7, nesting: 3 };
 

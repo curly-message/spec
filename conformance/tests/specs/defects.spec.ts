@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { audit, defects, fixtures, mutations, type Adapter, type Audited, type Case, type ConcreteCase, type Defect, type ExpectedNode, type Fixture, type Node, type Resolved, type ResolutionFixtureFile } from '../../src';
+import { audit, defects, fixtures, mutations, type Adapter, type Audited, type Case, type ConcreteCase, type Defect, type ExpectedNode, type Fixture, type Node, type Resolved, type ResolutionFixtureFile } from '@curly-message/conformance';
 import { format } from '../../src/cases';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));

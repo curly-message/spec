@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decode } from '../../src';
+import { decode } from '@curly-message/conformance';
 
 // How many nodes a serialization visits: the root, then every member reached,
 // a shared one counted every time.
