@@ -27,6 +27,7 @@ jobs:
   release:
     needs: tests
     runs-on: ubuntu-latest
+    environment: release
     concurrency: release-spec
     permissions:
       contents: read
@@ -45,6 +46,7 @@ jobs:
         with:
           client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
 
       - name: Checkout
         uses: actions/checkout@v7

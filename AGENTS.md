@@ -304,7 +304,8 @@ released after its dependent forces another release of the dependent.
 - **Publishing:** one package per workflow run, by npm trusted publishing,
   with a tag namespaced by package (`js-v3.1.1`, `conformance-v4.1.0`,
   `lint-v1.0.0`). A new package's first version is published by hand
-  (`--tag next`), then its trusted publisher is set to the workflow.
+  (`--tag next`), then its trusted publisher is set to the workflow, with
+  `release` as its environment.
 - **Close the loop.** After a publish, confirm the version on npm
   (`npm view`) and update what follows it — the ranges and pins above, the
   site's lockfile, the other repositories' lockfiles — as part of the same
@@ -541,8 +542,12 @@ Its CI:
   Windows, plus a leg each on Bun and Deno, plus lint without `--fix`.
 - `bench.yml`: the benchmark of the PR against its base, posted as a comment;
   `bench-label.yml` re-runs it when `bench-accepted` changes.
-- A publish workflow per package: trusted publishing, `BENCH.md` written into
-  the release commit, a GitHub release per package tag.
+- A publish workflow per package: trusted publishing, with `release` as the
+  publisher's environment; `BENCH.md` written into the release commit; a
+  GitHub release per package tag; and, after the tests, three jobs —
+  `version`, `build` and `release` — so that of them only `build` runs a
+  dependency's code and only `release` holds the credentials.
 - Repository settings: rebase merges only; issues off, pointing to the shared
-  tracker; the release App's client ID as the `APP_CLIENT_ID` variable and its
-  private key as the `APP_PRIVATE_KEY` secret.
+  tracker; the release App's client ID as the `APP_CLIENT_ID` variable, and its
+  private key as the `APP_PRIVATE_KEY` secret of a `release` environment that
+  only `main` can deploy to.
