@@ -418,7 +418,7 @@ the document its file reads against.
 
 ```bash
 npm install
-npm test         # builds, typechecks, lints, then runs vitest
+npm test         # builds, typechecks, lints, then runs vitest on the source and on the build
 npm run lint:fix # applies what the lint step only reports
 ```
 

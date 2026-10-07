@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { fixtures, type ResolutionFixtureFile } from '../../src';
+import { fixtures, type ResolutionFixtureFile } from '@curly-message/conformance';
 
 // The command imports the built package, so these run against dist/.
 const root = fileURLToPath(new URL('../../', import.meta.url));
