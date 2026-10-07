@@ -164,11 +164,13 @@ differently.**
 - **Findings along the way.** Unrelated dead code, a bug or a stale doc is
   not fixed in the same PR, and not left in chat or in the PR's notes alone,
   where it ends with the PR. Once reproduced, a small fix that decides
-  nothing is stacked on the current PR, never opened as a separate PR after
-  it: its branch starts at the current branch's tip, its PR targets that
+  nothing gets a PR stacked on the current branch, not one after the current
+  PR: its branch starts at the current branch's tip, its PR targets that
   branch, and it goes through the whole cycle with the stack. The stack
   merges into `main` bottom first; as each PR lands, the next is retargeted
-  to `main` and rebased onto it. Anything larger, or anything the user
+  to `main` and rebased onto it. Its branch starts from `main` only where the
+  finding lies in another repository, or no branch is in flight. Anything
+  larger, or anything the user
   decides, gets an issue in the
   [shared tracker](https://github.com/curly-message/spec/issues) with its
   scenario. Both are opened without asking. The PR that found it links
