@@ -77,29 +77,52 @@ const LEAVES = {
   text: 'ink-text',
 };
 
+// How many placeholders deep a box is drawn inside another: the depth every
+// implementation resolves (SPEC.md, section 13). A placeholder below it is
+// drawn in the box of the one holding it, so the pieces, and the markup and
+// the nodes they become, nest no deeper than this however deep the message
+// does.
+const BOXES = 8;
+
 // One piece per leaf of the tree. The leaves tile the message and spell it
 // back, so the walk carries no position of its own: each leaf states the
-// slice it covers, and the pieces laid end to end are the message.
-const walk = (message, node, role) => {
-  if (node.nodes?.length) {
-    const under = ROLES.has(node.type) ? node.type : role;
-    const inside = node.nodes.flatMap((child) => walk(message, child, under));
-    return node.type === 'placeholder' ? [{ cls: 'ink-ph', nodes: inside }] : inside;
+// slice it covers, and the pieces laid end to end are the message. The tree
+// is as deep as the message nests, so it is walked on a stack of its own
+// rather than on the call stack.
+const walk = (message, tree) => {
+  const pieces = [];
+  const stack = [{ nodes: tree.nodes, at: 0, role: 'text', into: pieces, boxes: 0 }];
+  while (stack.length) {
+    const level = stack[stack.length - 1];
+    if (level.at === level.nodes.length) {
+      stack.pop();
+      continue;
+    }
+    const node = level.nodes[level.at++];
+    if (node.nodes?.length) {
+      const boxed = node.type === 'placeholder' && level.boxes < BOXES;
+      const into = boxed ? [] : level.into;
+      if (boxed) level.into.push({ cls: 'ink-ph', nodes: into });
+      const role = ROLES.has(node.type) ? node.type : level.role;
+      stack.push({ nodes: node.nodes, at: 0, role, into, boxes: level.boxes + (boxed ? 1 : 0) });
+      continue;
+    }
+    const text = message.slice(node.start, node.end);
+    if (!text) continue;
+    // An escape is drawn as itself whatever it stands in, and the one that
+    // cancels nothing is drawn apart from the one that does: they leave
+    // different text behind, so colouring them alike would misstate one.
+    const cls =
+      node.type === 'escape'
+        ? `ink-escape${node.cancels ? '' : ' ink-inert'}`
+        : (LEAVES[node.type === 'text' ? level.role : node.type] ?? 'ink-text');
+    level.into.push(ink(cls, text));
   }
-  const text = message.slice(node.start, node.end);
-  if (!text) return [];
-  // An escape is drawn as itself whatever it stands in, and the one that
-  // cancels nothing is drawn apart from the one that does: they leave
-  // different text behind, so colouring them alike would misstate one.
-  const cls =
-    node.type === 'escape'
-      ? `ink-escape${node.cancels ? '' : ' ink-inert'}`
-      : (LEAVES[node.type === 'text' ? role : node.type] ?? 'ink-text');
-  return [ink(cls, text)];
+  return pieces;
 };
 
 /** Colours a whole message. */
-export const curly = (message, cst) => walk(message, cst(message), 'text');
+export const curly = (message, cst) => walk(message, cst(message));
 
 /* An example ---------------------------------------------------------------
  *

@@ -45,7 +45,9 @@ specification's own examples, and a colouring that dropped, doubled or
 mis-escaped one would not fail the build — it would print a message the
 specification does not spell, and a reader would copy it. The page list is held
 too, so a page added to `build.mjs` and not to the test fails rather than
-going unchecked.
+going unchecked. The suite also colours a message nested deeper than a call
+can recurse, and holds the pieces to the message and to eight boxes deep (see
+*Colour*).
 
 The **Site tests** workflow (`.github/workflows/tests-site.yml`) runs them on
 every branch that touches one of the sources above. The **Site** workflow runs
@@ -70,6 +72,13 @@ them as markup, `playground.js` builds them as nodes. That is the whole of the
 difference between a page and the one page that runs, which is why an example
 in the specification is drawn exactly as the same message typed into the
 playground.
+
+A placeholder is boxed in a piece of its own down to eight levels, the depth
+every implementation resolves (section 13 of the specification); one nested
+deeper is drawn in the box of the one holding it, its braces and keys coloured
+as ever. So neither the markup nor the playground nests deeper than eight
+boxes however deep the message does, and the walk runs on a stack of its own
+rather than on the call stack.
 
 A Curly message is coloured by the format's own parser: `cst()` of the pinned
 package, and so the tree [`CST.md`](../CST.md) specifies. The walk emits one

@@ -61,8 +61,15 @@ const el = (tag, className, text) => {
   return node;
 };
 
+// Appended one at a time: a message holds more nodes than a call can be
+// spread over.
+const appendEach = (parent, children) => {
+  for (const child of children) parent.append(child);
+  return parent;
+};
+
 const fill = (parent, children) => {
-  parent.replaceChildren(...children);
+  parent.replaceChildren(appendEach(document.createDocumentFragment(), children));
 };
 
 // A field that holds JSON, read as what it holds: empty is nothing passed, and
@@ -131,11 +138,7 @@ const showParams = (params) => {
 // holds nothing the reader did not type.
 const draw = (pieces) =>
   pieces.map((piece) => {
-    if (piece.nodes) {
-      const box = el('span', piece.cls);
-      box.append(...draw(piece.nodes));
-      return box;
-    }
+    if (piece.nodes) return appendEach(el('span', piece.cls), draw(piece.nodes));
     return piece.cls ? el('span', piece.cls, piece.text) : document.createTextNode(piece.text);
   });
 
