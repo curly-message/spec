@@ -187,6 +187,10 @@ differently.**
   playground can meet — in behavior, types or cost — or a gap in a
   repository's own checks. A nit, a matter of taste, or friction of the
   agent's own tooling or environment is neither; mention it in chat at most.
+  A defect in a package outside the `curly-message` organization (a dependency,
+  a runtime, a host library) gets no issue in the shared tracker: it is
+  mentioned in chat, and under `## Notes` of the PR that met it where one is
+  opened.
 
 ## 4. Verify and review
 
@@ -373,6 +377,10 @@ released after its dependent forces another release of the dependent.
 - Title ≤ 70 chars, describing the overarching scope. Body: a short summary,
   what was tested (real results), and the linked issue via closing keywords
   (`Closes curly-message/spec#N`).
+- **An issue is closed by its full name.** The tracker lives in `spec`, so a
+  PR or commit in another repository closes one with
+  `Closes curly-message/spec#N`: a bare `#N` names an issue of the
+  repository it is written in.
 - **Keep PR meta in lockstep with the branch.** After every push, re-check
   that the title, summary, test results and scope still match the diff.
   Drift is a defect, not a follow-up.
