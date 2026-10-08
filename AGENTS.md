@@ -166,9 +166,13 @@ differently.**
   where it ends with the PR. Once reproduced, a small fix that decides
   nothing gets a PR stacked on the current branch, not one after the current
   PR: its branch starts at the current branch's tip, its PR targets that
-  branch, and it goes through the whole cycle with the stack. The stack
-  merges into `main` bottom first; as each PR lands, the next is retargeted
-  to `main` and rebased onto it. Its branch starts from `main` only where the
+  branch, and it goes through the whole cycle with the stack. The stack is a
+  native GitHub stack: the first follow-up creates it from the current PR and
+  its own (`gh stack`, or `POST /repos/{owner}/{repo}/stacks` with the PR
+  numbers bottom first), and each later one is added on top
+  (`POST .../stacks/{number}/add`). It merges into `main` bottom first;
+  after each merge, the next PR targets `main` and is rebased onto it — by
+  hand where GitHub has not done so. Its branch starts from `main` only where the
   finding lies in another repository, or no branch is in flight. Anything
   larger, or anything the user
   decides, gets an issue in the
