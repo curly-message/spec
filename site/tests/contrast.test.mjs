@@ -1,4 +1,4 @@
-// Code keeps its contrast inside a placeholder.
+// Code keeps its contrast, inside a placeholder and out of one.
 //
 // A message is drawn over the box a placeholder is shaded with, and the box is
 // laid over a code block, on a page and in the playground alike. Every ink of
@@ -6,15 +6,21 @@
 // inside a box adds no shade of its own, so one box is the deepest ground
 // there is.
 //
-// Both are read from the tokens and from the one rule that draws a box inside
-// a box. Which part a rule draws in which ink, and what a browser paints, are
-// not checked here.
+// Outside a placeholder, what is set on a code block's surface has to hold the
+// same on the surface itself: each part a worked example's prose and the other
+// languages are scanned into, the stand-in the playground's output shows for
+// the empty string, and inline code.
+//
+// The inks are read from the tokens, and what is set on the surface from the
+// rules that colour it, as is the one rule that draws a box inside a box. What
+// else a rule draws, and what a browser paints, are not checked here.
 
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
 const css = (await readFile(new URL('../style.css', import.meta.url), 'utf8')).replace(/\/\*[\s\S]*?\*\//g, '');
+const highlighter = await readFile(new URL('../highlight.js', import.meta.url), 'utf8');
 
 const declarations = (block) =>
   Object.fromEntries(block.split(';').map((declaration) => declaration.split(/:(.*)/s).map((part) => part.trim())).filter(([property, value]) => property && value));
@@ -24,6 +30,11 @@ const dark = { ...light, ...declarations(css.match(/@media \(prefers-color-schem
 
 // The base and every ink but the box's own shade and edge.
 const inks = ['--base', ...Object.keys(light).filter((name) => name.startsWith('--ink-') && !name.startsWith('--ink-ph'))];
+
+const onSurface = [...new Set(highlighter.match(/'tok-[a-z-]+'/g).map((name) => `.${name.slice(1, -1)}`)), '#output.empty', ':not(pre) > code'];
+
+// Each rule as the selectors it lists and what it declares.
+const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, block]) => [selector.split(',').map((one) => one.replace(/\s+/g, ' ').trim()), declarations(block)]);
 
 const rgba = (value) => {
   const hex = value.match(/^#([\da-f]{6})$/i);
@@ -55,12 +66,26 @@ for (const [theme, palette] of [['light', light], ['dark', dark]]) {
       assert.ok(ratio >= 4.5, `${name} ${palette[name]} in a placeholder: ${ratio.toFixed(2)}:1`);
     }
   });
+
+  test(`what is set on a code block holds 4.5:1 on it, ${theme}`, () => {
+    const surface = rgba(palette['--surface']);
+    for (const selector of onSurface) {
+      const colours = rules.filter(([selectors]) => selectors.includes(selector)).map(([, block]) => block.color).filter(Boolean);
+      assert.ok(colours.length, `no rule colours ${selector}`);
+      for (const colour of colours) {
+        const token = colour.match(/^var\((--[\w-]+)\)$/)?.[1];
+        assert.ok(token in palette, `${selector} is coloured ${colour}, not with a token`);
+        const ratio = contrast(over(rgba(palette[token]), surface), surface);
+        assert.ok(ratio >= 4.5, `${selector} in ${token} ${palette[token]} on the surface: ${ratio.toFixed(2)}:1`);
+      }
+    }
+  });
 }
 
 test('a placeholder inside a placeholder paints no background', () => {
-  const nested = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-    .filter(([, selector]) => selector.split(',').some((one) => one.replace(/\s+/g, ' ').trim() === '.ink-ph .ink-ph'))
-    .flatMap(([, , block]) => Object.entries(declarations(block)).filter(([property]) => ['background', 'background-color', 'background-image'].includes(property)));
+  const nested = rules
+    .filter(([selectors]) => selectors.includes('.ink-ph .ink-ph'))
+    .flatMap(([, block]) => Object.entries(block).filter(([property]) => ['background', 'background-color', 'background-image'].includes(property)));
   assert.ok(nested.length, 'no rule sets the background of a placeholder inside a placeholder');
   for (const [property, value] of nested) assert.match(value, /^(none|transparent)$/, `${property}: ${value}`);
 });

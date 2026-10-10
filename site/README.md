@@ -181,6 +181,17 @@ both grounds, which the suite checks from the tokens. Only the outermost
 placeholder is shaded: one inside it is outlined instead, so code keeps that
 contrast however deep it sits.
 
+In the light theme a code block's surface is a shade darker than the ground,
+enough that the dimmed colour falls below 4.5:1 on it. So what a block draws
+quiet — the punctuation and the asides of the other languages, the arrow and
+the asides of a worked example, and the stand-in the playground's output shows
+for the empty string — takes a dimmed colour kept for the surface: a shade
+nearer the base in the light theme, the site's own, and the brand's dimmed
+colour in the dark, where it already holds. Inline code is set in the base
+wherever it stands, in a link too, whose underline still runs under it. The
+suite reads the rules that colour them and holds each to 4.5:1 on the surface,
+in both themes.
+
 The masthead carries the whole lockup on one line: the wordmark without its
 tagline, which is the file `brand/` prescribes at this size, then a hairline
 rule, then the tagline beside it rather than under it, broken over two lines so
