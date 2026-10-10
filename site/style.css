@@ -12,6 +12,12 @@
   --base: #14161a;
   --dim: #6b7079;
   --theme: #ff4365;
+  /* The dimmed colour where text is set on the surface. In the light theme it
+   * is the site's own, a shade nearer the base, so text there holds the 4.5:1
+   * the dimmed colour holds on the ground; in the dark theme it is the
+   * brand's, which already holds. It is drawn on the bare surface only, never
+   * inside a placeholder. */
+  --dim-on-surface: #636870;
 
   --display: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --body: "Literata", Georgia, "Times New Roman", serif;
@@ -41,6 +47,7 @@
     --base: #f5f5f3;
     --dim: #8a8f98;
     --theme: #f2a61a;
+    --dim-on-surface: #8a8f98;
 
     --ink-brace: #ff8095;
     --ink-key: #79b8f3;
@@ -430,7 +437,11 @@ code {
   font-size: 0.86em;
 }
 
+/* Inline code is set in the base wherever it stands: in the light theme, the
+ * dimmed colour and the theme colour it would take from what holds it fall
+ * below 4.5:1 on the surface, and a link keeps its underline under it. */
 :not(pre) > code {
+  color: var(--base);
   background: var(--surface);
   border: 1px solid var(--hairline);
   border-radius: 4px;
@@ -526,18 +537,18 @@ pre code {
 }
 
 .tok-punct {
-  color: var(--dim);
+  color: var(--dim-on-surface);
 }
 
 .tok-note {
-  color: var(--dim);
+  color: var(--dim-on-surface);
   font-style: italic;
 }
 
 /* The pivot of a worked example: what the line on its left makes of what it
  * was given. It is structure rather than content, so it is drawn quiet. */
 .tok-arrow {
-  color: var(--dim);
+  color: var(--dim-on-surface);
   font-weight: 600;
 }
 
@@ -927,7 +938,7 @@ body.playground .notes {
 }
 
 #output.empty {
-  color: var(--dim);
+  color: var(--dim-on-surface);
   font-style: italic;
 }
 
