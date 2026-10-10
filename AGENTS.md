@@ -173,7 +173,10 @@ differently.**
   numbers bottom first), and each later one is added on top
   (`POST .../stacks/{number}/add`). It merges into `main` bottom first;
   after each merge, the next PR targets `main` and is rebased onto it — by
-  hand where GitHub has not done so. Its branch starts from `main` only where the
+  hand where GitHub has not done so — and merges only once the runs on its
+  new head are green. A branch force-pushed in a stack is followed by a
+  rebase of each PR above it onto the one below it, bottom up, before
+  anything else is pushed to them. Its branch starts from `main` only where the
   finding lies in another repository, or no branch is in flight. Anything
   larger, or anything the user
   decides, gets an issue in the
@@ -249,7 +252,9 @@ change goes through this cycle:
 
 The user decides when a PR merges; the cycle decides when it is ready to ask.
 A PR is offered for merge only once the whole cycle ran on its final head and
-CI is green. The offer lists each step with its outcome — the design check,
+CI is green: every run on that head finished and passed. A head with no test
+run is green only where it touches none of a workflow's paths; a PR with a
+merge conflict, or retargeted with no push since, runs nothing. The offer lists each step with its outcome — the design check,
 each review round and what it found, the run where it is used (or why it does
 not apply), CI — and names any step not run.
 
@@ -374,9 +379,11 @@ released after its dependent forces another release of the dependent.
 
 ## 8. PRs
 
-- **Every branch headed for `main` gets a PR**, opened once it is pushed and
-  green, without asking. Keep it narrowly scoped; link out-of-scope
-  follow-ups (§3) under `## Notes`.
+- **Every branch headed for `main` gets a PR**, opened as soon as it is
+  pushed, without asking: each push to its head runs the tests of what it
+  touches, on the head merged with its base as it stands then. A branch with
+  no PR runs them by hand (`workflow_dispatch`). Keep it narrowly scoped;
+  link out-of-scope follow-ups (§3) under `## Notes`.
 - Title ≤ 70 chars, describing the overarching scope. Body: a short summary,
   what was tested (real results), and the linked issue via closing keywords
   (`Closes curly-message/spec#N`).
@@ -560,7 +567,11 @@ imported here so they load automatically:
 Its CI:
 
 - `tests.yml`: the suite on each supported Node version × ubuntu, macOS,
-  Windows, plus a leg each on Bun and Deno, plus lint without `--fix`.
+  Windows, plus a leg each on Bun and Deno, plus lint without `--fix`. It
+  runs on every pull request whatever its base (no `branches` filter, so a
+  stacked one is tested, and a fork's is once approved), on a push to `main`
+  and by hand. A workflow filtered by path is never a required check: one it
+  skips stays pending and blocks the merge.
 - `bench.yml`: the benchmark of the PR against its base, posted as a comment;
   `bench-label.yml` re-runs it when `bench-accepted` changes.
 - A publish workflow per package: trusted publishing, with `release` as the

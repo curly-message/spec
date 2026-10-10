@@ -1,10 +1,11 @@
 name: Site tests
 
 on:
-  push:
-    # Every branch: the Site workflow runs the same tests before it deploys,
-    # but only on main, which is too late to keep a change from being merged.
-    branches: ['**']
+  # A pull request from a fork pushes nothing here, so the tests run on the
+  # pull request, whatever its base, which tests a stacked one too. main is
+  # not watched: the Site workflow runs the same tests there before it
+  # deploys. A branch with no pull request runs by hand.
+  pull_request:
     paths:
       - site/**
       # The pages are rendered from these, so a change to one changes what the
