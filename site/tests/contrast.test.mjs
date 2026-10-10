@@ -9,7 +9,8 @@
 // Outside a placeholder, what is set on a code block's surface has to hold the
 // same on the surface itself: each part a worked example's prose and the other
 // languages are scanned into, the stand-in the playground's output shows for
-// the empty string, and inline code.
+// the empty string, and inline code. So does the skip link, which is drawn on
+// the surface too.
 //
 // The inks are read from the tokens, and what is set on the surface from the
 // rules that colour it, as is the one rule that draws a box inside a box. What
@@ -31,7 +32,7 @@ const dark = { ...light, ...declarations(css.match(/@media \(prefers-color-schem
 // The base and every ink but the box's own shade and edge.
 const inks = ['--base', ...Object.keys(light).filter((name) => name.startsWith('--ink-') && !name.startsWith('--ink-ph'))];
 
-const onSurface = [...new Set(highlighter.match(/'tok-[a-z-]+'/g).map((name) => `.${name.slice(1, -1)}`)), '#output.empty', ':not(pre) > code'];
+const onSurface = [...new Set(highlighter.match(/'tok-[a-z-]+'/g).map((name) => `.${name.slice(1, -1)}`)), '#output.empty', ':not(pre) > code', '.skip'];
 
 // Each rule as the selectors it lists and what it declares.
 const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, block]) => [selector.split(',').map((one) => one.replace(/\s+/g, ' ').trim()), declarations(block)]);
