@@ -262,7 +262,9 @@ not apply), CI — and names any step not run.
   comparison measures its own build under the same row name.
   `bench/harness.mjs` measures them and is the same file in every repository
   (`lint` keeps one at its root for both workspaces): change every copy at
-  once.
+  once. A time row returns the function it times, which may return a promise
+  the harness awaits; a row that holds something open while it is measured, a
+  browser say, gives it back in its `close`.
 - **Counts and times.** A count (calls, instantiations) is deterministic and
   gates, so a count is something that should not grow — never one that grows
   with what the package legitimately holds, such as the cases of the set; a
