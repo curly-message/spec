@@ -435,9 +435,14 @@ blockquote strong {
 
 /* Code -------------------------------------------------------------------- */
 
+/* Code is drawn as written: in a table header it would otherwise take the
+ * header's capitals and spacing, and read as a name that is not the one to
+ * type. */
 code {
   font-family: var(--mono);
   font-size: 0.86em;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 /* Inline code is set in the base wherever it stands: in the light theme, the
