@@ -190,7 +190,9 @@ nearer the base in the light theme, the site's own, and the brand's dimmed
 colour in the dark, where it already holds. Inline code is set in the base
 wherever it stands, in a link too, whose underline still runs under it. So is
 the skip link, the one link drawn on the surface. The suite reads the rules
-that colour them and holds each to 4.5:1 on the surface, in both themes.
+that colour them and holds each to 4.5:1 on the surface, in both themes. Code
+is also drawn as written wherever it stands: in a table header, set in
+capitals, it keeps its own case and spacing.
 
 The masthead carries the whole lockup on one line: the wordmark without its
 tagline, which is the file `brand/` prescribes at this size, then a hairline

@@ -12,9 +12,14 @@
 // the empty string, and inline code. So does the skip link, which is drawn on
 // the surface too.
 //
+// Wherever code stands it is drawn as written. A table header is set in
+// capitals and spaced out, and code inside one would take both: `api` would
+// read API, which is not the name to type.
+//
 // The inks are read from the tokens, and what is set on the surface from the
-// rules that colour it, as is the one rule that draws a box inside a box. What
-// else a rule draws, and what a browser paints, are not checked here.
+// rules that colour it; the one rule that draws a box inside a box and the
+// rule every code element takes are read too. What else a rule draws, and what
+// a browser paints, are not checked here.
 
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -82,6 +87,12 @@ for (const [theme, palette] of [['light', light], ['dark', dark]]) {
     }
   });
 }
+
+test('code takes no case and no spacing from what holds it', () => {
+  const code = Object.assign({}, ...rules.filter(([selectors]) => selectors.includes('code')).map(([, block]) => block));
+  assert.equal(code['text-transform'], 'none');
+  assert.equal(code['letter-spacing'], 'normal');
+});
 
 test('a placeholder inside a placeholder paints no background', () => {
   const nested = rules
