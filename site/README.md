@@ -175,7 +175,11 @@ grounds. They are the site's and not the brand's — a mark is read at a glance
 and a message is read closely, so they are not answering the same question.
 Each is a token stated once per ground beside the rest, so a ground is still
 read from one place. The other languages are drawn in those same six, which is
-why adding them cost the page no colour.
+why adding them cost the page no colour. What a placeholder holds is drawn in
+five of them and the base, and each holds 4.5:1 over the placeholder's shade on
+both grounds, which the suite checks from the tokens. Only the outermost
+placeholder is shaded: one inside it is outlined instead, so code keeps that
+contrast however deep it sits.
 
 The masthead carries the whole lockup on one line: the wordmark without its
 tagline, which is the file `brand/` prescribes at this size, then a hairline

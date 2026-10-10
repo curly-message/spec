@@ -28,8 +28,9 @@
   --ink-key: #1d5c9e;
   --ink-modifier: #6f3aa8;
   --ink-option-key: #0d6553;
-  --ink-escape: #96580f;
+  --ink-escape: #8a510e;
   --ink-ph: rgb(20 22 26 / 7%);
+  --ink-ph-edge: color-mix(in srgb, var(--base) 32%, var(--surface));
 }
 
 @media (prefers-color-scheme: dark) {
@@ -462,6 +463,15 @@ pre code {
 .ink-ph {
   background: var(--ink-ph);
   border-radius: 3px;
+}
+
+/* A placeholder inside a placeholder adds no shade, so the code in it keeps
+ * the contrast it has in one, however deep it sits. Its edge shows where it
+ * starts and ends instead: opaque, so the edges of boxes on one line do not
+ * darken each other, and drawn as a shadow, so it moves no glyph. */
+.ink-ph .ink-ph {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--ink-ph-edge);
 }
 
 .ink-brace {
