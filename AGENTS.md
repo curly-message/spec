@@ -44,7 +44,7 @@ Tech stack — **ground truth, do not assume otherwise**:
 | Lint | ESLint flat config with `@stylistic`, run by a pre-commit hook | none |
 | Runtime dependencies | none | none shipped; the playground runs the parser the lockfile pins |
 | Supported runtimes | Node 22+, Bun, Deno 2 | Node 22 to build; any current browser |
-| CI | `tests-conformance.yml` (calls `tests.yml`), `bench.yml` and `bench-label.yml`, `publish-conformance.yml` (calls `publish.yml`), `release-spec.yml` | `tests-site.yml`, `site.yml` |
+| CI | `tests-conformance.yml` (calls `tests.yml`), `bench-conformance.yml` (calls `bench.yml`) and `bench-label.yml`, `publish-conformance.yml` (calls `publish.yml`), `release-spec.yml` | `tests-site.yml`, `bench-site.yml` (calls `bench.yml`) and `bench-label.yml`, `site.yml` |
 
 Commands, run from the package directory:
 
@@ -53,8 +53,8 @@ Commands, run from the package directory:
 | `npm ci` | install from the lockfile |
 | `npm test` | `conformance/`: build, typecheck the source and the shipped declarations, lint, then the suite against the source and against the build; `site/`: build, then read the pages back |
 | `npm run test:bun`, `npm run test:deno` | `conformance/`: build, then the suite on Bun or Deno — what the runtime legs of CI run |
-| `npm run bench` | `conformance/`: build, then the benchmark (`bench/rows.mjs`) |
-| `npm run bench -- --compare <dir>` | `conformance/`: the same, beside the package checked out and built at `<dir>` — what `bench.yml` runs on a PR |
+| `npm run bench` | `conformance/`, `site/`: build, then the benchmark (`bench/rows.mjs`); the site's drives the playground in Chromium |
+| `npm run bench -- --compare <dir>` | `conformance/`, `site/`: the same, beside the package checked out and built at `<dir>` — what `bench.yml` runs on a PR, called by `bench-conformance.yml` or `bench-site.yml` |
 | `npm run lint:fix` | `conformance/`: fix what the formatting contract reports |
 | `npm run manifest` | `conformance/`: rewrite `index.json` from the fixtures |
 | `npm run serve` | `site/`: build and serve with a rebuild on change |
@@ -72,6 +72,7 @@ Repository map:
 | `conformance/bench/` | the rows of the benchmark, and the harness that measures them |
 | `conformance/RUNNER.md`, `conformance/defects.json` | what a runner in another language is held to, and the deliberately wrong adapters it is audited against |
 | `site/` | the site's generator, its two own pages and the playground |
+| `site/bench/` | the rows of the site's benchmark, and its copy of the harness |
 | `brand/` | the marks, under their own terms |
 
 ### Dependencies across the family
@@ -260,7 +261,7 @@ not apply), CI — and names any step not run.
 - **One harness, rows per package.** A package lists its rows in
   `bench/rows.mjs`, each reading the package's build, so each side of a
   comparison measures its own build under the same row name.
-  `bench/harness.mjs` measures them and is the same file in every repository
+  `bench/harness.mjs` measures them and is the same file in every package
   (`lint` keeps one at its root for both workspaces): change every copy at
   once. A time row returns the function it times, which may return a promise
   the harness awaits; a row that holds something open while it is measured, a

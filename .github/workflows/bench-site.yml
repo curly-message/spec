@@ -1,0 +1,28 @@
+name: Site benchmark
+
+on:
+  pull_request:
+    paths:
+      - site/**
+      - '!site/**/*.md'
+      - '!site/tests/**'
+      # The favicon and every page's masthead are drawn from these marks.
+      - brand/*.svg
+      - .github/workflows/bench-site.yml
+      - .github/workflows/bench.yml
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# A push supersedes the run of the one before it, so the comment shows the
+# head's table.
+concurrency:
+  group: bench-site-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  Benchmark:
+    uses: ./.github/workflows/bench.yml
+    with:
+      package: site

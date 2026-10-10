@@ -1,36 +1,24 @@
 name: Benchmark
 
-# The benchmark of a PR against its base, posted on the PR and in the job's
-# summary. It fails where the benchmark does: a row of the branch that fails,
-# or, unless the PR carries the `bench-accepted` label, a count that grew, a
-# row gone missing or changing kind, or a row that fails on the base.
-# `bench-label.yml` re-runs it when that label changes.
+# The benchmark of a PR against its base, for the package the workflow that
+# calls it names: `bench-conformance.yml` and `bench-site.yml`, each on a PR
+# that touches what its package measures. It posts the table on the PR and in
+# the job's summary, and fails where the benchmark does: a row of the branch
+# that fails, or, unless the PR carries the `bench-accepted` label, a count
+# that grew, a row gone missing or changing kind, or a row that fails on the
+# base. `bench-label.yml` re-runs it when that label changes.
 on:
-  pull_request:
-    paths:
-      - conformance/**
-      - '!conformance/**/*.md'
-      - '!conformance/tests/**'
-      - .github/workflows/bench.yml
-
-permissions:
-  contents: read
-  pull-requests: write
-
-# A push supersedes the run of the one before it, so the comment shows the
-# head's table.
-concurrency:
-  group: bench-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  workflow_call:
+    inputs:
+      package:
+        description: 'Package directory to benchmark'
+        required: true
+        type: string
 
 jobs:
   Benchmark:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        package: [conformance]
 
     steps:
       - name: Checkout the branch
@@ -56,10 +44,19 @@ jobs:
       # leaves rows that fail, which the label can accept.
       - name: Install and build
         env:
-          PACKAGE: ${{ matrix.package }}
+          PACKAGE: ${{ inputs.package }}
         run: |
           (cd "base/$PACKAGE" && npm ci --ignore-scripts && npm run build) || echo "::warning::The base did not install or build."
           (cd "change/$PACKAGE" && npm ci --ignore-scripts && npm run build)
+
+      # The site's rows drive the playground in the browser each side's
+      # lockfile pins. The system libraries it needs are installed once, with
+      # the branch's; the base's download is skipped when both pin the same.
+      - name: Install the browser
+        if: inputs.package == 'site'
+        run: |
+          (cd change/site && npx --no-install playwright-core install --with-deps chromium-headless-shell)
+          (cd base/site && npx --no-install playwright-core install chromium-headless-shell) || echo "::warning::The base has no browser to drive."
 
       # Read when the job runs rather than off the event, so a re-run sees a
       # label added since.
@@ -72,10 +69,10 @@ jobs:
 
       - name: Benchmark
         id: bench
-        working-directory: change/${{ matrix.package }}
+        working-directory: change/${{ inputs.package }}
         env:
           ACCEPTED: ${{ steps.labels.outputs.accepted }}
-          PACKAGE: ${{ matrix.package }}
+          PACKAGE: ${{ inputs.package }}
         run: |
           flags=()
           if [ "$ACCEPTED" = true ]; then flags+=(--accepted); fi
@@ -93,7 +90,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
           HEAD: ${{ github.event.pull_request.head.sha }}
-          PACKAGE: ${{ matrix.package }}
+          PACKAGE: ${{ inputs.package }}
         run: |
           marker="<!-- bench:$PACKAGE -->"
           body="$marker"$'\n'"$(cat "$RUNNER_TEMP/bench.md")"$'\n\n'"Measured on $HEAD."

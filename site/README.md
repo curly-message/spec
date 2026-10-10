@@ -148,6 +148,32 @@ link needs a server to resolve to its `index.html`:
 python3 -m http.server --directory _site 8000
 ```
 
+## Benchmark
+
+```sh
+npm run bench                       # builds, then measures _site/
+npm run bench -- --compare <dir>    # beside the site checked out and built at <dir>
+```
+
+[`bench/rows.mjs`](./bench/rows.mjs) lists what is measured: the size of each
+file the playground loads, and the time one keystroke takes in the playground
+holding a message of 2 000 placeholders — the parse, the colouring, the
+resolution and the layout the browser does for them, in Chromium through the
+`playwright-core` the lockfile pins. The fonts are not fetched, so the
+network is not timed, and an error the page throws fails the row rather than
+timing a keystroke that stopped short. `bench/harness.mjs` is the family's
+harness, the same file as `conformance/`'s.
+
+A keystroke's cost is not something any count shows: a layout that grows with
+the square of the placeholders takes as many passes, over as many boxes, as one
+that grows with them. So it is a time, and a time is never asserted: the
+**Site benchmark** workflow (`.github/workflows/bench-site.yml`) measures a PR
+that touches the site, or the marks in [`brand/`](../brand) its pages draw,
+beside its base, and a keystroke slower beyond the spread is flagged in the
+table it posts on the PR, for review, rather than failing it. Run locally, the
+benchmark needs the browser that version of `playwright-core` drives:
+`npx playwright-core install chromium-headless-shell`.
+
 ## Deploying
 
 The **Site** workflow (`.github/workflows/site.yml`) builds, checks and deploys

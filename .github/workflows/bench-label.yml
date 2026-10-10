@@ -1,8 +1,9 @@
 name: Benchmark label
 
-# Adding or removing the `bench-accepted` label re-runs the benchmark of the
-# PR's head, which reads the PR's labels when it runs. `pull_request_target`
-# gives this job a token that can re-run a workflow; it runs nothing of the PR.
+# Adding or removing the `bench-accepted` label re-runs each package's
+# benchmark of the PR's head, which reads the PR's labels when it runs.
+# `pull_request_target` gives this job a token that can re-run a workflow; it
+# runs nothing of the PR.
 on:
   pull_request_target:
     types: [labeled, unlabeled]
@@ -10,6 +11,14 @@ on:
 permissions:
   actions: write
   pull-requests: read
+
+# The job that joins the group last reads every run after every change of the
+# label before it, so an older job still watching has nothing left to re-run,
+# and two re-running one run would see the second refused. Other labels keep
+# groups of their own.
+concurrency:
+  group: bench-label-${{ github.event.pull_request.number }}-${{ github.event.label.name }}
+  cancel-in-progress: true
 
 jobs:
   Rerun:
@@ -29,21 +38,29 @@ jobs:
           # a failed call is returned, and every use of `latest` assigns it.
           latest() {
             sha=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" --jq .head.sha) || return
-            gh api "repos/$GITHUB_REPOSITORY/actions/workflows/bench.yml/runs?head_sha=$sha&event=pull_request" --jq '.workflow_runs[0].id // empty'
+            gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$1/runs?head_sha=$sha&event=pull_request" --jq '.workflow_runs[0].id // empty'
           }
-          id=$(latest)
-          if [ -z "$id" ]; then
-            echo "No benchmark ran on the PR's head: the PR touches nothing it measures."
-            exit 0
-          fi
-          # A run still going may have read the labels before the change.
-          gh run watch "$id" --repo "$GITHUB_REPOSITORY" > /dev/null || true
-          # A run started since, on a new head or on the same one against a
-          # moved base, reads the labels as they are now; re-running this one
-          # would cancel it and compare against the base this one read.
-          now=$(latest)
-          if [ "$now" != "$id" ]; then
-            echo "A newer benchmark run reads the labels itself."
-            exit 0
-          fi
-          gh api --method POST "repos/$GITHUB_REPOSITORY/actions/runs/$id/rerun" > /dev/null
+          # Every run is read before any is watched: one that starts while
+          # another is watched reads the labels itself.
+          declare -A ids
+          for workflow in bench-conformance.yml bench-site.yml; do
+            ids[$workflow]=$(latest "$workflow")
+          done
+          for workflow in bench-conformance.yml bench-site.yml; do
+            id=${ids[$workflow]}
+            if [ -z "$id" ]; then
+              echo "$workflow has no run on the PR's head to re-run."
+              continue
+            fi
+            # A run still going may have read the labels before the change.
+            gh run watch "$id" --repo "$GITHUB_REPOSITORY" > /dev/null || true
+            # A run started since, on a new head or on the same one against a
+            # moved base, reads the labels as they are now; re-running this
+            # one would cancel it and compare against the base this one read.
+            now=$(latest "$workflow")
+            if [ "$now" != "$id" ]; then
+              echo "A newer run of $workflow reads the labels itself."
+              continue
+            fi
+            gh api --method POST "repos/$GITHUB_REPOSITORY/actions/runs/$id/rerun" > /dev/null
+          done

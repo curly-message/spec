@@ -1,0 +1,26 @@
+name: Conformance benchmark
+
+on:
+  pull_request:
+    paths:
+      - conformance/**
+      - '!conformance/**/*.md'
+      - '!conformance/tests/**'
+      - .github/workflows/bench-conformance.yml
+      - .github/workflows/bench.yml
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# A push supersedes the run of the one before it, so the comment shows the
+# head's table.
+concurrency:
+  group: bench-conformance-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  Benchmark:
+    uses: ./.github/workflows/bench.yml
+    with:
+      package: conformance
