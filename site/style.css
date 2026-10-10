@@ -455,12 +455,13 @@ pre code {
 }
 
 /* What a message is drawn in, on a page and in the playground alike: one
- * class per part the parser found, so the two can never disagree. */
+ * class per part the parser found, so the two can never disagree. A
+ * placeholder broken over lines stays open at the break: cloning its box
+ * there made the playground's layout grow with the square of its
+ * placeholders. */
 .ink-ph {
   background: var(--ink-ph);
   border-radius: 3px;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
 }
 
 .ink-brace {
