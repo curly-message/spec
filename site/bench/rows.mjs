@@ -33,10 +33,8 @@ const serve = () =>
     server.listen(0, '127.0.0.1', () => resolve(server));
   });
 
-// What each run of the keystroke row holds open, closed by its `close`. Both
-// sides of a comparison run it at once, and import one module when they are
-// one package, so a run keeps its own rather than one slot the other
-// overwrites.
+// What the keystroke row's run holds open, given back by its `close`, the
+// last opened first.
 const held = [];
 
 // The playground holding a message of PLACEHOLDERS placeholders. A run is one

@@ -69,10 +69,10 @@ Repository map:
 | `conformance/fixtures/`, `conformance/schema/`, `conformance/index.json` | the set: fixtures pinned to sections, their JSON Schema, the manifest |
 | `conformance/src/` | the JavaScript runner and the loaders the package exports |
 | `conformance/bin/` | the `curly-message-conformance` command and the manifest writer |
-| `conformance/bench/` | the rows of the benchmark, and the harness that measures them |
+| `conformance/bench/` | the rows of the benchmark, the harness that measures them, and `check/`, the rows the harness is checked on |
 | `conformance/RUNNER.md`, `conformance/defects.json` | what a runner in another language is held to, and the deliberately wrong adapters it is audited against |
 | `site/` | the site's generator, its two own pages and the playground |
-| `site/bench/` | the rows of the site's benchmark, and its copy of the harness |
+| `site/bench/` | the rows of the site's benchmark, and its copies of the harness and of `check/` |
 | `brand/` | the marks, under their own terms |
 
 ### Dependencies across the family
@@ -270,12 +270,17 @@ not apply), CI — and names any step not run.
   (`lint` keeps one at its root for both workspaces): change every copy at
   once. A time row returns the function it times, which may return a promise
   the harness awaits; a row that holds something open while it is measured, a
-  browser say, gives it back in its `close`.
+  browser say, gives it back in its `close`. Each process that measures a row
+  calls its `run` once, so what a row sets up is paid in each. Beside the
+  harness, `bench/check/` holds rows that fail wherever two measurements share
+  a process, and is the same in every package too; each `bench.yml` runs the
+  harness on them before the benchmark.
 - **Counts and times.** A count (calls, instantiations) is deterministic and
   gates, so a count is something that should not grow — never one that grows
   with what the package legitimately holds, such as the cases of the set; a
   time is measured base against change on one machine in one
-  session, alternating over repeated samples, and reported with its spread.
+  session, each side in processes of its own taking samples by turn, and
+  reported with its spread.
   The spread leaves out the lowest and highest quarter of the samples, rounded
   down, so a busy neighbour neither hides nor flags a change.
 - **CI runs it on every PR** that touches what it measures and posts the
