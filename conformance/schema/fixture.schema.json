@@ -124,7 +124,8 @@
             "read-over-limit",
             "conversion-over-limit",
             "nesting-at-limit",
-            "nesting-over-limit"
+            "nesting-over-limit",
+            "nesting-chain-over-limit"
           ]
         }
       }

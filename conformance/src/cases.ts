@@ -100,6 +100,16 @@ const reads = '{{v:eq; nomatch:X; default:ok;}}';
 // nesting limit refuses is visible as the chain it takes.
 const nest = (levels: number): string => (levels <= 1 ? '{{v; a:settled; default:fallback;}}' : `{{v; a:${nest(levels - 1)};}}`);
 
+// How many levels past the nesting limit the chain construction nests: far
+// enough that a walk recursing once per level overflows a default call stack
+// on some hosts, Node's among them, though not on every one.
+const CHAIN = 20000;
+
+// A message nesting the stated number of levels, each the inline default of
+// the one around it. The payload names none of the keys, so every level takes
+// its chain down to the next, and the innermost writes the text.
+const chain = (levels: number) => `${'{{v; default:'.repeat(levels)}x${'}}'.repeat(levels)}`;
+
 const limit = (code: 'nesting-limit' | 'output-limit' | 'read-limit', origin: ExpectedReport['origin'], declared: number): Expectation['reports'][number] => ({ code, origin, id: ID, limit: declared });
 
 const generators: Record<Generator, (limits: Limits) => Prepared> = {
@@ -144,6 +154,13 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
     // defect of the message: it takes its fallback chain, and every level
     // around it selects the option that holds it.
     expected: { output: 'fallback', reports: [limit('nesting-limit', 'message', nesting)] },
+  }),
+  'nesting-chain-over-limit': ({ nesting }) => ({
+    input: { message: chain(nesting + CHAIN), payload: {}, id: ID },
+    // A refused placeholder takes its chain, whose last link is its inline
+    // default, so each level past the limit is refused and reported once and
+    // the walk carries on to the innermost text.
+    expected: { output: 'x', reports: Array.from({ length: CHAIN }, () => limit('nesting-limit', 'message', nesting)) },
   }),
 };
 

@@ -50,6 +50,12 @@
       "description": "A placeholder nested deeper than the implementation resolves is a message error: it takes its fallback chain, the walk carries on, and nesting-limit is reported once with origin message.",
       "section": "13",
       "generate": "nesting-over-limit"
+    },
+    {
+      "id": "limits/nesting-chain-over-limit",
+      "description": "No limit raises: a chain of inline defaults nested twenty thousand levels past the nesting limit resolves to its innermost text, each refused placeholder taking its chain and reporting nesting-limit once with origin message.",
+      "section": "13",
+      "generate": "nesting-chain-over-limit"
     }
   ]
 }

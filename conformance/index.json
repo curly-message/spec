@@ -66,7 +66,7 @@
       "path": "fixtures/limits.json",
       "level": "core",
       "section": "13",
-      "cases": 8
+      "cases": 9
     },
     {
       "path": "fixtures/nesting.json",

@@ -104,7 +104,7 @@ Three reasons leave a case out, and no others:
 
 Section 13 states minima and requires an implementation to document what it
 permits, so a case at a limit cannot be written out: the runner builds it from
-the limits the adapter declared. README.md gives the eight constructions, the
+the limits the adapter declared. README.md gives the nine constructions, the
 message and payload each builds, and what each expects. A runner builds them
 from the adapter's own numbers, not from section 13's minima; an
 implementation that permits more is exercised at what it documents.
@@ -116,6 +116,13 @@ own text and so costs no reading; the read construction hands over a long
 value the placeholder selects nothing from, so almost nothing of it reaches
 the output. A construction that spent two budgets would fail an implementation
 for the limit the case was not about.
+
+The nesting limit is built once more, far past it. A refused placeholder takes
+its fallback chain, and the chain's last link is its inline default, whose
+placeholders are refused in turn. Section 13 has no limit raise, so a chain of
+them twenty thousand levels past the limit resolves like any other message. The
+runner builds that message without recursion of its own, and so should a runner
+in another language.
 
 ## Executing a case
 
