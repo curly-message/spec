@@ -202,6 +202,7 @@ budget on never reaches the output.
 | `conversion-over-limit` | `{{v; default:D}}`, with `v` a `nodes` value of `C + 1`. | `D` and one `unserializable-value` report of origin `payload`: a serialization that reaches the limit describes nothing, so the placeholder takes the chain. |
 | `nesting-at-limit` | `N` placeholders, each selecting the option that holds the next; the innermost is `{{v; a:settled; default:fallback;}}`. `v` holds `a`. | `settled`, no reports. |
 | `nesting-over-limit` | The same nesting one level deeper. | `fallback` and one `nesting-limit` report of origin `message`: the innermost placeholder is refused and takes its fallback chain, and every level around it selects the option that holds it. |
+| `nesting-chain-over-limit` | `N + 20000` placeholders `{{v; default:`, each the inline default of the one before it, around `x`, then as many `}}`. The payload is empty. | `x` and 20 000 `nesting-limit` reports of origin `message`: every level takes its chain, whose last link is the next, and each one past the limit is refused and reported once. No limit raises, so the chain resolves however deep it is; a walk that recurses once per level overflows at this depth on some hosts, Node's default stack among them, though not on every one. |
 
 An adapter whose reports carry a `limit` is held to the declared limit on the
 `output-limit`, `read-limit` and `nesting-limit` reports.

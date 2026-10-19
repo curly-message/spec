@@ -112,4 +112,14 @@ describe('generated cases', () => {
     expect(outcome).toEqual({ ok: true });
     expect(build('nesting-over-limit', () => ({ output: 'settled', reports: [] })).outcome).toEqual({ ok: false, reason: 'The output differs.', expected: 'fallback', actual: 'settled' });
   });
+
+  it('nesting-chain-over-limit nests inline defaults 20 000 levels past N and expects the innermost text with a nesting-limit report for each', () => {
+    const refused = { code: 'nesting-limit', origin: 'message', id: 'limits', limit: 3 } as const;
+    const { input, outcome } = build('nesting-chain-over-limit', () => ({ output: 'x', reports: Array.from({ length: 20000 }, () => refused) }));
+
+    expect(input).toEqual({ message: `${'{{v; default:'.repeat(20003)}x${'}}'.repeat(20003)}`, payload: {}, id: 'limits' });
+    expect(outcome).toEqual({ ok: true });
+    expect(build('nesting-chain-over-limit', () => ({ output: 'x', reports: Array.from({ length: 19999 }, () => refused) })).outcome).toMatchObject({ ok: false, reason: 'Expected 20000 reports, got 19999 reports.' });
+    expect(build('nesting-chain-over-limit', () => { throw new RangeError('Maximum call stack size exceeded'); }).outcome).toEqual({ ok: false, reason: 'The adapter raised.', expected: 'x', actual: 'Maximum call stack size exceeded' });
+  });
 });

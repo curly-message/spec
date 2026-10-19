@@ -1,5 +1,18 @@
 # Changelog
 
+### 4.2.0 (Unreleased)
+
+The set gains one construction, a chain of inline defaults nested far past the
+nesting limit, which an implementation resolves however deeply it nests.
+
+* `limits/nesting-chain-over-limit`, built from the adapter's declared nesting
+  limit like the other limit cases, nests `{{v; default:` twenty thousand levels
+  past it around the text `x`. Section 13 says no limit raises: each refused
+  placeholder takes its chain, which ends at its inline default, so the message
+  resolves to `x` with twenty thousand `nesting-limit` reports of origin
+  `message`, one per refused level. The generator is `nesting-chain-over-limit`,
+  added to the schema's enum and to the exported `Generator` type.
+
 ## 4.1.0
 
 The set gains the plural selections of revision 3.1.0 of the specification,
