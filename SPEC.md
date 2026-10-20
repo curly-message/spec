@@ -145,6 +145,16 @@ section converts it to. What a host shows in the place of a message its
 catalogue does not hold is the host's own, which section 1 declines along with
 the catalogue itself.
 
+The host's undefined is ECMAScript's word for nothing, and a host with a single
+null has no second value to spell it with. There absence is an entry the
+mapping does not hold, an argument the caller omitted, or a stand-in the
+implementation documents for a place where a value must be written, and that is
+what this document means by the host's undefined. The host's null stays a value
+wherever this document holds it present — a message, a payload entry, a
+wrapper's `value`, a property a layer names (sections 4.1, 9.2, 11.2) — so a
+payload entry holding it is present. Where the host's functions answer nothing
+with that null, it is also section 11's answer that is nothing at all.
+
 Everything the format carries is text. A payload value MAY be of any host type,
 but it reaches a modifier, an option comparison and the output as text, never at
 the type it was authored with.
@@ -773,7 +783,9 @@ conversion: a structured answer serializes rather than collapsing to whatever
 the host calls an object, so a modifier writes the text a payload value of that
 shape would. Neither an answer no conversion can describe nor an answer that is
 nothing at all is an answer, and the placeholder takes the fallback chain
-(section 10) — the treatment a value that is not a value gets.
+(section 10) — the treatment a value that is not a value gets. An answer that is
+nothing at all is the host's undefined, and on a host whose functions answer
+nothing with their null, that null (section 4).
 
 That text is **data**, like a payload value: it is emitted as it stands, never
 parsed and never unescaped (sections 5, 7, 14.1). A modifier that builds its
