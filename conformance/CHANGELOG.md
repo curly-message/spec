@@ -22,6 +22,12 @@ ECMAScript does with it. Nothing a message resolves to changes.
   writes `{"unit":"kg","value":1}`, on which insertion and code-point order
   agree, and still pins that an object owning a key beside the wrapper keys
   serializes whole. *Writing a fixture* in the README gains the rule.
+* `comparisons/infinity-compares` leaves the set. It wrote an infinity as the
+  text `Infinity`, which is ECMAScript's literal: whether a text converts to an
+  infinity is the host's numeric conversion (section 11.2), and a host that
+  reads no such literal takes the chain over it. That a numeric comparison
+  still compares an infinity stays the specification's rule; no case states it
+  in one host's spelling.
 
 ## 4.1.0
 

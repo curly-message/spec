@@ -552,18 +552,6 @@
       }
     },
     {
-      "id": "comparisons/infinity-compares",
-      "description": "A comparison over an infinity still selects, though no formatting modifier could format it.",
-      "section": "11.2",
-      "message": "{{v:gt; 5:X}}",
-      "payload": {
-        "v": "Infinity"
-      },
-      "expected": {
-        "output": "X"
-      }
-    },
-    {
       "id": "comparisons/lte-equal-key-selects",
       "description": "lte selects an option whose key equals the value.",
       "section": "11.1",
