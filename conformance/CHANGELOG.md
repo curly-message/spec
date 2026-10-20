@@ -3,7 +3,10 @@
 ### 4.2.0 (Unreleased)
 
 The set gains one construction, a chain of inline defaults nested far past the
-nesting limit, which an implementation resolves however deeply it nests.
+nesting limit, which an implementation resolves however deeply it nests. It
+also stops pinning what the specification leaves to the host, pins what it
+settles and no case stated, and says what a runner on a host other than
+ECMAScript does with it. Nothing a message resolves to changes.
 
 * `limits/nesting-chain-over-limit`, built from the adapter's declared nesting
   limit like the other limit cases, nests `{{v; default:` twenty thousand levels
@@ -12,6 +15,13 @@ nesting limit, which an implementation resolves however deeply it nests.
   resolves to `x` with twenty thousand `nesting-limit` reports of origin
   `message`, one per refused level. The generator is `nesting-chain-over-limit`,
   added to the schema's enum and to the exported `Generator` type.
+* `resolution/wrapper-near-miss-is-value` wrote its object's members as
+  `value`, then `unit`, and expected them serialized in that order, which is
+  ECMAScript's insertion order: a host that writes a mapping's members sorted
+  failed it for a serialization section 4 leaves to the host. The case now
+  writes `{"unit":"kg","value":1}`, on which insertion and code-point order
+  agree, and still pins that an object owning a key beside the wrapper keys
+  serializes whole. *Writing a fixture* in the README gains the rule.
 
 ## 4.1.0
 
