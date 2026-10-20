@@ -42,6 +42,16 @@ ECMAScript does with it. Nothing a message resolves to changes.
   `intl/ago-negative-under-half-second` pins the sign: a delta of -499 under
   `numeric: 'always'` asks for `[-0.0, "second"]`, written so that a decoder
   reading `-0` as an integer keeps the sign. RUNNER.md says so.
+* The defect `tree-unit-changed` declares a unit other than the adapter's own.
+  It declared code points whatever the adapter counted in, which alters
+  nothing for an adapter counting code points, so on such a host the audit
+  never measured how its runner reads a misdeclared unit and called the
+  defect unreachable. A code-point adapter is now misdeclared as UTF-16, and
+  every other one as code points, as before; `defects.json` describes it so,
+  and RUNNER.md says a defect is realized as it reads for the adapter in
+  hand. The audit's example in the README and RUNNER.md lists the defects
+  `missed`, where it listed every one not `caught`, the unreachable among
+  them.
 
 ## 4.1.0
 
