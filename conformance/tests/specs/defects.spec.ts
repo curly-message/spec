@@ -66,16 +66,16 @@ const TREES: Record<string, ExpectedNode[]> = {
   '\\\u{1F600}': [{ type: 'escape', text: '\\\u{1F600}', cancels: false }],
 };
 
-// The tree the implementation answers with, in UTF-16 code units, laid out
-// from the same sketch the case expects: a span written a second time by hand
-// would only be a second chance to get one wrong.
-const built = (sketches: ExpectedNode[], from: number): Node[] => {
+// The tree the implementation answers with, in the unit it counts in, laid
+// out from the same sketch the case expects: a span written a second time by
+// hand would only be a second chance to get one wrong.
+const built = (sketches: ExpectedNode[], from: number, length: (text: string) => number): Node[] => {
   let at = from;
 
   return sketches.map((sketch) => {
     const start = at;
 
-    at += sketch.text.length;
+    at += length(sketch.text);
 
     return {
       type: sketch.type,
@@ -83,15 +83,17 @@ const built = (sketches: ExpectedNode[], from: number): Node[] => {
       end: at,
       ...sketch.name === undefined ? {} : { name: sketch.name },
       ...sketch.cancels === undefined ? {} : { cancels: sketch.cancels },
-      ...sketch.nodes ? { nodes: built(sketch.nodes, start) } : {},
+      ...sketch.nodes ? { nodes: built(sketch.nodes, start, length) } : {},
     };
   });
 };
 
-const CST = {
-  unit: 'utf-16',
-  parse: (message: string) => ({ type: 'message', start: 0, end: message.length, nodes: built(TREES[message], 0) }),
-} as const;
+const counting = (unit: 'utf-16' | 'code-point', length: (text: string) => number) => ({
+  unit,
+  parse: (message: string) => ({ type: 'message', start: 0, end: length(message), nodes: built(TREES[message], 0, length) }),
+});
+
+const CST = counting('utf-16', (text) => text.length);
 
 const trees: Fixture = {
   name: 'tree.json',
@@ -157,6 +159,12 @@ describe('audit', () => {
     const missed = audit(conforming(), { fixtures: SET }).filter(({ outcome }) => outcome !== 'caught');
 
     expect(missed).toEqual([]);
+  });
+
+  it('catches every defect of the catalogue with an adapter that counts its spans in code points', () => {
+    const codePoints = conforming({ cst: counting('code-point', (text) => [...text].length) });
+
+    expect(audit(codePoints, { fixtures: SET }).filter(({ outcome }) => outcome !== 'caught')).toEqual([]);
   });
 
   it('answers what the runner made of the defect beside what it expected', () => {
