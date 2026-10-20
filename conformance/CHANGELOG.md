@@ -1,5 +1,19 @@
 # Changelog
 
+### 4.1.1 (Unreleased)
+
+Nothing a message resolves to changes. The set stops pinning what the
+specification leaves to the host, pins what it settles and no case stated, and
+says what a runner on a host other than ECMAScript does with it.
+
+* `resolution/wrapper-near-miss-is-value` wrote its object's members as
+  `value`, then `unit`, and expected them serialized in that order, which is
+  ECMAScript's insertion order: a host that writes a mapping's members sorted
+  failed it for a serialization section 4 leaves to the host. The case now
+  writes `{"unit":"kg","value":1}`, on which insertion and code-point order
+  agree, and still pins that an object owning a key beside the wrapper keys
+  serializes whole. *Writing a fixture* in the README gains the rule.
+
 ## 4.1.0
 
 The set gains the plural selections of revision 3.1.0 of the specification,

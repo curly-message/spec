@@ -69,12 +69,12 @@
       "message": "{{v}}",
       "payload": {
         "v": {
-          "value": 1,
-          "unit": "kg"
+          "unit": "kg",
+          "value": 1
         }
       },
       "expected": {
-        "output": "{\"value\":1,\"unit\":\"kg\"}"
+        "output": "{\"unit\":\"kg\",\"value\":1}"
       }
     },
     {
