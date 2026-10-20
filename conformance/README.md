@@ -111,11 +111,11 @@ implementation's own modifier signature.
 | `upper` | The value with its ASCII letters uppercased. |
 | `echo` | The value, unchanged. |
 | `empty` | The empty string — an answer, not the absence of one. |
-| `nothing` | The host's nothing: no answer, so the placeholder takes the fallback chain (section 11). |
+| `nothing` | The host's nothing: what the implementation reads as an answer that is nothing at all — `undefined` in JavaScript — so the placeholder takes the fallback chain (section 11). |
 | `raise` | Nothing; it raises, and the failure must be contained (section 11.3). |
 | `default` | The default, read through the chain (section 10). |
 | `options` | The options in the order they were handed over, each `key=value`, joined by commas: `a=A,b=,c=c` (section 9.4). |
-| `props` | The props it received, each own property `name=value` with the value as JSON, sorted by name and joined by commas: `maximumFractionDigits=1,useGrouping=true` (sections 11.2, 11.3). |
+| `props` | The props it received, each own property `name=value` with the value written as ECMAScript's `JSON.stringify` writes it, sorted by name and joined by commas: `maximumFractionDigits=1,useGrouping=true` (sections 11.2, 11.3). That spelling is compact, writes a whole number without a fraction — `1`, not `1.0`, whatever type the implementation hands it on as — and escapes text as `JSON.stringify` does, which leaves `/` and text outside ASCII as they are. |
 | `locale` | The locale it received, or `none` where it received none. An empty locale answers empty. |
 | `object` | A plain object holding the value under `answer`, so the answer serializes (section 11): `{"answer":"X"}`. |
 
@@ -372,7 +372,7 @@ it is present, and `schema/defect.schema.json` describes the file.
 ```ts
 import { audit } from '@curly-message/conformance';
 
-const missed = audit(adapter).filter(({ outcome }) => outcome !== 'caught');
+const missed = audit(adapter).filter(({ outcome }) => outcome === 'missed');
 ```
 
 `audit` takes an adapter that passes the set, applies each defect to it in
@@ -404,6 +404,12 @@ application declared or derived converts as a string rather than as JSON is
 normative, but the string is the host's own, and a case that stated one would
 pin it on every other host. So the set pins the values that do serialize, and
 an implementation that reads section 4 too widely passes it.
+
+The order of an object's members is the host's as well: section 4 leaves the
+serialization to the host, and one host writes the members in the order they
+were inserted while another sorts them. So a case that serializes an object
+with several members writes them in an order both produce — sorted by code
+point, at every depth — in its inputs and in its expectation alike.
 
 The reference implementation is what the set is checked against before it
 lands, and the set is what the reference is checked against in turn. Where

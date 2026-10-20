@@ -39,6 +39,18 @@ targets, and is `curly-message-3` for version 3. A file whose `format` a runner
 does not know is a file it must refuse rather than skip: a set a runner could
 not read is not a set an implementation passed.
 
+A runner checks each file against the schema before it reads it. One on a host
+with no JSON Schema validator checks by hand what the schema states — the exact
+keys each object may hold, the members it requires, the type of each value, the
+values an enumeration or a constant allows, and the patterns, lengths and
+alternatives the schema adds — rather than taking on a dependency to run the
+set. It also refuses a file in which an object repeats a key: hosts' parsers
+differ over which of the two they keep, and the schema, which sees the object
+once it is parsed, cannot state it. A runner that reads the set from the
+release's archive, `conformance-<version>.zip`, and pins it by its digest
+checks the archive against the `sha256` the release notes state before it
+opens it.
+
 ## Decoding a case's inputs
 
 A case's inputs are JSON, and the format's data model (section 4) is not. Three
@@ -61,6 +73,28 @@ literal. A host with no notion of absence, or whose serialization never
 follows a reference twice, has its own answer for what stands in, and the set
 does not prescribe one.
 
+The adapter states its stand-in for `undefined`: the value its implementation
+reads as the caller having passed nothing. Where it states none, the runner
+leaves out whatever holds the tag — the entry of an object, or a message the
+caller then does not supply — which is what the specification makes of the
+host's undefined almost everywhere: an entry that holds it is absent, and a
+layer that holds it names nothing. A wrapper is the exception, because a
+wrapper owns at least one key (section 4.1): with its one member left out,
+`{ "value": { "$curly": "undefined" } }` is an empty object, which is a value.
+An implementation that reads a wrapper owning a member that holds nothing
+states a stand-in for it.
+
+A runner on a typed host may decode a case into a neutral value of its own —
+the kinds JSON spells, and a kind of its own for each tag — and have the
+adapter map that onto the implementation's types. The cases are measured on
+what the implementation answers, so the mapping is the adapter's business as
+the rest of its shape is; the comparison is the runner's, and does not change.
+
+A case's `messageId` is any JSON value, because no step of resolution reads it
+(section 4). An implementation whose ids are text hands any other shape on as
+no id. Nothing observes the difference: an expectation names an id only as
+text, so a case whose id is of another shape leaves it out of what it expects.
+
 ## The adapter
 
 The adapter is the implementation's side of the contract, and its shape in
@@ -75,6 +109,13 @@ what a runner reads before it runs anything:
 * `cst`, where the adapter supplies it, is the tree of [`CST.md`](../CST.md):
   the `unit` its spans are counted in, and the call that produces one. An
   adapter that supplies none has the tree cases left out.
+
+A runner reads the optional claims loosely: an `unexpressible` or a `cst` that
+an adapter on a typed host cannot leave out, and states empty — no properties,
+no tree — is no such claim. `levels` and `limits` are not optional, and an
+answer is not a claim: an empty list of reports is reports observed and none
+made, and an empty list of requests is requests exposed and none made, both
+measured as they stand.
 
 A claim outside the vocabulary of sections 2, 11.2, 11.5 and 13, or of section
 4 of `CST.md` — a level that is not one of the three, a limit that is not a
@@ -159,6 +200,14 @@ A request is compared by its entries and never by the text a serialization
 makes of it, because the order of a request's properties is the host's. A case
 that states a request writes the placeholder alone, so the resolution it
 describes makes exactly one request: more than one, or none, is a failure.
+
+A request's numbers are compared with the sign of zero, which JSON writes
+alike for both. Section 11.2 applies the sign of a delta to the count it
+rounds to, so a negative delta under half a second asks for a count of `-0`,
+and a relative time spelled out reads that as the past and `0` as the future;
+a runner that compared the two alike would pass an implementation that drops
+the sign. A case writes such a zero as `-0.0`, because a decoder that reads
+`-0` as an integer reads it as `0`.
 
 A selection request (section 11.5) answers with a category, not with text, and
 the case names the output each category selects. On the text reading the runner
@@ -263,7 +312,10 @@ with what a correct runner answers where it is present.
 
 The procedure is the same in any language. Take an adapter that passes the set.
 Apply one defect to it — wrap it, so the adapter is correct in every way but
-one. Run the set again. A correct runner answers what the catalogue states; a
+one. Run the set again. A defect is realized as its sentence reads for the
+adapter in hand: the one that misdeclares the unit of the tree declares a unit
+other than the adapter's own, whichever that is, since declaring the adapter's
+own would alter nothing. A correct runner answers what the catalogue states; a
 runner that answers nothing has found a hole in itself.
 
 `expects` says what that answer is:
@@ -302,7 +354,7 @@ through `audit`:
 ```ts
 import { audit } from '@curly-message/conformance';
 
-const missed = audit(adapter).filter(({ outcome }) => outcome !== 'caught');
+const missed = audit(adapter).filter(({ outcome }) => outcome === 'missed');
 ```
 
 `audit` answers one entry per defect: what the catalogue expected, what this

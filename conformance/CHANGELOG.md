@@ -1,5 +1,64 @@
 # Changelog
 
+### 4.1.1 (Unreleased)
+
+Nothing a message resolves to changes. The set stops pinning what the
+specification leaves to the host, pins what it settles and no case stated, and
+says what a runner on a host other than ECMAScript does with it.
+
+* `resolution/wrapper-near-miss-is-value` wrote its object's members as
+  `value`, then `unit`, and expected them serialized in that order, which is
+  ECMAScript's insertion order: a host that writes a mapping's members sorted
+  failed it for a serialization section 4 leaves to the host. The case now
+  writes `{"unit":"kg","value":1}`, on which insertion and code-point order
+  agree, and still pins that an object owning a key beside the wrapper keys
+  serializes whole. *Writing a fixture* in the README gains the rule.
+* `comparisons/infinity-compares` leaves the set. It wrote an infinity as the
+  text `Infinity`, which is ECMAScript's literal: whether a text converts to an
+  infinity is the host's numeric conversion (section 11.2), and a host that
+  reads no such literal takes the chain over it. That a numeric comparison
+  still compares an infinity stays the specification's rule; no case states it
+  in one host's spelling.
+* `comparisons/nan-key-is-not-numeric` pins that a key whose conversion
+  yields NaN is not numeric (section 11.1): `{{v:lt; 10:A; NaN:N; 5:B;
+  default:D}}` over `"3"` renders `B`. A host whose conversion reads `NaN`
+  as a number could order such a key among the numeric ones, where every
+  comparison with it is false and the sort leaves `10` ahead of `5`, and no
+  case wrote such a key.
+* The runner compares a request's numbers with the sign of zero. It compared
+  them as JSON writes them, where `-0` and `0` are one, so an implementation
+  that dropped the sign section 11.2 applies to a count of zero, making a
+  request that reads `in 0 seconds` where the delta was in the past, passed
+  on its request.
+  `intl/ago-negative-under-half-second` pins the sign: a delta of -499 under
+  `numeric: 'always'` asks for `[-0.0, "second"]`, written so that a decoder
+  reading `-0` as an integer keeps the sign. RUNNER.md says so.
+* The defect `tree-unit-changed` declares a unit other than the adapter's own.
+  It declared code points whatever the adapter counted in, which alters
+  nothing for an adapter counting code points, so on such a host the audit
+  never measured how its runner reads a misdeclared unit and called the
+  defect unreachable. A code-point adapter is now misdeclared as UTF-16, and
+  every other one as code points, as before; `defects.json` describes it so,
+  and RUNNER.md says a defect is realized as it reads for the adapter in
+  hand. The audit's example in the README and RUNNER.md lists the defects
+  `missed`, where it listed every one not `caught`, the unreachable among
+  them.
+* RUNNER.md states what a runner on a typed host does: the adapter states its
+  stand-in for the `undefined` tag, and where it states none the runner leaves
+  out what holds the tag, which reads alike everywhere but in a wrapper owning
+  that member alone; a case may be decoded into a neutral value the adapter
+  maps; an implementation whose ids are text hands an id of another shape on
+  as none, which no expectation observes; an optional claim stated empty is no
+  claim, while an empty list of reports or of requests is measured as it
+  stands; a runner with no schema validator checks by hand what the schema
+  states, and refuses a repeated key; and one that reads the release's archive
+  checks it against its digest.
+* The README's catalogue spells two behaviours for every host. `props` writes
+  each value as ECMAScript's `JSON.stringify` writes it, so a whole number
+  reads `1` and not `1.0` whatever type an implementation hands it on as, and
+  `nothing` answers what the implementation reads as an answer that is nothing
+  at all.
+
 ## 4.1.0
 
 The set gains the plural selections of revision 3.1.0 of the specification,

@@ -444,6 +444,18 @@
       }
     },
     {
+      "id": "comparisons/nan-key-is-not-numeric",
+      "description": "A key whose conversion yields NaN is not numeric: lt never selects it, and the numeric keys around it are ordered.",
+      "section": "11.1",
+      "message": "{{v:lt; 10:A; NaN:N; 5:B; default:D}}",
+      "payload": {
+        "v": "3"
+      },
+      "expected": {
+        "output": "B"
+      }
+    },
+    {
       "id": "comparisons/lt-non-numeric-key-only-takes-chain",
       "description": "Where the only option has a non-numeric key, a numeric comparison selects nothing.",
       "section": "11.1",
@@ -546,18 +558,6 @@
       "message": "{{v:gt; 5:X; default:D}}",
       "payload": {
         "v": "1e3"
-      },
-      "expected": {
-        "output": "X"
-      }
-    },
-    {
-      "id": "comparisons/infinity-compares",
-      "description": "A comparison over an infinity still selects, though no formatting modifier could format it.",
-      "section": "11.2",
-      "message": "{{v:gt; 5:X}}",
-      "payload": {
-        "v": "Infinity"
       },
       "expected": {
         "output": "X"
