@@ -82,6 +82,11 @@ every host what it already settled.
   implementation imposes on the nodes it visits; the document sets no minimum
   for either depth, which is documented with the limits the implementation
   permits.
+* Section 11.2 says what the host's internationalization facility is on a
+  platform with none of its own: the library the implementation formats
+  through, with the implementation's code applying that library's data. What
+  the library's data lacks is locale data, and what it cannot be asked is a
+  property the facility cannot express.
 
 ## 3.1.0
 
