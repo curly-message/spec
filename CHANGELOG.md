@@ -44,6 +44,12 @@ every host what it already settled.
   as one, `Infinity` being ECMAScript's spelling of it rather than a literal
   every host reads. The rule is unchanged: a formatting modifier does not
   format an infinity, and a numeric comparison still compares it.
+* Section 4 says which values are plain on hosts whose value model is not
+  ECMAScript's. A type that holds both shapes is plain, and its serialization
+  decides the shape; where several types fit one shape, the implementation
+  documents which are plain, the types the host's JSON decoding produces among
+  them; and a host with no type for dynamic data reads the implementation's
+  documented value model as its own.
 
 ## 3.1.0
 
