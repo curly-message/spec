@@ -1101,6 +1101,16 @@ than a call into any one language: a host reads each name onto its own
 facility, and a caller that writes the same properties asks for the same
 formatting wherever it runs.
 
+A platform with no internationalization facility of its own has the one its
+implementation formats through. There a library, with the implementation's own
+code applying that library's data, is the host's facility, here and in section
+11.5, and the implementation documents which library it is and at which
+version. What the library's data lacks — a non-numeric phrase, a narrow
+currency symbol, a locale's minimum for grouping — is locale data, and an
+output that differs from another implementation's by it differs by locale data
+alone (below). What the library cannot be asked is a property the facility
+cannot express, documented and stated as the next paragraph requires.
+
 A property the host's facility cannot express is not an input the modifier
 cannot format. The modifier formats with the properties the facility does
 express, and the placeholder does not take the fallback chain on a property's
