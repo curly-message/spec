@@ -43,6 +43,16 @@ says what a runner on a host other than ECMAScript does with it.
   hand. The audit's example in the README and RUNNER.md lists the defects
   `missed`, where it listed every one not `caught`, the unreachable among
   them.
+* RUNNER.md states what a runner on a typed host does: the adapter states its
+  stand-in for the `undefined` tag, and where it states none the runner leaves
+  out what holds the tag, which reads alike everywhere but in a wrapper owning
+  that member alone; a case may be decoded into a neutral value the adapter
+  maps; an implementation whose ids are text hands an id of another shape on
+  as none, which no expectation observes; an optional claim stated empty is no
+  claim, while an empty list of reports or of requests is measured as it
+  stands; a runner with no schema validator checks by hand what the schema
+  states, and refuses a repeated key; and one that reads the release's archive
+  checks it against its digest.
 
 ## 4.1.0
 
