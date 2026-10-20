@@ -841,6 +841,21 @@ spelled with the other. Those selections are required rather than an artifact of
 a host: the mapping is the one Unicode specifies, and an implementation MUST NOT
 narrow it to the ASCII letters.
 
+The mapping is Unicode's full lower-case mapping, the one its default case
+conversion applies: the context it gives a final sigma included, and none of
+the mappings it tailors to a language. It parts from the simple mapping at few
+code points: under the full one `U+0130 LATIN CAPITAL LETTER I WITH DOT ABOVE`
+lowercases to `i` followed by `U+0307 COMBINING DOT ABOVE`, and a capital sigma
+to `ς` in the `Final_Sigma` casing context, which Unicode's default case
+algorithms define, where the simple one gives `i` and `σ`. So
+`{{v:eq; ΟΔΟΣ:X; default:D}}` renders `X` over `οδος`, and
+`{{v:eq; σ:X; default:D}}` renders `X` over a lone `Σ`, which has no cased
+letter before it. Which version of Unicode the mapping follows is the host's
+ordinary conversion's, and the implementation documents it. A host whose
+ordinary conversion maps the ASCII letters alone, or applies the simple
+mapping, has none this section can use, and its implementation supplies the
+full mapping in its place.
+
 An option key is compared against the value's own text (section 11), never
 against what another placeholder makes of it. The count and the noun are two
 placeholders: `{{n}} {{n; 1:file; default:files;}}` renders `1 file` over
