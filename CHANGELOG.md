@@ -37,6 +37,15 @@ every host what it already settled.
   number, though a host may type NaN as one: a value compared numerically fails
   the comparison, and an option key is not numeric, so no numeric comparison
   selects it.
+* Section 11.2 says that the whitespace around a number is the class of
+  section 6 and nothing else, for a formatting modifier and a numeric
+  comparison alike, and around an option key a numeric comparison orders by as
+  around the value it compares. An implementation removes the class from both
+  ends of the text before converting wherever the host's conversion does not
+  skip it, and reads text that begins or ends with a code point outside the
+  class as no number wherever the conversion skips that code point, as
+  Python's `float` skips `U+0085`. What the conversion reads beyond its
+  whitespace stays the host's. Section 6's note 8 names both uses.
 
 ## 3.1.0
 

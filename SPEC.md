@@ -408,9 +408,11 @@ Notes on the grammar, all normative:
    class nor a Unicode property; an implementation MUST NOT substitute either
    for it. Wherever this document says whitespace it means this class: in the
    escapable characters of section 7, in the significance rules of section 8,
-   and in the blank text of section 11.2, which is a payload value, not message
-   text. The class names `line-term` rather than repeating its four code points,
-   so every line terminator is a member, and an amendment to `line-term` is an
+   in the blank text of section 11.2, which is read in a payload value, not in
+   message text, and in the whitespace around a number of that section, which is
+   read in a payload value and in an option key a numeric comparison converts.
+   The class names `line-term` rather than repeating its four code points, so
+   every line terminator is a member, and an amendment to `line-term` is an
    amendment to this class that reaches all three sections just named.
 
 9. **No production requires whitespace.** The grammar admits it wherever it
@@ -912,6 +914,25 @@ a number a formatting modifier can format either, so `{{v:number}}` over
 that same value; and `currency` applies the test a second time to the product
 of the value and its `ratio`, so a product that overflows to an infinity takes
 the chain too.
+
+The whitespace around a number is the class of section 6 and nothing else, so
+`12` with `U+3000 IDEOGRAPHIC SPACE` or `U+FEFF` on either side is a number,
+while `5` after `U+0085 NEXT LINE`, which the class does not hold, is not. An
+implementation converts the text that remains once that class is removed from
+both ends, and a code point outside the class is part of that text whatever
+the host's conversion makes of it: where the conversion does not skip the class
+around the text, the implementation removes it first, and where the conversion
+also skips a code point outside the class, as Python's `float` skips `U+0085`,
+the implementation reads text that begins or ends with one as no number. This
+holds for a formatting modifier and for a numeric comparison (section 4) alike,
+and for an option key a numeric comparison orders by (section 11.1) as for the
+value it compares, so `{{v:gt; 1:X; default:D}}` renders `D` over `U+0085`
+followed by `5`. Whitespace an escape sequence claims stays in the key
+(section 8), so `{{v:lt; \ 5:A; default:D}}` renders `A` over `3`, and so does
+the same message with `U+3000` after the backslash. ECMAScript's conversion
+skips exactly that class, so an implementation there does neither. What the
+conversion reads in what remains, its whitespace aside, is the host's, as the
+next paragraph says.
 
 Beyond that the test is the host's, and deliberately so: it is the same
 conversion section 4 requires of a numeric comparison, and a second test
