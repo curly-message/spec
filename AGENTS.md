@@ -252,12 +252,17 @@ not apply), CI — and names any step not run.
 
 ### Benchmarks
 
-- **Every package has one**: `npm run bench`, and
-  `npm run bench -- --compare <dir>` against the same package checked out and
-  built at `<dir>`.
+- **Every package has one**, run by the commands its README names: one that
+  measures the package, and one that sets it beside the same package checked
+  out and built at `<dir>` — `npm run bench` and
+  `npm run bench -- --compare <dir>` for a package npm manages.
 - **One harness, rows per package.** A package lists its rows in
-  `bench/rows.mjs`, each reading the package's build, so each side of a
-  comparison measures its own build under the same row name.
+  `bench/rows.mjs`, each reading what the package ships — over a child
+  process where the package is not JavaScript — so each side of a comparison
+  measures its own build under the same row name. A row over a child process
+  throws when that process fails, since output it never wrote can read as a
+  count of 0. A package's name and version are its `package.json`'s, or,
+  where it has none, the `name` and `version` its `bench/rows.mjs` exports.
   `bench/harness.mjs` measures them and is the same file in every package
   (`lint` keeps one at its root for both workspaces): change every copy at
   once. A time row returns the function it times, which may return a promise
@@ -279,8 +284,10 @@ not apply), CI — and names any step not run.
   table as a comment (on a PR from a fork, in the job's summary). A failing
   benchmark of the branch fails the job; so does a count that grew, a row gone
   missing or changing kind, or a failing benchmark of the base — unless the PR
-  carries a `bench-accepted` label (a label change re-runs the job). A size
-  that grew and a time beyond its spread are flagged for review.
+  carries a `bench-accepted` label (a label change re-runs the job). Where
+  `<dir>` does not exist, as the base of the PR that adds the package, nothing
+  is compared, so only a failing benchmark of the branch fails the job. A
+  size that grew and a time beyond its spread are flagged for review.
 - A hot path no row covers gets a row in the same PR.
 - The release workflow writes `BENCH.md` into the release commit, so each
   published version records its results.
