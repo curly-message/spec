@@ -56,6 +56,12 @@ every host what it already settled.
   documents which are plain, the types the host's JSON decoding produces among
   them; and a host with no type for dynamic data reads the implementation's
   documented value model as its own.
+* Section 11.1 says that the lower-case mapping is Unicode's full one, final
+  sigma included and tailored to no language, as ECMAScript's conversion
+  applies it; that its Unicode version is the host's ordinary conversion's and
+  documented by the implementation; and that a host whose ordinary conversion
+  is ASCII-only, or applies the simple mapping, has its implementation supply
+  the full one.
 
 ## 3.1.0
 
