@@ -191,6 +191,18 @@ the running realm's `Array.prototype`. A value built in another realm has a
 prototype of its own by that test, whatever it was authored as, and so does one
 of a type an application derived; both convert like every other value.
 
+A host may offer one type for both shapes, or several for one. A type that
+holds both — a mapping that is also a sequence — is plain, and the host's
+serialization decides which shape a value of it takes, so an empty one may
+write `[]`. Where several of the host's types fit one shape, the implementation
+documents which it reads as plain, and the types the host's JSON decoding
+produces for an object and an array are among them. A host with no type for
+dynamic data, where a payload reaches the implementation only as a value model
+the implementation defines, has that model stand for the host's types: the
+implementation documents which of its variants are the plain object and the
+plain array, and a value of any other type it accepts converts by the ordinary
+string conversion.
+
 The narrow reading is what keeps a value authored as a date instance formattable
 by `date` (section 11.2), and section 4.1 recognizes a wrapper by the same
 reading.
