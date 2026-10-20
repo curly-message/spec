@@ -2398,6 +2398,33 @@
       }
     },
     {
+      "id": "intl/ago-negative-under-half-second",
+      "description": "A negative delta under half a second is a count of zero seconds that keeps its sign, so a host spelling every count out phrases it as the past.",
+      "section": "11.2",
+      "message": "{{t:ago}}",
+      "payload": {
+        "t": -499
+      },
+      "props": {
+        "ago": {
+          "numeric": "always"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "RelativeTimeFormat",
+          "options": {
+            "numeric": "always"
+          },
+          "input": [
+            -0.0,
+            "second"
+          ]
+        }
+      }
+    },
+    {
       "id": "intl/ago-zero",
       "description": "A delta of zero is a count of zero seconds.",
       "section": "11.2",

@@ -34,6 +34,14 @@ ECMAScript does with it. Nothing a message resolves to changes.
   as a number could order such a key among the numeric ones, where every
   comparison with it is false and the sort leaves `10` ahead of `5`, and no
   case wrote such a key.
+* The runner compares a request's numbers with the sign of zero. It compared
+  them as JSON writes them, where `-0` and `0` are one, so an implementation
+  that dropped the sign section 11.2 applies to a count of zero, making a
+  request that reads `in 0 seconds` where the delta was in the past, passed
+  on its request.
+  `intl/ago-negative-under-half-second` pins the sign: a delta of -499 under
+  `numeric: 'always'` asks for `[-0.0, "second"]`, written so that a decoder
+  reading `-0` as an integer keeps the sign. RUNNER.md says so.
 
 ## 4.1.0
 
