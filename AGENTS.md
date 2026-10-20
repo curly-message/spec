@@ -328,25 +328,51 @@ released after its dependent forces another release of the dependent.
   (`devDependencies`, peer ranges, exact pins, lockfiles, the site's) and every
   doc line naming a tested version moves to the latest released version in a
   PR merged before the publish.
-- **What npm shows is the version it shows.** Before each publish, go through
-  what the tarball carries (`npm pack --dry-run`) — the README is the npm
-  page — and the docs it links to. Each statement describes the version being
-  published and each link resolves. A mismatch is fixed before the publish,
-  never in the next release.
+- **What the registry shows is the version it shows.** Before each publish,
+  go through what the registry will serve — the tarball of
+  `npm pack --dry-run`, the wheel and sdist `python -m build` writes,
+  `cargo package --list`, the module zip the Go proxy builds from the tag,
+  the archive of the tag Packagist serves — with the README, which is the
+  registry's page, and the docs it links to. Each statement describes the
+  version being published and each link resolves. A mismatch is fixed before
+  the publish, never in the next release.
 - **Every package is shown in use.** The playground shows the parser, and a
   release that adds to what a message can say shows it there; the parser's
   suite runs the conformance set; the linter and the plugin are shown by the
   usage their READMEs give.
 - **Every package is benchmarked** before it is published (see above).
-- **Publishing:** one package per workflow run, by npm trusted publishing,
-  with a tag namespaced by package (`js-v3.1.1`, `conformance-v4.1.0`,
-  `lint-v1.0.0`). A new package's first version is published by hand
-  (`--tag next`), then its trusted publisher is set to the workflow, with
-  `release` as its environment.
-- **Close the loop.** After a publish, confirm the version on npm
-  (`npm view`) and update what follows it — the ranges and pins above, the
-  site's lockfile, the other repositories' lockfiles — as part of the same
-  plan.
+- **Publishing:** one package per workflow run, by the registry's trusted
+  publishing where it has one, with `release` as the publisher's
+  environment.
+  - **Tags** are namespaced by package directory, `<dir>-vX.Y.Z`
+    (`js-v3.1.1`, `conformance-v4.1.0`, `lint-v1.0.0`). A Go module's is
+    `<dir>/vX.Y.Z` (`go/v1.0.0`, a nested module's `go/intl/v1.0.0`): the go
+    command reads a version only from a tag prefixed with the module's
+    directory. Packagist reads only a repository's root `composer.json` and
+    tags Composer parses as versions (`v1.0.0`, never `php-v1.0.0`), so a PHP
+    package is released through a repository it is the root of, tagged
+    `vX.Y.Z`.
+  - **Prereleases** take each registry's spelling: npm `X.Y.Z-next.N` under
+    the `next` dist-tag, crates.io `X.Y.Z-next.N`, Go `vX.Y.Z-next.N`, PyPI
+    `X.Y.ZrcN` (PEP 440), Composer `X.Y.Z-RC.N`. A registry with no
+    dist-tags has only the spelling to set a prerelease apart.
+  - **A new package's first version:** on npm and crates.io, published by
+    hand (`--tag next` on npm), then its trusted publisher is set to the
+    workflow. On PyPI, by the workflow through a pending publisher
+    registered beforehand, so no token exists; PyPI cannot name a reusable
+    workflow as the publisher, so the job that uploads lives in the
+    top-level workflow. Go and Packagist have no publish step: the
+    workflow's tag is the release, and Packagist is registered once by hand
+    with its GitHub hook. The Go proxy records a version on its first fetch
+    for good; a bad one is retracted by a later release, never removed.
+- **Close the loop.** After a publish, confirm the version on its registry
+  (`npm view`; PyPI's JSON API, `pypi.org/pypi/<name>/<version>/json`; the
+  crates.io API, `crates.io/api/v1/crates/<name>/<version>`; the Go proxy's
+  `<module>/@v/list`, and the hash `go mod download -json` reports against
+  the one the build computed; Packagist's `p2` metadata,
+  `repo.packagist.org/p2/<vendor>/<name>.json`) and update what follows it —
+  the ranges and pins above, the site's lockfile, the other repositories'
+  lockfiles — as part of the same plan.
 
 ## 5. Commit on approval
 
