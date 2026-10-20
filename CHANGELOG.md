@@ -66,6 +66,13 @@ every host what it already settled.
   on a code-point boundary, so neither between the halves of a surrogate pair
   nor inside a UTF-8 sequence, with an example in UTF-8. The rule stays a
   SHOULD, as the surrogate-pair rule it generalizes was.
+* Sections 11.3 and 14.2 say what containment covers: what the host signals
+  as a failure in code the implementation called, a modifier, a value's
+  conversion or a reporting handler. The host interrupting the process, or the
+  thread a resolution runs on, is not such a failure and passes through, and
+  neither is the host ending the script it runs, or the process, at a memory
+  limit it enforces. Where such a limit is what ends a resolution that reaches
+  itself, section 13's containment still applies.
 
 ## 3.1.0
 
