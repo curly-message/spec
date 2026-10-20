@@ -165,9 +165,13 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
 };
 
 // Property order is the host's, so a request is compared by its entries and
-// not by the text a serialization happens to make of it.
+// not by the text a serialization happens to make of it. The sign of zero is
+// the request's, though JSON writes both zeros alike: a relative time reads
+// -0 as the past and 0 as the future.
 const canonical = (value: unknown): string => {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+
+  if (Object.is(value, -0)) return '-0';
 
   if (!isObject(value)) return JSON.stringify(value) ?? 'undefined';
 
