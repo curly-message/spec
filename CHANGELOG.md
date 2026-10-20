@@ -35,6 +35,11 @@ every host what it already settled.
   number, though a host may type NaN as one: a value compared numerically fails
   the comparison, and an option key is not numeric, so no numeric comparison
   selects it.
+* Section 11.2 says that the whitespace around a number is the class of
+  section 6, which an implementation removes from both ends of the text before
+  converting wherever the host's conversion does not skip it, for a formatting
+  modifier and a numeric comparison alike. What the conversion reads beyond
+  that stays the host's. Section 6's note 8 names the use.
 
 ## 3.1.0
 

@@ -408,10 +408,11 @@ Notes on the grammar, all normative:
    class nor a Unicode property; an implementation MUST NOT substitute either
    for it. Wherever this document says whitespace it means this class: in the
    escapable characters of section 7, in the significance rules of section 8,
-   and in the blank text of section 11.2, which is a payload value, not message
-   text. The class names `line-term` rather than repeating its four code points,
-   so every line terminator is a member, and an amendment to `line-term` is an
-   amendment to this class that reaches all three sections just named.
+   and in the blank text and the whitespace around a number of section 11.2,
+   which are read in a payload value, not in message text. The class names
+   `line-term` rather than repeating its four code points, so every line
+   terminator is a member, and an amendment to `line-term` is an amendment to
+   this class that reaches all three sections just named.
 
 9. **No production requires whitespace.** The grammar admits it wherever it
    admits text, and admits it only as text: the spaces in `{{ value; }}` derive
@@ -912,6 +913,15 @@ a number a formatting modifier can format either, so `{{v:number}}` over
 that same value; and `currency` applies the test a second time to the product
 of the value and its `ratio`, so a product that overflows to an infinity takes
 the chain too.
+
+The whitespace around a number is the class of section 6, so `12` with
+`U+3000 IDEOGRAPHIC SPACE` or `U+FEFF` on either side is a number. Where the
+host's conversion does not skip that class around the text, an implementation
+removes it from both ends of the text before converting, for a formatting
+modifier and for a numeric comparison (section 4) alike. ECMAScript's
+conversion skips exactly that class, so an implementation there removes
+nothing. What the conversion reads in what remains is the host's, as the next
+paragraph says.
 
 Beyond that the test is the host's, and deliberately so: it is the same
 conversion section 4 requires of a numeric comparison, and a second test
