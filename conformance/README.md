@@ -406,6 +406,15 @@ normative, but the string is the host's own, and a case that stated one would
 pin it on every other host. So the set pins the values that do serialize, and
 an implementation that reads section 4 too widely passes it.
 
+The order of an object's members is the host's as well: section 4 leaves the
+serialization to the host, and one host writes the members in the order they
+were inserted while another sorts them. So a case that serializes an object
+with several members writes them in an order both produce — sorted by code
+point, at every depth — in its inputs and in its expectation alike. ECMAScript
+writes a key that is an array index, such as `9` or `10`, ahead of every other
+key and in numeric order, whatever order it was inserted in, so such a case
+names no member with one.
+
 The reference implementation is what the set is checked against before it
 lands, and the set is what the reference is checked against in turn. Where
 the two disagree, the specification decides which is wrong.
