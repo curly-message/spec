@@ -25,6 +25,12 @@ every host what it already settled.
   holds none. Escaping, the spelling of a number and what the serializer
   refuses stay the host's, and a host with no JSON serialization converts with
   an RFC 8259 one the implementation documents.
+* Sections 4 and 11 say what the host's undefined is on a host with a single
+  null: an entry the mapping does not hold, an argument the caller omitted, or
+  a stand-in the implementation documents. The null stays a value wherever the
+  document holds it present, a payload entry among them, and where the host's
+  functions answer nothing with it, it is a modifier's answer that is nothing
+  at all.
 
 ## 3.1.0
 
