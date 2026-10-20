@@ -31,6 +31,10 @@ every host what it already settled.
   document holds it present, a payload entry among them, and where the host's
   functions answer nothing with it, it is a modifier's answer that is nothing
   at all.
+* Sections 4 and 11.1 say that a numeric conversion yielding NaN yields no
+  number, though a host may type NaN as one: a value compared numerically fails
+  the comparison, and an option key is not numeric, so no numeric comparison
+  selects it.
 
 ## 3.1.0
 
