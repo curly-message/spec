@@ -263,6 +263,18 @@ describe('execute', () => {
     expect(outcome(exposing('one'), c)).toMatchObject({ ok: false, reason: 'The formatting requests are not a list.' });
   });
 
+  it('compares a request\'s numbers with the sign of zero, which a relative time reads', () => {
+    const request = (value: number) => ({ api: 'RelativeTimeFormat', options: { numeric: 'always' }, input: [value, 'second'] }) as const;
+    const c = (value: number) => concrete('a/ago', { message: '{{t:ago}}', payload: { t: Object.is(value, -0) ? -499 : 499 }, locale: 'en', props: { ago: { numeric: 'always' } }, expected: { format: request(value) } });
+    const exposing = (formats: unknown) => adapter(() => ({ output: '', reports: [], formats } as Resolved));
+
+    expect(format(request(-0), 'en')).not.toBe(format(request(0), 'en'));
+    expect(outcome(exposing([request(-0)]), c(-0))).toEqual({ ok: true });
+    expect(outcome(exposing([request(0)]), c(0))).toEqual({ ok: true });
+    expect(outcome(exposing([request(0)]), c(-0))).toMatchObject({ ok: false, reason: 'The input of the request differs.' });
+    expect(outcome(exposing([request(-0)]), c(0))).toMatchObject({ ok: false, reason: 'The input of the request differs.' });
+  });
+
   // A selection request's result on this host is a category, and the case
   // names the output each category selects.
   const selection = (over: Partial<ConcreteCase> = {}) => concrete('a/plural', {
