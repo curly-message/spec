@@ -63,6 +63,11 @@ every host what it already settled.
   as a failure in code the implementation called, a modifier, a value's
   conversion or a reporting handler. The host interrupting the process, or the
   thread a resolution runs on, is not such a failure and passes through.
+* Sections 4 and 13 say that a serialization the host's serializer refuses for
+  the value's depth is a serialization that raises or yields nothing, however
+  few nodes it holds. Section 13's node minimum binds the limit the
+  implementation imposes, and the host's depth is documented with the limits
+  it permits.
 
 ## 3.1.0
 

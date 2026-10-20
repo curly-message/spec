@@ -210,7 +210,10 @@ reading.
 A value that **no conversion can describe** — a serialization that raises,
 yields nothing or reaches the conversion limit of section 13, a string
 conversion that raises — MUST be treated as absent, MUST NOT raise, and SHOULD
-be reported (section 14.2).
+be reported (section 14.2). A serialization the host's serializer refuses for
+the depth of the value — at a nesting bound of its own, or where the call stack
+it recurses on runs out — is one that raises or yields nothing, however few
+nodes section 13 would count in it.
 
 How many times a value is converted while a message resolves is itself bounded
 (section 13).
@@ -1389,6 +1392,10 @@ An implementation MUST enforce all four of the following:
 - **A conversion limit.** At least **100 000** nodes MUST be visited before a
   value's serialization is abandoned. A serialization that reaches the limit
   MUST be treated as a conversion that cannot describe the value (section 4).
+  The minimum binds the limit the implementation imposes, not the depth at
+  which the host's serializer refuses a value: that refusal is a serialization
+  that raises (section 4), and the depth is among what the implementation
+  documents.
 - **A nesting limit.** At least **8** levels of placeholder MUST be resolved
   (section 12), counting the outermost as the first. A placeholder nested
   deeper than an implementation resolves is a **message error** (section 14.2):
