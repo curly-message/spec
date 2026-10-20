@@ -118,18 +118,30 @@ name.
 
 ## Invariants — do NOT break these without explicit user sign-off
 
-1. **No runtime dependencies** in the parser or the conformance set. Adding one
-   is a blocking change — stop and ask.
+1. **No runtime dependencies** in the parser or the conformance set. In a
+   language whose Intl level needs a library the language does not carry, that
+   library is an optional dependency the level opts into — a Python extra, a
+   Cargo feature, a Go module of its own, a Composer `suggest` — and the core
+   builds, tests and resolves without it. Adding a dependency to the core, or
+   an optional one beyond what an Intl level needs, is a blocking change —
+   stop and ask.
 2. **No breaking changes** to a released package's public surface or exported
    types.
 3. **No host coupling** (above). A dependency on a host library is a blocking
    change.
-4. **One module format, stated runtimes:** ESM only; Node 22+, Bun and
-   Deno 2. The source touches no API beyond what the stated runtimes share —
-   the `node:` modules Bun and Deno implement among them — and CI has a leg
-   per runtime to keep that true. Reaching for one is a blocking change.
-5. **Generated output** (`dist/`, `_site/`) is never hand-edited and never
-   committed.
+4. **One module format, stated runtimes:** each package states its module
+   format and the runtimes or toolchains it supports. A JavaScript package is
+   ESM only, on Node 22+, Bun and Deno 2, and touches no API beyond what those
+   runtimes share — the `node:` modules Bun and Deno implement among them. A
+   package in another language states its own in its repository's
+   `AGENTS.md` (a minimum supported version and the current stable one, say).
+   CI has a leg per stated runtime or toolchain to keep that true. Reaching
+   for an API beyond what they share is a blocking change.
+5. **Generated output** — what a build writes (`dist/`, `_site/`, `target/`)
+   — is never hand-edited and never committed. Generated source that a
+   package format serves from the repository's tree (a Go module, a Composer
+   package) is the exception: it is committed, never hand-edited, and CI
+   regenerates it and fails where it differs.
 
 ---
 
@@ -372,7 +384,11 @@ released after its dependent forces another release of the dependent.
   workarounds for unpublished dependencies, no half-built surfaces.
   Branch-only scaffolding (e.g. a `file:` dev dependency standing in for an
   unpublished package) is removed before merge; until then the PR waits as a
-  draft.
+  draft. A link between two packages of one repository that consumers never
+  see is not scaffolding, and stays: npm workspaces, or a Go
+  `replace … => ../`, which Go applies only in the main module. A Go module's
+  release is built and tested without its `replace`, against the released
+  version it requires — what a consumer resolves.
 - **Branch from an up-to-date `main`**
   (`git fetch origin && git switch main && git pull --ff-only`), with a name
   that says what the work is: `fix/<slug>`, `feat/<slug>`, `chore/<slug>`,
