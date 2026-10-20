@@ -112,11 +112,11 @@ implementation's own modifier signature.
 | `upper` | The value with its ASCII letters uppercased. |
 | `echo` | The value, unchanged. |
 | `empty` | The empty string — an answer, not the absence of one. |
-| `nothing` | The host's nothing: no answer, so the placeholder takes the fallback chain (section 11). |
+| `nothing` | The host's nothing: what the implementation reads as an answer that is nothing at all — `undefined` in JavaScript — so the placeholder takes the fallback chain (section 11). |
 | `raise` | Nothing; it raises, and the failure must be contained (section 11.3). |
 | `default` | The default, read through the chain (section 10). |
 | `options` | The options in the order they were handed over, each `key=value`, joined by commas: `a=A,b=,c=c` (section 9.4). |
-| `props` | The props it received, each own property `name=value` with the value as JSON, sorted by name and joined by commas: `maximumFractionDigits=1,useGrouping=true` (sections 11.2, 11.3). |
+| `props` | The props it received, each own property `name=value` with the value written as ECMAScript's `JSON.stringify` writes it, sorted by name and joined by commas: `maximumFractionDigits=1,useGrouping=true` (sections 11.2, 11.3). That spelling is compact, writes a whole number without a fraction — `1`, not `1.0`, whatever type the implementation hands it on as — and escapes text as `JSON.stringify` does, which leaves `/` and every character outside ASCII as it is, and escapes a lone surrogate. |
 | `locale` | The locale it received, or `none` where it received none. An empty locale answers empty. |
 | `object` | A plain object holding the value under `answer`, so the answer serializes (section 11): `{"answer":"X"}`. |
 

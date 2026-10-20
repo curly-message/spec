@@ -67,6 +67,11 @@ ECMAScript does with it. Nothing a message resolves to changes.
   against its digest. The set's tests now fail where an object of a JSON file
   the package ships, a fixture file, `index.json`, `defects.json` or a schema,
   repeats a key, which `JSON.parse` hid by keeping the last member.
+* The README's catalogue spells two behaviours for every host. `props` writes
+  each value as ECMAScript's `JSON.stringify` writes it, so a whole number
+  reads `1` and not `1.0` whatever type an implementation hands it on as, and
+  `nothing` answers what the implementation reads as an answer that is nothing
+  at all.
 
 ## 4.1.0
 
