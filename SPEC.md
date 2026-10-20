@@ -840,6 +840,15 @@ spelled with the other. Those selections are required rather than an artifact of
 a host: the mapping is the one Unicode specifies, and an implementation MUST NOT
 narrow it to the ASCII letters.
 
+Which version of Unicode the mapping follows, and whether it is Unicode's simple
+mapping or its full one, are the host's ordinary conversion's, and the
+implementation documents both. The two mappings part at few code points: under
+the full one `U+0130 LATIN CAPITAL LETTER I WITH DOT ABOVE` lowercases to `i`
+followed by `U+0307 COMBINING DOT ABOVE`, and a capital sigma that ends a word
+to `ς`, where the simple one gives `i` and `σ`. A host whose ordinary
+conversion maps the ASCII letters alone has none this section can use, and its
+implementation supplies Unicode's mapping in its place.
+
 An option key is compared against the value's own text (section 11), never
 against what another placeholder makes of it. The count and the noun are two
 placeholders: `{{n}} {{n; 1:file; default:files;}}` renders `1 file` over

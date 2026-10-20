@@ -50,6 +50,11 @@ every host what it already settled.
   documents which are plain, the types the host's JSON decoding produces among
   them; and a host with no type for dynamic data reads the implementation's
   documented value model as its own.
+* Section 11.1 says that the Unicode version of the lower-case mapping, and
+  whether it is Unicode's simple mapping or its full one, are the host's
+  ordinary conversion's and documented by the implementation, and that a host
+  whose ordinary conversion is ASCII-only has its implementation supply
+  Unicode's mapping.
 
 ## 3.1.0
 
