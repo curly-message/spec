@@ -53,6 +53,11 @@ says what a runner on a host other than ECMAScript does with it.
   stands; a runner with no schema validator checks by hand what the schema
   states, and refuses a repeated key; and one that reads the release's archive
   checks it against its digest.
+* The README's catalogue spells two behaviours for every host. `props` writes
+  each value as ECMAScript's `JSON.stringify` writes it, so a whole number
+  reads `1` and not `1.0` whatever type an implementation hands it on as, and
+  `nothing` answers what the implementation reads as an answer that is nothing
+  at all.
 
 ## 4.1.0
 
