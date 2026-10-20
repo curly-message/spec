@@ -14,6 +14,46 @@ const read = (path: string) => JSON.parse(readFileSync(path, 'utf8')) as unknown
 
 const set = fixtures();
 
+// The keys an object repeats in a JSON text, which a parsed file no longer
+// shows: `JSON.parse` keeps the last of two members, and another host's parser
+// may keep the first. The text is JSON, so a string is a key exactly where an
+// object opens or a comma inside one precedes it.
+const repeated = (text: string) => {
+  const objects: (Set<string> | undefined)[] = [];
+  const found: string[] = [];
+  let key = false;
+
+  for (let at = 0; at < text.length; at++) {
+    const char = text[at];
+
+    if (char === '"') {
+      let end = at + 1;
+
+      while (text[end] !== '"') end += text[end] === '\\' ? 2 : 1;
+
+      const keys = objects.at(-1);
+      const name = JSON.parse(text.slice(at, end + 1)) as string;
+
+      if (key && keys) {
+        if (keys.has(name)) found.push(name);
+        keys.add(name);
+      }
+
+      key = false;
+      at = end;
+    } else if (char === '{' || char === '[') {
+      objects.push(char === '{' ? new Set() : undefined);
+      key = char === '{';
+    } else if (char === '}' || char === ']') {
+      objects.pop();
+    } else if (char === ',') {
+      key = objects.at(-1) !== undefined;
+    }
+  }
+
+  return found;
+};
+
 // A file pins a resolution or it pins the tree, and the two are read against
 // different documents, so they are told apart once here.
 const resolutions = set.flatMap(({ name, file }) => file.kind === 'tree' ? [] : file.cases.map((c) => ({ name, c })));
@@ -42,6 +82,15 @@ describe('the shipped set', () => {
     const invalid = set.filter(({ file }) => !validate(file)).map(({ name }) => ({ name, errors: validate.errors }));
 
     expect(invalid).toEqual([]);
+  });
+
+  it('repeats no key in an object of a JSON file a release ships', () => {
+    expect(repeated('{"a":{"b":1,"c":[{"b":2},{"b":3}],"\\u0062":4},"d":"\\"b\\""}')).toEqual(['b']);
+
+    const shipped = [...set.map(({ name }) => join('fixtures', name)), 'index.json', 'defects.json', join('schema', 'fixture.schema.json'), join('schema', 'defect.schema.json')];
+    const texts = shipped.map((path) => ({ path, text: readFileSync(join(root, path), 'utf8') }));
+
+    expect(texts.flatMap(({ path, text }) => repeated(text).map((key) => `${path}: ${key}`))).toEqual([]);
   });
 
   it('gives every case an id unique across the set', () => {
