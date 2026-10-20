@@ -78,7 +78,11 @@ Repository map:
 ### Dependencies across the family
 
 - `@curly-message/parser` and `@curly-message/conformance` have **no runtime
-  dependencies**. The parser tests against the set as a `devDependency`.
+  dependencies**. The parser tests against the set as a `devDependency`; an
+  implementation in another language vendors the set's release archive
+  (`conformance-<version>.zip`, attached to each release of the set with its
+  digest in the release notes) or fetches it when its tests run, pinned by
+  that digest and checked against it before it is read.
 - `@curly-message/lint` takes the parser as a **peer dependency**, so a project
   lints with the parser it resolves with, and carries the current parser as a
   `devDependency` to build and test against. `@curly-message/eslint-plugin`
@@ -325,9 +329,10 @@ released after its dependent forces another release of the dependent.
   package is not published while a package it depends on holds an unreleased
   change or a planned fix it needs, unless the user deferred that fix by name.
 - **Bump the family first.** Every range a package holds on the family
-  (`devDependencies`, peer ranges, exact pins, lockfiles, the site's) and every
-  doc line naming a tested version moves to the latest released version in a
-  PR merged before the publish.
+  (`devDependencies`, peer ranges, exact pins, lockfiles, the site's, a
+  vendored or fetched archive and its digest) and every doc line naming a
+  tested version moves to the latest released version in a PR merged before
+  the publish.
 - **What the registry shows is the version it shows.** Before each publish,
   go through what the registry will serve — the tarball of
   `npm pack --dry-run`, the wheel and sdist `python -m build` writes,
@@ -484,12 +489,18 @@ also updates `SPEC.md` and its `CHANGELOG.md` (§ Architecture).
   trailing commas on multiline, spaced object braces, no trailing whitespace,
   at most one consecutive blank line, newline at EOF). `npm run lint` reports
   what breaks it and `npm run lint:fix` fixes it; a pre-commit hook runs it,
-  and CI runs it without `--fix`.
+  and CI runs it without `--fix`. A package in another language takes its
+  language's formatter and linter, configured in the package, as the
+  contract (gofmt and `go vet`, rustfmt and Clippy, Ruff, PHP-CS-Fixer), with
+  a command that reports, one that fixes where the tool can, the hook, and CI
+  without fixing; its repository's `AGENTS.md` names them.
 - Prefer the **functional, immutable** style for shared state (computed-key
   spread, `reduce`, `Object.fromEntries` for a level built from entries — a
   spread per key is quadratic). On a **measured hot path** a function-local
   accumulator may be mutated, but only into a null-prototype object, given a
-  normal prototype before it escapes.
+  normal prototype before it escapes. Another language follows the same
+  shape through its own idioms: a level is built once from its entries, never
+  copied per key.
 - Keep orchestration and pure logic apart: pure, testable helpers live in a
   `utils` module.
 - **A package writes nowhere itself.** What it has to say leaves through its
@@ -509,15 +520,21 @@ also updates `SPEC.md` and its `CHANGELOG.md` (§ Architecture).
 
 The packages have no eval, DOM or network of their own; they turn
 consumer-supplied text and data into strings, trees and findings. The
-realistic risks are **DoS, robustness and the prototype chain**.
+realistic risks are **DoS, robustness and the prototype chain** (or, in
+another language, the host's reserved members).
 
 - **Prototype keys are missing data.** Reads of a table by a key a message or
   a catalogue supplies use an own-property check, so `toString`, `__proto__`
-  and `constructor` are missing, not inherited.
+  and `constructor` are missing, not inherited. In a language with no
+  prototype chain, the analogue is a host's reserved or magic member — a
+  Python dunder, a PHP magic method or property — and the rule is the same:
+  a table is read by its own entries only, never through attribute or member
+  lookup, so `__class__` or `__get` is a missing key like any other.
 - **Never bracket-assign a user-supplied key onto a plain object** —
   `table[key] = value` routes `'__proto__'` through the prototype setter.
   Write with a computed-key spread (`DefineProperty`) or into a
-  null-prototype object.
+  null-prototype object. In another language, a key a message or a catalogue
+  supplies is written into a map, never set as an object's member.
 - **Bounded work.** What a call costs grows with its input, never with a
   value outside it; a limit that keeps it so is load-bearing, and changing one
   is a format change in the parser and a blocking change elsewhere.
@@ -556,17 +573,25 @@ realistic risks are **DoS, robustness and the prototype chain**.
   runs on.
 - **Test the shipped artifact**, not only the source: the suite imports the
   package by its name, and `npm test` runs it once against the source and
-  once, under `--mode dist`, against `dist/`.
+  once, under `--mode dist`, against `dist/`. In another language, the
+  packaged artifact stands in for `dist/` — the wheel, the crate
+  `cargo package` builds, the module zip, the Composer archive — taken as a
+  consumer gets it, and the suite runs once more against it.
 - **Types are tested by compiling.** Type fixtures assert with
   `@ts-expect-error` and a type-level `Equal`, compiled with `tsc` at
   `skipLibCheck: false` against both the source and the shipped declarations.
-  A type test that runs must exercise the value it types: a closure declared
-  and never invoked asserts nothing.
+  A package in another language compiles them with its own checker at its
+  strictest setting (`mypy --strict`, PHPStan at `level: max`, the compiler
+  in Go and Rust), against the source and, where it differs from the
+  source, the packaged artifact. A type test that runs must exercise the
+  value it types: a closure declared and never invoked asserts nothing.
 - **What a type costs the checker is tested by count, never by time**,
   wherever a type computes over what a consumer passes (a generic, a
   conditional or mapped type): `program.getInstantiationCount()` across
   inputs of two sizes, each call site written as a consumer writes it so the
-  checker cannot reuse one call's work for the next.
+  checker cannot reuse one call's work for the next. Another language counts
+  by instantiation where its checker reports a count, and has no such test
+  where it reports none.
 - Every repository runs the same suite on every supported runtime and OS in
   CI, plus lint without `--fix`.
 
