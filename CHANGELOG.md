@@ -62,6 +62,10 @@ every host what it already settled.
   documented by the implementation; and that a host whose ordinary conversion
   is ASCII-only, or applies the simple mapping, has its implementation supply
   the full one.
+* Section 13 says where a report's excerpt is cut in a host's own string unit:
+  on a code-point boundary, so neither between the halves of a surrogate pair
+  nor inside a UTF-8 sequence, with an example in UTF-8. The rule stays a
+  SHOULD, as the surrogate-pair rule it generalizes was.
 
 ## 3.1.0
 
