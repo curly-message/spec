@@ -155,6 +155,15 @@ host-defined modifier that reads it back. Every other value MUST be converted
 using the host's ordinary string conversion, so a date, a pattern, a set or a
 class instance keeps whatever text it describes itself as.
 
+That serialization holds no insignificant whitespace, as sections 4.1 and 7
+write it: `{ a: 1, b: [2] }` converts to `{"a":1,"b":[2]}`. An object's members
+come in the order the host's mapping holds them in, or, where the mapping holds
+no order, in the order the serializer writes them. Everything else in the text
+is the host serializer's: how it escapes a character, how it spells a number,
+and which values it refuses, a refused value being one no conversion can
+describe (below). A host with no JSON serialization of its own converts with an
+RFC 8259 serialization the implementation documents.
+
 **Plain object** and **plain array** MUST both be read narrowly, and by the
 value's own type: a value of the type a host offers for arbitrary keyed data,
 or of the type it offers for an arbitrary ordered sequence, carrying no meaning
@@ -211,7 +220,7 @@ value — including a plain object that owns any other key alongside them.
 { value: 1, default: 'D' }    wrapper
 { default: 'D' }              wrapper, no value
 { props: { number: … } }      wrapper, no value
-{ value: 1, unit: 'kg' }      value  ->  {"value":1,"unit":"kg"}
+{ unit: 'kg', value: 1 }      value  ->  {"unit":"kg","value":1}
 {}                            value  ->  {}
 ```
 
