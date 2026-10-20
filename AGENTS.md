@@ -382,8 +382,9 @@ released after its dependent forces another release of the dependent.
   no PR runs them by hand (`workflow_dispatch`). Keep it narrowly scoped;
   link out-of-scope follow-ups (§3) under `## Notes`.
 - **A PR built on another is stacked natively, never by a mention.** A PR
-  whose branch starts on another open PR's branch targets that branch and is
-  linked with it as a native GitHub
+  that needs another open PR of its repository — its code, or only that it
+  merges first — starts on that PR's branch, targets it, and is linked with
+  it as a native GitHub
   [stack](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-stacked-pull-requests).
   A sentence in its body is not a stack: it shows no stack map and holds no
   merge order. The first PR on another creates the stack from the two
