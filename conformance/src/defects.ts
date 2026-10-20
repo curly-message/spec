@@ -209,10 +209,12 @@ export const mutations: Record<Defect, (adapter: Adapter) => Mutation> = {
 
   'tree-cancels-inverted': (adapter) => everywhere(adapter, (node) => node.type === 'escape' ? { ...node, cancels: !node.cancels } : node),
 
+  // A declaration of the adapter's own unit would alter nothing, so a
+  // code-point adapter is misdeclared as UTF-16 and every other as code points.
   'tree-unit-changed': (adapter) => claiming(
     adapter,
-    adapter.cst ? { cst: { ...adapter.cst, unit: 'code-point' } } : {},
-    () => adapter.cst !== undefined && adapter.cst.unit !== 'code-point',
+    adapter.cst ? { cst: { ...adapter.cst, unit: adapter.cst.unit === 'code-point' ? 'utf-16' : 'code-point' } } : {},
+    () => adapter.cst !== undefined,
   ),
 
   'tree-unit-unknown': (adapter) => claiming(

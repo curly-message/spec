@@ -271,7 +271,10 @@ with what a correct runner answers where it is present.
 
 The procedure is the same in any language. Take an adapter that passes the set.
 Apply one defect to it — wrap it, so the adapter is correct in every way but
-one. Run the set again. A correct runner answers what the catalogue states; a
+one. Run the set again. A defect is realized as its sentence reads for the
+adapter in hand: the one that misdeclares the unit of the tree declares a unit
+other than the adapter's own, whichever that is, since declaring the adapter's
+own would alter nothing. A correct runner answers what the catalogue states; a
 runner that answers nothing has found a hole in itself.
 
 `expects` says what that answer is:
@@ -310,7 +313,7 @@ through `audit`:
 ```ts
 import { audit } from '@curly-message/conformance';
 
-const missed = audit(adapter).filter(({ outcome }) => outcome !== 'caught');
+const missed = audit(adapter).filter(({ outcome }) => outcome === 'missed');
 ```
 
 `audit` answers one entry per defect: what the catalogue expected, what this

@@ -372,7 +372,7 @@ it is present, and `schema/defect.schema.json` describes the file.
 ```ts
 import { audit } from '@curly-message/conformance';
 
-const missed = audit(adapter).filter(({ outcome }) => outcome !== 'caught');
+const missed = audit(adapter).filter(({ outcome }) => outcome === 'missed');
 ```
 
 `audit` takes an adapter that passes the set, applies each defect to it in
