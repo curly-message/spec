@@ -73,6 +73,15 @@ every host what it already settled.
   neither is the host ending the script it runs, or the process, at a memory
   limit it enforces. Where such a limit is what ends a resolution that reaches
   itself, section 13's containment still applies.
+* Sections 4 and 13 say that a serialization the host's serializer refuses for
+  the value's depth is a serialization that raises or yields nothing, however
+  few nodes it holds. Where the call stack running out would end the process,
+  the implementation refuses at a depth of its own short of that, and a depth
+  at which it refuses a value, there or in a serialization it documents, is
+  the serializer's refusal. Section 13's node minimum binds the limit the
+  implementation imposes on the nodes it visits; the document sets no minimum
+  for either depth, which is documented with the limits the implementation
+  permits.
 
 ## 3.1.0
 
