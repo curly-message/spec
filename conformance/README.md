@@ -39,8 +39,9 @@ its own, because a case may be corrected without the format changing.
 `fixtures/*.json` groups the cases by the section of the specification they
 pin, one file per group, and `index.json` lists the files with the level or the
 kind, and the section, each covers. `schema/fixture.schema.json` is the JSON
-Schema every file validates against, so a runner in another language checks the
-set before it reads it.
+Schema every file validates against: the set's own tests hold a release's files
+to it, and a runner in another language that reads files from anywhere else
+checks them against it first ([RUNNER.md](./RUNNER.md)).
 
 Those files are the set. Nothing in them is JavaScript, so an implementation in
 another language needs nothing else from this package: every release carries
@@ -420,9 +421,11 @@ lands, and the set is what the reference is checked against in turn. Where
 the two disagree, the specification decides which is wrong.
 
 `npm run manifest` regenerates `index.json` from the files, and a version bump
-runs it; the tests fail where it is stale, where an `id` repeats, where a file
-does not validate against the schema, or where a `section` names no heading of
-the document its file reads against.
+runs it; the tests fail where it is stale, where an `id` repeats, where an
+object of a JSON file the package ships (a fixture file, the manifest, the
+defect catalogue or a schema) repeats a key, where a file does not validate
+against the schema, or where a `section` names no heading of the document its
+file reads against.
 
 ## Development
 
