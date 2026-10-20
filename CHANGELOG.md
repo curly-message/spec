@@ -13,6 +13,67 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
+### 3.1.1 (Unreleased)
+
+Nothing a message resolves to changes. Where the document spelled a rule for
+ECMAScript alone, or left a host's reading of it unstated, it now states for
+every host what it already settled.
+
+* Section 4 says what the host's JSON serialization holds: no insignificant
+  whitespace, as sections 4.1 and 7 write it, and an object's members in the
+  order the host's mapping holds them in, or the serializer's where the mapping
+  holds none. Escaping, the spelling of a number and what the serializer
+  refuses stay the host's, and a host with no JSON serialization converts with
+  an RFC 8259 one the implementation documents.
+* Sections 4 and 11 say what the host's undefined is on a host with a single
+  null: an entry the mapping does not hold, an argument the caller omitted, or
+  a stand-in the implementation documents. The null stays a value wherever the
+  document holds it present, a payload entry among them, and where the host's
+  functions answer nothing with it, it is a modifier's answer that is nothing
+  at all.
+* Sections 4 and 11.1 say that a numeric conversion yielding NaN yields no
+  number, though a host may type NaN as one: a value compared numerically fails
+  the comparison, and an option key is not numeric, so no numeric comparison
+  selects it.
+* Section 11.2 says that the whitespace around a number is the class of
+  section 6, which an implementation removes from both ends of the text before
+  converting wherever the host's conversion does not skip it, for a formatting
+  modifier and a numeric comparison alike. What the conversion reads beyond
+  that stays the host's. Section 6's note 8 names the use.
+* Section 11.2's example of an infinity is a value the host's conversion reads
+  as one, `Infinity` being ECMAScript's spelling of it rather than a literal
+  every host reads. The rule is unchanged: a formatting modifier does not
+  format an infinity, and a numeric comparison still compares it.
+* Section 4 says which values are plain on hosts whose value model is not
+  ECMAScript's. A type that holds both shapes is plain, and its serialization
+  decides the shape; where several types fit one shape, the implementation
+  documents which are plain, the types the host's JSON decoding produces among
+  them; and a host with no type for dynamic data reads the implementation's
+  documented value model as its own.
+* Section 11.1 says that the Unicode version of the lower-case mapping, and
+  whether it is Unicode's simple mapping or its full one, are the host's
+  ordinary conversion's and documented by the implementation, and that a host
+  whose ordinary conversion is ASCII-only has its implementation supply
+  Unicode's mapping.
+* Section 13 says where a report's excerpt is cut in a host's own string unit:
+  on a code-point boundary, so neither between the halves of a surrogate pair
+  nor inside a UTF-8 sequence, with an example in UTF-8. The rule stays a
+  SHOULD, as the surrogate-pair rule it generalizes was.
+* Sections 11.3 and 14.2 say what containment covers: what the host signals
+  as a failure in code the implementation called, a modifier, a value's
+  conversion or a reporting handler. The host interrupting the process, or the
+  thread a resolution runs on, is not such a failure and passes through.
+* Sections 4 and 13 say that a serialization the host's serializer refuses for
+  the value's depth is a serialization that raises or yields nothing, however
+  few nodes it holds. Section 13's node minimum binds the limit the
+  implementation imposes, and the host's depth is documented with the limits
+  it permits.
+* Section 11.2 says what the host's internationalization facility is on a
+  platform with none of its own: the library the implementation formats
+  through, with the implementation's code applying that library's data. What
+  the library's data lacks is locale data, and what it cannot be asked is a
+  property the facility cannot express.
+
 ## 3.1.0
 
 Two modifiers are added under names no earlier revision defined. A message
