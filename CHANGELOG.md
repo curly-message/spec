@@ -46,6 +46,10 @@ every host what it already settled.
   class as no number wherever the conversion skips that code point, as
   Python's `float` skips `U+0085`. What the conversion reads beyond its
   whitespace stays the host's. Section 6's note 8 names both uses.
+* Section 11.2's example of an infinity is a value the host's conversion reads
+  as one, `Infinity` being ECMAScript's spelling of it rather than a literal
+  every host reads. The rule is unchanged: a formatting modifier does not
+  format an infinity, and a numeric comparison still compares it.
 
 ## 3.1.0
 
