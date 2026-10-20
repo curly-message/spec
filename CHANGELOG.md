@@ -68,6 +68,11 @@ every host what it already settled.
   few nodes it holds. Section 13's node minimum binds the limit the
   implementation imposes, and the host's depth is documented with the limits
   it permits.
+* Section 11.2 says what the host's internationalization facility is on a
+  platform with none of its own: the library the implementation formats
+  through, with the implementation's code applying that library's data. What
+  the library's data lacks is locale data, and what it cannot be asked is a
+  property the facility cannot express.
 
 ## 3.1.0
 
