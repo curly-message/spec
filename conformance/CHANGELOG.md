@@ -19,6 +19,12 @@ says what a runner on a host other than ECMAScript does with it.
   reads no such literal takes the chain over it. That a numeric comparison
   still compares an infinity stays the specification's rule; no case states it
   in one host's spelling.
+* `comparisons/nan-key-is-not-numeric` pins that a key whose conversion
+  yields NaN is not numeric (section 11.1): `{{v:lt; 10:A; NaN:N; 5:B;
+  default:D}}` over `"3"` renders `B`. A host whose conversion reads `NaN`
+  as a number could order such a key among the numeric ones, where every
+  comparison with it is false and the sort leaves `10` ahead of `5`, and no
+  case wrote such a key.
 
 ## 4.1.0
 
