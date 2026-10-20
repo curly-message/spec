@@ -167,16 +167,8 @@ differently.**
   where it ends with the PR. Once reproduced, a small fix that decides
   nothing gets a PR stacked on the current branch, not one after the current
   PR: its branch starts at the current branch's tip, its PR targets that
-  branch, and it goes through the whole cycle with the stack. The stack is a
-  native GitHub stack: the first follow-up creates it from the current PR and
-  its own (`gh stack`, or `POST /repos/{owner}/{repo}/stacks` with the PR
-  numbers bottom first), and each later one is added on top
-  (`POST .../stacks/{number}/add`). It merges into `main` bottom first;
-  after each merge, the next PR targets `main` and is rebased onto it — by
-  hand where GitHub has not done so — and merges only once the runs on its
-  new head are green. A branch force-pushed in a stack is followed by a
-  rebase of each PR above it onto the one below it, bottom up, before
-  anything else is pushed to them. Its branch starts from `main` only where the
+  branch and joins its stack (§8), and it goes through the whole cycle with
+  the stack. Its branch starts from `main` only where the
   finding lies in another repository, or no branch is in flight. Anything
   larger, or anything the user
   decides, gets an issue in the
@@ -389,6 +381,23 @@ released after its dependent forces another release of the dependent.
   touches, on the head merged with its base as it stands then. A branch with
   no PR runs them by hand (`workflow_dispatch`). Keep it narrowly scoped;
   link out-of-scope follow-ups (§3) under `## Notes`.
+- **A PR built on another is stacked natively, never by a mention.** A PR
+  whose branch starts on another open PR's branch targets that branch and is
+  linked with it as a native GitHub
+  [stack](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-stacked-pull-requests).
+  A sentence in its body is not a stack: it shows no stack map and holds no
+  merge order. The first PR on another creates the stack from the two
+  (`gh stack link <below> <own>`, or `POST /repos/{owner}/{repo}/stacks`
+  with the PR numbers bottom first), and each later one is added on top
+  (`gh stack link <stack> <own>`, or `POST .../stacks/{number}/add`). A
+  stack holds the PRs of one repository, so a PR that waits on a PR in
+  another repository names it under `## Notes`, and that is the one
+  dependency a body states. A stack merges into `main` bottom first; after
+  each merge, the next PR targets `main` and is rebased onto it — by hand
+  where GitHub has not done so — and merges only once the runs on its new
+  head are green. A branch force-pushed in a stack is followed by a rebase
+  of each PR above it onto the one below it, bottom up, before anything else
+  is pushed to them.
 - Title ≤ 70 chars, describing the overarching scope. Body: a short summary,
   what was tested (real results), and the linked issue via closing keywords
   (`Closes curly-message/spec#N`).
