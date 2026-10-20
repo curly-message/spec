@@ -13,6 +13,19 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
+### 3.1.1 (Unreleased)
+
+Nothing a message resolves to changes. Where the document spelled a rule for
+ECMAScript alone, or left a host's reading of it unstated, it now states for
+every host what it already settled.
+
+* Section 4 says what the host's JSON serialization holds: no insignificant
+  whitespace, as sections 4.1 and 7 write it, and an object's members in the
+  order the host's mapping holds them in, or the serializer's where the mapping
+  holds none. Escaping, the spelling of a number and what the serializer
+  refuses stay the host's, and a host with no JSON serialization converts with
+  an RFC 8259 one the implementation documents.
+
 ## 3.1.0
 
 Two modifiers are added under names no earlier revision defined. A message
