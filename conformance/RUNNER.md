@@ -160,6 +160,14 @@ makes of it, because the order of a request's properties is the host's. A case
 that states a request writes the placeholder alone, so the resolution it
 describes makes exactly one request: more than one, or none, is a failure.
 
+A request's numbers are compared with the sign of zero, which JSON writes
+alike for both. Section 11.2 applies the sign of a delta to the count it
+rounds to, so a negative delta under half a second asks for a count of `-0`,
+and a relative time spelled out reads that as the past and `0` as the future;
+a runner that compared the two alike would pass an implementation that drops
+the sign. A case writes such a zero as `-0.0`, because a decoder that reads
+`-0` as an integer reads it as `0`.
+
 A selection request (section 11.5) answers with a category, not with text, and
 the case names the output each category selects. On the text reading the runner
 performs the request, takes the category its host answers and expects the
