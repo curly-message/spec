@@ -391,9 +391,11 @@ released after its dependent forces another release of the dependent.
   (`gh stack link <below> <own>`, or `POST /repos/{owner}/{repo}/stacks`
   with the PR numbers bottom first), and each later one is added on top
   (`gh stack link <stack> <own>`, or `POST .../stacks/{number}/add`). A
-  stack holds the PRs of one repository, so a PR that waits on a PR in
-  another repository names it under `## Notes`, and that is the one
-  dependency a body states. A stack merges into `main` bottom first; after
+  stack is one line of PRs, so a PR that several open PRs need at once is
+  in no stack: each of them starts on its branch, targets it, and names it
+  under `## Notes`. A stack holds the PRs of one repository, so a PR that
+  waits on a PR in another repository names it under `## Notes` too. Those
+  are the only dependencies a body states. A stack merges into `main` bottom first; after
   each merge, the next PR targets `main` and is rebased onto it — by hand
   where GitHub has not done so — and merges only once the runs on its new
   head are green. A branch force-pushed in a stack is followed by a rebase
