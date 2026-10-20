@@ -52,6 +52,21 @@ ECMAScript does with it. Nothing a message resolves to changes.
   hand. The audit's example in the README and RUNNER.md lists the defects
   `missed`, where it listed every one not `caught`, the unreachable among
   them.
+* RUNNER.md states what a runner on a typed host does: the adapter states its
+  stand-in for the `undefined` tag, and where it states none the runner leaves
+  out what holds the tag, which reads alike everywhere but in a wrapper owning
+  that member alone; a case may be decoded into a neutral value the adapter
+  maps; an implementation whose ids are text hands an id of another shape on
+  as none, which no expectation observes; an `unexpressible` or a `cst` its
+  adapter cannot leave out and states empty is no claim, while an empty list
+  of reports or of requests is measured as it stands; a runner may rely on a
+  release's files holding to the schema and repeating no key in an object,
+  and checks files from anywhere else for both, by hand where it has no
+  schema validator, which the JavaScript runner's `load` and `--fixtures`
+  leave to the caller; and one that reads the release's archive checks it
+  against its digest. The set's tests now fail where an object of a JSON file
+  the package ships, a fixture file, `index.json`, `defects.json` or a schema,
+  repeats a key, which `JSON.parse` hid by keeping the last member.
 
 ## 4.1.0
 
