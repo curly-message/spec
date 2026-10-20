@@ -1149,7 +1149,8 @@ modifier under that name nothing: its messages resolve as they did, and the
 only thing out of reach is the modifier the new version defines.
 
 A host-defined modifier that raises MUST be contained: the placeholder resolves
-to the fallback chain and the failure SHOULD be reported.
+to the fallback chain and the failure SHOULD be reported. Section 14.2 says what
+a failure is, and that the host interrupting the process is not one.
 
 ### 11.4 Unknown modifiers
 
@@ -1655,6 +1656,21 @@ is nothing to resolve (section 4), and a message nobody wrote is not a defect in
 the payload, so stepping past it is not a condition to report. Neither is the
 id: no step of resolution reads it, and it is a caller's input rather than a
 payload value, so section 4's reporting SHOULD does not reach it.
+
+What is contained is a failure: what the host signals as one in code the
+implementation called — a modifier, a value's conversion, a reporting handler
+(sections 4, 11.3, 13) — an exception, say, or a panic the host lets the
+implementation recover from. The host interrupting the process, or the thread a
+resolution runs on — an interruption the user sent, a request to exit, a thread
+ended at its own request — is not a failure of that code. Nor is the host ending
+the script it runs, or the process, at a memory limit it enforces, such as PHP's
+`memory_limit`, which a script reaches wherever it allocates. An implementation
+lets either pass rather than contain it, and the resolution it interrupts does
+not return, which is not the implementation raising. Neither reaches a
+resolution that reaches itself without end (section 13): where the host's limit
+on how deep it will go is one it ends the script or the process at, its memory
+limit among them, section 13's containment still applies, and an implementation
+that sets no bound of its own short of that limit does not meet it.
 
 A report names the condition it describes with a **code**, and every code
 declares an **origin**: which of a resolution's inputs the defect is in, and so
