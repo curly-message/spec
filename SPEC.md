@@ -1525,9 +1525,13 @@ carries rather than over where that text came from: under section 5 the text a
 report identifies is the placeholder the message spells rather than anything a
 placeholder resolved to, and a message is written in a catalogue by hands that
 are not the host's, so an implementation is held to the bound whether or not it
-carries payload-derived text as well. A cut that would fall between the two
-halves of a surrogate pair SHOULD fall before the pair instead, so that the
-excerpt ends on a whole character.
+carries payload-derived text as well. A cut SHOULD fall on a code-point
+boundary in the unit the host measures its strings in, so that the excerpt ends
+on a whole character: one that would fall between the two halves of a surrogate
+pair falls before the pair instead, and one that would fall inside the bytes of
+a UTF-8 sequence falls before the sequence. An excerpt bounded at 120 bytes of
+UTF-8 whose 119th byte begins a three-byte sequence therefore ends at its 118th
+byte.
 
 ## 14. Security properties and error behavior
 
