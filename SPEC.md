@@ -908,11 +908,12 @@ What makes any other value a number is the host's ordinary numeric conversion
 The conversion reads the whole value and not a leading part of it, so `12px` is
 not a number; whitespace around a number is not part of it, so ` 12 ` is one; a
 sign and an exponent are part of it, so `+12` and `1e3` are. An infinity is not
-a number a formatting modifier can format either, so `{{v:number}}` over
-`Infinity` takes the fallback chain while `{{v:gt; 5:X}}` still selects `X` for
-that same value; and `currency` applies the test a second time to the product
-of the value and its `ratio`, so a product that overflows to an infinity takes
-the chain too.
+a number a formatting modifier can format either, so `{{v:number}}` over a
+value the host's conversion reads as an infinity — `Infinity` in ECMAScript —
+takes the fallback chain while `{{v:gt; 5:X}}` still selects `X` for that same
+value; and `currency` applies the test a second time to the product of the
+value and its `ratio`, so a product that overflows to an infinity takes the
+chain too.
 
 The whitespace around a number is the class of section 6, so `12` with
 `U+3000 IDEOGRAPHIC SPACE` or `U+FEFF` on either side is a number. Where the
