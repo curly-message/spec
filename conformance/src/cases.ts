@@ -98,7 +98,7 @@ const reads = '{{v:eq; nomatch:X; default:ok;}}';
 // A message nesting the stated number of levels, each selecting the option
 // that holds the next. The innermost declares a fallback, so a level the
 // nesting limit refuses is visible as the chain it takes.
-const nest = (levels: number): string => (levels <= 1 ? '{{v; a:settled; default:fallback;}}' : `{{v; a:${nest(levels - 1)};}}`);
+const nest = (levels: number, innermost = '{{v; a:settled; default:fallback;}}'): string => (levels <= 1 ? innermost : `{{v; a:${nest(levels - 1, innermost)};}}`);
 
 // How many levels past the nesting limit the chain construction nests: far
 // enough that a walk recursing once per level overflows a default call stack
@@ -153,6 +153,33 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
     // The innermost placeholder is the one refused, and a nesting limit is a
     // defect of the message: it takes its fallback chain, and every level
     // around it selects the option that holds it.
+    expected: { output: 'fallback', reports: [limit('nesting-limit', 'message', nesting)] },
+  }),
+  // Section 9 decides the nesting limit after the value is looked up and
+  // converted, so a placeholder nested too deep still converts its value,
+  // reports what the conversion reports and spends the read budget, and one
+  // reached with the budget spent resolves to the empty string however deeply
+  // it nests.
+  'nesting-over-limit-converts': ({ nesting }) => ({
+    input: { message: nest(nesting + 1, '{{w; default:fallback;}}'), payload: { v: 'a', w: decode({ $curly: 'unserializable' }) }, id: ID },
+    expected: { output: 'fallback', reports: [{ code: 'unserializable-value', origin: 'payload', id: ID }, limit('nesting-limit', 'message', nesting)] },
+  }),
+  'nesting-over-limit-reads': ({ nesting, read }) => ({
+    input: { message: `${nest(nesting + 1, '{{w; default:fallback;}}')}{{v}}`, payload: { v: 'a', w: 'x'.repeat(read + 1) }, id: ID },
+    expected: { output: 'fallback', reports: [limit('nesting-limit', 'message', nesting), limit('read-limit', 'limit', read)] },
+  }),
+  'nesting-over-limit-read-spent': ({ nesting, read }) => ({
+    input: { message: nest(nesting + 1, '{{w:eq; nomatch:X;}}{{v; default:fallback;}}'), payload: { v: 'a', w: 'x'.repeat(read + 1) }, id: ID },
+    expected: { output: '', reports: [limit('nesting-limit', 'message', nesting), limit('read-limit', 'limit', read)] },
+  }),
+  // The nesting limit is the first of the message errors, and a placeholder
+  // that meets one meets none after it.
+  'nesting-over-limit-unknown-modifier': ({ nesting }) => ({
+    input: { message: nest(nesting + 1, '{{w:zz; default:fallback;}}'), payload: { v: 'a', w: 'x' }, id: ID },
+    expected: { output: 'fallback', reports: [limit('nesting-limit', 'message', nesting)] },
+  }),
+  'nesting-over-limit-missing-options': ({ nesting }) => ({
+    input: { message: nest(nesting + 1, '{{w:eq; default:fallback;}}'), payload: { v: 'a', w: 'x' }, id: ID },
     expected: { output: 'fallback', reports: [limit('nesting-limit', 'message', nesting)] },
   }),
   'nesting-chain-over-limit': ({ nesting }) => ({

@@ -122,4 +122,56 @@ describe('generated cases', () => {
     expect(build('nesting-chain-over-limit', () => ({ output: 'x', reports: Array.from({ length: 19999 }, () => refused) })).outcome).toMatchObject({ ok: false, reason: 'Expected 20000 reports, got 19999 reports.' });
     expect(build('nesting-chain-over-limit', () => { throw new RangeError('Maximum call stack size exceeded'); }).outcome).toEqual({ ok: false, reason: 'The adapter raised.', expected: 'x', actual: 'Maximum call stack size exceeded' });
   });
+
+  const refused = { code: 'nesting-limit', origin: 'message', id: 'limits', limit: 3 } as const;
+  const spent = { code: 'read-limit', origin: 'limit', id: 'limits', limit: 7 } as const;
+  const unserializable = { code: 'unserializable-value', origin: 'payload', id: 'limits' } as const;
+
+  it('nesting-over-limit-converts refuses a placeholder whose value cannot be described, and expects the conversion reported before the refusal', () => {
+    const { input, outcome } = build('nesting-over-limit-converts', () => ({ output: 'fallback', reports: [unserializable, refused] }));
+    const { w } = input.payload as { w: Record<string, unknown> };
+
+    expect(input).toMatchObject({ message: '{{v; a:{{v; a:{{v; a:{{w; default:fallback;}};}};}};}}', payload: { v: 'a' }, id: 'limits' });
+    expect(() => JSON.stringify(w)).toThrow();
+    expect(outcome).toEqual({ ok: true });
+    // Refused before its value was converted, the placeholder reports nothing of the value.
+    expect(build('nesting-over-limit-converts', () => ({ output: 'fallback', reports: [refused] })).outcome).toMatchObject({ ok: false, reason: 'Expected 2 reports, got 1 report.' });
+    expect(build('nesting-over-limit-converts', () => ({ output: 'fallback', reports: [refused, unserializable] })).outcome).toMatchObject({ ok: false, reason: 'The code of report 1 differs.' });
+  });
+
+  it('nesting-over-limit-reads refuses a placeholder reading past R, and expects the placeholder after it to pay', () => {
+    const { input, outcome } = build('nesting-over-limit-reads', () => ({ output: 'fallback', reports: [refused, spent] }));
+
+    expect(input).toEqual({ message: '{{v; a:{{v; a:{{v; a:{{w; default:fallback;}};}};}};}}{{v}}', payload: { v: 'a', w: 'xxxxxxxx' }, id: 'limits' });
+    expect(outcome).toEqual({ ok: true });
+    // Refused before it read, the placeholder leaves the budget to the one after it.
+    expect(build('nesting-over-limit-reads', () => ({ output: 'fallbacka', reports: [refused] })).outcome).toEqual({ ok: false, reason: 'The output differs.', expected: 'fallback', actual: 'fallbacka' });
+  });
+
+  it('nesting-over-limit-read-spent reaches a placeholder past N with the budget spent, and expects it resolved to the empty string as read-limit', () => {
+    const { input, outcome } = build('nesting-over-limit-read-spent', () => ({ output: '', reports: [refused, spent] }));
+
+    expect(input).toEqual({ message: '{{v; a:{{v; a:{{v; a:{{w:eq; nomatch:X;}}{{v; default:fallback;}};}};}};}}', payload: { v: 'a', w: 'xxxxxxxx' }, id: 'limits' });
+    expect(outcome).toEqual({ ok: true });
+    // Refused before the read limit was tested, the second placeholder takes its chain.
+    expect(build('nesting-over-limit-read-spent', () => ({ output: 'fallback', reports: [refused, refused] })).outcome).toEqual({ ok: false, reason: 'The output differs.', expected: '', actual: 'fallback' });
+  });
+
+  it('nesting-over-limit-unknown-modifier refuses a placeholder naming a modifier nobody registered, and expects the refusal alone', () => {
+    const { input, outcome } = build('nesting-over-limit-unknown-modifier', () => ({ output: 'fallback', reports: [refused] }));
+
+    expect(input).toEqual({ message: '{{v; a:{{v; a:{{v; a:{{w:zz; default:fallback;}};}};}};}}', payload: { v: 'a', w: 'x' }, id: 'limits' });
+    expect(outcome).toEqual({ ok: true });
+    // The unknown modifier decided before the nesting limit, the placeholder reports that one instead.
+    expect(build('nesting-over-limit-unknown-modifier', () => ({ output: 'fallback', reports: [{ code: 'unknown-modifier', origin: 'message', id: 'limits' }] })).outcome).toMatchObject({ ok: false, reason: 'The code of report 1 differs.' });
+  });
+
+  it('nesting-over-limit-missing-options refuses a placeholder selecting from no options, and expects the refusal alone', () => {
+    const { input, outcome } = build('nesting-over-limit-missing-options', () => ({ output: 'fallback', reports: [refused] }));
+
+    expect(input).toEqual({ message: '{{v; a:{{v; a:{{v; a:{{w:eq; default:fallback;}};}};}};}}', payload: { v: 'a', w: 'x' }, id: 'limits' });
+    expect(outcome).toEqual({ ok: true });
+    // Both decided, the placeholder reports one message error more than it meets.
+    expect(build('nesting-over-limit-missing-options', () => ({ output: 'fallback', reports: [refused, { code: 'missing-options', origin: 'message', id: 'limits' }] })).outcome).toMatchObject({ ok: false, reason: 'Expected 1 report, got 2 reports.' });
+  });
 });
