@@ -416,6 +416,14 @@ writes a key that is an array index, such as `9` or `10`, ahead of every other
 key and in numeric order, whatever order it was inserted in, so such a case
 names no member with one.
 
+How deep a value nests before its serialization is refused is the host's too:
+section 13 sets no minimum for that depth, and the implementation documents
+it. So a case that expects a value serialized nests it at most four levels
+deep, counting the outermost object or array as the first. A case that
+expects a serialization refused — a `nodes` value, an `unserializable` one —
+expects the same outcome whatever depth refuses it, so only an implementation
+that documents a shallower depth fails a case for its depth.
+
 The reference implementation is what the set is checked against before it
 lands, and the set is what the reference is checked against in turn. Where
 the two disagree, the specification decides which is wrong.
