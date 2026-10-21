@@ -1218,6 +1218,12 @@ version of this format defines costs a host that already registered its own
 modifier under that name nothing: its messages resolve as they did, and the
 only thing out of reach is the modifier the new version defines.
 
+A host-defined modifier may keep what it was handed and read it later. Once the
+resolution has returned, an option's value or the default it kept answers the
+text a read of it during the resolution produced, and the empty string where
+nothing read it then: after a resolution returns, nothing resolves, reports or
+runs host code on its account.
+
 A host-defined modifier that raises MUST be contained: the placeholder resolves
 to the fallback chain and the failure SHOULD be reported. Section 14.2 says what
 a failure is, and that the host interrupting the process is not one.

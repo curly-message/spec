@@ -173,6 +173,10 @@ without changing what any message resolves to.
   whose other properties hold given values, such as the digit properties in
   the currency style. Each goes unapplied as such a property does, and is
   documented and stated to the conformance set with its condition.
+* Section 11.3 says what an option's value or the default answers when a
+  host-defined modifier kept it and reads it after the resolution returned:
+  the text a read during the resolution produced, or the empty string, so that
+  nothing resolves, reports or runs host code once a resolution has returned.
 
 ## 3.1.0
 
