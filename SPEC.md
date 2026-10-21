@@ -1101,6 +1101,17 @@ than a call into any one language: a host reads each name onto its own
 facility, and a caller that writes the same properties asks for the same
 formatting wherever it runs.
 
+That vocabulary also says which requests are valid, and an implementation
+SHOULD judge a request by it, here and in section 11.5, rather than by what its
+host's facility happens to accept. A locale that is not a well-formed Unicode
+BCP 47 locale identifier (UTS #35) as ECMAScript's facilities read one — `en_US`,
+`i-klingon` — and a property one of their constructors refuses — a currency
+that is not three ASCII letters, or none at all in the currency style — are
+then a request the host rejects however lenient its facility is: the modifier
+cannot format its input, and the placeholder takes the fallback chain by the
+last rule of this section rather than rendering `en_US` in some locale or an
+amount with no currency.
+
 A platform with no internationalization facility of its own has the one its
 implementation formats through. There a library, with the implementation's own
 code applying that library's data, is the host's facility, here and in section
