@@ -52,6 +52,36 @@
       "generate": "nesting-over-limit"
     },
     {
+      "id": "limits/nesting-over-limit-converts",
+      "description": "The nesting limit is decided after the value is looked up and converted: a placeholder nested too deep whose value cannot be described reports unserializable-value with origin payload, then nesting-limit with origin message, and takes its fallback chain.",
+      "section": "9",
+      "generate": "nesting-over-limit-converts"
+    },
+    {
+      "id": "limits/nesting-over-limit-reads",
+      "description": "A placeholder nested too deep reads its value before it is refused, so its value spends the read budget: it takes its fallback chain, and the placeholder after it resolves to the empty string and reports read-limit.",
+      "section": "9",
+      "generate": "nesting-over-limit-reads"
+    },
+    {
+      "id": "limits/nesting-over-limit-read-spent",
+      "description": "The read limit is tested before anything else: a placeholder nested too deep that is reached once the budget is spent resolves to the empty string and reports read-limit, rather than taking its fallback chain as nesting-limit.",
+      "section": "9",
+      "generate": "nesting-over-limit-read-spent"
+    },
+    {
+      "id": "limits/nesting-over-limit-unknown-modifier",
+      "description": "The nesting limit is decided before a modifier nobody registered: a placeholder nested too deep that names one reports nesting-limit with origin message alone, and takes its fallback chain.",
+      "section": "9",
+      "generate": "nesting-over-limit-unknown-modifier"
+    },
+    {
+      "id": "limits/nesting-over-limit-missing-options",
+      "description": "The nesting limit is decided before a selection with no options: a placeholder nested too deep that selects from none reports nesting-limit with origin message alone, and takes its fallback chain.",
+      "section": "9",
+      "generate": "nesting-over-limit-missing-options"
+    },
+    {
       "id": "limits/nesting-chain-over-limit",
       "description": "No limit raises: a chain of inline defaults nested twenty thousand levels past the nesting limit resolves to its innermost text, each refused placeholder taking its chain and reporting nesting-limit once with origin message.",
       "section": "13",

@@ -152,7 +152,7 @@ Three reasons leave a case out, and no others:
 
 Section 13 states minima and requires an implementation to document what it
 permits, so a case at a limit cannot be written out: the runner builds it from
-the limits the adapter declared. README.md gives the nine constructions, the
+the limits the adapter declared. README.md gives the fourteen constructions, the
 message and payload each builds, and what each expects. A runner builds them
 from the adapter's own numbers, not from section 13's minima; an
 implementation that permits more is exercised at what it documents.
@@ -163,7 +163,11 @@ constructions write their text from an option value, which is the message's
 own text and so costs no reading; the read construction hands over a long
 value the placeholder selects nothing from, so almost nothing of it reaches
 the output. A construction that spent two budgets would fail an implementation
-for the limit the case was not about.
+for the limit the case was not about. Five nesting constructions are the
+exception, and meet a second limit, a report of the payload or a second message
+error at a placeholder nested too deep because that is what they pin: section 9
+tests the read limit first, then looks the value up and converts it, and only
+then decides the nesting limit, before any other message error.
 
 The nesting limit is built once more, far past it. A refused placeholder takes
 its fallback chain, and the chain's last link is its inline default, whose
