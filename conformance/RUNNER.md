@@ -226,6 +226,24 @@ Where the adapter exposes no request, the runner performs the case's request on
 its own host and compares the text. Both readings are correct; they measure
 different things, and a runner supports both.
 
+The JavaScript runner performs a request through ECMAScript's `Intl`, which
+takes it as the case writes it. On a host whose facility does not take
+ECMA-402's requests, the runner performs one through a performer of its own,
+which maps the request's facility, properties and input onto the host's
+facility (section 11.2). The performer imports nothing of the implementation's
+formatting path: a translation the two shared would agree with the
+implementation whatever either of them got wrong. It is as wide as the requests
+of the cases the run holds, which leaves out those that read what the adapter
+declared it cannot express, and a request of the run outside it — a facility, a
+property or a value it does not map — ends the run rather than failing or
+skipping the case, since the gap is the runner's and not the implementation's.
+The port documents the library the performer formats through, and its version,
+so that a text it expects can be read against the locale data that made it. A
+recording of another host's answers to the set's requests, kept in the port and
+read in place of a facility, is such a performer as well. The set ships none:
+section 11.2 lets two hosts' locale data differ, and a recording the set
+shipped would pin one host's on every other.
+
 A request is compared by its entries and never by the text a serialization
 makes of it, because the order of a request's properties is the host's. A case
 that states a request writes the placeholder alone, so the resolution it
