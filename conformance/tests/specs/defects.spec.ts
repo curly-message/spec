@@ -3,14 +3,14 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { audit, defects, fixtures, mutations, type Adapter, type Audited, type Case, type ConcreteCase, type Defect, type ExpectedNode, type Fixture, type Node, type Resolved, type ResolutionFixtureFile } from '@curly-message/conformance';
+import { audit, defects, fixtures, mutations, run, type Adapter, type Audited, type Case, type ConcreteCase, type Defect, type ExpectedNode, type Fixture, type Node, type Resolved, type ResolutionFixtureFile } from '@curly-message/conformance';
 import { format } from '../../src/cases';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
 const LIMITS = { output: 5, read: 7, conversion: 7, nesting: 3 };
 
-const REQUEST = { api: 'NumberFormat', options: { maximumFractionDigits: 2 }, input: 1234.5678 } as const;
+const REQUEST = { api: 'NumberFormat', options: { maximumFractionDigits: 2, useGrouping: false }, input: 1234.5678 } as const;
 
 // One case per thing a defect can reach: an output, an output whose ends are
 // whitespace, a report, two reports the order of which matters, a report
@@ -197,6 +197,7 @@ describe('audit', () => {
       'claims-core-only': 'unreachable',
       'formats-wrong': 'unreachable',
       'unexpressible-declared': 'unreachable',
+      'unexpressible-conditional-declared': 'unreachable',
       'claims-no-core': 'caught',
     });
     expect(outcomes(treeless)).toMatchObject({
@@ -207,6 +208,54 @@ describe('audit', () => {
       'tree-unit-unknown': 'unreachable',
       'output-truncated': 'caught',
     });
+  });
+
+  it('adds a defect of what the adapter cannot express to what the adapter declared itself', () => {
+    const request = (options: Record<string, unknown>) => ({ api: 'NumberFormat', options, input: 1234.5678 }) as const;
+    const REQUESTS = {
+      'b.format': REQUEST,
+      'b.digits': request({ maximumFractionDigits: 2 }),
+      'b.grouped': request({ maximumFractionDigits: 1, useGrouping: true }),
+      'b.code': request({ style: 'currency', currency: 'USD', currencyDisplay: 'code' }),
+    };
+    const intl: Fixture = {
+      name: 'intl.json',
+      file: { format: 'curly-message-3', level: 'intl', section: '11.2', cases: Object.entries(REQUESTS).map(([id, stated]) => ({ id: id.replace('.', '/'), description: 'Pins a request.', message: '{{n:number}}', messageId: id, locale: 'de', expected: { format: stated } })) },
+    };
+    // A host that cannot express grouping or how a currency is displayed, and
+    // formats those requests without them, as it documents.
+    const gapped = conforming({
+      unexpressible: { NumberFormat: ['useGrouping', 'currencyDisplay'] },
+      resolve: ({ id }) => {
+        const key = String(id);
+
+        if (!Object.hasOwn(REQUESTS, key)) return ANSWERS[key];
+
+        return { output: key === 'b.grouped' || key === 'b.code' ? 'formatted without it' : format(REQUESTS[key as keyof typeof REQUESTS], 'de'), reports: [] };
+      },
+    });
+
+    expect(run(gapped, { fixtures: [SET[0], intl] }).skipped.map(({ id }) => id)).toEqual(['b/format', 'b/grouped', 'b/code']);
+    expect(outcomes(gapped, [SET[0], intl])).toMatchObject({
+      'unexpressible-declared': 'caught',
+      'unexpressible-conditional-declared': 'unreachable',
+    });
+  });
+
+  it('reaches the runner with a defect of what the adapter cannot express wherever it leaves out a case the adapter ran', () => {
+    const digits = (id: string, maximumFractionDigits: number): ConcreteCase => ({ id: `b/${id}`, description: 'Pins a request.', message: '{{n:number}}', messageId: `b.${id}`, locale: 'de', expected: { format: { api: 'NumberFormat', options: { maximumFractionDigits }, input: 1234.5678 } } });
+    const set = (...cases: ConcreteCase[]): Fixture[] => [SET[0], { name: 'intl.json', file: { format: 'curly-message-3', level: 'intl', section: '11.2', cases } }];
+    const answers: Record<string, Resolved> = Object.fromEntries([1, 2].map((n) => [`b.digits-${n}`, { output: format({ api: 'NumberFormat', options: { maximumFractionDigits: n }, input: 1234.5678 }, 'de'), reports: [] }]));
+    // A host that cannot express two fraction digits, and formats a request
+    // for one as asked.
+    const gapped = conforming({
+      unexpressible: { NumberFormat: [{ property: 'maximumFractionDigits', values: [2] }] },
+      resolve: ({ id }) => answers[String(id)] ?? ANSWERS[String(id)],
+    });
+
+    expect(outcomes(gapped, set(digits('digits-1', 1), digits('digits-2', 2)))['unexpressible-declared']).toBe('caught');
+    expect(outcomes(gapped, set(digits('digits-2', 2)))['unexpressible-declared']).toBe('unreachable');
+    expect(audit(gapped, { fixtures: set(digits('digits-1', 1), digits('digits-2', 2)), levels: ['core'] }).find(({ id }) => id === 'unexpressible-declared')?.outcome).toBe('unreachable');
   });
 
   it('calls a defect missed where it reached the runner and the runner answered nothing', () => {
