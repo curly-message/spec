@@ -1160,10 +1160,17 @@ A property the host's facility cannot express is not an input the modifier
 cannot format. The modifier formats with the properties the facility does
 express, and the placeholder does not take the fallback chain on a property's
 account: a number formatted without the grouping a caller asked to suppress is
-still the number, and a fallback in its place is not. An implementation MUST
-document the properties it cannot express, and states them to the conformance
-set through the adapter of section 14.3, so that what it did not apply is
-observable rather than only written down.
+still the number, and a fallback in its place is not. The same holds where the
+facility expresses a property but not every value of it, or not alongside every
+value of the request's other properties: a facility that formats an amount
+with its currency's own digits cannot express the digit properties in the
+currency style, and formats a decimal number with them all the same. What it
+cannot express there goes unapplied, and the rest is formatted. An
+implementation MUST document what it cannot express — each property or value
+of one, and, where it cannot express it in some requests only, the values of
+the other properties that make a request one of them — and states it to the
+conformance set through the adapter of section 14.3, so that what it did not
+apply is observable rather than only written down.
 
 Because the output of these modifiers depends on the host's locale data, an
 output string on its own tests that data as much as it tests this format. An
