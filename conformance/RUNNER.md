@@ -53,7 +53,9 @@ runner makes neither check: `load` and `--fixtures` read a directory as it
 stands, so files from anywhere but a release are checked before they are
 handed to them. A runner that reads the set from the release's archive,
 `conformance-<version>.zip`, and pins it by its digest checks the archive
-against the `sha256` the release notes state before it opens it.
+before it opens it, against the `sha256` the release notes state or, from
+4.2.0 on, the `conformance-<version>.zip.sha256` the release carries beside it,
+which `sha256sum -c` reads.
 
 ## Decoding a case's inputs
 

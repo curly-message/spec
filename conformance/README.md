@@ -48,7 +48,9 @@ another language needs nothing else from this package: every release carries
 them as `conformance-<version>.zip` — the fixtures, the manifest, the defect
 catalogue, both schemas and the two documents that state what they hold, under
 one directory, with its digest in the release notes — attached to the
-[release](https://github.com/curly-message/spec/releases) that named it.
+[release](https://github.com/curly-message/spec/releases) that named it. From
+4.2.0 on, the release carries beside it `conformance-<version>.zip.sha256`, the
+digest as `sha256sum` writes it.
 
 A file has a `format`, the versioned identifier of the format it targets; a
 `level`, the conformance level of section 2 that requires every case in it;

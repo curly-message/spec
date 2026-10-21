@@ -188,6 +188,11 @@ property. Nothing a message resolves to changes.
   defect is now unreachable where the adapter's own declaration already leaves
   out every case of the run whose request the defect's entry covers, read off
   the set and the levels the audit runs; RUNNER.md says so.
+* The release carries `conformance-<version>.zip.sha256` beside the archive:
+  its digest as `sha256sum` writes it, so a fetch checks the archive with
+  `sha256sum -c` rather than copying the digest out of the release notes,
+  which still state it. The README and RUNNER.md name the file, and the
+  release it starts at: no earlier release carries one.
 
 ## 4.1.0
 

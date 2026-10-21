@@ -272,7 +272,8 @@ jobs:
       # staged under one directory so the archive unpacks into a folder rather
       # than over the directory it is unpacked in, and are named rather than
       # matched: a path that has moved fails the release instead of dropping
-      # out of it.
+      # out of it. The archive's digest is written beside it as sha256sum
+      # writes it, so a fetch checks it with `sha256sum -c`.
       - name: Pack the release asset
         id: asset
         if: inputs.assets != ''
@@ -289,10 +290,11 @@ jobs:
             [ -e "$path" ] || { echo "::error::'$path' is named as a release asset but is not in $PACKAGE."; exit 1; }
             cp --parents --recursive "$path" "$root"
           done <<< "$ASSETS"
-          ( cd "$RUNNER_TEMP/asset" && zip --quiet --recurse-paths "$name.zip" "$name" )
+          ( cd "$RUNNER_TEMP/asset" && zip --quiet --recurse-paths "$name.zip" "$name" && sha256sum "$name.zip" > "$name.zip.sha256" )
           echo "file=$RUNNER_TEMP/asset/$name.zip" >> "$GITHUB_OUTPUT"
+          echo "digest=$RUNNER_TEMP/asset/$name.zip.sha256" >> "$GITHUB_OUTPUT"
           echo "name=$name.zip" >> "$GITHUB_OUTPUT"
-          echo "sha=$(sha256sum "$RUNNER_TEMP/asset/$name.zip" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+          echo "sha=$(cut -d ' ' -f 1 "$RUNNER_TEMP/asset/$name.zip.sha256")" >> "$GITHUB_OUTPUT"
 
       # The release commit, its tag and the GitHub release are the app's: its
       # token passes the rules on main, and unlike the workflow's own token, a
@@ -346,12 +348,13 @@ jobs:
           TAG: ${{ needs.version.outputs.tag }}
           SECTION: ${{ needs.version.outputs.section }}
           ASSET: ${{ steps.asset.outputs.file }}
+          DIGEST: ${{ steps.asset.outputs.digest }}
           ASSET_NAME: ${{ steps.asset.outputs.name }}
           ASSET_SHA: ${{ steps.asset.outputs.sha }}
         run: |
           awk -v heading="$SECTION" '$0 == heading { on = 1; next } /^## / { on = 0 } on' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
           if [ -n "$ASSET" ]; then
-            printf 'The release carries **%s** for anything that does not install from npm. `sha256 %s`\n' "$ASSET_NAME" "$ASSET_SHA" >> "$RUNNER_TEMP/notes.md"
+            printf 'The release carries **%s** for anything that does not install from npm, and its digest beside it as **%s.sha256**. `sha256 %s`\n' "$ASSET_NAME" "$ASSET_NAME" "$ASSET_SHA" >> "$RUNNER_TEMP/notes.md"
           fi
           [ "$TAG" = next ] && prerelease=--prerelease || prerelease=
-          gh release create "$PACKAGE-v$VERSION" --verify-tag --title "$NAME@$VERSION" --notes-file "$RUNNER_TEMP/notes.md" $prerelease $ASSET
+          gh release create "$PACKAGE-v$VERSION" --verify-tag --title "$NAME@$VERSION" --notes-file "$RUNNER_TEMP/notes.md" $prerelease $ASSET $DIGEST
