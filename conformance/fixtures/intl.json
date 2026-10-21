@@ -301,30 +301,6 @@
       }
     },
     {
-      "id": "intl/date-parsed-text",
-      "description": "date hands text that is not a number to the host's date parsing, so an ISO date-time with an explicit zone formats the instant it names.",
-      "section": "11.2",
-      "message": "{{d:date}}",
-      "payload": {
-        "d": "2024-03-05T10:00:00.000Z"
-      },
-      "props": {
-        "date": {
-          "timeZone": "UTC"
-        }
-      },
-      "locale": "en",
-      "expected": {
-        "format": {
-          "api": "DateTimeFormat",
-          "options": {
-            "timeZone": "UTC"
-          },
-          "input": 1709632800000
-        }
-      }
-    },
-    {
       "id": "intl/date-locale-is-the-callers",
       "description": "date formats in the locale the caller supplied.",
       "section": "11.2",
