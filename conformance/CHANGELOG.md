@@ -87,6 +87,12 @@ ECMAScript does with it. Nothing a message resolves to changes.
   reads `1` and not `1.0` whatever type an implementation hands it on as, and
   `nothing` answers what the implementation reads as an answer that is nothing
   at all.
+* *Writing a fixture* in the README says how deep a case nests a value it
+  expects serialized: at most four levels, as `conversion/nested-json` does.
+  A case that expects a serialization refused expects the same outcome
+  whatever depth refuses it. Section 13 sets no minimum for the depth at which
+  a serialization is refused, so only an implementation that documents a
+  shallower depth fails a case for its depth.
 
 ## 4.1.0
 
