@@ -9,8 +9,9 @@ value that cannot be described or another message error, which pin the order
 section 9 decides them in, and a value whose refused serialization would have
 written more than the read budget holds. It also stops pinning what the
 specification leaves to the host, pins what it settles and no case stated, and
-says what a runner on a host other than ECMAScript does with it. Nothing a
-message resolves to changes.
+says what a runner on a host other than ECMAScript does with it. An adapter
+states what its facility cannot express by value and by condition as well as by
+property. Nothing a message resolves to changes.
 
 * `limits/nesting-chain-over-limit`, built from the adapter's declared nesting
   limit like the other limit cases, nests `{{v; default:` twenty thousand levels
@@ -151,6 +152,35 @@ message resolves to changes.
   whatever depth refuses it. Section 13 sets no minimum for the depth at which
   a serialization is refused, so only an implementation that documents a
   shallower depth fails a case for its depth.
+* An adapter's `unexpressible` names a value of a property, or a property in
+  the requests whose other properties hold given values, as well as a whole
+  property (section 11.2). An entry is a property name, as before, or an
+  object naming the `property` with the `values` it cannot express, the
+  condition `when` it cannot express it in, or both; a value is compared as a
+  request's are. A property was coarser than the gaps hosts have: a facility
+  that writes an amount with its currency's own digits cannot express the digit
+  properties in the currency style alone, and naming them left out the 25
+  decimal requests of the set, which the facility formats as asked, and could
+  not say that the gap is the currency style's, where no request of the set
+  yet reads them. A case left out for an entry says which value or which
+  condition it met. An entry that names no property, lists no value, states an
+  empty condition or holds another key is refused with the run; RUNNER.md says
+  so, and that a runner on a typed host, whose adapter cannot leave `values`
+  or `when` out, reads either stated empty as no narrowing. The exported
+  `Unexpressible` type is the entry, and the defect
+  `unexpressible-conditional-declared` declares a value of a property in
+  requests meeting a condition the set states, which a runner leaves out. The
+  set's tests now fail where the shipped set states no request that either
+  defect of what an adapter cannot express covers, which would leave a
+  correct runner reading as one that missed it.
+* The defects of what an adapter cannot express add their entry to the
+  adapter's own `unexpressible` rather than replace it. `unexpressible-declared`
+  replaced it, which ran the cases the adapter documented a gap in: an audit of
+  an adapter that declares it cannot express `currencyDisplay`, and formats
+  without it, failed the case that reads it and called the defect missed. Each
+  defect is now unreachable where the adapter's own declaration already leaves
+  out every case of the run whose request the defect's entry covers, read off
+  the set and the levels the audit runs; RUNNER.md says so.
 
 ## 4.1.0
 

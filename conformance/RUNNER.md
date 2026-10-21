@@ -109,7 +109,13 @@ what a runner reads before it runs anything:
 * `levels` selects the fixtures. An adapter must claim `core`.
 * `limits` builds the generated cases.
 * `unexpressible`, where the adapter supplies it, leaves out the cases whose
-  formatting request reads a property the host's facility cannot express.
+  formatting request reads what the host's facility cannot express: a
+  property, or a value of one, in every request or in the requests whose
+  other properties hold given values. An entry is a property name, or names
+  the `property` and narrows it to the `values` it lists, to the requests
+  meeting the condition `when` states, or to both. An entry that names no
+  property, lists no value, states an empty condition or holds another member
+  is an error, as a claim outside the vocabulary below is.
 * `cst`, where the adapter supplies it, is the tree of [`CST.md`](../CST.md):
   the `unit` its spans are counted in, and the call that produces one. An
   adapter that supplies none has the tree cases left out.
@@ -117,9 +123,12 @@ what a runner reads before it runs anything:
 The optional claims are `unexpressible` and `cst`; `levels` and `limits` are
 not. A runner on a typed host, whose adapter cannot leave a member out, reads
 those two loosely: an `unexpressible` that names no property, or a `cst` stated
-empty — no unit and no call that produces a tree — is no such claim. An adapter
-that can leave a member out states no claim by leaving it out, and the
-JavaScript runner refuses a `cst` that holds no call. An answer is not a claim
+empty — no unit and no call that produces a tree — is no such claim. It reads
+an entry of `unexpressible` loosely too: `values` or `when` stated empty is no
+narrowing, so the entry stands for every value of its property, or in every
+request. An adapter that can leave a member out states no claim by leaving it
+out, and the JavaScript runner refuses a `cst` that holds no call and an entry
+whose `values` or `when` is empty. An answer is not a claim
 either: an empty list of reports is reports observed and none made, and an
 empty list of requests is requests exposed and none made, both measured as
 they stand.
@@ -142,8 +151,11 @@ summary.
 Three reasons leave a case out, and no others:
 
 * Its level is one the adapter does not claim, or one the caller excluded.
-* Its formatting request reads a property the adapter declared it cannot
-  express (section 11.2).
+* Its formatting request reads what the adapter declared it cannot express
+  (section 11.2): a property it named, a value of one among the values it
+  listed, in a request whose properties hold every value its condition
+  states. A value is compared as a request's are, by its entries and with the
+  sign of zero.
 * It pins the tree and the adapter offers none. A tree file declares no level,
   because `CST.md` is not one of them; whether the adapter offers a tree is
   what selects its cases.
@@ -333,8 +345,13 @@ Apply one defect to it — wrap it, so the adapter is correct in every way but
 one. Run the set again. A defect is realized as its sentence reads for the
 adapter in hand: the one that misdeclares the unit of the tree declares a unit
 other than the adapter's own, whichever that is, since declaring the adapter's
-own would alter nothing. A correct runner answers what the catalogue states; a
-runner that answers nothing has found a hole in itself.
+own would alter nothing. The two that declare what the adapter cannot express
+add their entry to what the adapter declared itself, since replacing it would
+run the cases the adapter documented a gap in, and fail them. Each is
+unreachable where the adapter's own declaration already leaves out every case of
+the run whose request the defect's entry covers: the defect then leaves out no
+case the run without it held. A correct runner answers what the catalogue
+states; a runner that answers nothing has found a hole in itself.
 
 `expects` says what that answer is:
 

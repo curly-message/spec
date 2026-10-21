@@ -71,5 +71,6 @@ export type Surface = [
   Assert<Equal<Shipped.SpanUnit, Source.SpanUnit>>,
   Assert<Equal<Shipped.TreeCase, Source.TreeCase>>,
   Assert<Equal<Shipped.TreeFixtureFile, Source.TreeFixtureFile>>,
+  Assert<Equal<Shipped.Unexpressible, Source.Unexpressible>>,
   Assert<Equal<Shipped.Verdict, Source.Verdict>>,
 ];
