@@ -27,6 +27,8 @@ without changing what 3.1.0 settled that any message resolves to. One answer
 does change what an implementation renders where 3.1.0 settled nothing: a chain
 of reads of inputs that host-defined modifiers kept now stops at a bound the
 implementation keeps, where it went as deep as the host's stack allowed.
+`CST.md` is settled: a node name or an arrangement now changes only with a
+version of the format.
 
 * Section 4 says what the host's JSON serialization holds: no insignificant
   whitespace, as sections 4.1 and 7 write it, and an object's members in the
@@ -207,6 +209,10 @@ implementation keeps, where it went as deep as the host's stack allowed.
   nothing resolves, reports or runs host code once a resolution has returned.
   Section 13 says what a read made during the resolution counts as, and when it
   is refused.
+* `CST.md` section 2 says the tree is settled: implementations in three string
+  units, UTF-16, UTF-8 and code points, offer it, so a node name or an
+  arrangement changes only with a version of the format, no longer in a
+  revision of the document. Its properties change in neither, as before.
 
 ## 3.1.0
 
