@@ -1647,8 +1647,14 @@ thread of execution meets the requirement above.
 
 A report SHOULD identify the unresolved text. A report MUST bound that text's
 length and MUST NOT emit line terminators from it, so that nothing it carries
-can forge additional log lines. The bound is written over the text a report
-carries rather than over where that text came from: under section 5 the text a
+can forge additional log lines. A line terminator there is a member of
+`line-term` (section 6) and nothing else. An implementation MAY escape more,
+and documents what it escapes; where a consumer's log reader ends a line at a
+further code point too — U+0085, or the C0 controls U+000B, U+000C and U+001C
+to U+001E, as some line readers do — the consumer escapes it, since which code
+points end a line is decided by what reads the log rather than by the host
+that wrote the report. The bound is written over the text a report carries
+rather than over where that text came from: under section 5 the text a
 report identifies is the placeholder the message spells rather than anything a
 placeholder resolved to, and a message is written in a catalogue by hands that
 are not the host's, so an implementation is held to the bound whether or not it
