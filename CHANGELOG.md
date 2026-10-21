@@ -87,6 +87,14 @@ every host what it already settled.
   through, with the implementation's code applying that library's data. What
   the library's data lacks is locale data, and what it cannot be asked is a
   property the facility cannot express.
+* Section 11.2 recommends that an implementation judge a formatting request,
+  and section 11.5's plural request, by the validity rules of ECMAScript's
+  facilities, whose vocabulary it is written in, whatever its own facility
+  accepts: a locale that is not a well-formed Unicode BCP 47 locale identifier,
+  a currency that is not three ASCII letters and a currency style with no
+  currency are a request the host rejects, and the placeholder takes the
+  fallback chain. It is a SHOULD, because the rules it narrows leave both
+  outcomes to the host, and `RULINGS.md` records why.
 
 ## 3.1.0
 
