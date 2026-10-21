@@ -141,7 +141,7 @@ describe('the shipped set', () => {
   it('writes its generated cases as the runner builds them', () => {
     const generated = resolutions.filter((entry): entry is { name: string; c: Extract<Case, { generate: string }> } => 'generate' in entry.c);
 
-    expect(generated.filter(({ c }) => !['output-at-limit', 'output-over-limit', 'output-over-limit-continues', 'read-at-limit', 'read-over-limit', 'conversion-over-limit', 'nesting-at-limit', 'nesting-over-limit', 'nesting-over-limit-converts', 'nesting-over-limit-reads', 'nesting-over-limit-read-spent', 'nesting-over-limit-unknown-modifier', 'nesting-over-limit-missing-options', 'nesting-chain-over-limit'].includes(c.generate))).toEqual([]);
+    expect(generated.filter(({ c }) => !['output-at-limit', 'output-over-limit', 'output-over-limit-continues', 'read-at-limit', 'read-over-limit', 'conversion-over-limit', 'conversion-over-limit-continues', 'nesting-at-limit', 'nesting-over-limit', 'nesting-over-limit-converts', 'nesting-over-limit-reads', 'nesting-over-limit-read-spent', 'nesting-over-limit-unknown-modifier', 'nesting-over-limit-missing-options', 'nesting-chain-over-limit'].includes(c.generate))).toEqual([]);
   });
 
   // What the runner holds an implementation to, held to the file itself: an

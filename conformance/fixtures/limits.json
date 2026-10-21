@@ -40,6 +40,12 @@
       "generate": "conversion-over-limit"
     },
     {
+      "id": "limits/conversion-over-limit-continues",
+      "description": "A value no conversion can describe produces no text and spends none of the read budget, however much text its serialization would have written: the placeholder takes the chain, unserializable-value is reported with origin payload, and the placeholder after it resolves and is carried.",
+      "section": "13",
+      "generate": "conversion-over-limit-continues"
+    },
+    {
       "id": "limits/nesting-at-limit",
       "description": "At least the declared number of levels of placeholder is resolved, counting the outermost as the first: a message nesting exactly that many resolves through to the innermost, with nothing to report.",
       "section": "13",
