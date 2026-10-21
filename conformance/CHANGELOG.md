@@ -34,6 +34,21 @@ ECMAScript does with it. Nothing a message resolves to changes.
   as a number could order such a key among the numeric ones, where every
   comparison with it is false and the sort leaves `10` ahead of `5`, and no
   case wrote such a key.
+* Seven cases pin that section 11.1's lower-case mapping is Unicode's full one.
+  No case used a code point at which it parts from the simple one, so an
+  implementation applying the simple mapping passed the set.
+  `comparisons/eq-full-mapping-final-sigma` and its near miss key `ΟΔΟΣ` over
+  `οδος`, which selects, and over `οδοσ`, which does not.
+  `comparisons/eq-full-mapping-final-sigma-after-mark` keys `ΟΔΟ`, a combining
+  acute and `Σ` over their lower case ending in `ς`, since the final-sigma
+  context skips a case-ignorable character;
+  `comparisons/eq-full-mapping-final-sigma-before-space` keys `ΟΣ ΚΑΙ` over
+  `ος και`, since a sigma that ends a word is final though another word
+  follows.
+  `comparisons/eq-full-mapping-dotted-capital-i` and its near miss key
+  `U+0130` over `i` followed by `U+0307`, which selects, and over a lone `i`,
+  which does not. `comparisons/eq-lone-capital-sigma-is-not-final` keys `σ`
+  over a lone `Σ`, which selects, as the section's own example says.
 * The runner compares a request's numbers with the sign of zero. It compared
   them as JSON writes them, where `-0` and `0` are one, so an implementation
   that dropped the sign section 11.2 applies to a count of zero, making a
