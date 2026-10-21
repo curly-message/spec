@@ -125,6 +125,16 @@ every host what it already settled.
   the text it writes is value text the read and output limits count, and only
   a value the application built reaches it, since a payload decoded from JSON
   holds plain values.
+* Section 9 says where section 13's bounds and the message errors fall among a
+  placeholder's steps: the read limit is tested first, so a placeholder
+  reached with the budget spent resolves to the empty string however deeply it
+  nests; every other placeholder looks its value up and converts it, spending
+  the budget and reporting, and only then meets the nesting limit, an unknown
+  modifier or a selection with no options, in that order. Section 11.2 says
+  that a formatting modifier's locale test comes after that read too, so a
+  placeholder that renders nothing for a missing locale has still spent the
+  budget on its value. Section 14.3 says that within a placeholder its value's
+  report comes before a message error's.
 
 ## 3.1.0
 

@@ -598,6 +598,17 @@ equivalent.
 
 A placeholder resolves in the following order.
 
+The bounds of section 13 and the message errors of section 14.2 have their
+places among the steps below. The read limit is tested first, before section 9.2
+reads anything: a placeholder reached once the budget is spent resolves to the
+empty string, however deeply it nests and whatever it names. Every other
+placeholder looks its value up and converts it at section 9.2, which spends the
+budget and reports what the conversion reports, and only then are the message
+errors decided — the nesting limit first (section 13), then a modifier nobody
+registered (section 11.4), then a selection with no options (section 9.5) —
+before section 9.5 selects a result. A placeholder that meets one of them takes
+the fallback chain and meets none after it.
+
 ### 9.1 Parse
 
 Split the placeholder into its selector and segments per section 6. There is no
@@ -911,11 +922,13 @@ SHOULD report a locale that is not available, naming it `missing-locale`
 (section 14.2): the empty string is what such a placeholder renders, and the
 report is what says why it rendered nothing.
 
-The locale is tested **first**, before the value is read: where none is
-available the result is the empty string whatever the value is, so the two
-rules below that send a placeholder to the fallback chain — a value that is
-blank, and an input the modifier cannot format — are reached only where a
-locale is. The test is reached in turn only where the placeholder reaches a
+The locale is tested **first** among what the modifier does, before it reads
+the value as a number or a date: the value has already been looked up and
+converted at section 9.2, spending the read budget (section 9), and where no
+locale is available the result is the empty string whatever that value is, so
+the two rules below that send a placeholder to the fallback chain — a value
+that is blank, and an input the modifier cannot format — are reached only where
+a locale is. The test is reached in turn only where the placeholder reaches a
 modifier at all: an absent value (section 9.2) takes the chain before any
 modifier is asked, whether a locale is available or not. A placeholder whose
 value is absent therefore reports no missing locale, over a caller that
@@ -1829,8 +1842,10 @@ resolves a message in one walk and section 9 fixes the steps a placeholder
 takes, so where neither of two reporting placeholders holds the other, the one
 the message writes first reports first; and where one holds the other, the
 inner reports while the outer's value is being read — after the outer's
-selector was resolved and before its result was produced. An implementation
-MUST NOT reorder reports by condition, by origin or by severity.
+selector was resolved and before its result was produced. Within one placeholder
+the order is section 9's: what its value's conversion reports comes before a
+message error it meets. An implementation MUST NOT reorder reports by
+condition, by origin or by severity.
 
 The count is therefore bounded by the message: a resolution emits at most one
 report per placeholder per condition, and a message holds fewer placeholders
