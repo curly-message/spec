@@ -135,6 +135,10 @@ every host what it already settled.
   placeholder that renders nothing for a missing locale has still spent the
   budget on its value. Section 14.3 says that within a placeholder its value's
   report comes before a message error's.
+* Section 13 says that the line terminators a report must not emit from its
+  text are the members of `line-term`. An implementation may escape more and
+  documents what it does, and a code point a consumer's log reader also ends a
+  line at, U+0085 among them, is the consumer's to escape.
 
 ## 3.1.0
 
