@@ -18,6 +18,15 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
+### 3.1.2 (Unreleased)
+
+Nothing a message resolves to changes, and `SPEC.md` is as 3.1.1 left it.
+
+* `CST.md` section 2 says the tree is settled: implementations in three string
+  units, UTF-16, UTF-8 and code points, offer it, so a node name or an
+  arrangement changes only with a version of the format, no longer in a
+  revision of the document. Its properties change in neither, as before.
+
 ## 3.1.1
 
 Nothing a message resolves to changes, but for one kind of value and, on a

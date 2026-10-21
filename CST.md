@@ -79,13 +79,13 @@ is measured in the unit it declares rather than in one the fixtures chose.
 (`curly-message-3`). Version 3 revises how a payload value converts and spells
 nothing differently, so no node here moves with it.
 
-This document is settled against one implementation. Until a second
-offers a tree, a node name or an arrangement MAY change in a revision of it;
-the properties below are what will not, because they are the reason to have a
-tree at all. Revisions travel with revisions of `SPEC.md` and are recorded in
-the same [`CHANGELOG.md`](./CHANGELOG.md); a revision that changes only this
-document changes nothing about what a message resolves to, and so does not
-touch the version of the format.
+This document is settled against implementations in three string units
+(UTF-16, UTF-8, code points). A node name or an arrangement changes only with a
+version of the format; the properties below never do, because they are the
+reason to have a tree at all. Revisions travel with revisions of `SPEC.md` and
+are recorded in the same [`CHANGELOG.md`](./CHANGELOG.md); a revision that
+changes only this document changes nothing about what a message resolves to,
+and so does not touch the version of the format.
 
 ## 3. Concrete, not abstract
 
