@@ -139,9 +139,11 @@ release carrying that changelog section.
 That release also carries the set as a file: `conformance-<version>.zip`,
 holding the fixtures, the manifest, the defect catalogue a runner is audited
 against, both schemas and the two documents that state what they hold, under one
-directory, with its digest in the notes, for an implementation in a language
-npm does not reach. It is packed before anything is pushed or published, so a
-path that has moved fails the run rather than dropping out of the archive.
+directory, for an implementation in a language npm does not reach, and
+beside it `conformance-<version>.zip.sha256`, its digest as `sha256sum` writes
+it, which the notes state too. It is packed before anything is pushed or
+published, so a path that has moved fails the run rather than dropping out of
+the archive.
 
 After the tests, the release runs in three jobs, so that no code a dependency
 ships runs where the release's credentials are: one settles the version, one
