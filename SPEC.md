@@ -1571,6 +1571,53 @@ resolution that was reporting MUST carry on and MUST NOT raise. That holds for
 a handler that fails any other way too: a channel is where diagnostics go, and
 a message does not fail to render because one could not be logged.
 
+A host may end the script or the process at that limit rather than signal a
+failure the implementation can contain. There an implementation MAY stand in
+for the host's limit with a bound of its own on how many resolutions are in
+progress at once on one thread of execution — a thread, a goroutine or a fiber,
+whatever runs on a call stack of its own — documented with the limits it
+permits. Keeping that count needs to know only which thread of execution asks,
+and a resolution that reaches itself on one call stack deepens the count as it
+deepens the stack. A resolution asked for on a thread of execution where none
+is in progress is never refused, and returns its string as always. The
+implementation MAY also bound how many resolutions are in progress at once
+across the process that were each asked for where another was already in
+progress on the same thread of execution, where one suspended part way keeps
+its place in the count. What reaches either bound is resolutions asked for
+while another is in progress on their thread of execution, never the walk of
+one resolution: a resolution's own walk MUST NOT reach either while its message
+keeps within the minima of this section. A resolution asked for past a bound is
+refused, and where the bound across the process refuses one, what is refused is
+the resolution asked for and not one holding a place in the count. The refusal
+is a failure signalled to the host code that asked for it, as the host signals
+any other (section 14.2), and that code may handle it as it may any other; one
+it lets pass is contained as the paragraph above contains the host's limit, so
+the resolution around it does not raise. Such a bound is then the host's own
+limit for the purpose of this section, and this document sets no minimum for
+it. An implementation whose host ends the script or the process at its limit
+and that sets no such bound does not meet the requirement above (section 14.2).
+
+Neither bound reaches what a chain does across threads of execution. A chain
+leaves a thread of execution where its host code resolves on one it starts, or
+hands the request to one already running and waits for the answer: the
+resolution asked for there runs on a call stack of its own, and carries nothing
+that names the resolution whose host code asked for it on another. The bound on
+one thread of execution therefore counts each part of a chain that stays on one
+call stack, and bounds that part as it bounds any resolution that reaches
+itself, but it does not add one part to the next. The bound across the process
+adds the parts up, though a part that holds a single resolution adds nothing to
+it, so a chain that hands off at every step reaches neither bound. Where a chain
+goes on through such hand-offs without end and no bound the implementation keeps
+reaches it, as the bound on one thread of execution alone never does while each
+part stays short of it, what ends it is the host running out of memory or of
+threads of execution, not a limit on how deep one call stack goes. Where the
+host signals that as a failure in code the implementation called, it is
+contained as any other; where the host ends the script or the process instead,
+the chain is the host code's to bound, as the threads of execution it starts
+are, and the requirement above does not reach it. The bound across the process
+stays optional for it: an implementation that keeps only the bound on one
+thread of execution meets the requirement above.
+
 A report SHOULD identify the unresolved text. A report MUST bound that text's
 length and MUST NOT emit line terminators from it, so that nothing it carries
 can forge additional log lines. The bound is written over the text a report
@@ -1705,7 +1752,10 @@ not return, which is not the implementation raising. Neither reaches a
 resolution that reaches itself without end (section 13): where the host's limit
 on how deep it will go is one it ends the script or the process at, its memory
 limit among them, section 13's containment still applies, and an implementation
-that sets no bound of its own short of that limit does not meet it.
+that sets no bound of its own short of that limit, as section 13 describes
+one, does not meet it. The one exception is what a chain does once it leaves a
+thread of execution, which no one call stack holds: section 13 leaves it to the
+host code that runs it.
 
 A report names the condition it describes with a **code**, and every code
 declares an **origin**: which of a resolution's inputs the defect is in, and so

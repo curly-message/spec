@@ -95,6 +95,29 @@ every host what it already settled.
   currency are a request the host rejects, and the placeholder takes the
   fallback chain. It is a SHOULD, because the rules it narrows leave both
   outcomes to the host, and `RULINGS.md` records why.
+* Section 13 says what stands in for the host's own limit on a resolution that
+  reaches itself, where the host ends the script or the process at that limit
+  rather than signal a failure: a bound the implementation documents on how
+  many resolutions are in progress at once on one thread of execution, a
+  thread, a goroutine or a fiber. Optionally it also bounds, across the
+  process, those asked for while another was in progress on the same thread of
+  execution, where one suspended part way keeps its place. One asked for where
+  none is in progress is never refused, and a resolution's own walk reaches
+  neither bound within section 13's minima. A refusal is a failure signalled to
+  the host code that asked for it, which that code may handle as any other and
+  which is contained where it lets it pass. An implementation on such a host
+  that sets no bound still does not meet the requirement, as section 14.2
+  says. Where a chain's host code resolves on another thread of execution, one
+  it starts or one it hands the request to, the resolution there carries
+  nothing that links it to the one that asked, so neither bound reaches what
+  the chain does across threads: the bound on one thread counts each part of
+  the chain that stays on one call stack, and the bound across the process adds
+  those parts up. Where such a chain goes on without end past every bound the
+  implementation keeps and the host ends the script or the process as it runs
+  out of memory or of threads, the chain is the host code's to bound, and
+  section 14.2 names it as the one exception; an implementation that keeps only
+  the bound on one thread meets the requirement. The document sets no minimum
+  for the bound.
 
 ## 3.1.0
 
