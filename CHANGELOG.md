@@ -160,6 +160,14 @@ without changing what any message resolves to.
   requires of every limit.
 * Section 13 says that a value no conversion can describe spends none of the
   read budget, however much its conversion wrote before it was abandoned.
+* Section 11.2 says that the text forms `date` reads are the host's, which an
+  implementation documents, and recommends two of them: the text the host's
+  own date type converts to, and an RFC 3339 date-time with an uppercase `T`,
+  its year from `0001` to `9999`, its seconds from `00` to `59` and an
+  explicit offset. Text whose instant depends on when it is read, such as
+  `next monday`, is better not read as a date; a form with no offset stays the
+  host's to read as UTC or as local time, and a year of `0000` or a leap
+  second's `60` the host's to read or not.
 
 ## 3.1.0
 

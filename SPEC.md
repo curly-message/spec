@@ -951,6 +951,20 @@ supplied one and over a caller that supplied none alike.
 as text (section 4), `date` also accepts text the host's own date parsing
 understands; that is what keeps a value authored as a date instance formattable.
 
+Which text that parsing reads is the host's, and an implementation documents the
+forms it reads. It SHOULD read two of them: the text the host's ordinary string
+conversion writes for a value of the host's own date type, as the instant that
+text writes, and an RFC 3339 date-time spelled with an uppercase `T`, its year
+from `0001` to `9999`, its seconds from `00` to `59`, a fraction of a second or
+none, and an explicit offset, `Z` or one of `+hh:mm` and `-hh:mm` —
+`2024-03-05T10:00:00.000Z` and
+`2024-03-05T11:00:00+01:00` are one instant. It SHOULD NOT read as a date a text
+whose instant depends on when it is read, `tomorrow` or `next monday`. Every
+other form is the host's, and two hosts differ over it: a date-time written
+with no offset, or a bare date, reads as UTC on one and as local time on
+another, so a value that must format alike everywhere is a timestamp or a
+date-time written with its offset.
+
 Text that is empty or consists only of `whitespace` (section 6) is **not** a
 number, whatever the host's numeric conversion makes of it, and is not a date
 either. No formatting modifier can format it, so the placeholder MUST take the
