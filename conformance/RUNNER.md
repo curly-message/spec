@@ -50,7 +50,7 @@ names:
 | --- | --- |
 | `{ "$curly": "undefined" }` | The host's own absence: what a caller passes where it passes nothing. |
 | `{ "$curly": "unserializable" }` | A value the host's serialization cannot describe. On a host whose serialization follows references, an object holding itself is one. |
-| `{ "$curly": "nodes", "count": N }` | A value whose serialization visits at least `N` nodes, holding no cycle. A tree that doubles per level reaches any count in few levels. |
+| `{ "$curly": "nodes", "count": N }` | A value whose serialization visits exactly `N` nodes — the value and every member it reaches, counted once for each time it reaches one — holding no cycle. A tree that doubles per level reaches any count in few levels, and members that hold no others make up the rest. |
 
 The replacement is by the value's own shape, everywhere in the inputs and at
 every depth, and nowhere in the expectations: an expectation names text, and a
@@ -104,7 +104,7 @@ Three reasons leave a case out, and no others:
 
 Section 13 states minima and requires an implementation to document what it
 permits, so a case at a limit cannot be written out: the runner builds it from
-the limits the adapter declared. README.md gives the nine constructions, the
+the limits the adapter declared. README.md gives the ten constructions, the
 message and payload each builds, and what each expects. A runner builds them
 from the adapter's own numbers, not from section 13's minima; an
 implementation that permits more is exercised at what it documents.
@@ -114,8 +114,13 @@ construction is shaped so that it spends one budget alone. The output
 constructions write their text from an option value, which is the message's
 own text and so costs no reading; the read construction hands over a long
 value the placeholder selects nothing from, so almost nothing of it reaches
-the output. A construction that spent two budgets would fail an implementation
-for the limit the case was not about.
+the output. The conversion construction at its bound reads its value once and
+compares it against a key its text cannot equal, so the option is chosen only
+where the value converted and none of the text reaches the output; the read
+budget is tested before that read, so however far the text runs past the read
+limit the placeholder still resolves. A construction that
+spent two budgets would fail an implementation for the limit the case was not
+about.
 
 The nesting limit is built once more, far past it. A refused placeholder takes
 its fallback chain, and the chain's last link is its inline default, whose

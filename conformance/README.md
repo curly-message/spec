@@ -94,7 +94,7 @@ of its expectation and the id goes unobserved.
 | --- | --- |
 | `{ "$curly": "undefined" }` | The host's undefined (sections 4.1, 9.2, 10). A message so tagged is one the caller did not supply. |
 | `{ "$curly": "unserializable" }` | A value that no conversion can describe (section 4). The JavaScript runner builds a plain object that references itself. |
-| `{ "$curly": "nodes", "count": N }` | A value whose serialization visits at least `N` nodes (section 13). The runner builds a tree of shared references — each level an array naming the level below twice — deep enough to visit `N`. |
+| `{ "$curly": "nodes", "count": N }` | A value whose serialization visits exactly `N` nodes (section 13). The runner builds an array holding the largest tree of shared references — each level an array naming the level below twice — that visits fewer than `N`, then as many zeros as make up `N`. |
 
 ### Host-defined modifiers
 
@@ -199,6 +199,7 @@ budget on never reaches the output.
 | `output-over-limit-continues` | The same placeholder followed by `{{w}}`, with `w` holding `tail`. | `tail` and one `output-limit` report: a result the output has no room for spends nothing, so what follows it still resolves. |
 | `read-at-limit` | `{{v:eq; nomatch:X; default:ok;}}`, with `v` holding `x` repeated `R` times. | `ok`, no reports. |
 | `read-over-limit` | The same placeholder followed by `{{w}}`, with `v` one character longer and `w` holding `tail`. | `ok` and one `read-limit` report of origin `limit`: the budget is tested before a placeholder reads, so the one that spent it past the limit still resolves and the one after it pays. |
+| `conversion-at-limit` | `{{v:ne; nomatch:ok; default:refused;}}`, with `v` a `nodes` value of `C`. | `ok`, no reports: the value converts, so its text differs from `nomatch` and the option is chosen, where an abandoned conversion would take the chain to `refused`. None of the text reaches the output, and it is the only text read, so a text longer than `R` still resolves: the read budget is tested before it. |
 | `conversion-over-limit` | `{{v; default:D}}`, with `v` a `nodes` value of `C + 1`. | `D` and one `unserializable-value` report of origin `payload`: a serialization that reaches the limit describes nothing, so the placeholder takes the chain. |
 | `nesting-at-limit` | `N` placeholders, each selecting the option that holds the next; the innermost is `{{v; a:settled; default:fallback;}}`. `v` holds `a`. | `settled`, no reports. |
 | `nesting-over-limit` | The same nesting one level deeper. | `fallback` and one `nesting-limit` report of origin `message`: the innermost placeholder is refused and takes its fallback chain, and every level around it selects the option that holds it. |

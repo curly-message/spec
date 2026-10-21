@@ -88,12 +88,23 @@ describe('generated cases', () => {
     expect(build('read-over-limit', () => ({ output: 'oktail', reports: [] })).outcome).toEqual({ ok: false, reason: 'The output differs.', expected: 'ok', actual: 'oktail' });
   });
 
-  it('conversion-over-limit holds a value visiting more than C nodes and expects the default with an unserializable-value report', () => {
+  it('conversion-at-limit holds a value visiting exactly C nodes and expects the option only a converted value selects', () => {
+    const { input, outcome } = build('conversion-at-limit', () => ({ output: 'ok', reports: [] }));
+    const { v } = input.payload as { v: unknown };
+
+    expect(input).toMatchObject({ message: '{{v:ne; nomatch:ok; default:refused;}}', id: 'limits' });
+    expect(visits(v)).toBe(7);
+    expect(outcome).toEqual({ ok: true });
+    expect(build('conversion-at-limit', () => ({ output: 'refused', reports: [] })).outcome).toEqual({ ok: false, reason: 'The output differs.', expected: 'ok', actual: 'refused' });
+    expect(build('conversion-at-limit', () => ({ output: 'ok', reports: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }] })).outcome).toMatchObject({ ok: false, reason: 'Expected 0 reports, got 1 report.', expected: [] });
+  });
+
+  it('conversion-over-limit holds a value visiting C + 1 nodes and expects the default with an unserializable-value report', () => {
     const { input, outcome } = build('conversion-over-limit', () => ({ output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }] }));
     const { v } = input.payload as { v: unknown };
 
     expect(input).toMatchObject({ message: '{{v; default:D}}', id: 'limits' });
-    expect(visits(v)).toBeGreaterThanOrEqual(8);
+    expect(visits(v)).toBe(8);
     expect(outcome).toEqual({ ok: true });
     expect(build('conversion-over-limit', () => ({ output: 'D', reports: [] })).outcome).toEqual({ ok: false, reason: 'Expected 1 report, got 0 reports.', expected: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }], actual: [] });
   });

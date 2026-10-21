@@ -3,17 +3,26 @@ const TAG = '$curly';
 type Tag = { [TAG]: unknown; count?: unknown };
 
 /**
- * A value whose serialization visits at least `count` nodes. Serialization
+ * A value whose serialization visits exactly `count` nodes. Serialization
  * follows a shared reference again every time it meets one, so each level of
  * `[below, below]` spends one node on itself and twice what `below` spends,
- * and the tree doubles its visits per level without ever holding a cycle.
+ * and the tree doubles its visits per level without ever holding a cycle. The
+ * value is an array holding the largest such tree that fits, then as many
+ * zeros as the count still needs, one node each.
  */
 export const nodes = (count: number) => {
+  if (count <= 1) return [];
+
   let tree: unknown[] = [];
+  let visits = 1;
 
-  for (let visits = 1; visits < count; visits = visits * 2 + 1) tree = [tree, tree];
+  for (; visits * 2 + 1 < count; visits = visits * 2 + 1) tree = [tree, tree];
 
-  return tree;
+  const value: unknown[] = new Array(count - visits).fill(0);
+
+  value[0] = tree;
+
+  return value;
 };
 
 const unserializable = () => {

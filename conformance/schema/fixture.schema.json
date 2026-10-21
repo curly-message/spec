@@ -122,6 +122,7 @@
             "output-over-limit-continues",
             "read-at-limit",
             "read-over-limit",
+            "conversion-at-limit",
             "conversion-over-limit",
             "nesting-at-limit",
             "nesting-over-limit",

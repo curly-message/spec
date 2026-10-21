@@ -35,24 +35,24 @@ describe('decode', () => {
     expect(() => JSON.stringify(value)).toThrow();
   });
 
-  it('decodes the nodes tag into a tree a serialization visits at least count times', () => {
-    [1, 2, 3, 4, 100, 1000, 100001].forEach((count) => {
-      const tree = decode({ $curly: 'nodes', count });
-      const visited = visits(tree);
+  it('decodes the nodes tag into a value a serialization visits exactly count times', () => {
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 100, 1000, 100000, 100001].forEach((count) => {
+      const value = decode({ $curly: 'nodes', count });
 
-      expect(visited).toBeGreaterThanOrEqual(count);
-      expect(visited).toBeLessThan(2 * count + 1);
-      expect(() => JSON.stringify(tree)).not.toThrow();
+      expect(visits(value)).toBe(count);
+      expect(() => JSON.stringify(value)).not.toThrow();
     });
   });
 
-  it('builds each level of the tree as an array naming the level below twice', () => {
-    const tree = decode({ $curly: 'nodes', count: 7 }) as unknown[][];
+  it('builds the value as a tree of arrays each naming the level below twice, padded with zeros', () => {
+    const value = decode({ $curly: 'nodes', count: 11 }) as unknown[][][];
 
-    expect(tree).toHaveLength(2);
-    expect(tree[0]).toBe(tree[1]);
-    expect(tree[0][0]).toBe(tree[0][1]);
-    expect(tree[0][0]).toEqual([]);
+    expect(value).toHaveLength(4);
+    expect(value[0]).toHaveLength(2);
+    expect(value[0][0]).toBe(value[0][1]);
+    expect(value[0][0][0]).toBe(value[0][0][1]);
+    expect(value[0][0][0]).toEqual([]);
+    expect(value.slice(1)).toEqual([0, 0, 0]);
   });
 
   it('decodes tags nested inside a payload, props and an id', () => {
@@ -64,7 +64,7 @@ describe('decode', () => {
 
     expect('value' in decoded.payload.v).toBe(true);
     expect(decoded.payload.v.value).toBeUndefined();
-    expect(visits(decoded.payload.list[0])).toBeGreaterThanOrEqual(3);
+    expect(visits(decoded.payload.list[0])).toBe(3);
     expect(decoded.payload.list[1]).toBe('plain');
     expect('maximumFractionDigits' in decoded.props.number).toBe(true);
     expect(decoded.props.number.maximumFractionDigits).toBeUndefined();

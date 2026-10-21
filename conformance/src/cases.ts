@@ -95,6 +95,12 @@ const writes = (length: number) => `{{v; a:${'x'.repeat(length)};}}`;
 // budget is spent whole and two characters reach the output.
 const reads = '{{v:eq; nomatch:X; default:ok;}}';
 
+// A value converted whole and compared against a key its text cannot equal:
+// the option is chosen only where the value was converted, so a conversion
+// abandoned shows in the output as the default, and none of the value's text
+// reaches the output either way.
+const converts = '{{v:ne; nomatch:ok; default:refused;}}';
+
 // A message nesting the stated number of levels, each selecting the option
 // that holds the next. The innermost declares a fallback, so a level the
 // nesting limit refuses is visible as the chain it takes.
@@ -139,6 +145,12 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
     // The budget is tested before a placeholder reads, so the one that spent
     // it past the limit still resolves and the one after it pays.
     expected: { output: 'ok', reports: [limit('read-limit', 'limit', read)] },
+  }),
+  'conversion-at-limit': ({ conversion }) => ({
+    // The value's text may run past the read limit, but it is the one read and
+    // the budget is tested before it.
+    input: { message: converts, payload: { v: nodes(conversion) }, id: ID },
+    expected: { output: 'ok', reports: [] },
   }),
   'conversion-over-limit': ({ conversion }) => ({
     input: { message: '{{v; default:D}}', payload: { v: nodes(conversion + 1) }, id: ID },
