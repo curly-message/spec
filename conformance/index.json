@@ -6,7 +6,7 @@
       "path": "fixtures/comparisons.json",
       "level": "core",
       "section": "11.1",
-      "cases": 76
+      "cases": 83
     },
     {
       "path": "fixtures/conversion.json",
