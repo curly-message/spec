@@ -152,7 +152,7 @@ Three reasons leave a case out, and no others:
 
 Section 13 states minima and requires an implementation to document what it
 permits, so a case at a limit cannot be written out: the runner builds it from
-the limits the adapter declared. README.md gives the fourteen constructions, the
+the limits the adapter declared. README.md gives the fifteen constructions, the
 message and payload each builds, and what each expects. A runner builds them
 from the adapter's own numbers, not from section 13's minima; an
 implementation that permits more is exercised at what it documents.

@@ -6,10 +6,11 @@ The set gains constructions at the limits: a chain of inline defaults nested
 far past the nesting limit, which an implementation resolves however deeply it
 nests, and placeholders that meet the nesting limit beside the read limit, a
 value that cannot be described or another message error, which pin the order
-section 9 decides them in.
-It also stops pinning what the specification leaves to the host, pins what it
-settles and no case stated, and says what a runner on a host other than
-ECMAScript does with it. Nothing a message resolves to changes.
+section 9 decides them in, and a value whose refused serialization would have
+written more than the read budget holds. It also stops pinning what the
+specification leaves to the host, pins what it settles and no case stated, and
+says what a runner on a host other than ECMAScript does with it. Nothing a
+message resolves to changes.
 
 * `limits/nesting-chain-over-limit`, built from the adapter's declared nesting
   limit like the other limit cases, nests `{{v; default:` twenty thousand levels
@@ -43,6 +44,14 @@ ECMAScript does with it. Nothing a message resolves to changes.
   `reports/value-reports-before-unknown-modifier` and
   `reports/value-reports-before-missing-options` expect `unserializable-value`
   before the message error at one placeholder (section 14.3).
+* `limits/conversion-over-limit-continues` pins that a value no conversion can
+  describe spends none of the read budget (section 13). `{{v; default:D}}{{w}}`
+  holds a `v` one node past the conversion limit whose text, written out,
+  would run past the read limit, and expects `Dtail` with one
+  `unserializable-value` report: an implementation that charged the refused
+  serialization's text to the budget left none for `w`, and no case told the
+  two apart. The generator is `conversion-over-limit-continues`, added to the
+  schema's enum and to the exported `Generator` type.
 * `resolution/wrapper-near-miss-is-value` wrote its object's members as
   `value`, then `unit`, and expected them serialized in that order, which is
   ECMAScript's insertion order: a host that writes a mapping's members sorted

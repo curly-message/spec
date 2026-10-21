@@ -98,6 +98,21 @@ describe('generated cases', () => {
     expect(build('conversion-over-limit', () => ({ output: 'D', reports: [] })).outcome).toEqual({ ok: false, reason: 'Expected 1 report, got 0 reports.', expected: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }], actual: [] });
   });
 
+  it('conversion-over-limit-continues refuses a value whose text runs past R, and expects the placeholder after it carried', () => {
+    const unserializable = { code: 'unserializable-value', origin: 'payload', id: 'limits' } as const;
+    const { input, outcome } = build('conversion-over-limit-continues', () => ({ output: 'Dtail', reports: [unserializable] }));
+    const { v, w } = input.payload as { v: string[]; w: string };
+
+    expect(input).toMatchObject({ message: '{{v; default:D}}{{w}}', id: 'limits' });
+    expect(v).toEqual(Array.from({ length: 7 }, () => 'xx'));
+    expect(visits(v)).toBe(8);
+    expect(v.join('').length).toBeGreaterThan(7);
+    expect(w).toBe('tail');
+    expect(outcome).toEqual({ ok: true });
+    // A refused serialization charged to the read budget leaves none for the placeholder after it.
+    expect(build('conversion-over-limit-continues', () => ({ output: 'D', reports: [unserializable, { code: 'read-limit', origin: 'limit', id: 'limits', limit: 7 }] })).outcome).toEqual({ ok: false, reason: 'The output differs.', expected: 'Dtail', actual: 'D' });
+  });
+
   it('nesting-at-limit nests exactly N levels and expects the innermost option', () => {
     const { input, outcome } = build('nesting-at-limit', () => ({ output: 'settled', reports: [] }));
 

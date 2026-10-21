@@ -123,6 +123,7 @@
             "read-at-limit",
             "read-over-limit",
             "conversion-over-limit",
+            "conversion-over-limit-continues",
             "nesting-at-limit",
             "nesting-over-limit",
             "nesting-over-limit-converts",
