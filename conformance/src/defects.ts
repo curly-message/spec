@@ -177,6 +177,8 @@ export const mutations: Record<Defect, (adapter: Adapter) => Mutation> = {
 
   'claims-no-limits': (adapter) => claiming(adapter, { limits: { ...adapter.limits, nesting: 0 } }),
 
+  'conversion-limit-overstated': (adapter) => claiming(adapter, { limits: { ...adapter.limits, conversion: adapter.limits.conversion + 1 } }),
+
   'tree-unoffered': (adapter) => claiming(adapter, { cst: undefined }, () => adapter.cst !== undefined),
 
   'tree-node-dropped': (adapter) => parsing(adapter, (tree) => {

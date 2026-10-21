@@ -386,6 +386,7 @@ export type Defect =
   | 'claims-no-core'
   | 'claims-unknown-level'
   | 'claims-no-limits'
+  | 'conversion-limit-overstated'
   | 'tree-unoffered'
   | 'tree-node-dropped'
   | 'tree-node-retyped'

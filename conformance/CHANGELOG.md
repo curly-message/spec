@@ -27,6 +27,11 @@ value at the conversion limit, which it converts.
   count. `limits/conversion-over-limit` so visits exactly one node past the
   limit, and an implementation that permits more nodes than it declares, up to
   nearly twice as many, no longer passes it.
+* `defects.json` gains `conversion-limit-overstated`, an adapter that declares
+  a conversion limit one node higher than the one it enforces. A correct runner
+  fails it on `limits/conversion-at-limit`; the set had no case it could fail it
+  on before. The defect is added to the exported `Defect` type and to
+  `mutations`, and a runner in another language carries it as well.
 
 ## 4.1.0
 
