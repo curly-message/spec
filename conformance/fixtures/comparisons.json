@@ -124,6 +124,90 @@
       }
     },
     {
+      "id": "comparisons/eq-full-mapping-final-sigma",
+      "description": "The mapping is Unicode's full one, final sigma included, so a key ending in a capital sigma after a cased letter selects for a value ending in a final sigma.",
+      "section": "11.1",
+      "message": "{{v:eq; \u039f\u0394\u039f\u03a3:X; default:D}}",
+      "payload": {
+        "v": "\u03bf\u03b4\u03bf\u03c2"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/eq-full-mapping-final-sigma-near-miss",
+      "description": "Under the full mapping a key ending in a capital sigma after a cased letter does not select for a value ending in an ordinary sigma, which the simple mapping would give.",
+      "section": "11.1",
+      "message": "{{v:eq; \u039f\u0394\u039f\u03a3:X; default:D}}",
+      "payload": {
+        "v": "\u03bf\u03b4\u03bf\u03c3"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/eq-full-mapping-final-sigma-after-mark",
+      "description": "The final-sigma context skips a case-ignorable character before the sigma, so a decomposed key whose capital sigma follows a combining mark selects for a value ending in a final sigma.",
+      "section": "11.1",
+      "message": "{{v:eq; \u039f\u0394\u039f\u0301\u03a3:X; default:D}}",
+      "payload": {
+        "v": "\u03bf\u03b4\u03bf\u0301\u03c2"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/eq-full-mapping-final-sigma-before-space",
+      "description": "A capital sigma that ends a word is final though a word follows it, so a key of two words whose first ends in a capital sigma selects for a value whose first word ends in a final sigma.",
+      "section": "11.1",
+      "message": "{{v:eq; \u039f\u03a3 \u039a\u0391\u0399:X; default:D}}",
+      "payload": {
+        "v": "\u03bf\u03c2 \u03ba\u03b1\u03b9"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/eq-lone-capital-sigma-is-not-final",
+      "description": "A capital sigma with no cased letter before it lowercases to an ordinary sigma, so a key of an ordinary sigma selects for a lone capital sigma.",
+      "section": "11.1",
+      "message": "{{v:eq; \u03c3:X; default:D}}",
+      "payload": {
+        "v": "\u03a3"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/eq-full-mapping-dotted-capital-i",
+      "description": "Under the full mapping U+0130 lowercases to i followed by U+0307, so a key of U+0130 selects for that value.",
+      "section": "11.1",
+      "message": "{{v:eq; \u0130:X; default:D}}",
+      "payload": {
+        "v": "i\u0307"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/eq-full-mapping-dotted-capital-i-near-miss",
+      "description": "Under the full mapping a key of U+0130 does not select for a lone i, which the simple mapping would give.",
+      "section": "11.1",
+      "message": "{{v:eq; \u0130:X; default:D}}",
+      "payload": {
+        "v": "i"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
       "id": "comparisons/eq-no-normalization",
       "description": "The comparison is by code-point equality, so a precomposed key does not select for a decomposed value.",
       "section": "11.1",
