@@ -28,6 +28,12 @@ ECMAScript does with it. Nothing a message resolves to changes.
   reads no such literal takes the chain over it. That a numeric comparison
   still compares an infinity stays the specification's rule; no case states it
   in one host's spelling.
+* `intl/date-parsed-text` leaves the set. It handed `date` the text
+  `2024-03-05T10:00:00.000Z` and expected the instant it names, but which text
+  `date` reads is the host's date parsing (section 11.2), and a host whose
+  parsing reads another set of forms takes the chain over it, as the
+  specification allows. *Writing a fixture* in the README already left that
+  parsing out of the set; this was the one case that reached it.
 * `comparisons/nan-key-is-not-numeric` pins that a key whose conversion
   yields NaN is not numeric (section 11.1): `{{v:lt; 10:A; NaN:N; 5:B;
   default:D}}` over `"3"` renders `B`. A host whose conversion reads `NaN`

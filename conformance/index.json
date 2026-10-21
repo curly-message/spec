@@ -60,7 +60,7 @@
       "path": "fixtures/intl.json",
       "level": "intl",
       "section": "11.2",
-      "cases": 127
+      "cases": 126
     },
     {
       "path": "fixtures/limits.json",
