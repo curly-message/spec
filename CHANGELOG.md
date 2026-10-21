@@ -118,6 +118,13 @@ every host what it already settled.
   section 14.2 names it as the one exception; an implementation that keeps only
   the bound on one thread meets the requirement. The document sets no minimum
   for the bound.
+* Section 13 says that the conversion limit bounds the serialization alone,
+  and section 4 says it beside the conversions it defines. What the ordinary
+  string conversion costs is the value's own type's, a sequence that walks
+  members of its own included: no limit bounds the work of that walk, though
+  the text it writes is value text the read and output limits count, and only
+  a value the application built reaches it, since a payload decoded from JSON
+  holds plain values.
 
 ## 3.1.0
 
