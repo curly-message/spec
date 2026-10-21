@@ -221,7 +221,8 @@ the host's: a serialization that raises or yields nothing, at a depth section
 13 sets no minimum for.
 
 How many times a value is converted while a message resolves is itself bounded
-(section 13).
+(section 13), and so is what one serialization visits. What one ordinary string
+conversion costs is the value's own type's, which section 13 does not bound.
 
 The text a value's conversion produces is data, and nothing removes escape
 sequences from it (section 7). A backslash it carries is a backslash, so a
@@ -1538,6 +1539,19 @@ answer alone and leaves an implementation free to record such a value anyway.
 A value section 4 serializes is not exempt however plainly it is built: its
 walk is the work the limit bounds, and a resolution that walks it once per
 placeholder pays for it once per placeholder.
+
+The conversion limit bounds the serialization alone: the walk section 4 asks
+of a plain object or a plain array. The ordinary string conversion is the
+value's own type's, and so is what it costs. A type that converts by walking
+members of its own — a sequence derived from the host's, say — walks them as its
+conversion does, and no limit of this section bounds the work that walk does,
+as none bounds the work of writing out the digits a large integer converts to.
+What either writes is value text all the same: the read limit counts it as a
+placeholder reads it, and the output limit as a placeholder's result holds it.
+A payload the host decodes from JSON holds no such type, since what that
+decoding produces for an object and an array is plain (section 4), so only a
+value the application built reaches it, and the application bounds what its own
+types cost.
 
 A resolution may begin while another is running: a host-defined modifier
 (section 11.3), a reporting handler (section 14.3) and any host code a
