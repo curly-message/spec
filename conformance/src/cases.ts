@@ -144,6 +144,14 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
     input: { message: '{{v; default:D}}', payload: { v: nodes(conversion + 1) }, id: ID },
     expected: { output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', id: ID }] },
   }),
+  'conversion-over-limit-continues': ({ read, conversion }) => ({
+    // One node past the limit, each element long enough that the text a
+    // finished serialization would write runs past the read budget: a refused
+    // serialization produces no text, so it spends none, and the placeholder
+    // after it is resolved and carried.
+    input: { message: '{{v; default:D}}{{w}}', payload: { v: new Array(conversion).fill('x'.repeat(Math.ceil(read / conversion) + 1)), w: 'tail' }, id: ID },
+    expected: { output: 'Dtail', reports: [{ code: 'unserializable-value', origin: 'payload', id: ID }] },
+  }),
   'nesting-at-limit': ({ nesting }) => ({
     input: { message: nest(nesting), payload: { v: 'a' }, id: ID },
     expected: { output: 'settled', reports: [] },
