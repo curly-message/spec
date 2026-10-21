@@ -168,6 +168,11 @@ without changing what any message resolves to.
   `next monday`, is better not read as a date; a form with no offset stays the
   host's to read as UTC or as local time, and a year of `0000` or a leap
   second's `60` the host's to read or not.
+* Section 11.2 says what an implementation leaves unexpressed at a finer grain
+  than a property: a value of one, and a property or a value only in requests
+  whose other properties hold given values, such as the digit properties in
+  the currency style. Each goes unapplied as such a property does, and is
+  documented and stated to the conformance set with its condition.
 
 ## 3.1.0
 
