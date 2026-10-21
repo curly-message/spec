@@ -141,6 +141,13 @@ property. Nothing a message resolves to changes.
   against its digest. The set's tests now fail where an object of a JSON file
   the package ships, a fixture file, `index.json`, `defects.json` or a schema,
   repeats a key, which `JSON.parse` hid by keeping the last member.
+* RUNNER.md says how a runner reads a case's text on a host whose facility
+  does not take ECMA-402's requests: through a performer of its own, which maps
+  the request onto the host's facility, imports nothing of the
+  implementation's formatting path, maps every request of the cases the run
+  holds and ends the run at one it does not, and is documented with the
+  library and the version it formats through. A recording of another host's
+  answers kept in the port is one; the set ships none.
 * The README's catalogue spells two behaviours for every host. `props` writes
   each value as ECMAScript's `JSON.stringify` writes it, so a whole number
   reads `1` and not `1.0` whatever type an implementation hands it on as, and
