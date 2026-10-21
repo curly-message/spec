@@ -59,14 +59,56 @@ describe('plan', () => {
     expect(cannot(undefined).cases).toHaveLength(1);
   });
 
+  it('leaves out a case whose request reads a value of a property the adapter documented it cannot express, and runs one reading another', () => {
+    const grouping = (useGrouping: unknown) => concrete(`b/grouping-${String(useGrouping)}`, { expected: { format: { api: 'NumberFormat', options: { useGrouping, maximumFractionDigits: 2 }, input: 1 } } });
+    const cannot = (unexpressible: Adapter['unexpressible']) => plan({ ...adapter(echo, ['core', 'intl']), unexpressible }, { fixtures: [file('intl', [grouping(false), grouping(true), grouping('false')], '11.2')] });
+
+    expect(cannot({ NumberFormat: [{ property: 'useGrouping', values: [false] }] }).skipped.map(({ id, reason }) => ({ id, reason }))).toEqual([
+      { id: 'b/grouping-false', reason: 'The adapter cannot express the value false of the useGrouping property of a NumberFormat request.' },
+    ]);
+    expect(cannot({ NumberFormat: [{ property: 'useGrouping', values: [false, 'false'] }] }).cases.map(({ id }) => id)).toEqual(['b/grouping-true']);
+    expect(cannot({ NumberFormat: [{ property: 'useGrouping' }] }).cases).toHaveLength(0);
+    expect(cannot({ NumberFormat: ['useGrouping'] }).cases).toHaveLength(0);
+  });
+
+  it('leaves out a case whose request reads a property the adapter cannot express alongside the values it names, and runs one where they differ', () => {
+    const digits = (id: string, options: Record<string, unknown>) => concrete(id, { expected: { format: { api: 'NumberFormat', options: { ...options, maximumFractionDigits: 2 }, input: 1 } } });
+    const set = [file('intl', [digits('b/currency', { style: 'currency', currency: 'EUR' }), digits('b/decimal', {}), digits('b/dollar', { style: 'currency', currency: 'USD' })], '11.2')];
+    const cannot = (unexpressible: Adapter['unexpressible']) => plan({ ...adapter(echo, ['core', 'intl']), unexpressible }, { fixtures: set });
+
+    expect(cannot({ NumberFormat: [{ property: 'maximumFractionDigits', when: { style: 'currency' } }] }).skipped.map(({ id, reason }) => ({ id, reason }))).toEqual([
+      { id: 'b/currency', reason: 'The adapter cannot express the maximumFractionDigits property of a NumberFormat request whose style is "currency".' },
+      { id: 'b/dollar', reason: 'The adapter cannot express the maximumFractionDigits property of a NumberFormat request whose style is "currency".' },
+    ]);
+    expect(cannot({ NumberFormat: [{ property: 'maximumFractionDigits', values: [2], when: { style: 'currency', currency: 'EUR' } }] }).skipped.map(({ id, reason }) => ({ id, reason }))).toEqual([
+      { id: 'b/currency', reason: 'The adapter cannot express the value 2 of the maximumFractionDigits property of a NumberFormat request whose style is "currency" and currency is "EUR".' },
+    ]);
+    expect(cannot({ NumberFormat: [{ property: 'maximumFractionDigits', values: [3], when: { style: 'currency' } }] }).cases).toHaveLength(3);
+    expect(cannot({ NumberFormat: [{ property: 'minimumFractionDigits', when: { style: 'currency' } }] }).cases).toHaveLength(3);
+    expect(cannot({ DateTimeFormat: [{ property: 'maximumFractionDigits', when: { style: 'currency' } }] }).cases).toHaveLength(3);
+  });
+
   it('rejects what an adapter cannot express named by an unknown facility, or as anything but property names', () => {
     const cannot = (unexpressible: unknown) => ({ ...adapter(echo), unexpressible } as Adapter);
 
     expect(() => plan(cannot({ NumberFormat: ['useGrouping'] }), { fixtures: [] })).not.toThrow();
     expect(() => plan(cannot('useGrouping'))).toThrow('The adapter must name the properties it cannot express by the request that reads them.');
     expect(() => plan(cannot({ Bogus: ['x'] }))).toThrow('The adapter names the facility "Bogus"; the facilities are NumberFormat, DateTimeFormat, RelativeTimeFormat, PluralRules.');
-    expect(() => plan(cannot({ NumberFormat: 'useGrouping' }))).toThrow('The adapter must name what it cannot express of a NumberFormat request as a list of property names.');
-    expect(() => plan(cannot({ NumberFormat: [1] }))).toThrow('The adapter must name what it cannot express of a NumberFormat request as a list of property names.');
+    expect(() => plan(cannot({ NumberFormat: 'useGrouping' }))).toThrow('The adapter must name what it cannot express of a NumberFormat request as a list of property names, or of entries each naming a property with the values or the request it cannot be expressed in.');
+    expect(() => plan(cannot({ NumberFormat: [1] }))).toThrow('The adapter must name what it cannot express of a NumberFormat request as a list of property names, or of entries each naming a property with the values or the request it cannot be expressed in.');
+  });
+
+  it('rejects an entry of what an adapter cannot express that is not a property with the values or the condition it cannot be expressed in', () => {
+    const cannot = (entry: unknown) => ({ ...adapter(echo), unexpressible: { NumberFormat: [entry] } } as Adapter);
+    const refused = 'The adapter must name what it cannot express of a NumberFormat request as a list of property names, or of entries each naming a property with the values or the request it cannot be expressed in.';
+
+    for (const entry of [{ property: 'useGrouping' }, { property: 'useGrouping', values: [false] }, { property: 'maximumFractionDigits', when: { style: 'currency' } }, { property: 'maximumFractionDigits', values: [2, 3], when: { style: 'currency', currency: 'EUR' } }]) {
+      expect(() => plan(cannot(entry), { fixtures: [] })).not.toThrow();
+    }
+
+    for (const entry of [null, [], {}, { property: 1 }, { values: [false] }, { property: 'useGrouping', values: [] }, { property: 'useGrouping', values: false }, { property: 'style', when: {} }, { property: 'style', when: [] }, { property: 'style', when: null }, { property: 'style', when: 'currency' }, { property: 'useGrouping', value: false }]) {
+      expect(() => plan(cannot(entry), { fixtures: [] })).toThrow(refused);
+    }
   });
 
   it('refuses a fixture file targeting a format this set does not read', () => {

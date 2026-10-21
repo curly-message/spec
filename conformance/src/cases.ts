@@ -1,6 +1,6 @@
 import { behaviours } from './behaviours';
 import { decode, nodes } from './decode';
-import type { Adapter, Category, ConcreteCase, ExpectedReport, ExposedRequest, Failure, FormatRequest, GeneratedCase, Generator, Limits, Outcome, Report, Resolution, Resolved } from './types';
+import type { Adapter, Category, ConcreteCase, ExpectedReport, ExposedRequest, Failure, FormatApi, FormatRequest, GeneratedCase, Generator, Limits, Outcome, Report, Resolution, Resolved, Unexpressible } from './types';
 
 // A generated case expects of a report what a written one may, and the limit
 // the adapter declared where the report is about one.
@@ -203,7 +203,7 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
 // not by the text a serialization happens to make of it. The sign of zero is
 // the request's, though JSON writes both zeros alike: a relative time reads
 // -0 as the past and 0 as the future.
-const canonical = (value: unknown): string => {
+export const canonical = (value: unknown): string => {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
 
   if (Object.is(value, -0)) return '-0';
@@ -211,6 +211,28 @@ const canonical = (value: unknown): string => {
   if (!isObject(value)) return JSON.stringify(value) ?? 'undefined';
 
   return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`;
+};
+
+// Whether a request's properties hold the given value under a name, compared
+// as a request is compared.
+const holds = (options: Record<string, unknown>, name: string, value: unknown) => Object.hasOwn(options, name) && canonical(options[name]) === canonical(value);
+
+// The skip reason an entry gives a request it covers, or nothing where it
+// covers none: the property must be one the request reads, among the values
+// the entry lists, in a request meeting its condition.
+export const covers = (entry: Unexpressible, api: FormatApi, options: Record<string, unknown>) => {
+  const { property, values, when } = typeof entry === 'string' ? { property: entry } : entry;
+
+  if (!Object.hasOwn(options, property)) return undefined;
+
+  if (values && !values.some((value) => holds(options, property, value))) return undefined;
+
+  if (when && !Object.entries(when).every(([name, value]) => holds(options, name, value))) return undefined;
+
+  const value = values ? `the value ${canonical(options[property])} of ` : '';
+  const condition = when ? ` whose ${Object.entries(when).map(([name, held]) => `${name} is ${canonical(held)}`).join(' and ')}` : '';
+
+  return `The adapter cannot express ${value}the ${property} property of a ${api} request${condition}.`;
 };
 
 // Section 11.2 lets an implementation expose the request it makes, and an

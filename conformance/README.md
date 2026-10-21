@@ -174,9 +174,26 @@ and the option it chose is the format's.
 
 A property the host's facility cannot express is a different matter, and
 section 11.2 has such an implementation document what it cannot express. The
-adapter states it as `unexpressible`, and every case whose request reads one of
-those properties is left out — listed among the skipped, the way an unclaimed
-level's cases are.
+adapter states it as `unexpressible`, and every case whose request reads what
+it states is left out — listed among the skipped, the way an unclaimed level's
+cases are. An entry is a property name, which stands for every value of the
+property in every request, or an object naming the `property` and narrowing
+it: to the `values` it lists, and to the requests whose properties named in
+`when` hold the values given there. A value is compared as a request's are.
+
+```ts
+unexpressible: {
+  NumberFormat: [
+    'roundingMode',
+    { property: 'currencyDisplay', values: ['name'] },
+    { property: 'maximumFractionDigits', when: { style: 'currency' } },
+  ],
+},
+```
+
+An entry that names no property, lists no value, states an empty condition or
+holds a key besides these three is an error rather than a skip, as an unknown
+facility is.
 
 ### Generated cases
 
@@ -277,10 +294,11 @@ export const adapter: Adapter = {
 satisfies. The runner selects the fixtures those levels require and skips the
 rest, and the skipped cases are listed, not hidden. `limits` is the statement
 section 13 requires, and is what the generated cases are built from. An adapter
-MAY make a third statement, `unexpressible`: the formatting properties the
-host's facility cannot express (section 11.2), under the request that reads
-them, which leaves out the cases that would measure the host rather than the
-implementation.
+MAY make a third statement, `unexpressible`: what the host's facility cannot
+express (section 11.2) — a property, or a value of one, in every request or in
+the requests whose other properties hold given values — under the request that
+reads it, which leaves out the cases that would measure the host rather than
+the implementation.
 
 An adapter MAY offer a fourth thing, `cst`: the concrete syntax tree of
 [`CST.md`](../CST.md), as the `unit` its spans are counted in — `utf-8`,
@@ -391,7 +409,9 @@ runner observed, and whether that counts as `caught`, `missed` or
 `unreachable`. The last is for a defect the adapter gives the runner nothing to
 catch — what an implementation that observes no reports does to every defect of
 its reports, one that claims Core alone to every defect of a level it does not
-claim, and one that offers no tree to every defect of the tree. A defect names
+claim, one that offers no tree to every defect of the tree, and one whose own
+`unexpressible` already leaves out every case of the run whose request a defect
+of what it cannot express covers to that defect. A defect names
 the `section` it pins and, where that is a heading of `CST.md` rather than of
 the specification, the `document` it is a heading of. `defects()` reads the
 catalogue and `mutations` carries it, so a runner's own tests can reach one
