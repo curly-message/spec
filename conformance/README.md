@@ -191,7 +191,9 @@ Each construction spends one budget and leaves the others room, so a case
 built at one limit cannot be failed by another: the output constructions write
 from an option value, which is the message's own text and costs no reading,
 and the read construction selects nothing, so the value it spends the read
-budget on never reaches the output.
+budget on never reaches the output. Five nesting constructions meet a second
+limit, a report of the payload or a second message error at a placeholder
+nested too deep on purpose: they pin the order section 9 decides those in.
 
 | `generate` | Message and payload | Expected |
 | --- | --- | --- |
@@ -203,6 +205,11 @@ budget on never reaches the output.
 | `conversion-over-limit` | `{{v; default:D}}`, with `v` a `nodes` value of `C + 1`. | `D` and one `unserializable-value` report of origin `payload`: a serialization that reaches the limit describes nothing, so the placeholder takes the chain. |
 | `nesting-at-limit` | `N` placeholders, each selecting the option that holds the next; the innermost is `{{v; a:settled; default:fallback;}}`. `v` holds `a`. | `settled`, no reports. |
 | `nesting-over-limit` | The same nesting one level deeper. | `fallback` and one `nesting-limit` report of origin `message`: the innermost placeholder is refused and takes its fallback chain, and every level around it selects the option that holds it. |
+| `nesting-over-limit-converts` | The `N + 1` levels of `nesting-over-limit`, the innermost being `{{w; default:fallback;}}`, with `v` holding `a` and `w` a value that cannot be described. | `fallback`, then one `unserializable-value` report of origin `payload` and one `nesting-limit` report of origin `message`, in that order: the nesting limit is decided after the value is looked up and converted. |
+| `nesting-over-limit-reads` | The same message followed by `{{v}}`, with `w` holding `x` repeated `R + 1` times. | `fallback`, then one `nesting-limit` report and one `read-limit` report: the refused placeholder read its value, which spent the budget, so the one after it pays. |
+| `nesting-over-limit-read-spent` | The `N + 1` levels of `nesting-over-limit`, the innermost level being two placeholders, `{{w:eq; nomatch:X;}}{{v; default:fallback;}}`, with `v` holding `a` and `w` holding `x` repeated `R + 1` times. | The empty string, then one `nesting-limit` report and one `read-limit` report: the read limit is tested first, so the second placeholder, reached with the budget spent, resolves to the empty string however deeply it nests. |
+| `nesting-over-limit-unknown-modifier` | The `N + 1` levels of `nesting-over-limit`, the innermost being `{{w:zz; default:fallback;}}`, with `v` holding `a` and `w` holding `x`. No modifier `zz` is registered. | `fallback` and one `nesting-limit` report of origin `message`, and no `unknown-modifier` report: the nesting limit is the first message error decided, and a placeholder that meets one meets none after it. |
+| `nesting-over-limit-missing-options` | The same levels, the innermost being `{{w:eq; default:fallback;}}`. | `fallback` and one `nesting-limit` report of origin `message`, and no `missing-options` report, for the same reason. |
 | `nesting-chain-over-limit` | `N + 20000` placeholders `{{v; default:`, each the inline default of the one before it, around `x`, then as many `}}`. The payload is empty. | `x` and 20 000 `nesting-limit` reports of origin `message`: every level takes its chain, whose last link is the next, and each one past the limit is refused and reported once. No limit raises, so the chain resolves however deep it is; a walk that recurses once per level overflows at this depth on some hosts, Node's default stack among them, though not on every one. |
 
 An adapter whose reports carry a `limit` is held to the declared limit on the

@@ -2,9 +2,12 @@
 
 ### 4.2.0 (Unreleased)
 
-The set gains one construction, a chain of inline defaults nested far past the
-nesting limit, which an implementation resolves however deeply it nests. It
-also stops pinning what the specification leaves to the host, pins what it
+The set gains constructions at the limits: a chain of inline defaults nested
+far past the nesting limit, which an implementation resolves however deeply it
+nests, and placeholders that meet the nesting limit beside the read limit, a
+value that cannot be described or another message error, which pin the order
+section 9 decides them in.
+It also stops pinning what the specification leaves to the host, pins what it
 settles and no case stated, and says what a runner on a host other than
 ECMAScript does with it. Nothing a message resolves to changes.
 
@@ -15,6 +18,31 @@ ECMAScript does with it. Nothing a message resolves to changes.
   resolves to `x` with twenty thousand `nesting-limit` reports of origin
   `message`, one per refused level. The generator is `nesting-chain-over-limit`,
   added to the schema's enum and to the exported `Generator` type.
+* Five constructions and two cases pin where section 9 decides the limits and
+  the message errors among a placeholder's steps: the read limit first, then
+  the value looked up and converted, then the nesting limit, a modifier nobody
+  registered and a selection with no options. No case put two of them at one
+  placeholder, so an implementation that refused a placeholder nested too deep
+  before reading its value, or decided another message error before the
+  nesting limit, passed the set. `limits/nesting-over-limit-converts`
+  expects such a placeholder over a value that cannot be described to report
+  `unserializable-value` before `nesting-limit`;
+  `limits/nesting-over-limit-reads` expects its value to spend the read
+  budget, so the placeholder after it reports `read-limit`; and
+  `limits/nesting-over-limit-read-spent` expects one reached with the budget
+  spent to resolve to the empty string as `read-limit` rather than take its
+  chain. `limits/nesting-over-limit-unknown-modifier` and
+  `limits/nesting-over-limit-missing-options` expect such a placeholder that
+  names a modifier nobody registered, or selects from no options, to report
+  `nesting-limit` alone: a placeholder that meets one message error meets none
+  after it. The generators are `nesting-over-limit-converts`,
+  `nesting-over-limit-reads`, `nesting-over-limit-read-spent`,
+  `nesting-over-limit-unknown-modifier` and
+  `nesting-over-limit-missing-options`, added to the schema's enum and to the
+  exported `Generator` type.
+  `reports/value-reports-before-unknown-modifier` and
+  `reports/value-reports-before-missing-options` expect `unserializable-value`
+  before the message error at one placeholder (section 14.3).
 * `resolution/wrapper-near-miss-is-value` wrote its object's members as
   `value`, then `unit`, and expected them serialized in that order, which is
   ECMAScript's insertion order: a host that writes a mapping's members sorted

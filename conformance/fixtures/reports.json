@@ -527,6 +527,60 @@
           }
         ]
       }
+    },
+    {
+      "id": "reports/value-reports-before-unknown-modifier",
+      "description": "Within one placeholder the value is converted before a modifier nobody registered is decided: a value that cannot be described reports unserializable-value with origin payload, then unknown-modifier with origin message.",
+      "section": "14.3",
+      "message": "{{w:zz; default:D}}",
+      "payload": {
+        "w": {
+          "$curly": "unserializable"
+        }
+      },
+      "messageId": "reports.id",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "id": "reports.id"
+          },
+          {
+            "code": "unknown-modifier",
+            "origin": "message",
+            "id": "reports.id"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reports/value-reports-before-missing-options",
+      "description": "Within one placeholder the value is converted before a selection with no options is decided: a value that cannot be described reports unserializable-value with origin payload, then missing-options with origin message.",
+      "section": "14.3",
+      "message": "{{w:eq; default:D}}",
+      "payload": {
+        "w": {
+          "$curly": "unserializable"
+        }
+      },
+      "messageId": "reports.id",
+      "expected": {
+        "output": "D",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "id": "reports.id"
+          },
+          {
+            "code": "missing-options",
+            "origin": "message",
+            "id": "reports.id"
+          }
+        ]
+      }
     }
   ]
 }
