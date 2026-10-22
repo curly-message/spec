@@ -78,7 +78,11 @@ Repository map:
 ### Dependencies across the family
 
 - `@curly-message/parser` and `@curly-message/conformance` have **no runtime
-  dependencies**. The parser tests against the set as a `devDependency`.
+  dependencies**. The parser tests against the set as a `devDependency`; an
+  implementation in another language vendors the set's release archive
+  (`conformance-<version>.zip`, attached to each release of the set with its
+  digest in the release notes) or fetches it when its tests run, pinned by
+  that digest and checked against it before it is read.
 - `@curly-message/lint` takes the parser as a **peer dependency**, so a project
   lints with the parser it resolves with, and carries the current parser as a
   `devDependency` to build and test against. `@curly-message/eslint-plugin`
@@ -118,18 +122,30 @@ name.
 
 ## Invariants — do NOT break these without explicit user sign-off
 
-1. **No runtime dependencies** in the parser or the conformance set. Adding one
-   is a blocking change — stop and ask.
+1. **No runtime dependencies** in the parser or the conformance set. In a
+   language whose Intl level needs a library the language does not carry, that
+   library is an optional dependency the level opts into — a Python extra, a
+   Cargo feature, a Go module of its own, a Composer `suggest` — and the core
+   builds, tests and resolves without it. Adding a dependency to the core, or
+   an optional one beyond what an Intl level needs, is a blocking change —
+   stop and ask.
 2. **No breaking changes** to a released package's public surface or exported
    types.
 3. **No host coupling** (above). A dependency on a host library is a blocking
    change.
-4. **One module format, stated runtimes:** ESM only; Node 22+, Bun and
-   Deno 2. The source touches no API beyond what the stated runtimes share —
-   the `node:` modules Bun and Deno implement among them — and CI has a leg
-   per runtime to keep that true. Reaching for one is a blocking change.
-5. **Generated output** (`dist/`, `_site/`) is never hand-edited and never
-   committed.
+4. **One module format, stated runtimes:** each package states its module
+   format and the runtimes or toolchains it supports. A JavaScript package is
+   ESM only, on Node 22+, Bun and Deno 2, and touches no API beyond what those
+   runtimes share — the `node:` modules Bun and Deno implement among them. A
+   package in another language states its own in its repository's
+   `AGENTS.md` (a minimum supported version and the current stable one, say).
+   CI has a leg per stated runtime or toolchain to keep that true. Reaching
+   for an API beyond what they share is a blocking change.
+5. **Generated output** — what a build writes (`dist/`, `_site/`, `target/`)
+   — is never hand-edited and never committed. Generated source that a
+   package format serves from the repository's tree (a Go module, a Composer
+   package) is the exception: it is committed, never hand-edited, and CI
+   regenerates it and fails where it differs.
 
 ---
 
@@ -313,28 +329,55 @@ released after its dependent forces another release of the dependent.
   package is not published while a package it depends on holds an unreleased
   change or a planned fix it needs, unless the user deferred that fix by name.
 - **Bump the family first.** Every range a package holds on the family
-  (`devDependencies`, peer ranges, exact pins, lockfiles, the site's) and every
-  doc line naming a tested version moves to the latest released version in a
-  PR merged before the publish.
-- **What npm shows is the version it shows.** Before each publish, go through
-  what the tarball carries (`npm pack --dry-run`) — the README is the npm
-  page — and the docs it links to. Each statement describes the version being
-  published and each link resolves. A mismatch is fixed before the publish,
-  never in the next release.
+  (`devDependencies`, peer ranges, exact pins, lockfiles, the site's, a
+  vendored or fetched archive and its digest) and every doc line naming a
+  tested version moves to the latest released version in a PR merged before
+  the publish.
+- **What the registry shows is the version it shows.** Before each publish,
+  go through what the registry will serve — the tarball of
+  `npm pack --dry-run`, the wheel and sdist `python -m build` writes,
+  `cargo package --list`, the module zip the Go proxy builds from the tag,
+  the archive of the tag Packagist serves — with the README, which is the
+  registry's page, and the docs it links to. Each statement describes the
+  version being published and each link resolves. A mismatch is fixed before
+  the publish, never in the next release.
 - **Every package is shown in use.** The playground shows the parser, and a
   release that adds to what a message can say shows it there; the parser's
   suite runs the conformance set; the linter and the plugin are shown by the
   usage their READMEs give.
 - **Every package is benchmarked** before it is published (see above).
-- **Publishing:** one package per workflow run, by npm trusted publishing,
-  with a tag namespaced by package (`js-v3.1.1`, `conformance-v4.1.0`,
-  `lint-v1.0.0`). A new package's first version is published by hand
-  (`--tag next`), then its trusted publisher is set to the workflow, with
-  `release` as its environment.
-- **Close the loop.** After a publish, confirm the version on npm
-  (`npm view`) and update what follows it — the ranges and pins above, the
-  site's lockfile, the other repositories' lockfiles — as part of the same
-  plan.
+- **Publishing:** one package per workflow run, by the registry's trusted
+  publishing where it has one, with `release` as the publisher's
+  environment.
+  - **Tags** are namespaced by package directory, `<dir>-vX.Y.Z`
+    (`js-v3.1.1`, `conformance-v4.1.0`, `lint-v1.0.0`). A Go module's is
+    `<dir>/vX.Y.Z` (`go/v1.0.0`, a nested module's `go/intl/v1.0.0`): the go
+    command reads a version only from a tag prefixed with the module's
+    directory. Packagist reads only a repository's root `composer.json` and
+    tags Composer parses as versions (`v1.0.0`, never `php-v1.0.0`), so a PHP
+    package is released through a repository it is the root of, tagged
+    `vX.Y.Z`.
+  - **Prereleases** take each registry's spelling: npm `X.Y.Z-next.N` under
+    the `next` dist-tag, crates.io `X.Y.Z-next.N`, Go `vX.Y.Z-next.N`, PyPI
+    `X.Y.ZrcN` (PEP 440), Composer `X.Y.Z-RC.N`. A registry with no
+    dist-tags has only the spelling to set a prerelease apart.
+  - **A new package's first version:** on npm and crates.io, published by
+    hand (`--tag next` on npm), then its trusted publisher is set to the
+    workflow. On PyPI, by the workflow through a pending publisher
+    registered beforehand, so no token exists; PyPI cannot name a reusable
+    workflow as the publisher, so the job that uploads lives in the
+    top-level workflow. Go and Packagist have no publish step: the
+    workflow's tag is the release, and Packagist is registered once by hand
+    with its GitHub hook. The Go proxy records a version on its first fetch
+    for good; a bad one is retracted by a later release, never removed.
+- **Close the loop.** After a publish, confirm the version on its registry
+  (`npm view`; PyPI's JSON API, `pypi.org/pypi/<name>/<version>/json`; the
+  crates.io API, `crates.io/api/v1/crates/<name>/<version>`; the Go proxy's
+  `<module>/@v/list`, and the hash `go mod download -json` reports against
+  the one the build computed; Packagist's `p2` metadata,
+  `repo.packagist.org/p2/<vendor>/<name>.json`) and update what follows it —
+  the ranges and pins above, the site's lockfile, the other repositories'
+  lockfiles — as part of the same plan.
 
 ## 5. Commit on approval
 
@@ -372,7 +415,11 @@ released after its dependent forces another release of the dependent.
   workarounds for unpublished dependencies, no half-built surfaces.
   Branch-only scaffolding (e.g. a `file:` dev dependency standing in for an
   unpublished package) is removed before merge; until then the PR waits as a
-  draft.
+  draft. A link between two packages of one repository that consumers never
+  see is not scaffolding, and stays: npm workspaces, or a Go
+  `replace … => ../`, which Go applies only in the main module. A Go module's
+  release is built and tested without its `replace`, against the released
+  version it requires — what a consumer resolves.
 - **Branch from an up-to-date `main`**
   (`git fetch origin && git switch main && git pull --ff-only`), with a name
   that says what the work is: `fix/<slug>`, `feat/<slug>`, `chore/<slug>`,
@@ -442,12 +489,18 @@ also updates `SPEC.md` and its `CHANGELOG.md` (§ Architecture).
   trailing commas on multiline, spaced object braces, no trailing whitespace,
   at most one consecutive blank line, newline at EOF). `npm run lint` reports
   what breaks it and `npm run lint:fix` fixes it; a pre-commit hook runs it,
-  and CI runs it without `--fix`.
+  and CI runs it without `--fix`. A package in another language takes its
+  language's formatter and linter, configured in the package, as the
+  contract (gofmt and `go vet`, rustfmt and Clippy, Ruff, PHP-CS-Fixer), with
+  a command that reports, one that fixes where the tool can, the hook, and CI
+  without fixing; its repository's `AGENTS.md` names them.
 - Prefer the **functional, immutable** style for shared state (computed-key
   spread, `reduce`, `Object.fromEntries` for a level built from entries — a
   spread per key is quadratic). On a **measured hot path** a function-local
   accumulator may be mutated, but only into a null-prototype object, given a
-  normal prototype before it escapes.
+  normal prototype before it escapes. Another language follows the same
+  shape through its own idioms: a level is built once from its entries, never
+  copied per key.
 - Keep orchestration and pure logic apart: pure, testable helpers live in a
   `utils` module.
 - **A package writes nowhere itself.** What it has to say leaves through its
@@ -467,15 +520,21 @@ also updates `SPEC.md` and its `CHANGELOG.md` (§ Architecture).
 
 The packages have no eval, DOM or network of their own; they turn
 consumer-supplied text and data into strings, trees and findings. The
-realistic risks are **DoS, robustness and the prototype chain**.
+realistic risks are **DoS, robustness and the prototype chain** (or, in
+another language, the host's reserved members).
 
 - **Prototype keys are missing data.** Reads of a table by a key a message or
   a catalogue supplies use an own-property check, so `toString`, `__proto__`
-  and `constructor` are missing, not inherited.
+  and `constructor` are missing, not inherited. In a language with no
+  prototype chain, the analogue is a host's reserved or magic member — a
+  Python dunder, a PHP magic method or property — and the rule is the same:
+  a table is read by its own entries only, never through attribute or member
+  lookup, so `__class__` or `__get` is a missing key like any other.
 - **Never bracket-assign a user-supplied key onto a plain object** —
   `table[key] = value` routes `'__proto__'` through the prototype setter.
   Write with a computed-key spread (`DefineProperty`) or into a
-  null-prototype object.
+  null-prototype object. In another language, a key a message or a catalogue
+  supplies is written into a map, never set as an object's member.
 - **Bounded work.** What a call costs grows with its input, never with a
   value outside it; a limit that keeps it so is load-bearing, and changing one
   is a format change in the parser and a blocking change elsewhere.
@@ -514,17 +573,25 @@ realistic risks are **DoS, robustness and the prototype chain**.
   runs on.
 - **Test the shipped artifact**, not only the source: the suite imports the
   package by its name, and `npm test` runs it once against the source and
-  once, under `--mode dist`, against `dist/`.
+  once, under `--mode dist`, against `dist/`. In another language, the
+  packaged artifact stands in for `dist/` — the wheel, the crate
+  `cargo package` builds, the module zip, the Composer archive — taken as a
+  consumer gets it, and the suite runs once more against it.
 - **Types are tested by compiling.** Type fixtures assert with
   `@ts-expect-error` and a type-level `Equal`, compiled with `tsc` at
   `skipLibCheck: false` against both the source and the shipped declarations.
-  A type test that runs must exercise the value it types: a closure declared
-  and never invoked asserts nothing.
+  A package in another language compiles them with its own checker at its
+  strictest setting (`mypy --strict`, PHPStan at `level: max`, the compiler
+  in Go and Rust), against the source and, where it differs from the
+  source, the packaged artifact. A type test that runs must exercise the
+  value it types: a closure declared and never invoked asserts nothing.
 - **What a type costs the checker is tested by count, never by time**,
   wherever a type computes over what a consumer passes (a generic, a
   conditional or mapped type): `program.getInstantiationCount()` across
   inputs of two sizes, each call site written as a consumer writes it so the
-  checker cannot reuse one call's work for the next.
+  checker cannot reuse one call's work for the next. Another language counts
+  by instantiation where its checker reports a count, and has no such test
+  where it reports none.
 - Every repository runs the same suite on every supported runtime and OS in
   CI, plus lint without `--fix`.
 
