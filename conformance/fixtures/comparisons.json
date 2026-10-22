@@ -624,6 +624,42 @@
       }
     },
     {
+      "id": "comparisons/ufeff-around-a-number",
+      "description": "U+FEFF is in the whitespace class, so a value it pads compares as the number, though a host's own whitespace may lack it.",
+      "section": "11.2",
+      "message": "{{v:gt; 5:X; default:D}}",
+      "payload": {
+        "v": "\ufeff12"
+      },
+      "expected": {
+        "output": "X"
+      }
+    },
+    {
+      "id": "comparisons/nel-around-a-number-is-part-of-it",
+      "description": "U+0085 is not in the whitespace class, so a value it begins is no number and the comparison fails, though a host's own whitespace may hold it.",
+      "section": "11.2",
+      "message": "{{v:gt; 1:X; default:D}}",
+      "payload": {
+        "v": "\u00855"
+      },
+      "expected": {
+        "output": "D"
+      }
+    },
+    {
+      "id": "comparisons/whitespace-around-an-option-key",
+      "description": "An escaped U+FEFF stays in an option key, and a numeric comparison removes the whitespace class around the key before converting it, as around the value, so the key orders as the number 5.",
+      "section": "11.2",
+      "message": "{{v:lt; \\\ufeff5:A; default:D}}",
+      "payload": {
+        "v": "3"
+      },
+      "expected": {
+        "output": "A"
+      }
+    },
+    {
       "id": "comparisons/signed-number",
       "description": "A sign is part of a number, so a signed value compares as the number.",
       "section": "11.2",

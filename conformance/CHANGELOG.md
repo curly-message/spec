@@ -34,6 +34,21 @@ ECMAScript does with it. Nothing a message resolves to changes.
   as a number could order such a key among the numeric ones, where every
   comparison with it is false and the sort leaves `10` ahead of `5`, and no
   case wrote such a key.
+* Three cases pin that the whitespace around a number is section 6's class
+  and nothing else (section 11.2). The cases that padded a number padded it
+  with ASCII spaces, which every host that skips whitespace skips, and no case
+  padded an option key, so a host whose own whitespace parts from the class,
+  or whose conversion of a key rejects surrounding whitespace, passed the set.
+  `comparisons/ufeff-around-a-number` pads a value with `U+FEFF`, which is in
+  the class but not in every host's own whitespace, Python's `float`'s among
+  them: `{{v:gt; 5:X; default:D}}` over `"<U+FEFF>12"` renders `X`.
+  `comparisons/nel-around-a-number-is-part-of-it` begins a value with
+  `U+0085`, which a host's own whitespace may hold, Python's `float`'s again,
+  but the class does not: `{{v:gt; 1:X; default:D}}` over `"<U+0085>5"`
+  renders `D`. `comparisons/whitespace-around-an-option-key` escapes `U+FEFF`
+  into an option key, where it stays (section 8), and the comparison removes
+  it before converting the key, as around the value: `{{v:lt; \<U+FEFF>5:A;
+  default:D}}` over `"3"` renders `A`.
 * Seven cases pin that section 11.1's lower-case mapping is Unicode's full one.
   No case used a code point at which it parts from the simple one, so an
   implementation applying the simple mapping passed the set.
