@@ -34,6 +34,12 @@
       "generate": "read-over-limit"
     },
     {
+      "id": "limits/conversion-at-limit",
+      "description": "At least the declared number of nodes is visited before a serialization is abandoned: a value whose serialization visits exactly that many converts, so ne selects the option its text cannot equal rather than taking the chain, with nothing to report.",
+      "section": "13",
+      "generate": "conversion-at-limit"
+    },
+    {
       "id": "limits/conversion-over-limit",
       "description": "A serialization that reaches the conversion limit is a conversion that cannot describe the value: the placeholder takes the chain and unserializable-value is reported with origin payload.",
       "section": "13",

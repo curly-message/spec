@@ -2,8 +2,9 @@
 
 ### 4.2.0 (Unreleased)
 
-The set gains one construction, a chain of inline defaults nested far past the
-nesting limit, which an implementation resolves however deeply it nests.
+The set gains two constructions: a chain of inline defaults nested far past the
+nesting limit, which an implementation resolves however deeply it nests, and a
+value at the conversion limit, which it converts.
 
 * `limits/nesting-chain-over-limit`, built from the adapter's declared nesting
   limit like the other limit cases, nests `{{v; default:` twenty thousand levels
@@ -12,6 +13,25 @@ nesting limit, which an implementation resolves however deeply it nests.
   resolves to `x` with twenty thousand `nesting-limit` reports of origin
   `message`, one per refused level. The generator is `nesting-chain-over-limit`,
   added to the schema's enum and to the exported `Generator` type.
+* `limits/conversion-at-limit` pins the conversion limit at its bound, as the
+  other three limits already were: `{{v:ne; nomatch:ok; default:refused;}}`,
+  with `v` a value whose serialization visits exactly the declared number of
+  nodes, resolves to `ok` with no reports, where an abandoned conversion takes
+  the chain to `refused`. An implementation that abandons a serialization
+  earlier than it declares used to pass the whole set. The generator is
+  `conversion-at-limit`, added to the schema's enum and to the exported
+  `Generator` type.
+* The `nodes` tag builds a value whose serialization visits exactly `count`
+  nodes, where it visited at least `count` and up to nearly twice as many: an
+  array holding the doubling tree of shared references, then zeros up to the
+  count. `limits/conversion-over-limit` so visits exactly one node past the
+  limit, and an implementation that permits more nodes than it declares, up to
+  nearly twice as many, no longer passes it.
+* `defects.json` gains `conversion-limit-overstated`, an adapter that declares
+  a conversion limit one node higher than the one it enforces. A correct runner
+  fails it on `limits/conversion-at-limit`; the set had no case it could fail it
+  on before. The defect is added to the exported `Defect` type and to
+  `mutations`, and a runner in another language carries it as well.
 
 ## 4.1.0
 

@@ -110,6 +110,12 @@
       "expects": "error"
     },
     {
+      "id": "conversion-limit-overstated",
+      "description": "Declares a conversion limit one node higher than the one it enforces.",
+      "section": "13",
+      "expects": "fail"
+    },
+    {
       "id": "tree-unoffered",
       "description": "Offers no tree, though the implementation produces one.",
       "document": "CST.md",

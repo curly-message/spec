@@ -215,7 +215,7 @@ export type ConcreteCase = {
   expected: Expected;
 };
 
-export type Generator = 'output-at-limit' | 'output-over-limit' | 'output-over-limit-continues' | 'read-at-limit' | 'read-over-limit' | 'conversion-over-limit' | 'nesting-at-limit' | 'nesting-over-limit' | 'nesting-chain-over-limit';
+export type Generator = 'output-at-limit' | 'output-over-limit' | 'output-over-limit-continues' | 'read-at-limit' | 'read-over-limit' | 'conversion-at-limit' | 'conversion-over-limit' | 'nesting-at-limit' | 'nesting-over-limit' | 'nesting-chain-over-limit';
 
 /** A case the runner builds from the adapter's limits. */
 export type GeneratedCase = {
@@ -386,6 +386,7 @@ export type Defect =
   | 'claims-no-core'
   | 'claims-unknown-level'
   | 'claims-no-limits'
+  | 'conversion-limit-overstated'
   | 'tree-unoffered'
   | 'tree-node-dropped'
   | 'tree-node-retyped'
