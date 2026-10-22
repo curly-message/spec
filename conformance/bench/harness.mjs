@@ -9,9 +9,11 @@
 // it calls. A count is deterministic and gates: one that grew fails the run,
 // as do a row gone missing, a row whose kind changed, a base whose rows fail
 // to load and a row of the base that fails, unless `--accepted` says the
-// change means them. This package fails the run regardless when its
-// `bench/rows.mjs` is missing or fails to load, or when a row of it fails. A
-// size that grew and a time beyond its spread are flagged for review.
+// change means them. A base that does not hold the package, the base of the
+// change that adds it, compares nothing and gates nothing. This package fails
+// the run regardless when its `bench/rows.mjs` is missing or fails to load, or
+// when a row of it fails. A size that grew and a time beyond its spread are
+// flagged for review.
 //
 // Each side of a row is measured in processes of its own, forked from this one
 // with `--side`, so neither side's code, nor a row measured before it, shapes
@@ -30,12 +32,17 @@
 // out the lowest and the highest quarter of the samples, rounded down, so a
 // busy neighbour neither hides nor flags a change.
 //
+// A package's name and version are read from its `package.json`, or, where it
+// has none, from the `name` and `version` its `bench/rows.mjs` exports, so a
+// package that npm does not manage is measured like one it does; the table is
+// headed by the directory's name where neither gives one.
+//
 // This file is the same in every repository of the family; change every copy
 // at once.
 import { fork } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { arch, platform } from 'node:os';
-import { resolve } from 'node:path';
+import { basename, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
@@ -54,22 +61,37 @@ const { values: args } = parseArgs({
   },
 });
 
-const manifest = (dir) => JSON.parse(readFileSync(resolve(dir, 'package.json'), 'utf8'));
-
 const failure = (error) => ({ error: error instanceof Error ? error.message : String(error) });
 
-// A side's rows by name, or why there are none to read. A base checked out
-// before the package had a benchmark has none, and is no failure; a directory
-// that holds no package is.
-const load = async (dir) => {
-  if (!existsSync(resolve(dir, 'package.json'))) return { error: 'no package.json is there' };
+const readManifest = (file) => {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'));
+  } catch (error) {
+    throw new Error(`its package.json could not be read: ${failure(error).error}`, { cause: error });
+  }
+};
 
+// A side's name, version and rows by name, or why there are no rows to read. A
+// base checked out before the package was added, or before it had a benchmark,
+// has none, and is no failure; a directory that holds neither a manifest nor
+// rows is.
+const load = async (dir) => {
+  if (!existsSync(dir)) return { missing: true };
+
+  const manifest = resolve(dir, 'package.json');
   const file = resolve(dir, 'bench/rows.mjs');
 
-  if (!existsSync(file)) return { absent: true };
+  if (!existsSync(manifest) && !existsSync(file)) return { error: 'neither a package.json nor a bench/rows.mjs is there' };
+
+  let read;
 
   try {
-    const { default: rows } = await import(pathToFileURL(file).href);
+    read = existsSync(manifest) ? readManifest(manifest) : undefined;
+
+    if (!existsSync(file)) return { name: read?.name, version: read?.version, absent: true };
+
+    const { default: rows, ...exported } = await import(pathToFileURL(file).href);
+    const { name, version } = read ?? exported;
     const named = new Map();
 
     for (const row of rows) {
@@ -82,9 +104,9 @@ const load = async (dir) => {
       named.set(row.name, row);
     }
 
-    return { rows: named };
+    return { name, version, rows: named };
   } catch (error) {
-    return failure(error);
+    return { name: read?.name, version: read?.version, ...failure(error) };
   }
 };
 
@@ -202,7 +224,7 @@ const serve = async (dir, name) => {
   const loaded = await load(dir);
 
   if (name === undefined) {
-    await reply(loaded.rows ? { rows: [...loaded.rows.values()].map((row) => ({ name: row.name, kind: row.kind })) } : loaded);
+    await reply(loaded.rows ? { ...loaded, rows: [...loaded.rows.values()].map((row) => ({ name: row.name, kind: row.kind })) } : loaded);
     process.exit();
   }
 
@@ -359,21 +381,24 @@ const verdict = ({ kind, was, base, change }, compared) => {
 
 const cell = (text) => text.replaceAll('|', '\\|').replaceAll('\n', ' ');
 
-// A side's rows by name and kind, or why there are none to read.
+// A side's name, version and rows by name and kind, or why there are no rows
+// to read.
 const list = async (dir) => {
   const listing = forkSide(dir);
   const reply = await listing.next();
 
   await listing.exited;
 
-  return reply.rows ? { rows: new Map(reply.rows.map((row) => [row.name, row])) } : reply;
+  return reply.rows ? { ...reply, rows: new Map(reply.rows.map((row) => [row.name, row])) } : reply;
 };
+
+// A column's heading, with the version of the side it holds where there is one.
+const heading = (...words) => words.filter(Boolean).join(' ');
 
 if (args.side !== undefined) await serve(args.side, args.row);
 
-const here = manifest('.');
 const change = await list(resolve('.'));
-const lines = [`## Benchmark of ${here.name}`, ''];
+const lines = [`## Benchmark of ${change.name || basename(resolve('.'))}`, ''];
 
 // Written where the table would be, so a PR's comment says why there is none.
 if (!change.rows) {
@@ -389,6 +414,8 @@ const compared = Boolean(base?.rows);
 
 if (base?.error) {
   lines.push(`The base at \`${args.compare}\` failed to load its rows: ${base.error}`, '');
+} else if (base?.missing) {
+  lines.push(`The base at \`${args.compare}\` does not hold this package, so nothing is compared.`, '');
 } else if (base?.absent) {
   lines.push(`The base at \`${args.compare}\` has no benchmark, so nothing is compared.`, '');
 }
@@ -402,10 +429,10 @@ lines.push(
 );
 
 if (compared) {
-  lines.push(`| Row | Kind | Base ${manifest(against).version} | Change ${here.version} | |`, '|---|---|--:|--:|---|');
+  lines.push(`| Row | Kind | ${heading('Base', base.version)} | ${heading('Change', change.version)} | |`, '|---|---|--:|--:|---|');
   results.forEach((result, index) => lines.push(`| ${cell(result.name)} | ${result.kind} | ${formatted(result.kind, result.base)} | ${formatted(result.kind, result.change)} | ${cell(verdicts[index].note)} |`));
 } else {
-  lines.push(`| Row | Kind | ${here.version} | |`, '|---|---|--:|---|');
+  lines.push(`| Row | Kind | ${change.version || 'Value'} | |`, '|---|---|--:|---|');
   results.forEach((result, index) => lines.push(`| ${cell(result.name)} | ${result.kind} | ${formatted(result.kind, result.change)} | ${cell(verdicts[index].note)} |`));
 }
 
