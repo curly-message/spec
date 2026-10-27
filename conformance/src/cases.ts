@@ -1,6 +1,6 @@
 import { behaviours } from './behaviours';
 import { decode, nodes } from './decode';
-import type { Adapter, Category, ConcreteCase, ExpectedReport, ExposedRequest, Failure, FormatRequest, GeneratedCase, Generator, Limits, Outcome, Report, Resolution, Resolved } from './types';
+import type { Adapter, Category, ConcreteCase, ExpectedReport, ExposedRequest, Failure, FormatApi, FormatRequest, GeneratedCase, Generator, Limits, Outcome, Report, Resolution, Resolved, Unexpressible } from './types';
 
 // A generated case expects of a report what a written one may, and the limit
 // the adapter declared where the report is about one.
@@ -98,7 +98,7 @@ const reads = '{{v:eq; nomatch:X; default:ok;}}';
 // A message nesting the stated number of levels, each selecting the option
 // that holds the next. The innermost declares a fallback, so a level the
 // nesting limit refuses is visible as the chain it takes.
-const nest = (levels: number): string => (levels <= 1 ? '{{v; a:settled; default:fallback;}}' : `{{v; a:${nest(levels - 1)};}}`);
+const nest = (levels: number, innermost = '{{v; a:settled; default:fallback;}}'): string => (levels <= 1 ? innermost : `{{v; a:${nest(levels - 1, innermost)};}}`);
 
 // How many levels past the nesting limit the chain construction nests: far
 // enough that a walk recursing once per level overflows a default call stack
@@ -144,6 +144,14 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
     input: { message: '{{v; default:D}}', payload: { v: nodes(conversion + 1) }, id: ID },
     expected: { output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', id: ID }] },
   }),
+  'conversion-over-limit-continues': ({ read, conversion }) => ({
+    // One node past the limit, each element long enough that the text a
+    // finished serialization would write runs past the read budget: a refused
+    // serialization produces no text, so it spends none, and the placeholder
+    // after it is resolved and carried.
+    input: { message: '{{v; default:D}}{{w}}', payload: { v: new Array(conversion).fill('x'.repeat(Math.ceil(read / conversion) + 1)), w: 'tail' }, id: ID },
+    expected: { output: 'Dtail', reports: [{ code: 'unserializable-value', origin: 'payload', id: ID }] },
+  }),
   'nesting-at-limit': ({ nesting }) => ({
     input: { message: nest(nesting), payload: { v: 'a' }, id: ID },
     expected: { output: 'settled', reports: [] },
@@ -153,6 +161,33 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
     // The innermost placeholder is the one refused, and a nesting limit is a
     // defect of the message: it takes its fallback chain, and every level
     // around it selects the option that holds it.
+    expected: { output: 'fallback', reports: [limit('nesting-limit', 'message', nesting)] },
+  }),
+  // Section 9 decides the nesting limit after the value is looked up and
+  // converted, so a placeholder nested too deep still converts its value,
+  // reports what the conversion reports and spends the read budget, and one
+  // reached with the budget spent resolves to the empty string however deeply
+  // it nests.
+  'nesting-over-limit-converts': ({ nesting }) => ({
+    input: { message: nest(nesting + 1, '{{w; default:fallback;}}'), payload: { v: 'a', w: decode({ $curly: 'unserializable' }) }, id: ID },
+    expected: { output: 'fallback', reports: [{ code: 'unserializable-value', origin: 'payload', id: ID }, limit('nesting-limit', 'message', nesting)] },
+  }),
+  'nesting-over-limit-reads': ({ nesting, read }) => ({
+    input: { message: `${nest(nesting + 1, '{{w; default:fallback;}}')}{{v}}`, payload: { v: 'a', w: 'x'.repeat(read + 1) }, id: ID },
+    expected: { output: 'fallback', reports: [limit('nesting-limit', 'message', nesting), limit('read-limit', 'limit', read)] },
+  }),
+  'nesting-over-limit-read-spent': ({ nesting, read }) => ({
+    input: { message: nest(nesting + 1, '{{w:eq; nomatch:X;}}{{v; default:fallback;}}'), payload: { v: 'a', w: 'x'.repeat(read + 1) }, id: ID },
+    expected: { output: '', reports: [limit('nesting-limit', 'message', nesting), limit('read-limit', 'limit', read)] },
+  }),
+  // The nesting limit is the first of the message errors, and a placeholder
+  // that meets one meets none after it.
+  'nesting-over-limit-unknown-modifier': ({ nesting }) => ({
+    input: { message: nest(nesting + 1, '{{w:zz; default:fallback;}}'), payload: { v: 'a', w: 'x' }, id: ID },
+    expected: { output: 'fallback', reports: [limit('nesting-limit', 'message', nesting)] },
+  }),
+  'nesting-over-limit-missing-options': ({ nesting }) => ({
+    input: { message: nest(nesting + 1, '{{w:eq; default:fallback;}}'), payload: { v: 'a', w: 'x' }, id: ID },
     expected: { output: 'fallback', reports: [limit('nesting-limit', 'message', nesting)] },
   }),
   'nesting-chain-over-limit': ({ nesting }) => ({
@@ -168,7 +203,7 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
 // not by the text a serialization happens to make of it. The sign of zero is
 // the request's, though JSON writes both zeros alike: a relative time reads
 // -0 as the past and 0 as the future.
-const canonical = (value: unknown): string => {
+export const canonical = (value: unknown): string => {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
 
   if (Object.is(value, -0)) return '-0';
@@ -176,6 +211,28 @@ const canonical = (value: unknown): string => {
   if (!isObject(value)) return JSON.stringify(value) ?? 'undefined';
 
   return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`;
+};
+
+// Whether a request's properties hold the given value under a name, compared
+// as a request is compared.
+const holds = (options: Record<string, unknown>, name: string, value: unknown) => Object.hasOwn(options, name) && canonical(options[name]) === canonical(value);
+
+// The skip reason an entry gives a request it covers, or nothing where it
+// covers none: the property must be one the request reads, among the values
+// the entry lists, in a request meeting its condition.
+export const covers = (entry: Unexpressible, api: FormatApi, options: Record<string, unknown>) => {
+  const { property, values, when } = typeof entry === 'string' ? { property: entry } : entry;
+
+  if (!Object.hasOwn(options, property)) return undefined;
+
+  if (values && !values.some((value) => holds(options, property, value))) return undefined;
+
+  if (when && !Object.entries(when).every(([name, value]) => holds(options, name, value))) return undefined;
+
+  const value = values ? `the value ${canonical(options[property])} of ` : '';
+  const condition = when ? ` whose ${Object.entries(when).map(([name, held]) => `${name} is ${canonical(held)}`).join(' and ')}` : '';
+
+  return `The adapter cannot express ${value}the ${property} property of a ${api} request${condition}.`;
 };
 
 // Section 11.2 lets an implementation expose the request it makes, and an

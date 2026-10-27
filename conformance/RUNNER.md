@@ -53,7 +53,9 @@ runner makes neither check: `load` and `--fixtures` read a directory as it
 stands, so files from anywhere but a release are checked before they are
 handed to them. A runner that reads the set from the release's archive,
 `conformance-<version>.zip`, and pins it by its digest checks the archive
-against the `sha256` the release notes state before it opens it.
+before it opens it, against the `sha256` the release notes state or, from
+4.2.0 on, the `conformance-<version>.zip.sha256` the release carries beside it,
+which `sha256sum -c` reads.
 
 ## Decoding a case's inputs
 
@@ -109,7 +111,13 @@ what a runner reads before it runs anything:
 * `levels` selects the fixtures. An adapter must claim `core`.
 * `limits` builds the generated cases.
 * `unexpressible`, where the adapter supplies it, leaves out the cases whose
-  formatting request reads a property the host's facility cannot express.
+  formatting request reads what the host's facility cannot express: a
+  property, or a value of one, in every request or in the requests whose
+  other properties hold given values. An entry is a property name, or names
+  the `property` and narrows it to the `values` it lists, to the requests
+  meeting the condition `when` states, or to both. An entry that names no
+  property, lists no value, states an empty condition or holds another member
+  is an error, as a claim outside the vocabulary below is.
 * `cst`, where the adapter supplies it, is the tree of [`CST.md`](../CST.md):
   the `unit` its spans are counted in, and the call that produces one. An
   adapter that supplies none has the tree cases left out.
@@ -117,9 +125,12 @@ what a runner reads before it runs anything:
 The optional claims are `unexpressible` and `cst`; `levels` and `limits` are
 not. A runner on a typed host, whose adapter cannot leave a member out, reads
 those two loosely: an `unexpressible` that names no property, or a `cst` stated
-empty — no unit and no call that produces a tree — is no such claim. An adapter
-that can leave a member out states no claim by leaving it out, and the
-JavaScript runner refuses a `cst` that holds no call. An answer is not a claim
+empty — no unit and no call that produces a tree — is no such claim. It reads
+an entry of `unexpressible` loosely too: `values` or `when` stated empty is no
+narrowing, so the entry stands for every value of its property, or in every
+request. An adapter that can leave a member out states no claim by leaving it
+out, and the JavaScript runner refuses a `cst` that holds no call and an entry
+whose `values` or `when` is empty. An answer is not a claim
 either: an empty list of reports is reports observed and none made, and an
 empty list of requests is requests exposed and none made, both measured as
 they stand.
@@ -142,8 +153,11 @@ summary.
 Three reasons leave a case out, and no others:
 
 * Its level is one the adapter does not claim, or one the caller excluded.
-* Its formatting request reads a property the adapter declared it cannot
-  express (section 11.2).
+* Its formatting request reads what the adapter declared it cannot express
+  (section 11.2): a property it named, a value of one among the values it
+  listed, in a request whose properties hold every value its condition
+  states. A value is compared as a request's are, by its entries and with the
+  sign of zero.
 * It pins the tree and the adapter offers none. A tree file declares no level,
   because `CST.md` is not one of them; whether the adapter offers a tree is
   what selects its cases.
@@ -152,7 +166,7 @@ Three reasons leave a case out, and no others:
 
 Section 13 states minima and requires an implementation to document what it
 permits, so a case at a limit cannot be written out: the runner builds it from
-the limits the adapter declared. README.md gives the nine constructions, the
+the limits the adapter declared. README.md gives the fifteen constructions, the
 message and payload each builds, and what each expects. A runner builds them
 from the adapter's own numbers, not from section 13's minima; an
 implementation that permits more is exercised at what it documents.
@@ -163,7 +177,11 @@ constructions write their text from an option value, which is the message's
 own text and so costs no reading; the read construction hands over a long
 value the placeholder selects nothing from, so almost nothing of it reaches
 the output. A construction that spent two budgets would fail an implementation
-for the limit the case was not about.
+for the limit the case was not about. Five nesting constructions are the
+exception, and meet a second limit, a report of the payload or a second message
+error at a placeholder nested too deep because that is what they pin: section 9
+tests the read limit first, then looks the value up and converts it, and only
+then decides the nesting limit, before any other message error.
 
 The nesting limit is built once more, far past it. A refused placeholder takes
 its fallback chain, and the chain's last link is its inline default, whose
@@ -209,6 +227,24 @@ data would have to agree on.
 Where the adapter exposes no request, the runner performs the case's request on
 its own host and compares the text. Both readings are correct; they measure
 different things, and a runner supports both.
+
+The JavaScript runner performs a request through ECMAScript's `Intl`, which
+takes it as the case writes it. On a host whose facility does not take
+ECMA-402's requests, the runner performs one through a performer of its own,
+which maps the request's facility, properties and input onto the host's
+facility (section 11.2). The performer imports nothing of the implementation's
+formatting path: a translation the two shared would agree with the
+implementation whatever either of them got wrong. It is as wide as the requests
+of the cases the run holds, which leaves out those that read what the adapter
+declared it cannot express, and a request of the run outside it — a facility, a
+property or a value it does not map — ends the run rather than failing or
+skipping the case, since the gap is the runner's and not the implementation's.
+The port documents the library the performer formats through, and its version,
+so that a text it expects can be read against the locale data that made it. A
+recording of another host's answers to the set's requests, kept in the port and
+read in place of a facility, is such a performer as well. The set ships none:
+section 11.2 lets two hosts' locale data differ, and a recording the set
+shipped would pin one host's on every other.
 
 A request is compared by its entries and never by the text a serialization
 makes of it, because the order of a request's properties is the host's. A case
@@ -329,8 +365,13 @@ Apply one defect to it — wrap it, so the adapter is correct in every way but
 one. Run the set again. A defect is realized as its sentence reads for the
 adapter in hand: the one that misdeclares the unit of the tree declares a unit
 other than the adapter's own, whichever that is, since declaring the adapter's
-own would alter nothing. A correct runner answers what the catalogue states; a
-runner that answers nothing has found a hole in itself.
+own would alter nothing. The two that declare what the adapter cannot express
+add their entry to what the adapter declared itself, since replacing it would
+run the cases the adapter documented a gap in, and fail them. Each is
+unreachable where the adapter's own declaration already leaves out every case of
+the run whose request the defect's entry covers: the defect then leaves out no
+case the run without it held. A correct runner answers what the catalogue
+states; a runner that answers nothing has found a hole in itself.
 
 `expects` says what that answer is:
 

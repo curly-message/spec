@@ -104,6 +104,20 @@ export type Resolved = {
 export type ExposedRequest = FormatRequest & { category?: Category };
 
 /**
+ * One thing a host's facility cannot express of a request (section 11.2). A
+ * property name stands for every value of that property in every request. An
+ * entry naming a `property` narrows that: to the `values` listed, where it
+ * lists any, and to the requests whose properties named in `when` hold the
+ * values given there, where it states a condition. Values are compared as a
+ * request's are: by their entries, and with the sign of zero.
+ */
+export type Unexpressible = string | {
+  property: string;
+  values?: readonly unknown[];
+  when?: Readonly<Record<string, unknown>>;
+};
+
+/**
  * The adapter of section 14.3: what an implementation supplies so the set can
  * drive it. `levels` selects the fixtures the set runs, and `limits` derives
  * the cases that sit at a boundary, so both are the implementation's own
@@ -113,13 +127,14 @@ export type Adapter = {
   levels: readonly Level[];
   limits: Limits;
   /**
-   * The formatting properties the host's facility cannot express (section
-   * 11.2), by the request that reads them. A case whose request names one is
-   * skipped: the implementation formats without it by design, so its output is
-   * not the request's, and holding it to one it documented it cannot make
-   * measures the host rather than the implementation.
+   * What the host's facility cannot express (section 11.2), by the request
+   * that reads it: a property, or a value of one, in every request or in the
+   * requests whose other properties hold given values. A case whose request
+   * reads one is skipped: the implementation formats without it by design, so
+   * its output is not the request's, and holding it to one it documented it
+   * cannot make measures the host rather than the implementation.
    */
-  unexpressible?: Partial<Record<FormatApi, readonly string[]>>;
+  unexpressible?: Partial<Record<FormatApi, readonly Unexpressible[]>>;
   resolve: (input: Resolution) => Resolved;
   /**
    * The concrete syntax tree, where the implementation offers one (CST.md).
@@ -215,7 +230,7 @@ export type ConcreteCase = {
   expected: Expected;
 };
 
-export type Generator = 'output-at-limit' | 'output-over-limit' | 'output-over-limit-continues' | 'read-at-limit' | 'read-over-limit' | 'conversion-over-limit' | 'nesting-at-limit' | 'nesting-over-limit' | 'nesting-chain-over-limit';
+export type Generator = 'output-at-limit' | 'output-over-limit' | 'output-over-limit-continues' | 'read-at-limit' | 'read-over-limit' | 'conversion-over-limit' | 'conversion-over-limit-continues' | 'nesting-at-limit' | 'nesting-over-limit' | 'nesting-over-limit-converts' | 'nesting-over-limit-reads' | 'nesting-over-limit-read-spent' | 'nesting-over-limit-unknown-modifier' | 'nesting-over-limit-missing-options' | 'nesting-chain-over-limit';
 
 /** A case the runner builds from the adapter's limits. */
 export type GeneratedCase = {
@@ -383,6 +398,7 @@ export type Defect =
   | 'reports-unobserved'
   | 'claims-core-only'
   | 'unexpressible-declared'
+  | 'unexpressible-conditional-declared'
   | 'claims-no-core'
   | 'claims-unknown-level'
   | 'claims-no-limits'

@@ -60,13 +60,13 @@
       "path": "fixtures/intl.json",
       "level": "intl",
       "section": "11.2",
-      "cases": 127
+      "cases": 126
     },
     {
       "path": "fixtures/limits.json",
       "level": "core",
       "section": "13",
-      "cases": 9
+      "cases": 15
     },
     {
       "path": "fixtures/nesting.json",
@@ -84,7 +84,7 @@
       "path": "fixtures/reports.json",
       "level": "core",
       "section": "14",
-      "cases": 25
+      "cases": 27
     },
     {
       "path": "fixtures/resolution.json",

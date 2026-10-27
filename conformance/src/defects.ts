@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { covers } from './cases';
+import { fixtures } from './set';
 import { NAMED, boundaries } from './tree';
-import type { Adapter, Catalogue, Defect, FormatRequest, Level, Mutation, Node, Report, ReportCode, ReportOrigin, Resolved, SpanUnit } from './types';
+import type { Adapter, Catalogue, Defect, Fixture, FormatRequest, Level, Mutation, Node, Report, ReportCode, ReportOrigin, Resolved, SpanUnit, Unexpressible } from './types';
 
 /** The catalogue shipped with this package; RUNNER.md states what each defect pins. */
 export const defects = () => (JSON.parse(readFileSync(fileURLToPath(new URL('../defects.json', import.meta.url)), 'utf8')) as Catalogue).defects;
@@ -46,6 +48,28 @@ const instead = (resolve: Adapter['resolve']) => (adapter: Adapter): Mutation =>
 // before anything runs, so such a defect reaches the runner wherever the
 // claim it alters was one the adapter made.
 const claiming = (adapter: Adapter, claims: Partial<Adapter>, reached: () => boolean = () => true): Mutation => ({ adapter: { ...adapter, ...claims }, reached });
+
+// What a run holds: the set it reads, and the levels whose cases it runs.
+type Run = { set: Fixture[]; levels: readonly Level[] };
+
+// A defect of what the adapter declares it cannot express: one entry more
+// than the adapter declared itself, so the gaps it documents stay left out. It
+// reaches the runner where a case of the run states a request the entry covers
+// and no entry of the adapter's own covers: a case only a runner that reads the
+// entry leaves out.
+const declaring = (entry: Unexpressible) => (adapter: Adapter, { set, levels }: Run = { set: fixtures(), levels: adapter.levels }): Mutation => {
+  const own = adapter.unexpressible?.NumberFormat ?? [];
+  const leaves = (options: Record<string, unknown>) => covers(entry, 'NumberFormat', options) !== undefined
+    && !own.some((declared) => covers(declared, 'NumberFormat', options) !== undefined);
+
+  return claiming(
+    adapter,
+    { unexpressible: { ...adapter.unexpressible, NumberFormat: [...own, entry] } },
+    () => set.some(({ file }) => file.kind !== 'tree' && levels.includes(file.level) && file.cases.some((c) => !('generate' in c)
+      && c.expected.format?.api === 'NumberFormat'
+      && leaves(c.expected.format.options ?? {}))),
+  );
+};
 
 // A defect of the tree, which an implementation need not offer at all. An
 // adapter that offers none carries nothing to alter, so the defect is
@@ -117,8 +141,9 @@ const OTHER_REQUEST: FormatRequest = { api: 'NumberFormat', options: { style: 'p
 
 const alike = (reports: Report[], other: Report[]) => reports.every((report, index) => JSON.stringify(report) === JSON.stringify(other[index]));
 
-/** The catalogue's defects as this host carries them: each wraps a conforming adapter into one that is wrong in exactly one way. */
-export const mutations: Record<Defect, (adapter: Adapter) => Mutation> = {
+// Each defect, realized for the run it reaches: the shipped set at the levels
+// the adapter claims, where nothing names another.
+const realizations: Record<Defect, (adapter: Adapter, run?: Run) => Mutation> = {
   'output-truncated': (adapter) => answering(adapter, (resolved) => typeof resolved.output === 'string' && resolved.output.length ? { ...resolved, output: resolved.output.slice(0, -1) } : undefined),
 
   'output-trimmed': (adapter) => answering(adapter, (resolved) => {
@@ -169,7 +194,9 @@ export const mutations: Record<Defect, (adapter: Adapter) => Mutation> = {
 
   'claims-core-only': (adapter) => claiming(adapter, { levels: ['core'] }, () => adapter.levels.length > 1),
 
-  'unexpressible-declared': (adapter) => claiming(adapter, { unexpressible: { NumberFormat: ['maximumFractionDigits'] } }, () => adapter.levels.includes('intl')),
+  'unexpressible-declared': declaring('maximumFractionDigits'),
+
+  'unexpressible-conditional-declared': declaring({ property: 'maximumFractionDigits', values: [2], when: { useGrouping: false } }),
 
   'claims-no-core': (adapter) => claiming(adapter, { levels: adapter.levels.filter((level) => level !== 'core') }),
 
@@ -223,3 +250,10 @@ export const mutations: Record<Defect, (adapter: Adapter) => Mutation> = {
     () => adapter.cst !== undefined,
   ),
 };
+
+/** The catalogue's defects as this host carries them: each wraps a conforming adapter into one that is wrong in exactly one way. */
+export const mutations: Record<Defect, (adapter: Adapter) => Mutation> = realizations;
+
+// A defect realized for the run an audit makes, which may read another set or
+// fewer levels than the adapter claims.
+export const realize = (id: Defect, adapter: Adapter, run: Run) => realizations[id](adapter, run);

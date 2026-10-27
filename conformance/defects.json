@@ -92,6 +92,12 @@
       "expects": "skip"
     },
     {
+      "id": "unexpressible-conditional-declared",
+      "description": "Declares a value of a formatting property it cannot express, in the requests whose other properties hold a given value, that the set asks for.",
+      "section": "11.2",
+      "expects": "skip"
+    },
+    {
       "id": "claims-no-core",
       "description": "Claims no core level.",
       "section": "2",

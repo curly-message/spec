@@ -48,7 +48,9 @@ another language needs nothing else from this package: every release carries
 them as `conformance-<version>.zip` — the fixtures, the manifest, the defect
 catalogue, both schemas and the two documents that state what they hold, under
 one directory, with its digest in the release notes — attached to the
-[release](https://github.com/curly-message/spec/releases) that named it.
+[release](https://github.com/curly-message/spec/releases) that named it. From
+4.2.0 on, the release carries beside it `conformance-<version>.zip.sha256`, the
+digest as `sha256sum` writes it.
 
 A file has a `format`, the versioned identifier of the format it targets; a
 `level`, the conformance level of section 2 that requires every case in it;
@@ -174,9 +176,26 @@ and the option it chose is the format's.
 
 A property the host's facility cannot express is a different matter, and
 section 11.2 has such an implementation document what it cannot express. The
-adapter states it as `unexpressible`, and every case whose request reads one of
-those properties is left out — listed among the skipped, the way an unclaimed
-level's cases are.
+adapter states it as `unexpressible`, and every case whose request reads what
+it states is left out — listed among the skipped, the way an unclaimed level's
+cases are. An entry is a property name, which stands for every value of the
+property in every request, or an object naming the `property` and narrowing
+it: to the `values` it lists, and to the requests whose properties named in
+`when` hold the values given there. A value is compared as a request's are.
+
+```ts
+unexpressible: {
+  NumberFormat: [
+    'roundingMode',
+    { property: 'currencyDisplay', values: ['name'] },
+    { property: 'maximumFractionDigits', when: { style: 'currency' } },
+  ],
+},
+```
+
+An entry that names no property, lists no value, states an empty condition or
+holds a key besides these three is an error rather than a skip, as an unknown
+facility is.
 
 ### Generated cases
 
@@ -191,7 +210,9 @@ Each construction spends one budget and leaves the others room, so a case
 built at one limit cannot be failed by another: the output constructions write
 from an option value, which is the message's own text and costs no reading,
 and the read construction selects nothing, so the value it spends the read
-budget on never reaches the output.
+budget on never reaches the output. Five nesting constructions meet a second
+limit, a report of the payload or a second message error at a placeholder
+nested too deep on purpose: they pin the order section 9 decides those in.
 
 | `generate` | Message and payload | Expected |
 | --- | --- | --- |
@@ -201,8 +222,14 @@ budget on never reaches the output.
 | `read-at-limit` | `{{v:eq; nomatch:X; default:ok;}}`, with `v` holding `x` repeated `R` times. | `ok`, no reports. |
 | `read-over-limit` | The same placeholder followed by `{{w}}`, with `v` one character longer and `w` holding `tail`. | `ok` and one `read-limit` report of origin `limit`: the budget is tested before a placeholder reads, so the one that spent it past the limit still resolves and the one after it pays. |
 | `conversion-over-limit` | `{{v; default:D}}`, with `v` a `nodes` value of `C + 1`. | `D` and one `unserializable-value` report of origin `payload`: a serialization that reaches the limit describes nothing, so the placeholder takes the chain. |
+| `conversion-over-limit-continues` | `{{v; default:D}}{{w}}`, with `v` an array of `C` elements, each `x` repeated `ceil(R / C) + 1` times, so its serialization visits `C + 1` nodes and the text it would write runs past `R`, and `w` holding `tail`. | `Dtail` and one `unserializable-value` report of origin `payload`: a value no conversion can describe produces no text and spends none of the read budget, so what follows it still resolves. |
 | `nesting-at-limit` | `N` placeholders, each selecting the option that holds the next; the innermost is `{{v; a:settled; default:fallback;}}`. `v` holds `a`. | `settled`, no reports. |
 | `nesting-over-limit` | The same nesting one level deeper. | `fallback` and one `nesting-limit` report of origin `message`: the innermost placeholder is refused and takes its fallback chain, and every level around it selects the option that holds it. |
+| `nesting-over-limit-converts` | The `N + 1` levels of `nesting-over-limit`, the innermost being `{{w; default:fallback;}}`, with `v` holding `a` and `w` a value that cannot be described. | `fallback`, then one `unserializable-value` report of origin `payload` and one `nesting-limit` report of origin `message`, in that order: the nesting limit is decided after the value is looked up and converted. |
+| `nesting-over-limit-reads` | The same message followed by `{{v}}`, with `w` holding `x` repeated `R + 1` times. | `fallback`, then one `nesting-limit` report and one `read-limit` report: the refused placeholder read its value, which spent the budget, so the one after it pays. |
+| `nesting-over-limit-read-spent` | The `N + 1` levels of `nesting-over-limit`, the innermost level being two placeholders, `{{w:eq; nomatch:X;}}{{v; default:fallback;}}`, with `v` holding `a` and `w` holding `x` repeated `R + 1` times. | The empty string, then one `nesting-limit` report and one `read-limit` report: the read limit is tested first, so the second placeholder, reached with the budget spent, resolves to the empty string however deeply it nests. |
+| `nesting-over-limit-unknown-modifier` | The `N + 1` levels of `nesting-over-limit`, the innermost being `{{w:zz; default:fallback;}}`, with `v` holding `a` and `w` holding `x`. No modifier `zz` is registered. | `fallback` and one `nesting-limit` report of origin `message`, and no `unknown-modifier` report: the nesting limit is the first message error decided, and a placeholder that meets one meets none after it. |
+| `nesting-over-limit-missing-options` | The same levels, the innermost being `{{w:eq; default:fallback;}}`. | `fallback` and one `nesting-limit` report of origin `message`, and no `missing-options` report, for the same reason. |
 | `nesting-chain-over-limit` | `N + 20000` placeholders `{{v; default:`, each the inline default of the one before it, around `x`, then as many `}}`. The payload is empty. | `x` and 20 000 `nesting-limit` reports of origin `message`: every level takes its chain, whose last link is the next, and each one past the limit is refused and reported once. No limit raises, so the chain resolves however deep it is; a walk that recurses once per level overflows at this depth on some hosts, Node's default stack among them, though not on every one. |
 
 An adapter whose reports carry a `limit` is held to the declared limit on the
@@ -269,10 +296,11 @@ export const adapter: Adapter = {
 satisfies. The runner selects the fixtures those levels require and skips the
 rest, and the skipped cases are listed, not hidden. `limits` is the statement
 section 13 requires, and is what the generated cases are built from. An adapter
-MAY make a third statement, `unexpressible`: the formatting properties the
-host's facility cannot express (section 11.2), under the request that reads
-them, which leaves out the cases that would measure the host rather than the
-implementation.
+MAY make a third statement, `unexpressible`: what the host's facility cannot
+express (section 11.2) — a property, or a value of one, in every request or in
+the requests whose other properties hold given values — under the request that
+reads it, which leaves out the cases that would measure the host rather than
+the implementation.
 
 An adapter MAY offer a fourth thing, `cst`: the concrete syntax tree of
 [`CST.md`](../CST.md), as the `unit` its spans are counted in — `utf-8`,
@@ -383,7 +411,9 @@ runner observed, and whether that counts as `caught`, `missed` or
 `unreachable`. The last is for a defect the adapter gives the runner nothing to
 catch — what an implementation that observes no reports does to every defect of
 its reports, one that claims Core alone to every defect of a level it does not
-claim, and one that offers no tree to every defect of the tree. A defect names
+claim, one that offers no tree to every defect of the tree, and one whose own
+`unexpressible` already leaves out every case of the run whose request a defect
+of what it cannot express covers to that defect. A defect names
 the `section` it pins and, where that is a heading of `CST.md` rather than of
 the specification, the `document` it is a heading of. `defects()` reads the
 catalogue and `mutations` carries it, so a runner's own tests can reach one

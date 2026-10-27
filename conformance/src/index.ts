@@ -1,25 +1,15 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { executeConcrete, executeGenerated } from './cases';
-import { defects, mutations } from './defects';
+import { covers, executeConcrete, executeGenerated } from './cases';
+import { defects, mutations, realize } from './defects';
+import { fixtures } from './set';
 import { UNITS, executeTree } from './tree';
-import type { Adapter, Audited, Case, Fixture, FixtureFile, FormatApi, Identity, Level, Limits, Options, Outcome, Plan, Planned, Result, Skipped, TreeFixtureFile, Verdict } from './types';
+import type { Adapter, Audited, Case, Fixture, FixtureFile, FormatApi, Identity, Level, Limits, Options, Outcome, Plan, Planned, Result, Skipped, TreeFixtureFile, Unexpressible, Verdict } from './types';
 
 export type * from './types';
 
 export { behaviours } from './behaviours';
 export { decode } from './decode';
 export { defects, mutations } from './defects';
-
-/** The fixture files of a directory, sorted by name. */
-export const load = (directory: string): Fixture[] => readdirSync(directory)
-  .filter((name) => name.endsWith('.json'))
-  .sort()
-  .map((name) => ({ name, file: JSON.parse(readFileSync(join(directory, name), 'utf8')) as FixtureFile }));
-
-/** The set shipped with this package. */
-export const fixtures = () => load(fileURLToPath(new URL('../fixtures/', import.meta.url)));
+export { fixtures, load } from './set';
 
 const LEVELS: readonly Level[] = ['core', 'intl', 'extensions'];
 
@@ -30,6 +20,22 @@ const APIS: readonly FormatApi[] = ['NumberFormat', 'DateTimeFormat', 'RelativeT
 // The versioned identifier of the format this set reads.
 const FORMAT = 'curly-message-3';
 
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const ENTRY_KEYS = ['property', 'values', 'when'];
+
+// An entry is a property name, or an object naming one and narrowing it to
+// values or to a condition, neither of them empty: an empty list of values
+// would claim nothing, and an empty condition would read as one while
+// narrowing nothing.
+const isUnexpressible = (entry: unknown): entry is Unexpressible => typeof entry === 'string' || (
+  isRecord(entry)
+  && Object.keys(entry).every((key) => ENTRY_KEYS.includes(key))
+  && typeof entry.property === 'string'
+  && (entry.values === undefined || (Array.isArray(entry.values) && entry.values.length > 0))
+  && (entry.when === undefined || (isRecord(entry.when) && Object.keys(entry.when).length > 0))
+);
+
 // The third statement an adapter makes about itself (section 11.2), held to
 // the same vocabulary as the other two before anything runs.
 const unexpressibleClaim = (adapter: Adapter) => {
@@ -39,10 +45,10 @@ const unexpressibleClaim = (adapter: Adapter) => {
 
   if (typeof declared !== 'object' || declared === null) throw new Error('The adapter must name the properties it cannot express by the request that reads them.');
 
-  for (const [api, names] of Object.entries(declared)) {
+  for (const [api, entries] of Object.entries(declared)) {
     if (!APIS.includes(api as FormatApi)) throw new Error(`The adapter names the facility ${JSON.stringify(api)}; the facilities are ${APIS.join(', ')}.`);
 
-    if (!Array.isArray(names) || names.some((name) => typeof name !== 'string')) throw new Error(`The adapter must name what it cannot express of a ${api} request as a list of property names.`);
+    if (!Array.isArray(entries) || !entries.every(isUnexpressible)) throw new Error(`The adapter must name what it cannot express of a ${api} request as a list of property names, or of entries each naming a property with the values or the request it cannot be expressed in.`);
   }
 };
 
@@ -95,17 +101,15 @@ const claims = (adapter: Adapter, options: Options) => {
   treeClaim(adapter);
 };
 
-// A case whose request reads a property the adapter documented it cannot
-// express (section 11.2) measures the host's facility rather than the
-// implementation, so it is left out the way an unclaimed level is.
+// A case whose request reads what the adapter documented it cannot express
+// (section 11.2) measures the host's facility rather than the implementation,
+// so it is left out the way an unclaimed level is.
 const unexpressible = (c: Case, adapter: Adapter) => {
   if ('generate' in c || !c.expected.format) return undefined;
 
-  const { api, options } = c.expected.format;
-  const cannot = adapter.unexpressible?.[api];
-  const property = cannot && Object.keys(options ?? {}).find((name) => cannot.includes(name));
+  const { api, options = {} } = c.expected.format;
 
-  return property && `The adapter cannot express the ${property} property of a ${api} request.`;
+  return adapter.unexpressible?.[api]?.reduce<string | undefined>((found, entry) => found ?? covers(entry, api, options), undefined);
 };
 
 // Why a level's cases are left out, or nothing where they run.
@@ -239,10 +243,12 @@ export const audit = (adapter: Adapter, options: Options = {}): Audited[] => {
 
   if (baseline.failed.length) throw new Error(`The audit needs an adapter that passes the set; this one fails ${baseline.failed.length} of ${baseline.passed.length + baseline.failed.length} cases.`);
 
+  const audited = { set: options.fixtures ?? fixtures(), levels: adapter.levels.filter((level) => !options.levels || options.levels.includes(level)) };
+
   return defects().map((entry) => {
     if (!Object.hasOwn(mutations, entry.id)) throw new Error(`The catalogue names a defect this runner does not carry: ${JSON.stringify(entry.id)}.`);
 
-    const { adapter: defective, reached } = mutations[entry.id](adapter);
+    const { adapter: defective, reached } = realize(entry.id, adapter, audited);
 
     let observed: Verdict | 'none';
 

@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { fixtures, type Case, type ExpectedNode, type Manifest } from '@curly-message/conformance';
+import { fixtures, mutations, plan, type Adapter, type Case, type ExpectedNode, type Manifest } from '@curly-message/conformance';
 import { NAMED } from '../../src/tree';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -141,7 +141,22 @@ describe('the shipped set', () => {
   it('writes its generated cases as the runner builds them', () => {
     const generated = resolutions.filter((entry): entry is { name: string; c: Extract<Case, { generate: string }> } => 'generate' in entry.c);
 
-    expect(generated.filter(({ c }) => !['output-at-limit', 'output-over-limit', 'output-over-limit-continues', 'read-at-limit', 'read-over-limit', 'conversion-over-limit', 'nesting-at-limit', 'nesting-over-limit', 'nesting-chain-over-limit'].includes(c.generate))).toEqual([]);
+    expect(generated.filter(({ c }) => !['output-at-limit', 'output-over-limit', 'output-over-limit-continues', 'read-at-limit', 'read-over-limit', 'conversion-over-limit', 'conversion-over-limit-continues', 'nesting-at-limit', 'nesting-over-limit', 'nesting-over-limit-converts', 'nesting-over-limit-reads', 'nesting-over-limit-read-spent', 'nesting-over-limit-unknown-modifier', 'nesting-over-limit-missing-options', 'nesting-chain-over-limit'].includes(c.generate))).toEqual([]);
+  });
+
+  // A defect of what an adapter cannot express is caught only where the set
+  // states a request it covers, and a correct runner that leaves none out
+  // would read as one with a hole in it.
+  it('states a request each defect of what an adapter cannot express covers', () => {
+    const adapter: Adapter = { levels: ['core', 'intl'], limits: { output: 5, read: 7, conversion: 7, nesting: 3 }, resolve: () => ({ output: '' }) };
+    const baseline = plan(adapter).skipped.length;
+    const uncovered = (['unexpressible-declared', 'unexpressible-conditional-declared'] as const).filter((id) => {
+      const { adapter: defective, reached } = mutations[id](adapter);
+
+      return plan(defective).skipped.length <= baseline || !reached();
+    });
+
+    expect(uncovered).toEqual([]);
   });
 
   // What the runner holds an implementation to, held to the file itself: an

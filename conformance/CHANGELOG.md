@@ -2,11 +2,16 @@
 
 ### 4.2.0 (Unreleased)
 
-The set gains one construction, a chain of inline defaults nested far past the
-nesting limit, which an implementation resolves however deeply it nests. It
-also stops pinning what the specification leaves to the host, pins what it
-settles and no case stated, and says what a runner on a host other than
-ECMAScript does with it. Nothing a message resolves to changes.
+The set gains constructions at the limits: a chain of inline defaults nested
+far past the nesting limit, which an implementation resolves however deeply it
+nests, and placeholders that meet the nesting limit beside the read limit, a
+value that cannot be described or another message error, which pin the order
+section 9 decides them in, and a value whose refused serialization would have
+written more than the read budget holds. It also stops pinning what the
+specification leaves to the host, pins what it settles and no case stated, and
+says what a runner on a host other than ECMAScript does with it. An adapter
+states what its facility cannot express by value and by condition as well as by
+property. Nothing a message resolves to changes.
 
 * `limits/nesting-chain-over-limit`, built from the adapter's declared nesting
   limit like the other limit cases, nests `{{v; default:` twenty thousand levels
@@ -15,6 +20,39 @@ ECMAScript does with it. Nothing a message resolves to changes.
   resolves to `x` with twenty thousand `nesting-limit` reports of origin
   `message`, one per refused level. The generator is `nesting-chain-over-limit`,
   added to the schema's enum and to the exported `Generator` type.
+* Five constructions and two cases pin where section 9 decides the limits and
+  the message errors among a placeholder's steps: the read limit first, then
+  the value looked up and converted, then the nesting limit, a modifier nobody
+  registered and a selection with no options. No case put two of them at one
+  placeholder, so an implementation that refused a placeholder nested too deep
+  before reading its value, or decided another message error before the
+  nesting limit, passed the set. `limits/nesting-over-limit-converts`
+  expects such a placeholder over a value that cannot be described to report
+  `unserializable-value` before `nesting-limit`;
+  `limits/nesting-over-limit-reads` expects its value to spend the read
+  budget, so the placeholder after it reports `read-limit`; and
+  `limits/nesting-over-limit-read-spent` expects one reached with the budget
+  spent to resolve to the empty string as `read-limit` rather than take its
+  chain. `limits/nesting-over-limit-unknown-modifier` and
+  `limits/nesting-over-limit-missing-options` expect such a placeholder that
+  names a modifier nobody registered, or selects from no options, to report
+  `nesting-limit` alone: a placeholder that meets one message error meets none
+  after it. The generators are `nesting-over-limit-converts`,
+  `nesting-over-limit-reads`, `nesting-over-limit-read-spent`,
+  `nesting-over-limit-unknown-modifier` and
+  `nesting-over-limit-missing-options`, added to the schema's enum and to the
+  exported `Generator` type.
+  `reports/value-reports-before-unknown-modifier` and
+  `reports/value-reports-before-missing-options` expect `unserializable-value`
+  before the message error at one placeholder (section 14.3).
+* `limits/conversion-over-limit-continues` pins that a value no conversion can
+  describe spends none of the read budget (section 13). `{{v; default:D}}{{w}}`
+  holds a `v` one node past the conversion limit whose text, written out,
+  would run past the read limit, and expects `Dtail` with one
+  `unserializable-value` report: an implementation that charged the refused
+  serialization's text to the budget left none for `w`, and no case told the
+  two apart. The generator is `conversion-over-limit-continues`, added to the
+  schema's enum and to the exported `Generator` type.
 * `resolution/wrapper-near-miss-is-value` wrote its object's members as
   `value`, then `unit`, and expected them serialized in that order, which is
   ECMAScript's insertion order: a host that writes a mapping's members sorted
@@ -28,6 +66,12 @@ ECMAScript does with it. Nothing a message resolves to changes.
   reads no such literal takes the chain over it. That a numeric comparison
   still compares an infinity stays the specification's rule; no case states it
   in one host's spelling.
+* `intl/date-parsed-text` leaves the set. It handed `date` the text
+  `2024-03-05T10:00:00.000Z` and expected the instant it names, but which text
+  `date` reads is the host's date parsing (section 11.2), and a host whose
+  parsing reads another set of forms takes the chain over it, as the
+  specification allows. *Writing a fixture* in the README already left that
+  parsing out of the set; this was the one case that reached it.
 * `comparisons/nan-key-is-not-numeric` pins that a key whose conversion
   yields NaN is not numeric (section 11.1): `{{v:lt; 10:A; NaN:N; 5:B;
   default:D}}` over `"3"` renders `B`. A host whose conversion reads `NaN`
@@ -97,6 +141,13 @@ ECMAScript does with it. Nothing a message resolves to changes.
   against its digest. The set's tests now fail where an object of a JSON file
   the package ships, a fixture file, `index.json`, `defects.json` or a schema,
   repeats a key, which `JSON.parse` hid by keeping the last member.
+* RUNNER.md says how a runner reads a case's text on a host whose facility
+  does not take ECMA-402's requests: through a performer of its own, which maps
+  the request onto the host's facility, imports nothing of the
+  implementation's formatting path, maps every request of the cases the run
+  holds and ends the run at one it does not, and is documented with the
+  library and the version it formats through. A recording of another host's
+  answers kept in the port is one; the set ships none.
 * The README's catalogue spells two behaviours for every host. `props` writes
   each value as ECMAScript's `JSON.stringify` writes it, so a whole number
   reads `1` and not `1.0` whatever type an implementation hands it on as, and
@@ -108,6 +159,40 @@ ECMAScript does with it. Nothing a message resolves to changes.
   whatever depth refuses it. Section 13 sets no minimum for the depth at which
   a serialization is refused, so only an implementation that documents a
   shallower depth fails a case for its depth.
+* An adapter's `unexpressible` names a value of a property, or a property in
+  the requests whose other properties hold given values, as well as a whole
+  property (section 11.2). An entry is a property name, as before, or an
+  object naming the `property` with the `values` it cannot express, the
+  condition `when` it cannot express it in, or both; a value is compared as a
+  request's are. A property was coarser than the gaps hosts have: a facility
+  that writes an amount with its currency's own digits cannot express the digit
+  properties in the currency style alone, and naming them left out the 25
+  decimal requests of the set, which the facility formats as asked, and could
+  not say that the gap is the currency style's, where no request of the set
+  yet reads them. A case left out for an entry says which value or which
+  condition it met. An entry that names no property, lists no value, states an
+  empty condition or holds another key is refused with the run; RUNNER.md says
+  so, and that a runner on a typed host, whose adapter cannot leave `values`
+  or `when` out, reads either stated empty as no narrowing. The exported
+  `Unexpressible` type is the entry, and the defect
+  `unexpressible-conditional-declared` declares a value of a property in
+  requests meeting a condition the set states, which a runner leaves out. The
+  set's tests now fail where the shipped set states no request that either
+  defect of what an adapter cannot express covers, which would leave a
+  correct runner reading as one that missed it.
+* The defects of what an adapter cannot express add their entry to the
+  adapter's own `unexpressible` rather than replace it. `unexpressible-declared`
+  replaced it, which ran the cases the adapter documented a gap in: an audit of
+  an adapter that declares it cannot express `currencyDisplay`, and formats
+  without it, failed the case that reads it and called the defect missed. Each
+  defect is now unreachable where the adapter's own declaration already leaves
+  out every case of the run whose request the defect's entry covers, read off
+  the set and the levels the audit runs; RUNNER.md says so.
+* The release carries `conformance-<version>.zip.sha256` beside the archive:
+  its digest as `sha256sum` writes it, so a fetch checks the archive with
+  `sha256sum -c` rather than copying the digest out of the release notes,
+  which still state it. The README and RUNNER.md name the file, and the
+  release it starts at: no earlier release carries one.
 
 ## 4.1.0
 
