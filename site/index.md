@@ -71,7 +71,12 @@ wrong should show as a translation that is wrong, not as a blank page.
 The specification is **stable**. Version 3 of the format is settled: within
 `curly-message-3`, what a message resolves to does not change, and an amendment
 that would change it belongs to a later version of the format rather than to
-this one. Revisions of the document are tagged, beginning at `v1.0.0`.
+this one. It has one exception: section 13 of
+[the specification](../SPEC.md) bounds the text one serialization writes, and a
+value whose text passes the bound an implementation documents is one no
+conversion can describe, however few nodes it visits, as a value the host's
+serializer refuses already was. Revisions of the document are tagged, beginning
+at `v1.0.0`.
 
 The specification states version 3 and nothing else. Every revision of it is in
 the [changelog](../CHANGELOG.md), and the path from an earlier version of the

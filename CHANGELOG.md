@@ -7,7 +7,8 @@ leaves the messages written for it alone — a modifier under a name no earlier
 revision defines, a conformance level an implementation opts into, and wording
 that states more precisely what the body already required. That promise is about
 messages: what an implementation answers where there is no message to resolve
-is outside it.
+is outside it. It has one exception, which 3.1.1 makes and states: the bound on
+the text one serialization writes.
 
 The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
@@ -15,10 +16,14 @@ the document may be revised without it moving.
 
 ### 3.1.1 (Unreleased)
 
-Nothing a message resolves to changes. Where the document spelled a rule for
-ECMAScript alone, or left a host's reading of it unstated, it now states for
-every host what it already settled, and where it left another question open, it
-answers it without changing what any message resolves to.
+Nothing a message resolves to changes, but for one kind of value: one whose
+serialization writes more text than an implementation permits, though it visits
+fewer nodes than the conversion limit counts, is now one no conversion can
+describe, as one the host's serializer refuses already was, where 3.1.0 had the
+implementation serialize it. Where the document spelled a rule for ECMAScript
+alone, or left a host's reading of it unstated, it now states for every host
+what it already settled, and where it left another question open, it answers it
+without changing what any message resolves to.
 
 * Section 4 says what the host's JSON serialization holds: no insignificant
   whitespace, as sections 4.1 and 7 write it, and an object's members in the
@@ -140,6 +145,19 @@ answers it without changing what any message resolves to.
   text are the members of `line-term`. An implementation may escape more and
   documents what it does, and a code point a consumer's log reader also ends a
   line at, U+0085 among them, is the consumer's to escape.
+* Section 13's conversion limit measures the text a serialization writes as
+  well as the nodes it visits, since a node may be a string of any length: a
+  serialization is not abandoned while it has visited fewer than 100 000 nodes
+  and written fewer than 100 000 characters, in the unit the output limit
+  counts, and one that reaches either limit the implementation imposes is a
+  conversion that cannot describe the value. This is the one change of this
+  revision to what a message resolves to: 3.1.0 bounded only the nodes, so an
+  implementation serialized a value of fewer than 100 000 nodes however much
+  text it wrote, unless the host's serializer refused it, and one whose bound
+  on the text sits at the minimum now takes the fallback chain for a value
+  whose text reaches 100 000 characters. The implementations of the family
+  permit more, and section 13 requires each to document what it permits, as it
+  requires of every limit.
 * Section 13 says that a value no conversion can describe spends none of the
   read budget, however much its conversion wrote before it was abandoned.
 
