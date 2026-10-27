@@ -17,7 +17,8 @@ the document may be revised without it moving.
 
 Nothing a message resolves to changes. Where the document spelled a rule for
 ECMAScript alone, or left a host's reading of it unstated, it now states for
-every host what it already settled.
+every host what it already settled, and where it left another question open, it
+answers it without changing what any message resolves to.
 
 * Section 4 says what the host's JSON serialization holds: no insignificant
   whitespace, as sections 4.1 and 7 write it, and an object's members in the
@@ -139,6 +140,8 @@ every host what it already settled.
   text are the members of `line-term`. An implementation may escape more and
   documents what it does, and a code point a consumer's log reader also ends a
   line at, U+0085 among them, is the consumer's to escape.
+* Section 13 says that a value no conversion can describe spends none of the
+  read budget, however much its conversion wrote before it was abandoned.
 
 ## 3.1.0
 
