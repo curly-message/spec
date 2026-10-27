@@ -33,9 +33,13 @@ The specification is **stable**. Version 3 of the format is settled: within
 `curly-message-3`, what a message resolves to does not change, and an amendment
 that would change it belongs to a later version of the format rather than to
 this one. The promise is about messages: a caller that supplied none wrote
-nothing for the document to settle. Revisions of the document are tagged in this
-repository, beginning at `v1.0.0`, and [`CHANGELOG.md`](./CHANGELOG.md) says
-what each one changed. `SPEC.md` states version 3 and nothing else, and
+nothing for the document to settle. It has one exception, which revision 3.1.1
+makes: section 13 of [`SPEC.md`](./SPEC.md) bounds the text one serialization
+writes, and a value whose text passes the bound an implementation documents is
+one no conversion can describe, however few nodes it visits, as a value the
+host's serializer refuses already was. Revisions of the document are tagged in
+this repository, beginning at `v1.0.0`, and [`CHANGELOG.md`](./CHANGELOG.md)
+says what each one changed. `SPEC.md` states version 3 and nothing else, and
 [`MIGRATIONS.md`](./MIGRATIONS.md) is the path from an earlier version of the
 format.
 
