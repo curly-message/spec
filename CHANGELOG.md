@@ -23,7 +23,8 @@ describe, as one the host's serializer refuses already was, where 3.1.0 had the
 implementation serialize it. Where the document spelled a rule for ECMAScript
 alone, or left a host's reading of it unstated, it now states for every host
 what it already settled, and where it left another question open, it answers it
-without changing what any message resolves to.
+without changing what any message resolves to. `CST.md` is settled: a node name
+or an arrangement now changes only with a version of the format.
 
 * Section 4 says what the host's JSON serialization holds: no insignificant
   whitespace, as sections 4.1 and 7 write it, and an object's members in the
@@ -177,6 +178,10 @@ without changing what any message resolves to.
   host-defined modifier kept it and reads it after the resolution returned:
   the text a read during the resolution produced, or the empty string, so that
   nothing resolves, reports or runs host code once a resolution has returned.
+* `CST.md` section 2 says the tree is settled: implementations in three string
+  units, UTF-16, UTF-8 and code points, offer it, so a node name or an
+  arrangement changes only with a version of the format, no longer in a
+  revision of the document. Its properties change in neither, as before.
 
 ## 3.1.0
 
