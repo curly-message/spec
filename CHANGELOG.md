@@ -7,7 +7,8 @@ leaves the messages written for it alone — a modifier under a name no earlier
 revision defines, a conformance level an implementation opts into, and wording
 that states more precisely what the body already required. That promise is about
 messages: what an implementation answers where there is no message to resolve
-is outside it.
+is outside it. It has one exception, which 3.1.1 makes and states: the bound on
+the text one serialization writes.
 
 The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
@@ -15,9 +16,14 @@ the document may be revised without it moving.
 
 ### 3.1.1 (Unreleased)
 
-Nothing a message resolves to changes. Where the document spelled a rule for
-ECMAScript alone, or left a host's reading of it unstated, it now states for
-every host what it already settled.
+Nothing a message resolves to changes, but for one kind of value: one whose
+serialization writes more text than an implementation permits, though it visits
+fewer nodes than the conversion limit counts, is now one no conversion can
+describe, as one the host's serializer refuses already was, where 3.1.0 had the
+implementation serialize it. Where the document spelled a rule for ECMAScript
+alone, or left a host's reading of it unstated, it now states for every host
+what it already settled, and where it left another question open, it answers it
+without changing what any message resolves to.
 
 * Section 4 says what the host's JSON serialization holds: no insignificant
   whitespace, as sections 4.1 and 7 write it, and an object's members in the
@@ -87,6 +93,90 @@ every host what it already settled.
   through, with the implementation's code applying that library's data. What
   the library's data lacks is locale data, and what it cannot be asked is a
   property the facility cannot express.
+* Section 11.2 recommends that an implementation judge a formatting request,
+  and section 11.5's plural request, by the validity rules of ECMAScript's
+  facilities, whose vocabulary it is written in, whatever its own facility
+  accepts: a locale that is not a well-formed Unicode BCP 47 locale identifier,
+  a currency that is not three ASCII letters and a currency style with no
+  currency are a request the host rejects, and the placeholder takes the
+  fallback chain. It is a SHOULD, because the rules it narrows leave both
+  outcomes to the host, and `RULINGS.md` records why.
+* Section 13 says what stands in for the host's own limit on a resolution that
+  reaches itself, where the host ends the script or the process at that limit
+  rather than signal a failure: a bound the implementation documents on how
+  many resolutions are in progress at once on one thread of execution, a
+  thread, a goroutine or a fiber. Optionally it also bounds, across the
+  process, those asked for while another was in progress on the same thread of
+  execution, where one suspended part way keeps its place. One asked for where
+  none is in progress is never refused, and a resolution's own walk reaches
+  neither bound within section 13's minima. A refusal is a failure signalled to
+  the host code that asked for it, which that code may handle as any other and
+  which is contained where it lets it pass. An implementation on such a host
+  that sets no bound still does not meet the requirement, as section 14.2
+  says. Where a chain's host code resolves on another thread of execution, one
+  it starts or one it hands the request to, the resolution there carries
+  nothing that links it to the one that asked, so neither bound reaches what
+  the chain does across threads: the bound on one thread counts each part of
+  the chain that stays on one call stack, and the bound across the process adds
+  those parts up. Where such a chain goes on without end past every bound the
+  implementation keeps and the host ends the script or the process as it runs
+  out of memory or of threads, the chain is the host code's to bound, and
+  section 14.2 names it as the one exception; an implementation that keeps only
+  the bound on one thread meets the requirement. The document sets no minimum
+  for the bound.
+* Section 13 says that the conversion limit bounds the serialization alone,
+  and section 4 says it beside the conversions it defines. What the ordinary
+  string conversion costs is the value's own type's, a sequence that walks
+  members of its own included: no limit bounds the work of that walk, though
+  the text it writes is value text the read and output limits count, and only
+  a value the application built reaches it, since a payload decoded from JSON
+  holds plain values.
+* Section 9 says where section 13's bounds and the message errors fall among a
+  placeholder's steps: the read limit is tested first, so a placeholder
+  reached with the budget spent resolves to the empty string however deeply it
+  nests; every other placeholder looks its value up and converts it, spending
+  the budget and reporting, and only then meets the nesting limit, an unknown
+  modifier or a selection with no options, in that order. Section 11.2 says
+  that a formatting modifier's locale test comes after that read too, so a
+  placeholder that renders nothing for a missing locale has still spent the
+  budget on its value. Section 14.3 says that within a placeholder its value's
+  report comes before a message error's.
+* Section 13 says that the line terminators a report must not emit from its
+  text are the members of `line-term`. An implementation may escape more and
+  documents what it does, and a code point a consumer's log reader also ends a
+  line at, U+0085 among them, is the consumer's to escape.
+* Section 13's conversion limit measures the text a serialization writes as
+  well as the nodes it visits, since a node may be a string of any length: a
+  serialization is not abandoned while it has visited fewer than 100 000 nodes
+  and written fewer than 100 000 characters, in the unit the output limit
+  counts, and one that reaches either limit the implementation imposes is a
+  conversion that cannot describe the value. This is the one change of this
+  revision to what a message resolves to: 3.1.0 bounded only the nodes, so an
+  implementation serialized a value of fewer than 100 000 nodes however much
+  text it wrote, unless the host's serializer refused it, and one whose bound
+  on the text sits at the minimum now takes the fallback chain for a value
+  whose text reaches 100 000 characters. The implementations of the family
+  permit more, and section 13 requires each to document what it permits, as it
+  requires of every limit.
+* Section 13 says that a value no conversion can describe spends none of the
+  read budget, however much its conversion wrote before it was abandoned.
+* Section 11.2 says that the text forms `date` reads are the host's, which an
+  implementation documents, and recommends two of them: the text the host's
+  own date type converts to, and an RFC 3339 date-time with an uppercase `T`,
+  its year from `0001` to `9999`, its seconds from `00` to `59` and an
+  explicit offset. Text whose instant depends on when it is read, such as
+  `next monday`, is better not read as a date; a form with no offset stays the
+  host's to read as UTC or as local time, and a year of `0000` or a leap
+  second's `60` the host's to read or not.
+* Section 11.2 says what an implementation leaves unexpressed at a finer grain
+  than a property: a value of one, and a property or a value only in requests
+  whose other properties hold given values, such as the digit properties in
+  the currency style. Each goes unapplied as such a property does, and is
+  documented and stated to the conformance set with its condition.
+* Section 11.3 says what an option's value or the default answers when a
+  host-defined modifier kept it and reads it after the resolution returned:
+  the text a read during the resolution produced, or the empty string, so that
+  nothing resolves, reports or runs host code once a resolution has returned.
 
 ## 3.1.0
 

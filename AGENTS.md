@@ -96,8 +96,8 @@ implementation and `SPEC.md` disagree, that is a bug report against one of
 them — decide which, and say so, rather than quietly changing the other. What
 the document settles is argued from how messages are written and read, not from
 what it happens to say today. Within `curly-message-3`, what a message resolves
-to does not change (`README.md`, *Status*); an amendment that would change it
-belongs to a later version of the format.
+to does not change, but for the one exception `README.md`'s *Status* names; an
+amendment that would change it belongs to a later version of the format.
 
 **Behavior changes are format changes.** Anything that alters what a message
 resolves to changes `SPEC.md`, its `CHANGELOG.md`, the conformance set and every

@@ -12,16 +12,22 @@ below is already written into its body as a requirement — sections 4, 6, 7, 8,
 so that a reader who wonders why a rule reads as it does can find the answer
 instead of guessing at it.
 
-Each **Observed** block is a historical record of the pre-3.0 implementation
-this format was specified against: what it did before the ruling landed. It is
-not re-measured against any current head, and it describes no conforming
-implementation. Entries A.1-A.6 correspond to the six divergences catalogued
-before the specification was written; the rest were found while writing it.
+Each **Observed** block of an A entry is a historical record of the pre-3.0
+implementation this format was specified against: what it did before the
+ruling landed. It is not re-measured against any current head, and it
+describes no conforming implementation. Entries A.1-A.6 correspond to the six
+divergences catalogued before the specification was written; the rest were
+found while writing it.
 
-Every ruling is a breaking change to the implementation it was observed on and
-none is a breaking change to a released package: the specification has carried
-every ruling since its revision 1.0.0, so every release made against it has
-them. No migration note is owed to any user.
+Every ruling of the A entries is a breaking change to the implementation it was
+observed on and none is a breaking change to a released package: the
+specification has carried every ruling since its revision 1.0.0, so every
+release made against it has them. No migration note is owed to any user.
+
+The B entries were found later, between the hosts implementations of version 3
+run on, where the document left an outcome to the host. Their **Observed**
+block records what those hosts do, and their ruling says how far version 3
+goes and what it leaves to a later version of the format.
 
 ---
 
@@ -537,3 +543,41 @@ Composition follows from that rather than needing a rule of its own. Each layer
 contributes the modifiers it holds and nothing else, so a bad entry costs a host
 the name it wrote and nothing further; a layer read for its modifiers only after
 composing would let that entry take the modifier it named down with it.
+
+---
+
+## B.1 A request the host accepts that ECMAScript would refuse
+
+**Observed.** Section 11.2 makes a rejected locale and a missing currency the
+host's to decide: a locale the caller supplied "that the host then rejects"
+takes the fallback chain, and so does a currency missing "where the host's
+facility requires one". ECMAScript's facilities refuse both, so the reference
+implementation takes the chain. A facility that is a library, on a platform
+with none built in, need not:
+
+```notation
+{{n:number; default:D}}     locale "not a locale", n 1234.5
+    ECMAScript                        ->  "D", failed-modifier
+    an ICU binding                    ->  "1,234.5", in the root locale's data
+{{n:currency; default:D}}   locale "en", n 10
+    currency none     ECMAScript      ->  "D", failed-modifier
+                      a library       ->  "¤10.00"
+    currency ""       a library       ->  "10.00"
+    currency "US"     a library       ->  "US10.00"
+```
+
+**Ruling.** An implementation SHOULD judge a request by the validity rules of
+the vocabulary it is written in (section 11.2): what ECMAScript's facilities
+refuse is a request the host rejects, however lenient the facility, and the
+placeholder takes the fallback chain. The same holds of the request a plural
+selection makes (section 11.5).
+
+It is a SHOULD rather than a MUST because the words it narrows let a lenient
+host conform: under 3.1.0 an implementation that rendered
+`¤10.00` met every requirement the document states, and within version 3 what
+a message resolves to does not change, but for the one exception the README's
+*Status* names, the bound on the text one serialization writes. A later
+version of the format makes it
+a MUST, with cases in the conformance set for a malformed locale and a
+missing currency; an implementation that already validates loses nothing by
+it.

@@ -19,7 +19,12 @@
 > there is no message to resolve is outside it. What a later revision may add is
 > what leaves the messages written today alone: a modifier under a name no
 > earlier revision defined, a conformance level an implementation opts into, and
-> wording that states more precisely what the body already required.
+> wording that states more precisely what the body already required. The
+> promise has one exception, the one addition outside that list: section 13's
+> bound on the text one serialization writes, which a revision of this document
+> added. A value whose serialization writes more text than the bound an
+> implementation documents is one no conversion can describe, however few nodes
+> it visits, as a value the host's serializer refuses already was.
 >
 > This document states version 3 and nothing else. Three documents beside it
 > carry what it does not, and none of them is part of this specification:
@@ -77,8 +82,9 @@ Conformance is tested by the implementation-independent fixture set
 That set is developed in the `conformance/` directory of this document's
 repository and released from it.
 
-An implementation states the levels it satisfies and the limits it permits to
-that set through the adapter of section 14.3.
+An implementation states the levels it satisfies, and the limits it permits
+that the set derives cases from, to that set through the adapter of section
+14.3.
 
 ## 3. Terminology
 
@@ -221,7 +227,8 @@ the host's: a serialization that raises or yields nothing, at a depth section
 13 sets no minimum for.
 
 How many times a value is converted while a message resolves is itself bounded
-(section 13).
+(section 13), and so is what one serialization visits. What one ordinary string
+conversion costs is the value's own type's, which section 13 does not bound.
 
 The text a value's conversion produces is data, and nothing removes escape
 sequences from it (section 7). A backslash it carries is a backslash, so a
@@ -597,6 +604,17 @@ equivalent.
 
 A placeholder resolves in the following order.
 
+The bounds of section 13 and the message errors of section 14.2 have their
+places among the steps below. The read limit is tested first, before section 9.2
+reads anything: a placeholder reached once the budget is spent resolves to the
+empty string, however deeply it nests and whatever it names. Every other
+placeholder looks its value up and converts it at section 9.2, which spends the
+budget and reports what the conversion reports, and only then are the message
+errors decided — the nesting limit first (section 13), then a modifier nobody
+registered (section 11.4), then a selection with no options (section 9.5) —
+before section 9.5 selects a result. A placeholder that meets one of them takes
+the fallback chain and meets none after it.
+
 ### 9.1 Parse
 
 Split the placeholder into its selector and segments per section 6. There is no
@@ -910,11 +928,13 @@ SHOULD report a locale that is not available, naming it `missing-locale`
 (section 14.2): the empty string is what such a placeholder renders, and the
 report is what says why it rendered nothing.
 
-The locale is tested **first**, before the value is read: where none is
-available the result is the empty string whatever the value is, so the two
-rules below that send a placeholder to the fallback chain — a value that is
-blank, and an input the modifier cannot format — are reached only where a
-locale is. The test is reached in turn only where the placeholder reaches a
+The locale is tested **first** among what the modifier does, before it reads
+the value as a number or a date: the value has already been looked up and
+converted at section 9.2, spending the read budget (section 9), and where no
+locale is available the result is the empty string whatever that value is, so
+the two rules below that send a placeholder to the fallback chain — a value
+that is blank, and an input the modifier cannot format — are reached only where
+a locale is. The test is reached in turn only where the placeholder reaches a
 modifier at all: an absent value (section 9.2) takes the chain before any
 modifier is asked, whether a locale is available or not. A placeholder whose
 value is absent therefore reports no missing locale, over a caller that
@@ -930,6 +950,20 @@ supplied one and over a caller that supplied none alike.
 `number`, `ago` and `currency` take a number only. Because every value arrives
 as text (section 4), `date` also accepts text the host's own date parsing
 understands; that is what keeps a value authored as a date instance formattable.
+
+Which text that parsing reads is the host's, and an implementation documents the
+forms it reads. It SHOULD read two of them: the text the host's ordinary string
+conversion writes for a value of the host's own date type, as the instant that
+text writes, and an RFC 3339 date-time spelled with an uppercase `T`, its year
+from `0001` to `9999`, its seconds from `00` to `59`, a fraction of a second or
+none, and an explicit offset, `Z` or one of `+hh:mm` and `-hh:mm` —
+`2024-03-05T10:00:00.000Z` and
+`2024-03-05T11:00:00+01:00` are one instant. It SHOULD NOT read as a date a text
+whose instant depends on when it is read, `tomorrow` or `next monday`. Every
+other form is the host's, and two hosts differ over it: a date-time written
+with no offset, or a bare date, reads as UTC on one and as local time on
+another, so a value that must format alike everywhere is a timestamp or a
+date-time written with its offset.
 
 Text that is empty or consists only of `whitespace` (section 6) is **not** a
 number, whatever the host's numeric conversion makes of it, and is not a date
@@ -1101,6 +1135,17 @@ than a call into any one language: a host reads each name onto its own
 facility, and a caller that writes the same properties asks for the same
 formatting wherever it runs.
 
+That vocabulary also says which requests are valid, and an implementation
+SHOULD judge a request by it, here and in section 11.5, rather than by what its
+host's facility happens to accept. A locale that is not a well-formed Unicode
+BCP 47 locale identifier (UTS #35) as ECMAScript's facilities read one — `en_US`,
+`i-klingon` — and a property one of their constructors refuses — a currency
+that is not three ASCII letters, or none at all in the currency style — are
+then a request the host rejects however lenient its facility is: the modifier
+cannot format its input, and the placeholder takes the fallback chain by the
+last rule of this section rather than rendering `en_US` in some locale or an
+amount with no currency.
+
 A platform with no internationalization facility of its own has the one its
 implementation formats through. There a library, with the implementation's own
 code applying that library's data, is the host's facility, here and in section
@@ -1115,10 +1160,17 @@ A property the host's facility cannot express is not an input the modifier
 cannot format. The modifier formats with the properties the facility does
 express, and the placeholder does not take the fallback chain on a property's
 account: a number formatted without the grouping a caller asked to suppress is
-still the number, and a fallback in its place is not. An implementation MUST
-document the properties it cannot express, and states them to the conformance
-set through the adapter of section 14.3, so that what it did not apply is
-observable rather than only written down.
+still the number, and a fallback in its place is not. The same holds where the
+facility expresses a property but not every value of it, or not alongside every
+value of the request's other properties: a facility that formats an amount
+with its currency's own digits cannot express the digit properties in the
+currency style, and formats a decimal number with them all the same. What it
+cannot express there goes unapplied, and the rest is formatted. An
+implementation MUST document what it cannot express — each property or value
+of one, and, where it cannot express it in some requests only, the values of
+the other properties that make a request one of them — and states it to the
+conformance set through the adapter of section 14.3, so that what it did not
+apply is observable rather than only written down.
 
 Because the output of these modifiers depends on the host's locale data, an
 output string on its own tests that data as much as it tests this format. An
@@ -1165,6 +1217,12 @@ Because a host's own registration overrides the format's, a name a later
 version of this format defines costs a host that already registered its own
 modifier under that name nothing: its messages resolve as they did, and the
 only thing out of reach is the modifier the new version defines.
+
+A host-defined modifier may keep what it was handed and read it later. Once the
+resolution has returned, an option's value or the default it kept answers the
+text a read of it during the resolution produced, and the empty string where
+nothing read it then: after a resolution returns, nothing resolves, reports or
+runs host code on its account.
 
 A host-defined modifier that raises MUST be contained: the placeholder resolves
 to the fallback chain and the failure SHOULD be reported. Section 14.2 says what
@@ -1417,14 +1475,18 @@ An implementation MUST enforce all four of the following:
   placeholder that finds a budget and spends it past the limit still resolves,
   and the next one pays. Value text is what a placeholder reads from the
   **payload**: the value it names, and each link of its fallback chain the
-  payload supplies (section 10). The message's own text is not value text — an
+  payload supplies (section 10). A value no conversion can describe produces
+  no text and spends none of the budget, however much its conversion wrote
+  before it was abandoned. The message's own text is not value text — an
   option value and an inline default are bounded by the message they were read
   from — and neither is what a modifier answers with, which is the placeholder's
   result and is bounded by the output limit above.
-- **A conversion limit.** At least **100 000** nodes MUST be visited before a
-  value's serialization is abandoned. A serialization that reaches the limit
-  MUST be treated as a conversion that cannot describe the value (section 4).
-  The minimum binds the limit the implementation imposes on the nodes it
+- **A conversion limit.** A value's serialization MUST NOT be abandoned while
+  it has visited fewer than **100 000** nodes and written fewer than
+  **100 000** characters of text, in the unit the output limit counts. A
+  serialization that reaches either limit the implementation imposes MUST be
+  treated as a conversion that cannot describe the value (section 4).
+  The node minimum binds the limit the implementation imposes on the nodes it
   visits, not the depth at which the host's serializer refuses a value, or the
   implementation refuses one in the serializer's place: that refusal is a
   serialization that raises or yields nothing (section 4). This document sets
@@ -1477,7 +1539,12 @@ more nodes than a resolvable output could hold is read as one no conversion can
 describe, which is where it takes the output limit's number from. The two do not
 measure each other, though — a serialization visits a member it then omits, so a
 value can visit any number of nodes and still describe itself in two characters
-— and the output limit cannot stand in for a bound on the work.
+— and the output limit cannot stand in for a bound on the work. Nor does a count
+of nodes bound the text a serialization writes, since a node may be a string of
+any length: an array naming one string of a hundred thousand characters five
+thousand times visits five thousand and one nodes and writes more than five
+hundred million characters. So the limit measures that text too, and takes the
+output limit's number for it as it does for the nodes.
 
 A **node**, for that count, is a value the walk visits: the value being
 converted, and then every member it reaches, counted once for each time it
@@ -1528,6 +1595,19 @@ A value section 4 serializes is not exempt however plainly it is built: its
 walk is the work the limit bounds, and a resolution that walks it once per
 placeholder pays for it once per placeholder.
 
+The conversion limit bounds the serialization alone: the walk section 4 asks
+of a plain object or a plain array. The ordinary string conversion is the
+value's own type's, and so is what it costs. A type that converts by walking
+members of its own — a sequence derived from the host's, say — walks them as its
+conversion does, and no limit of this section bounds the work that walk does,
+as none bounds the work of writing out the digits a large integer converts to.
+What either writes is value text all the same: the read limit counts it as a
+placeholder reads it, and the output limit as a placeholder's result holds it.
+A payload the host decodes from JSON holds no such type, since what that
+decoding produces for an object and an array is plain (section 4), so only a
+value the application built reaches it, and the application bounds what its own
+types cost.
+
 A resolution may begin while another is running: a host-defined modifier
 (section 11.3), a reporting handler (section 14.3) and any host code a
 conversion runs (section 4) all reach the implementation, and any of them may
@@ -1560,10 +1640,63 @@ resolution that was reporting MUST carry on and MUST NOT raise. That holds for
 a handler that fails any other way too: a channel is where diagnostics go, and
 a message does not fail to render because one could not be logged.
 
+A host may end the script or the process at that limit rather than signal a
+failure the implementation can contain. There an implementation MAY stand in
+for the host's limit with a bound of its own on how many resolutions are in
+progress at once on one thread of execution — a thread, a goroutine or a fiber,
+whatever runs on a call stack of its own — documented with the limits it
+permits. Keeping that count needs to know only which thread of execution asks,
+and a resolution that reaches itself on one call stack deepens the count as it
+deepens the stack. A resolution asked for on a thread of execution where none
+is in progress is never refused, and returns its string as always. The
+implementation MAY also bound how many resolutions are in progress at once
+across the process that were each asked for where another was already in
+progress on the same thread of execution, where one suspended part way keeps
+its place in the count. What reaches either bound is resolutions asked for
+while another is in progress on their thread of execution, never the walk of
+one resolution: a resolution's own walk MUST NOT reach either while its message
+keeps within the minima of this section. A resolution asked for past a bound is
+refused, and where the bound across the process refuses one, what is refused is
+the resolution asked for and not one holding a place in the count. The refusal
+is a failure signalled to the host code that asked for it, as the host signals
+any other (section 14.2), and that code may handle it as it may any other; one
+it lets pass is contained as the paragraph above contains the host's limit, so
+the resolution around it does not raise. Such a bound is then the host's own
+limit for the purpose of this section, and this document sets no minimum for
+it. An implementation whose host ends the script or the process at its limit
+and that sets no such bound does not meet the requirement above (section 14.2).
+
+Neither bound reaches what a chain does across threads of execution. A chain
+leaves a thread of execution where its host code resolves on one it starts, or
+hands the request to one already running and waits for the answer: the
+resolution asked for there runs on a call stack of its own, and carries nothing
+that names the resolution whose host code asked for it on another. The bound on
+one thread of execution therefore counts each part of a chain that stays on one
+call stack, and bounds that part as it bounds any resolution that reaches
+itself, but it does not add one part to the next. The bound across the process
+adds the parts up, though a part that holds a single resolution adds nothing to
+it, so a chain that hands off at every step reaches neither bound. Where a chain
+goes on through such hand-offs without end and no bound the implementation keeps
+reaches it, as the bound on one thread of execution alone never does while each
+part stays short of it, what ends it is the host running out of memory or of
+threads of execution, not a limit on how deep one call stack goes. Where the
+host signals that as a failure in code the implementation called, it is
+contained as any other; where the host ends the script or the process instead,
+the chain is the host code's to bound, as the threads of execution it starts
+are, and the requirement above does not reach it. The bound across the process
+stays optional for it: an implementation that keeps only the bound on one
+thread of execution meets the requirement above.
+
 A report SHOULD identify the unresolved text. A report MUST bound that text's
 length and MUST NOT emit line terminators from it, so that nothing it carries
-can forge additional log lines. The bound is written over the text a report
-carries rather than over where that text came from: under section 5 the text a
+can forge additional log lines. A line terminator there is a member of
+`line-term` (section 6) and nothing else. An implementation MAY escape more,
+and documents what it escapes; where a consumer's log reader ends a line at a
+further code point too — U+0085, or the C0 controls U+000B, U+000C and U+001C
+to U+001E, as some line readers do — the consumer escapes it, since which code
+points end a line is decided by what reads the log rather than by the host
+that wrote the report. The bound is written over the text a report carries
+rather than over where that text came from: under section 5 the text a
 report identifies is the placeholder the message spells rather than anything a
 placeholder resolved to, and a message is written in a catalogue by hands that
 are not the host's, so an implementation is held to the bound whether or not it
@@ -1694,7 +1827,10 @@ not return, which is not the implementation raising. Neither reaches a
 resolution that reaches itself without end (section 13): where the host's limit
 on how deep it will go is one it ends the script or the process at, its memory
 limit among them, section 13's containment still applies, and an implementation
-that sets no bound of its own short of that limit does not meet it.
+that sets no bound of its own short of that limit, as section 13 describes
+one, does not meet it. The one exception is what a chain does once it leaves a
+thread of execution, which no one call stack holds: section 13 leaves it to the
+host code that runs it.
 
 A report names the condition it describes with a **code**, and every code
 declares an **origin**: which of a resolution's inputs the defect is in, and so
@@ -1754,8 +1890,10 @@ resolves a message in one walk and section 9 fixes the steps a placeholder
 takes, so where neither of two reporting placeholders holds the other, the one
 the message writes first reports first; and where one holds the other, the
 inner reports while the outer's value is being read — after the outer's
-selector was resolved and before its result was produced. An implementation
-MUST NOT reorder reports by condition, by origin or by severity.
+selector was resolved and before its result was produced. Within one placeholder
+the order is section 9's: what its value's conversion reports comes before a
+message error it meets. An implementation MUST NOT reorder reports by
+condition, by origin or by severity.
 
 The count is therefore bounded by the message: a resolution emits at most one
 report per placeholder per condition, and a message holds fewer placeholders
@@ -1766,11 +1904,15 @@ separately, by section 13.
 The conformance set observes reports through an adapter an implementation
 supplies for it; this document still prescribes no channel. The same adapter
 names the levels the implementation satisfies (section 2) and the limits it
-permits (section 13), which is what makes those two statements an
-implementation makes about itself observable: the set reads the levels to
-select the fixtures a level requires, and the limits to derive the cases that
-sit at a boundary, so an implementation that permits more than section 13's
-minima is exercised at the bounds it documents rather than at those minima.
+permits that the set derives cases from — section 13's output, read and nesting
+limits, and the nodes its conversion limit counts — which is what makes those
+two statements an implementation makes about itself observable: the set reads
+the levels to select the fixtures a level requires, and the limits to derive
+the cases that sit at a boundary, so an implementation that permits more than
+section 13's minima is exercised at the bounds it documents rather than at
+those minima. The bound on the text one serialization writes is not among them:
+the set derives no case from it, and the implementation's documentation is
+where it is stated (section 13).
 
 ## Appendix: the reference implementation
 
