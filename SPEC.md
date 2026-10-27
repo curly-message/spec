@@ -1442,7 +1442,9 @@ An implementation MUST enforce all four of the following:
   placeholder that finds a budget and spends it past the limit still resolves,
   and the next one pays. Value text is what a placeholder reads from the
   **payload**: the value it names, and each link of its fallback chain the
-  payload supplies (section 10). The message's own text is not value text — an
+  payload supplies (section 10). A value no conversion can describe produces
+  no text and spends none of the budget, however much its conversion wrote
+  before it was abandoned. The message's own text is not value text — an
   option value and an inline default are bounded by the message they were read
   from — and neither is what a modifier answers with, which is the placeholder's
   result and is bounded by the output limit above.
