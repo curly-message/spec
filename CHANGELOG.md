@@ -13,6 +13,81 @@ The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
 the document may be revised without it moving.
 
+### 3.1.1 (Unreleased)
+
+Nothing a message resolves to changes. Where the document spelled a rule for
+ECMAScript alone, or left a host's reading of it unstated, it now states for
+every host what it already settled.
+
+* Section 4 says what the host's JSON serialization holds: no insignificant
+  whitespace, as sections 4.1 and 7 write it, and an object's members in the
+  order the host's mapping holds them in, or the serializer's where the mapping
+  holds none. Escaping, the spelling of a number and what the serializer
+  refuses stay the host's, and a host with no JSON serialization converts with
+  an RFC 8259 one the implementation documents. Section 4.1's example of an
+  object that is a value writes its members in code-point order, which a
+  mapping that keeps insertion order and one that sorts its keys both write.
+* Sections 4 and 11 say what the host's undefined is on a host with a single
+  null: an entry the mapping does not hold, an argument the caller omitted, or
+  a stand-in the implementation documents. The null stays a value wherever the
+  document holds it present, a payload entry among them, and where the host's
+  functions answer nothing with it, it is a modifier's answer that is nothing
+  at all.
+* Sections 4 and 11.1 say that a numeric conversion yielding NaN yields no
+  number, though a host may type NaN as one: a value compared numerically fails
+  the comparison, and an option key is not numeric, so no numeric comparison
+  selects it.
+* Section 11.2 says that the whitespace around a number is the class of
+  section 6 and nothing else, for a formatting modifier and a numeric
+  comparison alike, and around an option key a numeric comparison orders by as
+  around the value it compares. An implementation removes the class from both
+  ends of the text before converting wherever the host's conversion does not
+  skip it, and reads text that begins or ends with a code point outside the
+  class as no number wherever the conversion skips that code point, as
+  Python's `float` skips `U+0085`. What the conversion reads beyond its
+  whitespace stays the host's. Section 6's note 8 names both uses.
+* Section 11.2's example of an infinity is a value the host's conversion reads
+  as one, `Infinity` being ECMAScript's spelling of it rather than a literal
+  every host reads. The rule is unchanged: a formatting modifier does not
+  format an infinity, and a numeric comparison still compares it.
+* Section 4 says which values are plain on hosts whose value model is not
+  ECMAScript's. A type that holds both shapes is plain, and its serialization
+  decides the shape; where several types fit one shape, the implementation
+  documents which are plain, the types the host's JSON decoding produces among
+  them; and a host with no type for dynamic data reads the implementation's
+  documented value model as its own.
+* Section 11.1 says that the lower-case mapping is Unicode's full one, final
+  sigma included and tailored to no language, as ECMAScript's conversion
+  applies it; that its Unicode version is the host's ordinary conversion's and
+  documented by the implementation; and that a host whose ordinary conversion
+  is ASCII-only, or applies the simple mapping, has its implementation supply
+  the full one.
+* Section 13 says where a report's excerpt is cut in a host's own string unit:
+  on a code-point boundary, so neither between the halves of a surrogate pair
+  nor inside a UTF-8 sequence, with an example in UTF-8. The rule stays a
+  SHOULD, as the surrogate-pair rule it generalizes was.
+* Sections 11.3 and 14.2 say what containment covers: what the host signals
+  as a failure in code the implementation called, a modifier, a value's
+  conversion or a reporting handler. The host interrupting the process, or the
+  thread a resolution runs on, is not such a failure and passes through, and
+  neither is the host ending the script it runs, or the process, at a memory
+  limit it enforces. Where such a limit is what ends a resolution that reaches
+  itself, section 13's containment still applies.
+* Sections 4 and 13 say that a serialization the host's serializer refuses for
+  the value's depth is a serialization that raises or yields nothing, however
+  few nodes it holds. Where the call stack running out would end the process,
+  the implementation refuses at a depth of its own short of that, and a depth
+  at which it refuses a value, there or in a serialization it documents, is
+  the serializer's refusal. Section 13's node minimum binds the limit the
+  implementation imposes on the nodes it visits; the document sets no minimum
+  for either depth, which is documented with the limits the implementation
+  permits.
+* Section 11.2 says what the host's internationalization facility is on a
+  platform with none of its own: the library the implementation formats
+  through, with the implementation's code applying that library's data. What
+  the library's data lacks is locale data, and what it cannot be asked is a
+  property the facility cannot express.
+
 ## 3.1.0
 
 Two modifiers are added under names no earlier revision defined. A message

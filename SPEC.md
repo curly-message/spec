@@ -145,6 +145,16 @@ section converts it to. What a host shows in the place of a message its
 catalogue does not hold is the host's own, which section 1 declines along with
 the catalogue itself.
 
+The host's undefined is ECMAScript's word for nothing, and a host with a single
+null has no second value to spell it with. There absence is an entry the
+mapping does not hold, an argument the caller omitted, or a stand-in the
+implementation documents for a place where a value must be written, and that is
+what this document means by the host's undefined. The host's null stays a value
+wherever this document holds it present — a message, a payload entry, a
+wrapper's `value`, a property a layer names (sections 4.1, 9.2, 11.2) — so a
+payload entry holding it is present. Where the host's functions answer nothing
+with that null, it is also section 11's answer that is nothing at all.
+
 Everything the format carries is text. A payload value MAY be of any host type,
 but it reaches a modifier, an option comparison and the output as text, never at
 the type it was authored with.
@@ -154,6 +164,15 @@ host's JSON serialization, so that a structured value survives into a
 host-defined modifier that reads it back. Every other value MUST be converted
 using the host's ordinary string conversion, so a date, a pattern, a set or a
 class instance keeps whatever text it describes itself as.
+
+That serialization holds no insignificant whitespace, as sections 4.1 and 7
+write it: `{ a: 1, b: [2] }` converts to `{"a":1,"b":[2]}`. An object's members
+come in the order the host's mapping holds them in, or, where the mapping holds
+no order, in the order the serializer writes them. Everything else in the text
+is the host serializer's: how it escapes a character, how it spells a number,
+and which values it refuses, a refused value being one no conversion can
+describe (below). A host with no JSON serialization of its own converts with an
+RFC 8259 serialization the implementation documents.
 
 **Plain object** and **plain array** MUST both be read narrowly, and by the
 value's own type: a value of the type a host offers for arbitrary keyed data,
@@ -172,6 +191,18 @@ the running realm's `Array.prototype`. A value built in another realm has a
 prototype of its own by that test, whatever it was authored as, and so does one
 of a type an application derived; both convert like every other value.
 
+A host may offer one type for both shapes, or several for one. A type that
+holds both — a mapping that is also a sequence — is plain, and the host's
+serialization decides which shape a value of it takes, so an empty one may
+write `[]`. Where several of the host's types fit one shape, the implementation
+documents which it reads as plain, and the types the host's JSON decoding
+produces for an object and an array are among them. A host with no type for
+dynamic data, where a payload reaches the implementation only as a value model
+the implementation defines, has that model stand for the host's types: the
+implementation documents which of its variants are the plain object and the
+plain array, and a value of any other type it accepts converts by the ordinary
+string conversion.
+
 The narrow reading is what keeps a value authored as a date instance formattable
 by `date` (section 11.2), and section 4.1 recognizes a wrapper by the same
 reading.
@@ -179,7 +210,15 @@ reading.
 A value that **no conversion can describe** — a serialization that raises,
 yields nothing or reaches the conversion limit of section 13, a string
 conversion that raises — MUST be treated as absent, MUST NOT raise, and SHOULD
-be reported (section 14.2).
+be reported (section 14.2). A serialization the host's serializer refuses for
+the depth of the value — at a nesting bound of its own, or where the call stack
+it recurses on runs out — is one that raises or yields nothing, however few
+nodes section 13 would count in it. Where the call stack running out would end
+the process rather than raise, the implementation refuses the value at a depth
+of its own short of that. A depth at which the implementation refuses a value,
+there or in a serialization it documents, is a refusal of the serializer's like
+the host's: a serialization that raises or yields nothing, at a depth section
+13 sets no minimum for.
 
 How many times a value is converted while a message resolves is itself bounded
 (section 13).
@@ -193,7 +232,9 @@ what the conversion produced is then the message's own text.
 
 Wherever a value is compared numerically, the implementation MUST convert it
 using the host's ordinary numeric conversion, and a conversion that does not
-yield a number MUST be treated as a failed comparison, never as an error.
+yield a number MUST be treated as a failed comparison, never as an error. A
+conversion that yields NaN yields no number, though the host may type NaN as
+one: it orders against nothing, so it cannot be compared.
 
 An implementation MUST return a string, including when the message it was given
 was not one.
@@ -211,7 +252,7 @@ value — including a plain object that owns any other key alongside them.
 { value: 1, default: 'D' }    wrapper
 { default: 'D' }              wrapper, no value
 { props: { number: … } }      wrapper, no value
-{ value: 1, unit: 'kg' }      value  ->  {"value":1,"unit":"kg"}
+{ unit: 'kg', value: 1 }      value  ->  {"unit":"kg","value":1}
 {}                            value  ->  {}
 ```
 
@@ -387,9 +428,11 @@ Notes on the grammar, all normative:
    class nor a Unicode property; an implementation MUST NOT substitute either
    for it. Wherever this document says whitespace it means this class: in the
    escapable characters of section 7, in the significance rules of section 8,
-   and in the blank text of section 11.2, which is a payload value, not message
-   text. The class names `line-term` rather than repeating its four code points,
-   so every line terminator is a member, and an amendment to `line-term` is an
+   in the blank text of section 11.2, which is read in a payload value, not in
+   message text, and in the whitespace around a number of that section, which is
+   read in a payload value and in an option key a numeric comparison converts.
+   The class names `line-term` rather than repeating its four code points, so
+   every line terminator is a member, and an amendment to `line-term` is an
    amendment to this class that reaches all three sections just named.
 
 9. **No production requires whitespace.** The grammar admits it wherever it
@@ -764,7 +807,9 @@ conversion: a structured answer serializes rather than collapsing to whatever
 the host calls an object, so a modifier writes the text a payload value of that
 shape would. Neither an answer no conversion can describe nor an answer that is
 nothing at all is an answer, and the placeholder takes the fallback chain
-(section 10) — the treatment a value that is not a value gets.
+(section 10) — the treatment a value that is not a value gets. An answer that is
+nothing at all is the host's undefined, and on a host whose functions answer
+nothing with their null, that null (section 4).
 
 That text is **data**, like a payload value: it is emitted as it stands, never
 parsed and never unescaped (sections 5, 7, 14.1). A modifier that builds its
@@ -804,6 +849,21 @@ spelled with the other. Those selections are required rather than an artifact of
 a host: the mapping is the one Unicode specifies, and an implementation MUST NOT
 narrow it to the ASCII letters.
 
+The mapping is Unicode's full lower-case mapping, the one its default case
+conversion applies: the context it gives a final sigma included, and none of
+the mappings it tailors to a language. It parts from the simple mapping at few
+code points: under the full one `U+0130 LATIN CAPITAL LETTER I WITH DOT ABOVE`
+lowercases to `i` followed by `U+0307 COMBINING DOT ABOVE`, and a capital sigma
+to `ς` in the `Final_Sigma` casing context, which Unicode's default case
+algorithms define, where the simple one gives `i` and `σ`. So
+`{{v:eq; ΟΔΟΣ:X; default:D}}` renders `X` over `οδος`, and
+`{{v:eq; σ:X; default:D}}` renders `X` over a lone `Σ`, which has no cased
+letter before it. Which version of Unicode the mapping follows is the host's
+ordinary conversion's, and the implementation documents it. A host whose
+ordinary conversion maps the ASCII letters alone, or applies the simple
+mapping, has none this section can use, and its implementation supplies the
+full mapping in its place.
+
 An option key is compared against the value's own text (section 11), never
 against what another placeholder makes of it. The count and the noun are two
 placeholders: `{{n}} {{n; 1:file; default:files;}}` renders `1 file` over
@@ -817,11 +877,14 @@ forms turn on more than that selects by the count's plural category instead
 
 `lt` and `lte` MUST consider options in ascending key order; `gt` and `gte` in
 descending key order. Ordering is by numeric value of the key; an option whose
-key is not numeric MUST NOT be selected by a numeric comparison. Two keys
-spelled differently that carry the same numeric value — `2` and `2.0` — tie, and
-a tie MUST be broken by source order (section 9.4), so an ordering that is not
-stable does not conform. Implementations MUST NOT reorder the caller's option
-list observably.
+key is not numeric MUST NOT be selected by a numeric comparison, and a key whose
+conversion yields NaN is not numeric (section 4). So
+`{{v:lt; 10:A; NaN:N; 5:B; default:D}}` renders `B` over `3` and `D` over
+`NaN`, on a host whose conversion reads `NaN` as NaN and on one that reads it as
+no number alike. Two keys spelled differently that carry the same numeric value
+— `2` and `2.0` — tie, and a tie MUST be broken by source order (section 9.4),
+so an ordering that is not stable does not conform. Implementations MUST NOT
+reorder the caller's option list observably.
 
 `lte` and `gte` compare for equality first, over every option in source order
 (section 9.4), and reach the key order above only where that comparison selects
@@ -881,11 +944,31 @@ What makes any other value a number is the host's ordinary numeric conversion
 The conversion reads the whole value and not a leading part of it, so `12px` is
 not a number; whitespace around a number is not part of it, so ` 12 ` is one; a
 sign and an exponent are part of it, so `+12` and `1e3` are. An infinity is not
-a number a formatting modifier can format either, so `{{v:number}}` over
-`Infinity` takes the fallback chain while `{{v:gt; 5:X}}` still selects `X` for
-that same value; and `currency` applies the test a second time to the product
-of the value and its `ratio`, so a product that overflows to an infinity takes
-the chain too.
+a number a formatting modifier can format either, so `{{v:number}}` over a
+value the host's conversion reads as an infinity — `Infinity` in ECMAScript —
+takes the fallback chain while `{{v:gt; 5:X}}` still selects `X` for that same
+value; and `currency` applies the test a second time to the product of the
+value and its `ratio`, so a product that overflows to an infinity takes the
+chain too.
+
+The whitespace around a number is the class of section 6 and nothing else, so
+`12` with `U+3000 IDEOGRAPHIC SPACE` or `U+FEFF` on either side is a number,
+while `5` after `U+0085 NEXT LINE`, which the class does not hold, is not. An
+implementation converts the text that remains once that class is removed from
+both ends, and a code point outside the class is part of that text whatever
+the host's conversion makes of it: where the conversion does not skip the class
+around the text, the implementation removes it first, and where the conversion
+also skips a code point outside the class, as Python's `float` skips `U+0085`,
+the implementation reads text that begins or ends with one as no number. This
+holds for a formatting modifier and for a numeric comparison (section 4) alike,
+and for an option key a numeric comparison orders by (section 11.1) as for the
+value it compares, so `{{v:gt; 1:X; default:D}}` renders `D` over `U+0085`
+followed by `5`. Whitespace an escape sequence claims stays in the key
+(section 8), so `{{v:lt; \ 5:A; default:D}}` renders `A` over `3`, and so does
+the same message with `U+3000` after the backslash. ECMAScript's conversion
+skips exactly that class, so an implementation there does neither. What the
+conversion reads in what remains, its whitespace aside, is the host's, as the
+next paragraph says.
 
 Beyond that the test is the host's, and deliberately so: it is the same
 conversion section 4 requires of a numeric comparison, and a second test
@@ -1018,6 +1101,16 @@ than a call into any one language: a host reads each name onto its own
 facility, and a caller that writes the same properties asks for the same
 formatting wherever it runs.
 
+A platform with no internationalization facility of its own has the one its
+implementation formats through. There a library, with the implementation's own
+code applying that library's data, is the host's facility, here and in section
+11.5, and the implementation documents which library it is and at which
+version. What the library's data lacks — a non-numeric phrase, a narrow
+currency symbol, a locale's minimum for grouping — is locale data, and an
+output that differs from another implementation's by it differs by locale data
+alone (below). What the library cannot be asked is a property the facility
+cannot express, documented and stated as the next paragraph requires.
+
 A property the host's facility cannot express is not an input the modifier
 cannot format. The modifier formats with the properties the facility does
 express, and the placeholder does not take the fallback chain on a property's
@@ -1074,7 +1167,8 @@ modifier under that name nothing: its messages resolve as they did, and the
 only thing out of reach is the modifier the new version defines.
 
 A host-defined modifier that raises MUST be contained: the placeholder resolves
-to the fallback chain and the failure SHOULD be reported.
+to the fallback chain and the failure SHOULD be reported. Section 14.2 says what
+a failure is, and that the host interrupting the process is not one.
 
 ### 11.4 Unknown modifiers
 
@@ -1330,6 +1424,12 @@ An implementation MUST enforce all four of the following:
 - **A conversion limit.** At least **100 000** nodes MUST be visited before a
   value's serialization is abandoned. A serialization that reaches the limit
   MUST be treated as a conversion that cannot describe the value (section 4).
+  The minimum binds the limit the implementation imposes on the nodes it
+  visits, not the depth at which the host's serializer refuses a value, or the
+  implementation refuses one in the serializer's place: that refusal is a
+  serialization that raises or yields nothing (section 4). This document sets
+  no minimum for that depth, and the implementation documents it with what it
+  permits.
 - **A nesting limit.** At least **8** levels of placeholder MUST be resolved
   (section 12), counting the outermost as the first. A placeholder nested
   deeper than an implementation resolves is a **message error** (section 14.2):
@@ -1467,9 +1567,13 @@ carries rather than over where that text came from: under section 5 the text a
 report identifies is the placeholder the message spells rather than anything a
 placeholder resolved to, and a message is written in a catalogue by hands that
 are not the host's, so an implementation is held to the bound whether or not it
-carries payload-derived text as well. A cut that would fall between the two
-halves of a surrogate pair SHOULD fall before the pair instead, so that the
-excerpt ends on a whole character.
+carries payload-derived text as well. A cut SHOULD fall on a code-point
+boundary in the unit the host measures its strings in, so that the excerpt ends
+on a whole character: one that would fall between the two halves of a surrogate
+pair falls before the pair instead, and one that would fall inside the bytes of
+a UTF-8 sequence falls before the sequence. An excerpt bounded at 120 bytes of
+UTF-8 whose 119th byte begins a three-byte sequence therefore ends at its 118th
+byte.
 
 ## 14. Security properties and error behavior
 
@@ -1576,6 +1680,21 @@ is nothing to resolve (section 4), and a message nobody wrote is not a defect in
 the payload, so stepping past it is not a condition to report. Neither is the
 id: no step of resolution reads it, and it is a caller's input rather than a
 payload value, so section 4's reporting SHOULD does not reach it.
+
+What is contained is a failure: what the host signals as one in code the
+implementation called — a modifier, a value's conversion, a reporting handler
+(sections 4, 11.3, 13) — an exception, say, or a panic the host lets the
+implementation recover from. The host interrupting the process, or the thread a
+resolution runs on — an interruption the user sent, a request to exit, a thread
+ended at its own request — is not a failure of that code. Nor is the host ending
+the script it runs, or the process, at a memory limit it enforces, such as PHP's
+`memory_limit`, which a script reaches wherever it allocates. An implementation
+lets either pass rather than contain it, and the resolution it interrupts does
+not return, which is not the implementation raising. Neither reaches a
+resolution that reaches itself without end (section 13): where the host's limit
+on how deep it will go is one it ends the script or the process at, its memory
+limit among them, section 13's containment still applies, and an implementation
+that sets no bound of its own short of that limit does not meet it.
 
 A report names the condition it describes with a **code**, and every code
 declares an **origin**: which of a resolution's inputs the defect is in, and so
