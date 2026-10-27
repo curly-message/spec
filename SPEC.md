@@ -19,7 +19,12 @@
 > there is no message to resolve is outside it. What a later revision may add is
 > what leaves the messages written today alone: a modifier under a name no
 > earlier revision defined, a conformance level an implementation opts into, and
-> wording that states more precisely what the body already required.
+> wording that states more precisely what the body already required. The
+> promise has one exception, the one addition outside that list: section 13's
+> bound on the text one serialization writes, which a revision of this document
+> added. A value whose serialization writes more text than the bound an
+> implementation documents is one no conversion can describe, however few nodes
+> it visits, as a value the host's serializer refuses already was.
 >
 > This document states version 3 and nothing else. Three documents beside it
 > carry what it does not, and none of them is part of this specification:
@@ -77,8 +82,9 @@ Conformance is tested by the implementation-independent fixture set
 That set is developed in the `conformance/` directory of this document's
 repository and released from it.
 
-An implementation states the levels it satisfies and the limits it permits to
-that set through the adapter of section 14.3.
+An implementation states the levels it satisfies, and the limits it permits
+that the set derives cases from, to that set through the adapter of section
+14.3.
 
 ## 3. Terminology
 
@@ -1448,10 +1454,12 @@ An implementation MUST enforce all four of the following:
   option value and an inline default are bounded by the message they were read
   from — and neither is what a modifier answers with, which is the placeholder's
   result and is bounded by the output limit above.
-- **A conversion limit.** At least **100 000** nodes MUST be visited before a
-  value's serialization is abandoned. A serialization that reaches the limit
-  MUST be treated as a conversion that cannot describe the value (section 4).
-  The minimum binds the limit the implementation imposes on the nodes it
+- **A conversion limit.** A value's serialization MUST NOT be abandoned while
+  it has visited fewer than **100 000** nodes and written fewer than
+  **100 000** characters of text, in the unit the output limit counts. A
+  serialization that reaches either limit the implementation imposes MUST be
+  treated as a conversion that cannot describe the value (section 4).
+  The node minimum binds the limit the implementation imposes on the nodes it
   visits, not the depth at which the host's serializer refuses a value, or the
   implementation refuses one in the serializer's place: that refusal is a
   serialization that raises or yields nothing (section 4). This document sets
@@ -1504,7 +1512,12 @@ more nodes than a resolvable output could hold is read as one no conversion can
 describe, which is where it takes the output limit's number from. The two do not
 measure each other, though — a serialization visits a member it then omits, so a
 value can visit any number of nodes and still describe itself in two characters
-— and the output limit cannot stand in for a bound on the work.
+— and the output limit cannot stand in for a bound on the work. Nor does a count
+of nodes bound the text a serialization writes, since a node may be a string of
+any length: an array naming one string of a hundred thousand characters five
+thousand times visits five thousand and one nodes and writes more than five
+hundred million characters. So the limit measures that text too, and takes the
+output limit's number for it as it does for the nodes.
 
 A **node**, for that count, is a value the walk visits: the value being
 converted, and then every member it reaches, counted once for each time it
@@ -1864,11 +1877,15 @@ separately, by section 13.
 The conformance set observes reports through an adapter an implementation
 supplies for it; this document still prescribes no channel. The same adapter
 names the levels the implementation satisfies (section 2) and the limits it
-permits (section 13), which is what makes those two statements an
-implementation makes about itself observable: the set reads the levels to
-select the fixtures a level requires, and the limits to derive the cases that
-sit at a boundary, so an implementation that permits more than section 13's
-minima is exercised at the bounds it documents rather than at those minima.
+permits that the set derives cases from — section 13's output, read and nesting
+limits, and the nodes its conversion limit counts — which is what makes those
+two statements an implementation makes about itself observable: the set reads
+the levels to select the fixtures a level requires, and the limits to derive
+the cases that sit at a boundary, so an implementation that permits more than
+section 13's minima is exercised at the bounds it documents rather than at
+those minima. The bound on the text one serialization writes is not among them:
+the set derives no case from it, and the implementation's documentation is
+where it is stated (section 13).
 
 ## Appendix: the reference implementation
 

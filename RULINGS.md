@@ -575,7 +575,9 @@ selection makes (section 11.5).
 It is a SHOULD rather than a MUST because the words it narrows let a lenient
 host conform: under 3.1.0 an implementation that rendered
 `¤10.00` met every requirement the document states, and within version 3 what
-a message resolves to does not change. A later version of the format makes it
+a message resolves to does not change, but for the one exception the README's
+*Status* names, the bound on the text one serialization writes. A later
+version of the format makes it
 a MUST, with cases in the conformance set for a malformed locale and a
 missing currency; an implementation that already validates loses nothing by
 it.
