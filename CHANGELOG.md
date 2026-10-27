@@ -23,7 +23,10 @@ describe, as one the host's serializer refuses already was, where 3.1.0 had the
 implementation serialize it. Where the document spelled a rule for ECMAScript
 alone, or left a host's reading of it unstated, it now states for every host
 what it already settled, and where it left another question open, it answers it
-without changing what any message resolves to.
+without changing what 3.1.0 settled that any message resolves to. One answer
+does change what an implementation renders where 3.1.0 settled nothing: a chain
+of reads of inputs that host-defined modifiers kept now stops at a bound the
+implementation keeps, where it went as deep as the host's stack allowed.
 
 * Section 4 says what the host's JSON serialization holds: no insignificant
   whitespace, as sections 4.1 and 7 write it, and an object's members in the
@@ -124,6 +127,31 @@ without changing what any message resolves to.
   section 14.2 names it as the one exception; an implementation that keeps only
   the bound on one thread meets the requirement. The document sets no minimum
   for the bound.
+* Section 13 says what a read of an option's value or of a default costs, the
+  default being an inline one or one the payload declares. During a resolution
+  each is produced at most once, and a later read answers the text recorded. A
+  modifier is current on a thread of execution while its call is the innermost
+  modifier call there that has not returned, one this document defines and one a
+  host defines alike, through whatever host code runs beneath the call. Two
+  kinds of read are the walk and cost nesting alone: taking a placeholder's
+  fallback chain, and, while a modifier is current, a read of an option's value
+  or of the default of the placeholder it was called for, unless one of that
+  placeholder is already being produced there. Any other read by host
+  code, of an input a host-defined modifier kept or handed on, counts while it
+  produces its text as one more resolution in progress toward the bound on its
+  thread of execution; a read of text already produced holds no place. A counted
+  read past the bound produces nothing and answers the empty string. So does a
+  read of what is being produced on the same thread of execution, with or
+  without a bound. A refused read is not recorded, so a later read that is not
+  refused produces the text. A refused read fails nothing: the code that made
+  it is handed the empty string and goes on. An implementation whose host signals its limit as a
+  failure it contains may keep the bound on one thread of execution too, and for
+  these reads alone; no minimum is set for it. 3.1.0 said nothing of a modifier
+  reading an input it kept, so no text it settled changes, but what an
+  implementation renders may: one that keeps the bound now stops a chain of such
+  reads at it, where before the text was whatever the host's stack allowed, and
+  a read of what is being produced now answers the empty string where it went on
+  to the host's limit.
 * Section 13 says that the conversion limit bounds the serialization alone,
   and section 4 says it beside the conversions it defines. What the ordinary
   string conversion costs is the value's own type's, a sequence that walks
@@ -177,6 +205,8 @@ without changing what any message resolves to.
   host-defined modifier kept it and reads it after the resolution returned:
   the text a read during the resolution produced, or the empty string, so that
   nothing resolves, reports or runs host code once a resolution has returned.
+  Section 13 says what a read made during the resolution counts as, and when it
+  is refused.
 
 ## 3.1.0
 
