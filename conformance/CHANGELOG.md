@@ -3,7 +3,10 @@
 ### 4.2.0 (Unreleased)
 
 The set gains one construction, a chain of inline defaults nested far past the
-nesting limit, which an implementation resolves however deeply it nests.
+nesting limit, which an implementation resolves however deeply it nests. It
+also stops pinning what the specification leaves to the host, pins what it
+settles and no case stated, and says what a runner on a host other than
+ECMAScript does with it. Nothing a message resolves to changes.
 
 * `limits/nesting-chain-over-limit`, built from the adapter's declared nesting
   limit like the other limit cases, nests `{{v; default:` twenty thousand levels
@@ -12,6 +15,99 @@ nesting limit, which an implementation resolves however deeply it nests.
   resolves to `x` with twenty thousand `nesting-limit` reports of origin
   `message`, one per refused level. The generator is `nesting-chain-over-limit`,
   added to the schema's enum and to the exported `Generator` type.
+* `resolution/wrapper-near-miss-is-value` wrote its object's members as
+  `value`, then `unit`, and expected them serialized in that order, which is
+  ECMAScript's insertion order: a host that writes a mapping's members sorted
+  failed it for a serialization section 4 leaves to the host. The case now
+  writes `{"unit":"kg","value":1}`, on which insertion and code-point order
+  agree, and still pins that an object owning a key beside the wrapper keys
+  serializes whole. *Writing a fixture* in the README gains the rule.
+* `comparisons/infinity-compares` leaves the set. It wrote an infinity as the
+  text `Infinity`, which is ECMAScript's literal: whether a text converts to an
+  infinity is the host's numeric conversion (section 11.2), and a host that
+  reads no such literal takes the chain over it. That a numeric comparison
+  still compares an infinity stays the specification's rule; no case states it
+  in one host's spelling.
+* `comparisons/nan-key-is-not-numeric` pins that a key whose conversion
+  yields NaN is not numeric (section 11.1): `{{v:lt; 10:A; NaN:N; 5:B;
+  default:D}}` over `"3"` renders `B`. A host whose conversion reads `NaN`
+  as a number could order such a key among the numeric ones, where every
+  comparison with it is false and the sort leaves `10` ahead of `5`, and no
+  case wrote such a key.
+* Three cases pin that the whitespace around a number is section 6's class
+  and nothing else (section 11.2). The cases that padded a number padded it
+  with ASCII spaces, which every host that skips whitespace skips, and no case
+  padded an option key, so a host whose own whitespace parts from the class,
+  or whose conversion of a key rejects surrounding whitespace, passed the set.
+  `comparisons/ufeff-around-a-number` pads a value with `U+FEFF`, which is in
+  the class but not in every host's own whitespace, Python's `float`'s among
+  them: `{{v:gt; 5:X; default:D}}` over `"<U+FEFF>12"` renders `X`.
+  `comparisons/nel-around-a-number-is-part-of-it` begins a value with
+  `U+0085`, which a host's own whitespace may hold, Python's `float`'s again,
+  but the class does not: `{{v:gt; 1:X; default:D}}` over `"<U+0085>5"`
+  renders `D`. `comparisons/whitespace-around-an-option-key` escapes `U+FEFF`
+  into an option key, where it stays (section 8), and the comparison removes
+  it before converting the key, as around the value: `{{v:lt; \<U+FEFF>5:A;
+  default:D}}` over `"3"` renders `A`.
+* Seven cases pin that section 11.1's lower-case mapping is Unicode's full one.
+  No case used a code point at which it parts from the simple one, so an
+  implementation applying the simple mapping passed the set.
+  `comparisons/eq-full-mapping-final-sigma` and its near miss key `ΟΔΟΣ` over
+  `οδος`, which selects, and over `οδοσ`, which does not.
+  `comparisons/eq-full-mapping-final-sigma-after-mark` keys `ΟΔΟ`, a combining
+  acute and `Σ` over their lower case ending in `ς`, since the final-sigma
+  context skips a case-ignorable character;
+  `comparisons/eq-full-mapping-final-sigma-before-space` keys `ΟΣ ΚΑΙ` over
+  `ος και`, since a sigma that ends a word is final though another word
+  follows.
+  `comparisons/eq-full-mapping-dotted-capital-i` and its near miss key
+  `U+0130` over `i` followed by `U+0307`, which selects, and over a lone `i`,
+  which does not. `comparisons/eq-lone-capital-sigma-is-not-final` keys `σ`
+  over a lone `Σ`, which selects, as the section's own example says.
+* The runner compares a request's numbers with the sign of zero. It compared
+  them as JSON writes them, where `-0` and `0` are one, so an implementation
+  that dropped the sign section 11.2 applies to a count of zero, making a
+  request that reads `in 0 seconds` where the delta was in the past, passed
+  on its request.
+  `intl/ago-negative-under-half-second` pins the sign: a delta of -499 under
+  `numeric: 'always'` asks for `[-0.0, "second"]`, written so that a decoder
+  reading `-0` as an integer keeps the sign. RUNNER.md says so.
+* The defect `tree-unit-changed` declares a unit other than the adapter's own.
+  It declared code points whatever the adapter counted in, which alters
+  nothing for an adapter counting code points, so on such a host the audit
+  never measured how its runner reads a misdeclared unit and called the
+  defect unreachable. A code-point adapter is now misdeclared as UTF-16, and
+  every other one as code points, as before; `defects.json` describes it so,
+  and RUNNER.md says a defect is realized as it reads for the adapter in
+  hand. The audit's example in the README and RUNNER.md lists the defects
+  `missed`, where it listed every one not `caught`, the unreachable among
+  them.
+* RUNNER.md states what a runner on a typed host does: the adapter states its
+  stand-in for the `undefined` tag, and where it states none the runner leaves
+  out what holds the tag, which reads alike everywhere but in a wrapper owning
+  that member alone; a case may be decoded into a neutral value the adapter
+  maps; an implementation whose ids are text hands an id of another shape on
+  as none, which no expectation observes; an `unexpressible` or a `cst` its
+  adapter cannot leave out and states empty is no claim, while an empty list
+  of reports or of requests is measured as it stands; a runner may rely on a
+  release's files holding to the schema and repeating no key in an object,
+  and checks files from anywhere else for both, by hand where it has no
+  schema validator, which the JavaScript runner's `load` and `--fixtures`
+  leave to the caller; and one that reads the release's archive checks it
+  against its digest. The set's tests now fail where an object of a JSON file
+  the package ships, a fixture file, `index.json`, `defects.json` or a schema,
+  repeats a key, which `JSON.parse` hid by keeping the last member.
+* The README's catalogue spells two behaviours for every host. `props` writes
+  each value as ECMAScript's `JSON.stringify` writes it, so a whole number
+  reads `1` and not `1.0` whatever type an implementation hands it on as, and
+  `nothing` answers what the implementation reads as an answer that is nothing
+  at all.
+* *Writing a fixture* in the README says how deep a case nests a value it
+  expects serialized: at most four levels, as `conversion/nested-json` does.
+  A case that expects a serialization refused expects the same outcome
+  whatever depth refuses it. Section 13 sets no minimum for the depth at which
+  a serialization is refused, so only an implementation that documents a
+  shallower depth fails a case for its depth.
 
 ## 4.1.0
 

@@ -39,8 +39,9 @@ its own, because a case may be corrected without the format changing.
 `fixtures/*.json` groups the cases by the section of the specification they
 pin, one file per group, and `index.json` lists the files with the level or the
 kind, and the section, each covers. `schema/fixture.schema.json` is the JSON
-Schema every file validates against, so a runner in another language checks the
-set before it reads it.
+Schema every file validates against: the set's own tests hold a release's files
+to it, and a runner in another language that reads files from anywhere else
+checks them against it first ([RUNNER.md](./RUNNER.md)).
 
 Those files are the set. Nothing in them is JavaScript, so an implementation in
 another language needs nothing else from this package: every release carries
@@ -111,11 +112,11 @@ implementation's own modifier signature.
 | `upper` | The value with its ASCII letters uppercased. |
 | `echo` | The value, unchanged. |
 | `empty` | The empty string — an answer, not the absence of one. |
-| `nothing` | The host's nothing: no answer, so the placeholder takes the fallback chain (section 11). |
+| `nothing` | The host's nothing: what the implementation reads as an answer that is nothing at all — `undefined` in JavaScript — so the placeholder takes the fallback chain (section 11). |
 | `raise` | Nothing; it raises, and the failure must be contained (section 11.3). |
 | `default` | The default, read through the chain (section 10). |
 | `options` | The options in the order they were handed over, each `key=value`, joined by commas: `a=A,b=,c=c` (section 9.4). |
-| `props` | The props it received, each own property `name=value` with the value as JSON, sorted by name and joined by commas: `maximumFractionDigits=1,useGrouping=true` (sections 11.2, 11.3). |
+| `props` | The props it received, each own property `name=value` with the value written as ECMAScript's `JSON.stringify` writes it, sorted by name and joined by commas: `maximumFractionDigits=1,useGrouping=true` (sections 11.2, 11.3). That spelling is compact, writes a whole number without a fraction — `1`, not `1.0`, whatever type the implementation hands it on as — and escapes text as `JSON.stringify` does, which leaves `/` and every character outside ASCII as it is, and escapes a lone surrogate. |
 | `locale` | The locale it received, or `none` where it received none. An empty locale answers empty. |
 | `object` | A plain object holding the value under `answer`, so the answer serializes (section 11): `{"answer":"X"}`. |
 
@@ -373,7 +374,7 @@ it is present, and `schema/defect.schema.json` describes the file.
 ```ts
 import { audit } from '@curly-message/conformance';
 
-const missed = audit(adapter).filter(({ outcome }) => outcome !== 'caught');
+const missed = audit(adapter).filter(({ outcome }) => outcome === 'missed');
 ```
 
 `audit` takes an adapter that passes the set, applies each defect to it in
@@ -406,14 +407,33 @@ normative, but the string is the host's own, and a case that stated one would
 pin it on every other host. So the set pins the values that do serialize, and
 an implementation that reads section 4 too widely passes it.
 
+The order of an object's members is the host's as well: section 4 leaves the
+serialization to the host, and one host writes the members in the order they
+were inserted while another sorts them. So a case that serializes an object
+with several members writes them in an order both produce — sorted by code
+point, at every depth — in its inputs and in its expectation alike. ECMAScript
+writes a key that is an array index, such as `9` or `10`, ahead of every other
+key and in numeric order, whatever order it was inserted in, so such a case
+names no member with one.
+
+How deep a value nests before its serialization is refused is the host's too:
+section 13 sets no minimum for that depth, and the implementation documents
+it. So a case that expects a value serialized nests it at most four levels
+deep, counting the outermost object or array as the first. A case that
+expects a serialization refused — a `nodes` value, an `unserializable` one —
+expects the same outcome whatever depth refuses it, so only an implementation
+that documents a shallower depth fails a case for its depth.
+
 The reference implementation is what the set is checked against before it
 lands, and the set is what the reference is checked against in turn. Where
 the two disagree, the specification decides which is wrong.
 
 `npm run manifest` regenerates `index.json` from the files, and a version bump
-runs it; the tests fail where it is stale, where an `id` repeats, where a file
-does not validate against the schema, or where a `section` names no heading of
-the document its file reads against.
+runs it; the tests fail where it is stale, where an `id` repeats, where an
+object of a JSON file the package ships (a fixture file, the manifest, the
+defect catalogue or a schema) repeats a key, where a file does not validate
+against the schema, or where a `section` names no heading of the document its
+file reads against.
 
 ## Development
 
