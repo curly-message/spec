@@ -581,3 +581,91 @@ version of the format makes it
 a MUST, with cases in the conformance set for a malformed locale and a
 missing currency; an implementation that already validates loses nothing by
 it.
+
+---
+
+## B.2 A kept option renders outside both bounds
+
+**Observed.** A host-defined modifier may keep what it was handed and read it
+later (section 11.3). Register `k`, which keeps the option it is handed and
+answers `k`, and `m`, which takes the option kept last, removing it from what is
+kept and reading its value, and answers that value, or `e` where none is kept.
+Write `{{x:k; o:{{x:m}}}}` 33 times, then `{{x:m}}`, and resolve it over
+`{ x: 1 }`. The message nests two levels deep however long it is. Its last `m`
+reads the option the last `k` kept, the `m` that option holds reads the option
+the `k` before that kept, and so on: 33 reads stand one inside another, and the
+innermost `m` finds nothing kept. Unbounded, the message renders `k` 33 times
+and then `e`. Section 13 as first written for 3.1.1 left every such read to the
+walk of the resolution, which reaches neither bound on resolutions in progress,
+and the nesting limit never meets a message of two levels. What ended a longer
+chain was the host's own limit.
+
+**Ruling.** Such a read counts toward the bound on resolutions in progress on
+its thread of execution (section 13). The walk reads an option's value or a
+default in two ways only: it takes a placeholder's fallback chain, and, while a
+modifier's call is the innermost modifier call on its thread that has not
+returned, which makes that modifier the current one, an option value or the
+default of the placeholder it was called for is read, while none of that
+placeholder is being produced there already. One of those stands inside
+another only as deep as the message nests, which is a fact about the message
+alone (section 12). Any other read renders text nested no deeper than the
+placeholder that wrote it, whatever host code makes it, so a flat message of n
+placeholders could stack n renders that the nesting limit never meets. It is
+counted as a resolution in progress, and not charged to the nesting limit,
+because `nesting-limit` declares the origin `message` (section 14.2): the depth
+of the host code that made the read is no fact about the message, and a
+translator could not repair it by rewriting one. An implementation that lets 32
+such reads stand one inside another refuses the 33rd above: the `m` that made it
+is handed the empty string and answers it, and the message renders `k` 33 times
+and nothing after.
+
+What is counted is the production of text, not the read. An option's value or a
+default is produced at most once in a resolution, and a later read answers the
+text recorded: it renders nothing and stands inside nothing, so it holds no
+place and is never refused, however many counted reads are in progress.
+
+A read of what is being produced on the same thread of execution is refused at
+once, with or without a bound. A placeholder is reached at most once (sections 5
+and 14.3), and rendering an option's value inside itself would reach its
+placeholders again, and again inside that, with nothing to end it but the host's
+limit. What is refused is that placeholder's option or default, not its text:
+every `k` above writes the same `{{x:m}}`, and each is rendered.
+
+A refused read is not recorded. The refusal says where the read was made, not
+what the option's value is, and a record of the empty string would answer a
+later reader that has the room.
+
+A refused read answers the empty string, since a read is an accessor and some
+hosts' accessors have no way to fail, and it fails nothing further. A rule that
+failed a modifier for a read refused beneath it would have to say which modifier
+a read made by a conversion method, a getter or a reporting handler belongs to.
+The code that made the read is the one place that knows what the empty string
+means to it.
+
+A read the current modifier makes of its own placeholder is the walk's only
+while nothing of that placeholder is being produced on the thread. A modifier
+stays current through the host code beneath its call, and the conversion of a
+value nested in the option being produced is such code: without the condition
+it could read the next option of the same placeholder, uncounted, and a
+placeholder of n options would stack n renders at one level of nesting.
+
+An implementation may keep the bound on one thread of execution whatever its
+host does at its own limit, and for these reads alone. Section 13 first offered
+a bound only where the host ends the script or the process at its limit. A host
+that signals a failure ends the chain too, but where it happens to set its
+limit, which differs between engines of one language and with how deep the stack
+already stood where the resolution was asked for. A bound of the
+implementation's own ends the chain at one documented depth. Where an
+implementation keeps none, a chain of such reads ends at the host's limit,
+contained as a resolution that reaches itself is (section 13).
+
+3.1.0 said nothing of a modifier that reads an input it kept: section 11.3's
+rule for one is new in 3.1.1, so no text 3.1.0 settled for a message changes.
+What an implementation renders may change: one that keeps the bound stops a
+chain at it, where before the text was whatever the host's stack allowed. The
+ruling stops at reads of an option's value or of a default. What a request
+answers for a value's conversion or an entry's enumeration that is in progress,
+or for a production on another thread of execution or one suspended part way, is
+not ruled here, and neither is a bound across the process. No case of the
+conformance set pins the bound, since the set's behaviours for a host-defined
+modifier keep nothing between calls and an adapter declares no such bound.

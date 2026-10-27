@@ -1218,11 +1218,13 @@ version of this format defines costs a host that already registered its own
 modifier under that name nothing: its messages resolve as they did, and the
 only thing out of reach is the modifier the new version defines.
 
-A host-defined modifier may keep what it was handed and read it later. Once the
-resolution has returned, an option's value or the default it kept answers the
-text a read of it during the resolution produced, and the empty string where
-nothing read it then: after a resolution returns, nothing resolves, reports or
-runs host code on its account.
+A host-defined modifier may keep what it was handed and read it later. Section
+13 says which reads made during the resolution count toward a bound an
+implementation keeps, and which are refused and answer the empty string. Once
+the resolution has returned, an option's value or the default it kept answers
+the text a read of it during the resolution produced, and the empty string where
+no read produced it then: after a resolution returns, nothing resolves, reports
+or runs host code on its account.
 
 A host-defined modifier that raises MUST be contained: the placeholder resolves
 to the fallback chain and the failure SHOULD be reported. Section 14.2 says what
@@ -1655,16 +1657,67 @@ progress on the same thread of execution, where one suspended part way keeps
 its place in the count. What reaches either bound is resolutions asked for
 while another is in progress on their thread of execution, never the walk of
 one resolution: a resolution's own walk MUST NOT reach either while its message
-keeps within the minima of this section. A resolution asked for past a bound is
+keeps within the minima of this section. The bound on one thread of execution
+also counts the reads the paragraphs below count toward it, which are not the
+walk. A resolution asked for past a bound is
 refused, and where the bound across the process refuses one, what is refused is
 the resolution asked for and not one holding a place in the count. The refusal
 is a failure signalled to the host code that asked for it, as the host signals
 any other (section 14.2), and that code may handle it as it may any other; one
 it lets pass is contained as the paragraph above contains the host's limit, so
-the resolution around it does not raise. Such a bound is then the host's own
+the resolution around it does not raise. A read counted past the bound on one
+thread of execution is refused differently, as the paragraphs below say. Such a
+bound is then the host's own
 limit for the purpose of this section, and this document sets no minimum for
 it. An implementation whose host ends the script or the process at its limit
 and that sets no such bound does not meet the requirement above (section 14.2).
+
+An implementation whose host signals its limit as a failure the implementation
+contains MAY keep the bound on one thread of execution too, documented the same
+way. It MAY keep it for the reads the paragraphs below count and for nothing
+else. This document sets no minimum for it there either.
+
+An option's value and a default are text a read produces. A default is an
+inline default or one the payload declares (section 10), and what a read of it
+produces is rendered text or the text a payload link converts to. During a
+resolution each is produced at most once: the text a read produced is recorded,
+and a later read produces nothing and answers it. Where this section asks for no
+record of a payload's default, converting it again is no second production: it
+runs no host code and answers the same text.
+
+A modifier is *current* on a thread of execution while its call is the
+innermost call of a modifier on that thread that has not returned. A modifier
+this document defines and one a host defines are current alike, and a modifier
+stays current through whatever host code runs beneath its call: a value's
+conversion method, a getter, a reporting handler, or what a resolution asked
+for there runs outside any modifier call of its own.
+
+Two kinds of read are the walk of a resolution. The walk takes a placeholder's
+fallback chain. And while a modifier is current, a read of an option's value or
+of the default of the placeholder that modifier was called for is the walk's,
+whatever code beneath the call makes it, unless an option's value or the default
+of that placeholder is already being produced on that thread of execution. These
+reads count toward no bound: they cost nesting alone, since one stands inside
+another only as deep as the message nests (section 12).
+
+Any other read by host code of an option's value or of a default, of an input a
+host-defined modifier kept (section 11.3) or handed on, is counted where it
+produces its text. While it produces it, it counts as one more resolution in
+progress on the thread of execution it is made on, toward the bound the
+implementation keeps there, as a resolution asked for there would. The bound is
+one on depth: the place is given back when the read returns. A read of text an
+earlier read produced produces nothing: it holds no place, is not refused and
+answers the text recorded.
+
+A counted read past the bound is refused: it produces nothing and answers the
+empty string. A read of an option's value or of a default whose own production
+is in progress on the same thread of execution is refused at once the same way,
+whether or not the implementation keeps a bound, a current modifier's read of
+its own placeholder's included. A refused read is not recorded: a later read
+that is not refused produces the text.
+
+A refused read fails nothing: the code that made it is handed the empty string
+and goes on, and what a modifier then answers is taken as any answer is.
 
 Neither bound reaches what a chain does across threads of execution. A chain
 leaves a thread of execution where its host code resolves on one it starts, or
