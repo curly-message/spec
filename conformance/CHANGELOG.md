@@ -6,12 +6,13 @@ The set gains constructions at the limits: a chain of inline defaults nested
 far past the nesting limit, which an implementation resolves however deeply it
 nests, and placeholders that meet the nesting limit beside the read limit, a
 value that cannot be described or another message error, which pin the order
-section 9 decides them in, and a value whose refused serialization would have
-written more than the read budget holds. It also stops pinning what the
-specification leaves to the host, pins what it settles and no case stated, and
-says what a runner on a host other than ECMAScript does with it. An adapter
-states what its facility cannot express by value and by condition as well as by
-property. Nothing a message resolves to changes.
+section 9 decides them in, a value whose refused serialization would have
+written more than the read budget holds, and a value at the conversion limit,
+which it converts. It also stops pinning what the specification leaves to the
+host, pins what it settles and no case stated, and says what a runner on a
+host other than ECMAScript does with it. An adapter states what its facility
+cannot express by value and by condition as well as by property. Nothing a
+message resolves to changes.
 
 * `limits/nesting-chain-over-limit`, built from the adapter's declared nesting
   limit like the other limit cases, nests `{{v; default:` twenty thousand levels
@@ -20,6 +21,32 @@ property. Nothing a message resolves to changes.
   resolves to `x` with twenty thousand `nesting-limit` reports of origin
   `message`, one per refused level. The generator is `nesting-chain-over-limit`,
   added to the schema's enum and to the exported `Generator` type.
+* `limits/conversion-at-limit` pins the conversion limit at its bound, as the
+  other three limits already were: `{{v:ne; nomatch:ok; default:refused;}}`,
+  with `v` a value whose serialization visits exactly the declared number of
+  nodes, resolves to `ok` with no reports, where an abandoned conversion takes
+  the chain to `refused`. The value holds one object several times, whose
+  members hold the host's undefined, and further members that hold it too:
+  section 13 counts a value reached twice twice, and a member the walk
+  visits and then omits, so the serialization meets the limit while writing
+  little text. An implementation that abandons a serialization earlier than it
+  declares used to pass the whole set; one that counts a shared object once, or
+  skips a member it omits, now fails it. The generator is
+  `conversion-at-limit`, added to the schema's enum and to the exported
+  `Generator` type.
+* `limits/conversion-over-limit` is built the same way, to visit one node past
+  the limit. It was built from the `nodes` tag, whose value writes hundreds of
+  thousands of characters, so an implementation that bounds the text a
+  serialization writes and not the nodes it visits passed it.
+* The conversion limit an adapter declares is the most nodes a conversion may
+  visit and still describe the value: an implementation that abandons a
+  serialization on reaching its hundred-thousandth node, as section 13 allows,
+  declares 99 999. `README.md` and the `Limits` type say so.
+* A runner whose adapter states no stand-in for `undefined` leaves out both
+  cases: with their members left out, each value is an object of empty objects
+  far short of the limit, and pins none. `RUNNER.md` gives it as a fourth
+  reason a case is left out. `limits/conversion-over-limit-continues` holds no
+  undefined and is run either way.
 * Five constructions and two cases pin where section 9 decides the limits and
   the message errors among a placeholder's steps: the read limit first, then
   the value looked up and converted, then the nesting limit, a modifier nobody

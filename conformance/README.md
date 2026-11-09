@@ -221,7 +221,8 @@ nested too deep on purpose: they pin the order section 9 decides those in.
 | `output-over-limit-continues` | The same placeholder followed by `{{w}}`, with `w` holding `tail`. | `tail` and one `output-limit` report: a result the output has no room for spends nothing, so what follows it still resolves. |
 | `read-at-limit` | `{{v:eq; nomatch:X; default:ok;}}`, with `v` holding `x` repeated `R` times. | `ok`, no reports. |
 | `read-over-limit` | The same placeholder followed by `{{w}}`, with `v` one character longer and `w` holding `tail`. | `ok` and one `read-limit` report of origin `limit`: the budget is tested before a placeholder reads, so the one that spent it past the limit still resolves and the one after it pays. |
-| `conversion-over-limit` | `{{v; default:D}}`, with `v` a `nodes` value of `C + 1`. | `D` and one `unserializable-value` report of origin `payload`: a serialization that reaches the limit describes nothing, so the placeholder takes the chain. |
+| `conversion-at-limit` | `{{v:ne; nomatch:ok; default:refused;}}`, with `v` a value whose serialization visits `C` nodes: `s` members referring to one shared object of `s − 1` members, with `s` the largest whole number whose square is at most `C − 1`, and `C − 1 − s²` members more; those members, and every member of the shared object, hold the host's undefined. Section 13 counts each reference to the shared object, and each member the walk visits and then omits, so the serialization writes only the `s` names, each with an empty object. | `ok`, no reports: the value converts, so its text differs from `nomatch` and the option is chosen, where an abandoned conversion would take the chain to `refused`. |
+| `conversion-over-limit` | `{{v; default:D}}`, with `v` built the same way to visit `C + 1` nodes. | `D` and one `unserializable-value` report of origin `payload`: a serialization that reaches the limit describes nothing, so the placeholder takes the chain, however short the text it would have written. |
 | `conversion-over-limit-continues` | `{{v; default:D}}{{w}}`, with `v` an array of `C` elements, each `x` repeated `ceil(R / C) + 1` times, so its serialization visits `C + 1` nodes and the text it would write runs past `R`, and `w` holding `tail`. | `Dtail` and one `unserializable-value` report of origin `payload`: a value no conversion can describe produces no text and spends none of the read budget, so what follows it still resolves. |
 | `nesting-at-limit` | `N` placeholders, each selecting the option that holds the next; the innermost is `{{v; a:settled; default:fallback;}}`. `v` holds `a`. | `settled`, no reports. |
 | `nesting-over-limit` | The same nesting one level deeper. | `fallback` and one `nesting-limit` report of origin `message`: the innermost placeholder is refused and takes its fallback chain, and every level around it selects the option that holds it. |
@@ -295,12 +296,15 @@ export const adapter: Adapter = {
 `levels` is the statement section 2 requires: the levels the implementation
 satisfies. The runner selects the fixtures those levels require and skips the
 rest, and the skipped cases are listed, not hidden. `limits` is the statement
-section 13 requires, and is what the generated cases are built from. An adapter
-MAY make a third statement, `unexpressible`: what the host's facility cannot
-express (section 11.2) — a property, or a value of one, in every request or in
-the requests whose other properties hold given values — under the request that
-reads it, which leaves out the cases that would measure the host rather than
-the implementation.
+section 13 requires, and is what the generated cases are built from. Each
+limit is the most the implementation lets through: the conversion limit is the
+most nodes a serialization may visit and still describe the value, so an
+implementation that abandons one on reaching its hundred-thousandth node, as
+section 13 allows, declares 99 999. An adapter MAY make a third statement,
+`unexpressible`: what the host's facility cannot express (section 11.2) — a
+property, or a value of one, in every request or in the requests whose other
+properties hold given values — under the request that reads it, which leaves
+out the cases that would measure the host rather than the implementation.
 
 An adapter MAY offer a fourth thing, `cst`: the concrete syntax tree of
 [`CST.md`](../CST.md), as the `unit` its spans are counted in — `utf-8`,

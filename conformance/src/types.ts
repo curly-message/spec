@@ -14,8 +14,9 @@ export type Level = 'core' | 'intl' | 'extensions';
 /**
  * The limits of section 13 an implementation permits, as it documents them:
  * the placeholder result its output holds and the value text it reads, both
- * in the host's own string unit, the nodes one conversion may visit, and the
- * levels of placeholder it resolves. Section 13 states the minima.
+ * in the host's own string unit, the nodes one conversion may visit and still
+ * describe the value, and the levels of placeholder it resolves: each the most
+ * it lets through. Section 13 states the minima.
  *
  * The constructions that sit at the output boundary write their output from
  * the message rather than from the payload, and the ones at the read boundary
@@ -230,7 +231,7 @@ export type ConcreteCase = {
   expected: Expected;
 };
 
-export type Generator = 'output-at-limit' | 'output-over-limit' | 'output-over-limit-continues' | 'read-at-limit' | 'read-over-limit' | 'conversion-over-limit' | 'conversion-over-limit-continues' | 'nesting-at-limit' | 'nesting-over-limit' | 'nesting-over-limit-converts' | 'nesting-over-limit-reads' | 'nesting-over-limit-read-spent' | 'nesting-over-limit-unknown-modifier' | 'nesting-over-limit-missing-options' | 'nesting-chain-over-limit';
+export type Generator = 'output-at-limit' | 'output-over-limit' | 'output-over-limit-continues' | 'read-at-limit' | 'read-over-limit' | 'conversion-at-limit' | 'conversion-over-limit' | 'conversion-over-limit-continues' | 'nesting-at-limit' | 'nesting-over-limit' | 'nesting-over-limit-converts' | 'nesting-over-limit-reads' | 'nesting-over-limit-read-spent' | 'nesting-over-limit-unknown-modifier' | 'nesting-over-limit-missing-options' | 'nesting-chain-over-limit';
 
 /** A case the runner builds from the adapter's limits. */
 export type GeneratedCase = {

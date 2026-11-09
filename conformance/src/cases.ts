@@ -1,5 +1,5 @@
 import { behaviours } from './behaviours';
-import { decode, nodes } from './decode';
+import { decode } from './decode';
 import type { Adapter, Category, ConcreteCase, ExpectedReport, ExposedRequest, Failure, FormatApi, FormatRequest, GeneratedCase, Generator, Limits, Outcome, Report, Resolution, Resolved, Unexpressible } from './types';
 
 // A generated case expects of a report what a written one may, and the limit
@@ -95,6 +95,29 @@ const writes = (length: number) => `{{v; a:${'x'.repeat(length)};}}`;
 // budget is spent whole and two characters reach the output.
 const reads = '{{v:eq; nomatch:X; default:ok;}}';
 
+// A value converted whole and compared against a key its text cannot equal:
+// the option is chosen only where the value was converted, so a conversion
+// abandoned shows in the output as the default, and none of the value's text
+// reaches the output either way.
+const converts = '{{v:ne; nomatch:ok; default:refused;}}';
+
+// A value whose serialization visits the stated number of nodes and writes
+// little text. Section 13 counts a member the walk visits and then omits, and a
+// value reached twice twice: the root holds `s` references to one object of
+// `s - 1` members holding the host's undefined, each reference visiting `s`
+// nodes, and enough members holding undefined itself to make up the rest. So
+// the node count meets the limit long before any bound on the text, and an
+// implementation that counts a shared object once, or skips what it omits,
+// stops short of it.
+const visiting = (nodes: number) => {
+  const side = Math.floor(Math.sqrt(nodes - 1));
+  const shared = Object.fromEntries(Array.from({ length: side - 1 }, (_, index) => [`k${index}`, undefined]));
+  return Object.fromEntries([
+    ...Array.from({ length: side }, (_, index) => [`s${index}`, shared]),
+    ...Array.from({ length: nodes - 1 - side * side }, (_, index) => [`u${index}`, undefined]),
+  ]);
+};
+
 // A message nesting the stated number of levels, each selecting the option
 // that holds the next. The innermost declares a fallback, so a level the
 // nesting limit refuses is visible as the chain it takes.
@@ -140,8 +163,12 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
     // it past the limit still resolves and the one after it pays.
     expected: { output: 'ok', reports: [limit('read-limit', 'limit', read)] },
   }),
+  'conversion-at-limit': ({ conversion }) => ({
+    input: { message: converts, payload: { v: visiting(conversion) }, id: ID },
+    expected: { output: 'ok', reports: [] },
+  }),
   'conversion-over-limit': ({ conversion }) => ({
-    input: { message: '{{v; default:D}}', payload: { v: nodes(conversion + 1) }, id: ID },
+    input: { message: '{{v; default:D}}', payload: { v: visiting(conversion + 1) }, id: ID },
     expected: { output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', id: ID }] },
   }),
   'conversion-over-limit-continues': ({ read, conversion }) => ({

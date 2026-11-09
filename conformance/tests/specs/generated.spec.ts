@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { plan, type Adapter, type Fixture, type Generator, type Resolution, type Resolved } from '@curly-message/conformance';
+import { decode, plan, type Adapter, type Fixture, type Generator, type Resolution, type Resolved } from '@curly-message/conformance';
 
 const limits = { output: 5, read: 7, conversion: 7, nesting: 3 };
 
@@ -10,11 +10,11 @@ const fixture = (generate: Generator): Fixture => ({
 
 // Runs one construction through an adapter that answers as scripted, and
 // hands back what the adapter was given beside the outcome.
-const build = (generate: Generator, answer: (input: Resolution) => Resolved) => {
+const build = (generate: Generator, answer: (input: Resolution) => Resolved, declared = limits) => {
   let received: Resolution | undefined;
   const adapter: Adapter = {
     levels: ['core', 'extensions'],
-    limits,
+    limits: declared,
     resolve: (input) => {
       received = input;
 
@@ -88,14 +88,84 @@ describe('generated cases', () => {
     expect(build('read-over-limit', () => ({ output: 'oktail', reports: [] })).outcome).toEqual({ ok: false, reason: 'The output differs.', expected: 'ok', actual: 'oktail' });
   });
 
-  it('conversion-over-limit holds a value visiting more than C nodes and expects the default with an unserializable-value report', () => {
+  it('conversion-at-limit shares one object of undefined members and adds more, visiting exactly C nodes, and expects the option only a converted value selects', () => {
+    const { input, outcome } = build('conversion-at-limit', () => ({ output: 'ok', reports: [] }));
+    const { v } = input.payload as { v: Record<string, unknown> };
+    const shared = { k0: undefined };
+
+    expect(input).toMatchObject({ message: '{{v:ne; nomatch:ok; default:refused;}}', id: 'limits' });
+    expect(v).toStrictEqual({ s0: shared, s1: shared, u0: undefined, u1: undefined });
+    expect(v.s0).toBe(v.s1);
+    expect(visits(v)).toBe(7);
+    expect(JSON.stringify(v)).toBe('{"s0":{},"s1":{}}');
+    expect(outcome).toEqual({ ok: true });
+    expect(build('conversion-at-limit', () => ({ output: 'refused', reports: [] })).outcome).toEqual({ ok: false, reason: 'The output differs.', expected: 'ok', actual: 'refused' });
+    expect(build('conversion-at-limit', () => ({ output: 'ok', reports: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }] })).outcome).toMatchObject({ ok: false, reason: 'Expected 0 reports, got 1 report.', expected: [] });
+  });
+
+  it('conversion-over-limit is built the same way, visiting C + 1 nodes, and expects the default with an unserializable-value report', () => {
     const { input, outcome } = build('conversion-over-limit', () => ({ output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }] }));
-    const { v } = input.payload as { v: unknown };
+    const { v } = input.payload as { v: Record<string, unknown> };
 
     expect(input).toMatchObject({ message: '{{v; default:D}}', id: 'limits' });
-    expect(visits(v)).toBeGreaterThanOrEqual(8);
+    expect(Object.keys(v)).toEqual(['s0', 's1', 'u0', 'u1', 'u2']);
+    expect(visits(v)).toBe(8);
     expect(outcome).toEqual({ ok: true });
     expect(build('conversion-over-limit', () => ({ output: 'D', reports: [] })).outcome).toEqual({ ok: false, reason: 'Expected 1 report, got 0 reports.', expected: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }], actual: [] });
+  });
+
+  it('visits the stated nodes at section 13\'s minimum while writing a fraction of the text bound', () => {
+    const minima = { output: 100000, read: 100000, conversion: 100000, nesting: 8 };
+
+    for (const [generate, nodes] of [['conversion-at-limit', 100000], ['conversion-over-limit', 100001]] as const) {
+      const { v } = build(generate, () => ({ output: '', reports: [] }), minima).input.payload as { v: unknown };
+
+      expect(visits(v)).toBe(nodes);
+      expect(JSON.stringify(v).length).toBeLessThan(minima.conversion / 10);
+    }
+  });
+
+  it('conversion-over-limit fails an implementation that bounds the text a serialization writes and not the nodes it visits', () => {
+    // A bound on the text alone refuses a value whose text grows with its
+    // nodes, as a tree of shared references does, so only a value that visits
+    // its nodes and writes little tells the two bounds apart. At the minima,
+    // where the text bound is as large as the node bound.
+    const minima = { output: 100000, read: 100000, conversion: 100000, nesting: 8 };
+    const textBound = ({ payload }: Resolution): Resolved => {
+      const text = JSON.stringify((payload as { v: unknown }).v);
+
+      return text.length >= minima.conversion ? { output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }] } : { output: text, reports: [] };
+    };
+
+    expect(textBound({ message: '{{v; default:D}}', payload: { v: decode({ $curly: 'nodes', count: minima.conversion + 1 }) } }).output).toBe('D');
+    expect(build('conversion-over-limit', textBound, minima).outcome).toMatchObject({ ok: false, reason: 'The output differs.', expected: 'D' });
+  });
+
+  it('conversion-over-limit fails an implementation that counts a shared object once, or skips the members it omits', () => {
+    const counting = (count: (value: unknown) => number) => ({ payload }: Resolution): Resolved => count((payload as { v: unknown }).v) > limits.conversion
+      ? { output: 'D', reports: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }] }
+      : { output: JSON.stringify((payload as { v: unknown }).v), reports: [] };
+    const once = (value: unknown) => {
+      const seen = new Set<unknown>();
+      let count = 0;
+
+      JSON.stringify(value, (_, entry) => {
+        if (typeof entry === 'object' && entry !== null) {
+          if (seen.has(entry)) return undefined;
+          seen.add(entry);
+        }
+        count += 1;
+
+        return entry;
+      });
+
+      return count;
+    };
+    const written = (value: unknown) => visits(JSON.parse(JSON.stringify(value)));
+
+    expect(build('conversion-over-limit', counting(visits)).outcome).toEqual({ ok: true });
+    expect(build('conversion-over-limit', counting(once)).outcome).toMatchObject({ ok: false, reason: 'The output differs.', expected: 'D' });
+    expect(build('conversion-over-limit', counting(written)).outcome).toMatchObject({ ok: false, reason: 'The output differs.', expected: 'D' });
   });
 
   it('conversion-over-limit-continues refuses a value whose text runs past R, and expects the placeholder after it carried', () => {
