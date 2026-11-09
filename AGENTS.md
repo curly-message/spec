@@ -276,8 +276,9 @@ not apply), CI — and names any step not run.
   process where the package is not JavaScript — so each side of a comparison
   measures its own build under the same row name. A row over a child process
   throws when that process fails, since output it never wrote can read as a
-  count of 0. A package's name and version are its `package.json`'s, or,
-  where it has none, the `name` and `version` its `bench/rows.mjs` exports.
+  count of 0. A package's name and version are each its `package.json`'s
+  where that names it, and otherwise the `name` or `version` its
+  `bench/rows.mjs` exports.
   `bench/harness.mjs` measures them and is the same file in every package
   (`lint` keeps one at its root for both workspaces): change every copy at
   once. A time row returns the function it times, which may return a promise
@@ -285,8 +286,9 @@ not apply), CI — and names any step not run.
   browser say, gives it back in its `close`. Each process that measures a row
   calls its `run` once, so what a row sets up is paid in each. Beside the
   harness, `bench/check/` holds rows that fail wherever two measurements share
-  a process, and is the same in every package too; each `bench.yml` runs the
-  harness on them before the benchmark.
+  a process, and the `check.mjs` that runs the harness on them, with a base
+  and without; it is the same in every package too, and each `bench.yml` runs
+  `check.mjs` before the benchmark.
 - **Counts and times.** A count (calls, instantiations) is deterministic and
   gates, so a count is something that should not grow — never one that grows
   with what the package legitimately holds, such as the cases of the set; a
@@ -299,10 +301,14 @@ not apply), CI — and names any step not run.
   table as a comment (on a PR from a fork, in the job's summary). A failing
   benchmark of the branch fails the job; so does a count that grew, a row gone
   missing or changing kind, or a failing benchmark of the base — unless the PR
-  carries a `bench-accepted` label (a label change re-runs the job). Where
-  `<dir>` does not exist, as the base of the PR that adds the package, nothing
-  is compared, so only a failing benchmark of the branch fails the job. A
-  size that grew and a time beyond its spread are flagged for review.
+  carries a `bench-accepted` label (a label change re-runs the job). The
+  workflow reads from the base commit whether the base has the package's
+  `bench/rows.mjs`, and passes `--compare` only then; where it has none, as
+  for the PR that adds the package or its rows, or one that renames its
+  directory, nothing is compared, so only a failing benchmark of the branch
+  fails the job. A `<dir>` that does not exist or has no `bench/rows.mjs`
+  fails the run, whatever the label. A size that grew and a time beyond its
+  spread are flagged for review.
 - A hot path no row covers gets a row in the same PR.
 - The release workflow writes `BENCH.md` into the release commit, so each
   published version records its results.

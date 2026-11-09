@@ -6,7 +6,11 @@ name: Benchmark
 # the job's summary, and fails where the benchmark does: a row of the branch
 # that fails, or, unless the PR carries the `bench-accepted` label, a count
 # that grew, a row gone missing or changing kind, or a row that fails on the
-# base. `bench-label.yml` re-runs it when that label changes.
+# base. The base is compared only where its commit has the package's
+# `bench/rows.mjs`; where it has none, as for the PR that adds the package or
+# its benchmark, or one that renames its directory, nothing is compared, and
+# only the branch's own benchmark can fail the job. `bench-label.yml` re-runs
+# it when that label changes.
 on:
   workflow_call:
     inputs:
@@ -40,20 +44,37 @@ jobs:
           node-version: 24
 
       # The harness on rows that fail wherever two measurements share a
-      # process, so a table below is one whose sides were measured apart.
+      # process, with a base and without, so a table below is one whose sides
+      # were measured apart and whose base was read as given.
       - name: Check the harness
         timeout-minutes: 5
         working-directory: change/${{ inputs.package }}/bench/check
-        run: node ../harness.mjs --compare .
+        run: node check.mjs
+
+      # Read from the base's commit rather than from what its checkout holds,
+      # so a path given wrong fails the harness instead of comparing nothing.
+      # The substitution is unpiped, so a git that fails fails the step.
+      - name: Read whether the base has a benchmark
+        id: base
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PACKAGE: ${{ inputs.package }}
+        run: |
+          rows=$(git -C base ls-tree --name-only "$BASE_SHA" -- "$PACKAGE/bench/rows.mjs")
+          if [ -n "$rows" ]; then holds=true; else holds=false; fi
+          echo "holds=$holds" >> "$GITHUB_OUTPUT"
 
       # Each side from its own lockfile, running no install script, since the
       # job holds a token that writes to the PR. A base that does not build
       # leaves rows that fail, which the label can accept.
       - name: Install and build
         env:
+          HOLDS: ${{ steps.base.outputs.holds }}
           PACKAGE: ${{ inputs.package }}
         run: |
-          (cd "base/$PACKAGE" && npm ci --ignore-scripts && npm run build) || echo "::warning::The base did not install or build."
+          if [ "$HOLDS" = true ]; then
+            (cd "base/$PACKAGE" && npm ci --ignore-scripts && npm run build) || echo "::warning::The base did not install or build."
+          fi
           (cd "change/$PACKAGE" && npm ci --ignore-scripts && npm run build)
 
       # The site's rows drive the playground in the browser each side's
@@ -61,9 +82,13 @@ jobs:
       # the branch's; the base's download is skipped when both pin the same.
       - name: Install the browser
         if: inputs.package == 'site'
+        env:
+          HOLDS: ${{ steps.base.outputs.holds }}
         run: |
           (cd change/site && npx --no-install playwright-core install --with-deps chromium-headless-shell)
-          (cd base/site && npx --no-install playwright-core install chromium-headless-shell) || echo "::warning::The base has no browser to drive."
+          if [ "$HOLDS" = true ]; then
+            (cd base/site && npx --no-install playwright-core install chromium-headless-shell) || echo "::warning::The base has no browser to drive."
+          fi
 
       # Read when the job runs rather than off the event, so a re-run sees a
       # label added since.
@@ -79,12 +104,14 @@ jobs:
         working-directory: change/${{ inputs.package }}
         env:
           ACCEPTED: ${{ steps.labels.outputs.accepted }}
+          HOLDS: ${{ steps.base.outputs.holds }}
           PACKAGE: ${{ inputs.package }}
         run: |
           flags=()
+          if [ "$HOLDS" = true ]; then flags+=(--compare "$GITHUB_WORKSPACE/base/$PACKAGE"); fi
           if [ "$ACCEPTED" = true ]; then flags+=(--accepted); fi
           status=0
-          node bench/harness.mjs --compare "../../base/$PACKAGE" "${flags[@]}" > "$RUNNER_TEMP/bench.md" || status=$?
+          node bench/harness.mjs "${flags[@]}" > "$RUNNER_TEMP/bench.md" || status=$?
           cat "$RUNNER_TEMP/bench.md" >> "$GITHUB_STEP_SUMMARY"
           echo "status=$status" >> "$GITHUB_OUTPUT"
 
