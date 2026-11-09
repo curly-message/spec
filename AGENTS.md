@@ -276,9 +276,18 @@ not apply), CI — and names any step not run.
   process where the package is not JavaScript — so each side of a comparison
   measures its own build under the same row name. A row over a child process
   throws when that process fails, since output it never wrote can read as a
-  count of 0. A package's name and version are each its `package.json`'s
-  where that names it, and otherwise the `name` or `version` its
-  `bench/rows.mjs` exports.
+  count of 0. A child it keeps open between calls is started in its `run`,
+  ends when its standard input closes, so that it ends with the process
+  measuring it, writes and flushes each reply before it reads the next
+  request, and is given back in its `close`; the row rejects a pending call
+  once the child exits or fails to start. A time row over a child sends one
+  child a batch per call, since a process started per sample measures its
+  start; a row that measures a command end to end starts it per call. A
+  package's name and version are each its `package.json`'s where that names
+  it, and otherwise the `name` or `version` its `bench/rows.mjs` exports. An
+  exported version that copies a manifest or a tag is held to it by the
+  package's tests or its release workflow, or is read from the manifest when
+  the rows load.
   `bench/harness.mjs` measures them and is the same file in every package
   (`lint` keeps one at its root for both workspaces): change every copy at
   once. A time row returns the function it times, which may return a promise
