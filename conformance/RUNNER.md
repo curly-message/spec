@@ -402,11 +402,14 @@ states; a runner that answers nothing has found a hole in itself.
 A defect that the adapter never gives the runner anything to catch is neither
 caught nor missed. An implementation that observes no reports cannot carry a
 defect of its reports; one that claims Core alone cannot carry a defect of a
-level it does not claim. A defect is **unreachable** where applying it changed
-nothing the adapter answers, and an audit that calls those missed sends a port
-hunting for holes that are not there. The catalogue is most informative against
-an adapter that claims every level its implementation satisfies and observes
-what it reports.
+level it does not claim; one that states no stand-in for `undefined` runs no
+construction at the conversion limit, so a conversion limit stated one higher
+alters nothing it answers, though one stated one lower is still caught past
+the limit, by the construction that continues. A defect is **unreachable**
+where applying it changed nothing the adapter answers, and an audit that calls
+those missed sends a port hunting for holes that are not there. The catalogue
+is most informative against an adapter that claims every level its
+implementation satisfies and observes what it reports.
 
 The defects are in `defects.json`, a sentence each, in five families: whether
 an adapter answers at all (it raises, or answers with nothing), what it answers

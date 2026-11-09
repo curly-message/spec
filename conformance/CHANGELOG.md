@@ -47,6 +47,15 @@ message resolves to changes.
   far short of the limit, and pins none. `RUNNER.md` gives it as a fourth
   reason a case is left out. `limits/conversion-over-limit-continues` holds no
   undefined and is run either way.
+* `defects.json` gains `conversion-limit-overstated` and
+  `conversion-limit-understated`, adapters that declare a conversion limit one
+  node higher, or one node lower, than the one they enforce. A correct runner
+  fails the first on `limits/conversion-at-limit`, and the second on
+  `limits/conversion-over-limit` and `limits/conversion-over-limit-continues`;
+  the set had no case it could fail the first on before. An audit counts the
+  first unreachable where the run holds no case at the limit, and the second
+  where it holds none past it. Both are added to the exported `Defect` type and
+  to `mutations`, and a runner in another language carries them as well.
 * Five constructions and two cases pin where section 9 decides the limits and
   the message errors among a placeholder's steps: the read limit first, then
   the value looked up and converted, then the nesting limit, a modifier nobody
