@@ -88,7 +88,10 @@ layer that holds it names nothing. A wrapper is the exception, because a
 wrapper owns at least one key (section 4.1): with its one member left out,
 `{ "value": { "$curly": "undefined" } }` is an empty object, which is a value.
 An implementation that reads a wrapper owning a member that holds nothing
-states a stand-in for it.
+states a stand-in for it. So does one that runs the constructions at and one
+past the conversion limit, which hand over an object whose members, and the
+members of the object it shares, hold the host's undefined (see *Building a
+generated case*).
 
 A runner on a typed host may decode a case into a neutral value of its own —
 the kinds JSON spells, and a kind of its own for each tag — and have the
@@ -150,7 +153,7 @@ is listed with the reason it was left out, never dropped silently: a set whose
 skipped cases are invisible is a set whose coverage cannot be read off the
 summary.
 
-Three reasons leave a case out, and no others:
+Four reasons leave a case out, and no others:
 
 * Its level is one the adapter does not claim, or one the caller excluded.
 * Its formatting request reads what the adapter declared it cannot express
@@ -161,12 +164,16 @@ Three reasons leave a case out, and no others:
 * It pins the tree and the adapter offers none. A tree file declares no level,
   because `CST.md` is not one of them; whether the adapter offers a tree is
   what selects its cases.
+* It is `conversion-at-limit` or `conversion-over-limit`, and the adapter
+  states no stand-in for `undefined`. Each counts its nodes in members that
+  hold nothing, and with those members left out it is an object of empty
+  objects far short of the limit, which pins none.
 
 ## Building a generated case
 
 Section 13 states minima and requires an implementation to document what it
 permits, so a case at a limit cannot be written out: the runner builds it from
-the limits the adapter declared. README.md gives the fifteen constructions, the
+the limits the adapter declared. README.md gives the sixteen constructions, the
 message and payload each builds, and what each expects. A runner builds them
 from the adapter's own numbers, not from section 13's minima; an
 implementation that permits more is exercised at what it documents.
@@ -176,12 +183,22 @@ construction is shaped so that it spends one budget alone. The output
 constructions write their text from an option value, which is the message's
 own text and so costs no reading; the read construction hands over a long
 value the placeholder selects nothing from, so almost nothing of it reaches
-the output. A construction that spent two budgets would fail an implementation
-for the limit the case was not about. Five nesting constructions are the
-exception, and meet a second limit, a report of the payload or a second message
-error at a placeholder nested too deep because that is what they pin: section 9
-tests the read limit first, then looks the value up and converts it, and only
-then decides the nesting limit, before any other message error.
+the output. The constructions at and one past the conversion limit hand over
+an object that holds one object several times and members that hold the host's
+undefined, and the shared object's own members hold it too: section 13 counts
+a value reached twice twice, and a member the walk visits and then omits, so
+the serialization visits as many nodes as the construction states and writes
+little more than the names of the shared references, and the node count meets
+the limit long before any bound on the text. The construction past the limit
+that continues hands over an array of strings instead, whose text would run
+past the read limit, because what it pins is that a value no conversion
+describes spends none of that budget. A construction that spent two budgets
+would fail an implementation for the limit the case was not about. Five
+nesting constructions are the exception, and meet a second limit, a report of
+the payload or a second message error at a placeholder nested too deep because
+that is what they pin: section 9 tests the read limit first, then looks the
+value up and converts it, and only then decides the nesting limit, before any
+other message error.
 
 The nesting limit is built once more, far past it. A refused placeholder takes
 its fallback chain, and the chain's last link is its inline default, whose
