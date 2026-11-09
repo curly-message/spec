@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { covers } from './cases';
 import { fixtures } from './set';
 import { NAMED, boundaries } from './tree';
-import type { Adapter, Catalogue, Defect, Fixture, FormatRequest, Level, Mutation, Node, Report, ReportCode, ReportOrigin, Resolved, SpanUnit, Unexpressible } from './types';
+import type { Adapter, Catalogue, Defect, Fixture, FormatRequest, Generator, Level, Mutation, Node, Report, ReportCode, ReportOrigin, Resolved, SpanUnit, Unexpressible } from './types';
 
 /** The catalogue shipped with this package; RUNNER.md states what each defect pins. */
 export const defects = () => (JSON.parse(readFileSync(fileURLToPath(new URL('../defects.json', import.meta.url)), 'utf8')) as Catalogue).defects;
@@ -70,6 +70,16 @@ const declaring = (entry: Unexpressible) => (adapter: Adapter, { set, levels }: 
       && leaves(c.expected.format.options ?? {}))),
   );
 };
+
+// A defect of the conversion limit the adapter declares. The limit is read
+// only by the constructions of section 13 that build from it, so the defect
+// reaches the runner where the run holds one of the stated constructions at a
+// level it runs.
+const converting = (by: number, constructions: readonly Generator[]) => (adapter: Adapter, { set, levels }: Run = { set: fixtures(), levels: adapter.levels }): Mutation => claiming(
+  adapter,
+  { limits: { ...adapter.limits, conversion: adapter.limits.conversion + by } },
+  () => set.some(({ file }) => file.kind !== 'tree' && levels.includes(file.level) && file.cases.some((c) => 'generate' in c && constructions.includes(c.generate))),
+);
 
 // A defect of the tree, which an implementation need not offer at all. An
 // adapter that offers none carries nothing to alter, so the defect is
@@ -203,6 +213,14 @@ const realizations: Record<Defect, (adapter: Adapter, run?: Run) => Mutation> = 
   'claims-unknown-level': (adapter) => claiming(adapter, { levels: [...adapter.levels, 'ecmascript' as Level] }),
 
   'claims-no-limits': (adapter) => claiming(adapter, { limits: { ...adapter.limits, nesting: 0 } }),
+
+  // Only the construction at the limit visits a node more than the limit the
+  // implementation imposes; past it, either limit refuses.
+  'conversion-limit-overstated': converting(1, ['conversion-at-limit']),
+
+  // Only the constructions past the limit then visit no node more than the
+  // implementation's limit; at it, either limit lets the value through.
+  'conversion-limit-understated': converting(-1, ['conversion-over-limit', 'conversion-over-limit-continues']),
 
   'tree-unoffered': (adapter) => claiming(adapter, { cst: undefined }, () => adapter.cst !== undefined),
 

@@ -403,6 +403,8 @@ export type Defect =
   | 'claims-no-core'
   | 'claims-unknown-level'
   | 'claims-no-limits'
+  | 'conversion-limit-overstated'
+  | 'conversion-limit-understated'
   | 'tree-unoffered'
   | 'tree-node-dropped'
   | 'tree-node-retyped'

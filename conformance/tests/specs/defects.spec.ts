@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { audit, defects, fixtures, mutations, run, type Adapter, type Audited, type Case, type ConcreteCase, type Defect, type ExpectedNode, type Fixture, type Node, type Resolved, type ResolutionFixtureFile } from '@curly-message/conformance';
+import { audit, defects, fixtures, mutations, run, type Adapter, type Audited, type Case, type ConcreteCase, type Defect, type ExpectedNode, type Fixture, type Generator, type Node, type Resolution, type Resolved, type ResolutionFixtureFile } from '@curly-message/conformance';
 import { format } from '../../src/cases';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -14,13 +14,16 @@ const REQUEST = { api: 'NumberFormat', options: { maximumFractionDigits: 2, useG
 
 // One case per thing a defect can reach: an output, an output whose ends are
 // whitespace, a report, two reports the order of which matters, a report
-// carrying a limit, and a locale-dependent request.
+// carrying a limit, a value at the declared conversion limit and one past it,
+// and a locale-dependent request.
 const CASES: Record<string, Case> = {
   'a.plain': { id: 'a/plain', description: 'Pins an output.', message: '{{v}}', messageId: 'a.plain', expected: { output: 'x' } },
   'a.spaced': { id: 'a/spaced', description: 'Pins an output whose ends are whitespace.', message: ' {{v}} ', messageId: 'a.spaced', expected: { output: ' x ' } },
   'a.report': { id: 'a/report', description: 'Pins a report.', message: '{{v:none}}', messageId: 'a.report', expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message', id: 'a.report' }] } },
   'a.order': { id: 'a/order', description: 'Pins the order of two reports.', message: '{{v:none}}{{w; eq:}}', messageId: 'a.order', expected: { output: 'x', reports: [{ code: 'unknown-modifier', origin: 'message', id: 'a.order' }, { code: 'missing-options', origin: 'payload', id: 'a.order' }] } },
   limits: { id: 'limits/over', description: 'Pins the declared nesting limit.', generate: 'nesting-over-limit' },
+  conversion: { id: 'limits/conversion', description: 'Pins the declared conversion limit.', generate: 'conversion-at-limit' },
+  'conversion.over': { id: 'limits/conversion-over', description: 'Pins the declared conversion limit from past it.', generate: 'conversion-over-limit' },
   'b.format': { id: 'b/format', description: 'Pins a request.', message: '{{n:number}}', messageId: 'b.format', locale: 'de', expected: { format: REQUEST } },
 };
 
@@ -105,14 +108,40 @@ const trees: Fixture = {
   },
 };
 
-const SET = [file('core.json', 'core', ['a.plain', 'a.spaced', 'a.report', 'a.order', 'limits']), file('intl.json', 'intl', ['b.format']), trees];
+const SET = [file('core.json', 'core', ['a.plain', 'a.spaced', 'a.report', 'a.order', 'limits', 'conversion', 'conversion.over']), file('intl.json', 'intl', ['b.format']), trees];
+
+// How many nodes a serialization visits: the root, then every member reached,
+// a shared one counted every time.
+const visits = (value: unknown) => {
+  let count = 0;
+
+  JSON.stringify(value, (_, entry) => {
+    count += 1;
+
+    return entry;
+  });
+
+  return count;
+};
+
+// The implementation answers the conversion case by the limit it enforces,
+// which a defect may misdeclare but cannot move.
+const answer = ({ id, message, payload }: Resolution): Resolved => {
+  const { v, w = '' } = (payload ?? {}) as { v?: unknown; w?: string };
+
+  if (typeof v !== 'object' || v === null) return ANSWERS[String(id)];
+
+  return visits(v) > LIMITS.conversion
+    ? { output: String(message).includes('default:D') ? `D${w}` : 'refused', reports: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }] }
+    : { output: String(message).includes('nomatch:ok') ? 'ok' : '{}', reports: [] };
+};
 
 // An implementation that answers every case of the set correctly: what a
 // defect is applied to, and what the audit needs.
 const conforming = (over: Partial<Adapter> = {}): Adapter => ({
   levels: ['core', 'intl', 'extensions'],
   limits: LIMITS,
-  resolve: ({ id }) => ANSWERS[String(id)],
+  resolve: answer,
   cst: CST,
   ...over,
 });
@@ -177,10 +206,27 @@ describe('audit', () => {
     expect(entries['claims-no-core']).toMatchObject({ expects: 'error', observed: 'error', outcome: 'caught' });
     expect(entries['claims-core-only']).toMatchObject({ expects: 'skip', observed: 'skip', outcome: 'caught' });
     expect(entries['reports-unobserved']).toMatchObject({ expects: 'unobserved', observed: 'unobserved', outcome: 'caught' });
+    expect(entries['conversion-limit-overstated']).toMatchObject({ expects: 'fail', observed: 'fail', outcome: 'caught', section: '13' });
+    expect(entries['conversion-limit-understated']).toMatchObject({ expects: 'fail', observed: 'fail', outcome: 'caught', section: '13' });
+  });
+
+  it('catches an overstated conversion limit only at the bound, and an understated one only past it', () => {
+    const only = (...constructions: Generator[]): Fixture[] => [{ name: 'core.json', file: { format: 'curly-message-3', level: 'core', section: '13', cases: constructions.map((generate) => ({ id: `limits/${generate}`, description: `Pins the declared conversion limit with ${generate}.`, generate })) } }];
+    const conversion = (set: Fixture[]) => {
+      const { 'conversion-limit-overstated': overstated, 'conversion-limit-understated': understated } = outcomes(conforming(), set);
+
+      return { overstated, understated };
+    };
+
+    expect(conversion(only('conversion-at-limit'))).toEqual({ overstated: 'caught', understated: 'unreachable' });
+    expect(conversion(only('conversion-over-limit'))).toEqual({ overstated: 'unreachable', understated: 'caught' });
+    expect(conversion(only('conversion-over-limit-continues'))).toEqual({ overstated: 'unreachable', understated: 'caught' });
+    expect(conversion([SET[1]])).toEqual({ overstated: 'unreachable', understated: 'unreachable' });
+    expect(audit(conforming(), { fixtures: only('conversion-at-limit', 'conversion-over-limit'), levels: [] }).filter(({ id }) => id.startsWith('conversion-')).map(({ outcome }) => outcome)).toEqual(['unreachable', 'unreachable']);
   });
 
   it('calls a defect unreachable where the adapter never answers what it alters', () => {
-    const silent = conforming({ resolve: ({ id }) => ({ output: ANSWERS[String(id)].output }) });
+    const silent = conforming({ resolve: (input) => ({ output: answer(input).output }) });
     const core = conforming({ levels: ['core'] });
     const treeless = conforming({ cst: undefined });
 
@@ -226,10 +272,10 @@ describe('audit', () => {
     // formats those requests without them, as it documents.
     const gapped = conforming({
       unexpressible: { NumberFormat: ['useGrouping', 'currencyDisplay'] },
-      resolve: ({ id }) => {
-        const key = String(id);
+      resolve: (input) => {
+        const key = String(input.id);
 
-        if (!Object.hasOwn(REQUESTS, key)) return ANSWERS[key];
+        if (!Object.hasOwn(REQUESTS, key)) return answer(input);
 
         return { output: key === 'b.grouped' || key === 'b.code' ? 'formatted without it' : format(REQUESTS[key as keyof typeof REQUESTS], 'de'), reports: [] };
       },
@@ -250,7 +296,7 @@ describe('audit', () => {
     // for one as asked.
     const gapped = conforming({
       unexpressible: { NumberFormat: [{ property: 'maximumFractionDigits', values: [2] }] },
-      resolve: ({ id }) => answers[String(id)] ?? ANSWERS[String(id)],
+      resolve: (input) => answers[String(input.id)] ?? answer(input),
     });
 
     expect(outcomes(gapped, set(digits('digits-1', 1), digits('digits-2', 2)))['unexpressible-declared']).toBe('caught');
@@ -269,6 +315,6 @@ describe('audit', () => {
   it('needs an adapter that passes the set', () => {
     const wrong = conforming({ resolve: () => ({ output: 'not what any case expects' }) });
 
-    expect(() => audit(wrong, { fixtures: SET })).toThrow('The audit needs an adapter that passes the set; this one fails 6 of 9 cases.');
+    expect(() => audit(wrong, { fixtures: SET })).toThrow('The audit needs an adapter that passes the set; this one fails 8 of 11 cases.');
   });
 });
