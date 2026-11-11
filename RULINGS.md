@@ -712,3 +712,11 @@ of props, one answer and at most the links section 10 gives its chain, so
 nothing a payload or the props hold multiplies the reports, as a count per
 property would.
 
+What a call configures is read once for the call and is no placeholder's input,
+so the same reasoning makes each of its inputs — the modifier registry, the
+formatting defaults, the reporting channel, the payload, the props, the locale,
+the message id — one input of the call: a registry three of whose entries
+refuse to be read reports once, naming the message, and the count of a call's
+reports grows with the message and a fixed set of inputs, never with how many
+modifiers a host registered (section 14.3).
+

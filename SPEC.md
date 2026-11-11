@@ -1949,8 +1949,9 @@ message must not take down the page that contains it.
 This specification does not prescribe a reporting channel. Reports SHOULD
 identify the message id and the placeholder. Every condition this document names
 is met at a placeholder, limits included: a limit is reached while a particular
-placeholder is being resolved, and that is the one to name (section 13). Section
-13's bounds on report content apply to every report, whatever text it carries.
+placeholder is being resolved, and that is the one to name (section 13). The one
+exception is a read of the call's own configuration, below. Section 13's bounds
+on report content apply to every report, whatever text it carries.
 
 An implementation that reports emits one report for each placeholder that met
 the condition, where the walk met it. A message naming an unknown modifier at
@@ -1971,6 +1972,19 @@ payload link as its value (section 9.3), which is one input and not two. A
 placeholder the walk never reaches — one in an option the modifier passed over —
 meets no condition and is reported not at all.
 
+What a call configures is no placeholder's input. The modifier registry
+(sections 11.3, 11.4), the formatting defaults (section 11.2), the reporting
+channel, and the call's own inputs — the payload, the props, the locale and the
+message id, from the host container they arrive in where an implementation takes
+one (section 14.1) — are each read once for the call, before or apart from the
+walk, and each is one input of the call. One the host raises on where it is
+read, or an entry of the registry it raises on, is absent: an input it would
+have held is not passed, and a modifier it would have registered is not
+registered. The implementation MUST NOT raise for it. It is reported as a value
+no conversion can describe, at most once for each of those inputs however many
+of the registry's entries refused, and the report names the message rather than
+a placeholder, so a message with no placeholder can report it too.
+
 Reports are emitted in the order the walk meets the conditions. Section 5
 resolves a message in one walk and section 9 fixes the steps a placeholder
 takes, so where neither of two reporting placeholders holds the other, the one
@@ -1982,9 +1996,10 @@ message error it meets. An implementation MUST NOT reorder reports by
 condition, by origin or by severity.
 
 The count is therefore bounded by the message: a resolution emits at most one
-report per condition for each input a placeholder reads, a placeholder reads a
-value, its props, an answer and no more links than section 10 gives its chain,
-and a message holds fewer placeholders than it holds characters. Nothing a
+report per condition for each input a placeholder reads and one for each input
+of the call's own configuration, a placeholder reads a value, its props, an
+answer and no more links than section 10 gives its chain, and a message holds
+fewer placeholders than it holds characters. Nothing a
 payload supplies multiplies that, which is what a model of repeated passes could
 not say. Each report's content is bounded separately, by section 13.
 
