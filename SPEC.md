@@ -271,6 +271,12 @@ Unwrapping happens **exactly once**: a wrapper's `value` is a value, never
 itself a wrapper. A wrapper that owns no `value` key, or whose `value` is the
 host's undefined, has no value.
 
+Recognizing a wrapper asks an entry for its own keys. An entry that refuses to
+name them — the host raises where they are enumerated — is not a wrapper, and
+the placeholder does not read it as its value either: it is treated as a value
+no conversion can describe (section 4), absent, and is not converted after the
+refusal, so the one read meets the condition once.
+
 The payload's root `default` entry is an ordinary value, never a wrapper.
 
 Recognition is exact rather than opportunistic because a payload cannot be
@@ -652,7 +658,10 @@ section 4.1 already reads that way in a wrapper's `value`. An undefined entry
 is absent, not a value no conversion could describe, so there is nothing to
 report (section 14.2). Nothing else is absent: a value of zero, empty string,
 `false` or the host's null MUST be treated as present. A value that is present
-but that no conversion can describe (section 4) is treated as absent.
+but that no conversion can describe (section 4) is treated as absent. So is an
+own entry, of the payload or of a wrapper, the host raises on where it is read:
+what cannot be read cannot be described, and the implementation MUST NOT raise
+for it either.
 
 If the entry is a wrapper (section 4.1), the value is the wrapper's `value`, and
 the wrapper's `default` and `props` join resolution as sections 10 and 11.2
@@ -1044,6 +1053,16 @@ gave them. A layer MUST NOT reset a property it does not name. A property a
 layer holds the host's null under is one it names: null is a value (section 3),
 and it is what reaches the formatting request. A property the layer holds the
 host's undefined under, like one it does not hold, is one it does not name.
+
+So is a property, or a whole layer, the host raises on where it is read: what
+cannot be read names nothing, and the modifier is handed what the other layers
+name. Props are the caller's, and a property that cannot be read is a defect in
+them rather than an input the modifier cannot process: it is reported as a
+value no conversion can describe (section 14.2), once for the placeholder,
+however many properties or layers refused (section 14.3). The props are read
+where a modifier is handed them and nowhere else, so a plain substitution
+(section 9.5), or a placeholder whose value is absent, never reads a wrapper's
+`props`.
 
 ```notation
 implementation defaults   number: { maximumFractionDigits: 4, useGrouping: false }
@@ -1907,8 +1926,10 @@ message alone (section 12): the payload asked for none of it, and what repairs
 it is rewriting the message or choosing an implementation that resolves further.
 `failed-modifier` is a modifier that cannot process its input (sections 11.2,
 11.3, 11.5); `unserializable-value` is a value no conversion can describe
-(section 4); `missing-locale` is a modifier of section 11.2 or 11.5 reached
-where no locale is available. Those three declare the origin `payload`.
+(section 4), an entry or a property the host raises on where it is read among
+them (sections 4.1, 9.2, 11.2); `missing-locale` is a modifier of section 11.2
+or 11.5 reached where no locale is available. Those three declare the origin
+`payload`.
 `output-limit` and `read-limit` are the two bounds of section 13 the message and
 the payload reach together, and both declare the origin `limit`. The conversion
 limit is not among them: a value whose serialization reaches it is a value no
@@ -1934,9 +1955,21 @@ placeholder is being resolved, and that is the one to name (section 13). Section
 An implementation that reports emits one report for each placeholder that met
 the condition, where the walk met it. A message naming an unknown modifier at
 three placeholders therefore reports three times. A placeholder is reached at
-most once (section 5), so it meets a condition at most once and is reported at
-most once, and a placeholder the walk never reaches — one in an option the
-modifier passed over — meets no condition and is reported not at all.
+most once (section 5), and it reads each of its inputs once: its value, the
+props its modifier is handed, the answer the modifier gives, and each link of
+its fallback chain it reaches (section 10). It meets a condition at most once in
+each of them, and any condition met at the placeholder itself rather than in
+what it reads — a message error, a limit — at most once, and is reported at most
+once for each. The props are one input
+however many layers they compose from — the implementation's defaults, the
+caller's props, a wrapper's — and, for `plural`, together with the digits it
+reads under `number` (section 11.5), so a placeholder whose props refuse to be
+read under any number of properties reports once. Its value and each link are
+inputs of their own, so one whose value and next link no conversion can
+describe reports twice. A placeholder that names `default` reads the chain's
+payload link as its value (section 9.3), which is one input and not two. A
+placeholder the walk never reaches — one in an option the modifier passed over —
+meets no condition and is reported not at all.
 
 Reports are emitted in the order the walk meets the conditions. Section 5
 resolves a message in one walk and section 9 fixes the steps a placeholder
@@ -1949,10 +1982,11 @@ message error it meets. An implementation MUST NOT reorder reports by
 condition, by origin or by severity.
 
 The count is therefore bounded by the message: a resolution emits at most one
-report per placeholder per condition, and a message holds fewer placeholders
-than it holds characters. Nothing a payload supplies multiplies that, which is
-what a model of repeated passes could not say. Each report's content is bounded
-separately, by section 13.
+report per condition for each input a placeholder reads, a placeholder reads a
+value, its props, an answer and no more links than section 10 gives its chain,
+and a message holds fewer placeholders than it holds characters. Nothing a
+payload supplies multiplies that, which is what a model of repeated passes could
+not say. Each report's content is bounded separately, by section 13.
 
 The conformance set observes reports through an adapter an implementation
 supplies for it; this document still prescribes no channel. The same adapter
