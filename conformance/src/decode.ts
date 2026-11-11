@@ -1,6 +1,6 @@
 const TAG = '$curly';
 
-type Tag = { [TAG]: unknown; count?: unknown };
+type Tag = { [TAG]: unknown; count?: unknown; members?: unknown };
 
 /**
  * A value whose serialization visits at least `count` nodes. Serialization
@@ -24,6 +24,20 @@ const unserializable = () => {
   return value;
 };
 
+/**
+ * A plain object owning each of `members` as an enumerable member that raises
+ * where it is read: an entry or a property the host will not hand over
+ * (specification, sections 9.2 and 11.2), which JSON has no way to write.
+ */
+const refusing = (members: string[]) => Object.defineProperties({}, Object.fromEntries(members.map((name) => [name, {
+  enumerable: true,
+  get() {
+    throw new Error(`The member ${JSON.stringify(name)} refuses to be read.`);
+  },
+}])));
+
+const isNames = (value: unknown): value is string[] => Array.isArray(value) && value.every((name) => typeof name === 'string');
+
 const isTag = (value: object): value is Tag => Object.hasOwn(value, TAG);
 
 const tagged = (tag: Tag) => {
@@ -36,6 +50,10 @@ const tagged = (tag: Tag) => {
       if (typeof tag.count !== 'number') throw new Error('A nodes tag needs a numeric count.');
 
       return nodes(tag.count);
+    case 'refusing':
+      if (!isNames(tag.members)) throw new Error('A refusing tag needs a list of member names.');
+
+      return refusing(tag.members);
     default:
       throw new Error(`Unknown tag ${JSON.stringify(tag[TAG])}.`);
   }

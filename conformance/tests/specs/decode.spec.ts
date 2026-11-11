@@ -55,6 +55,26 @@ describe('decode', () => {
     expect(tree[0][0]).toEqual([]);
   });
 
+  it('decodes the refusing tag into a plain object whose every named member raises where it is read', () => {
+    const value = decode({ $curly: 'refusing', members: ['a', '__proto__'] }) as Record<string, unknown>;
+
+    expect(Object.getPrototypeOf(value)).toBe(Object.prototype);
+    expect(Object.keys(value)).toEqual(['a', '__proto__']);
+    expect(() => value.a).toThrow();
+    expect(() => Object.getOwnPropertyDescriptor(value, '__proto__')!.get!()).toThrow();
+    expect(() => JSON.stringify(value)).toThrow();
+  });
+
+  it('decodes a refusing tag with no members into an empty plain object', () => {
+    expect(decode({ $curly: 'refusing', members: [] })).toEqual({});
+  });
+
+  it('refuses a refusing tag whose members are not a list of names', () => {
+    [undefined, 'a', [1], [['a']]].forEach((members) => {
+      expect(() => decode({ $curly: 'refusing', members })).toThrow('A refusing tag needs a list of member names.');
+    });
+  });
+
   it('decodes tags nested inside a payload, props and an id', () => {
     const decoded = decode({
       payload: { v: { value: { $curly: 'undefined' } }, list: [{ $curly: 'nodes', count: 3 }, 'plain'] },
