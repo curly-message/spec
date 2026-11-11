@@ -81,7 +81,7 @@ declares.
 
 ### Tagged values
 
-A fixture is JSON, and the format takes inputs JSON cannot spell. Three tagged
+A fixture is JSON, and the format takes inputs JSON cannot spell. Four tagged
 objects stand in for them, anywhere in a message, a payload, props, an id or
 the defaults. A runner decodes each into the host value it names before the
 adapter sees it; nothing else is decoded, so a payload entry of any other shape
@@ -98,6 +98,7 @@ of its expectation and the id goes unobserved.
 | `{ "$curly": "undefined" }` | The host's undefined (sections 4.1, 9.2, 10). A message so tagged is one the caller did not supply. |
 | `{ "$curly": "unserializable" }` | A value that no conversion can describe (section 4). The JavaScript runner builds a plain object that references itself. |
 | `{ "$curly": "nodes", "count": N }` | A value whose serialization visits at least `N` nodes (section 13). The runner builds a tree of shared references — each level an array naming the level below twice — deep enough to visit `N`. |
+| `{ "$curly": "refusing", "members": [names] }` | An object owning each of `names` as an entry the host raises on where it is read (sections 9.2, 11.2). The JavaScript runner builds a plain object whose members are enumerable getters that throw. |
 
 ### Host-defined modifiers
 

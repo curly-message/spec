@@ -59,7 +59,7 @@ which `sha256sum -c` reads.
 
 ## Decoding a case's inputs
 
-A case's inputs are JSON, and the format's data model (section 4) is not. Three
+A case's inputs are JSON, and the format's data model (section 4) is not. Four
 constructions cannot be written as JSON, and a case writes each as an object
 carrying a `$curly` key, which a runner replaces with the host value the tag
 names:
@@ -69,6 +69,7 @@ names:
 | `{ "$curly": "undefined" }` | The host's own absence: what a caller passes where it passes nothing. |
 | `{ "$curly": "unserializable" }` | A value the host's serialization cannot describe. On a host whose serialization follows references, an object holding itself is one. |
 | `{ "$curly": "nodes", "count": N }` | A value whose serialization visits at least `N` nodes, holding no cycle. A tree that doubles per level reaches any count in few levels. |
+| `{ "$curly": "refusing", "members": [names] }` | A mapping that holds each of `names` as an entry, where reading any of them raises. A Python `Mapping` whose `__getitem__` raises and a PHP `ArrayAccess` whose `offsetGet` throws are such values, where the implementation reads one. |
 
 The replacement is by the value's own shape, everywhere in the inputs and at
 every depth, and nowhere in the expectations: an expectation names text, and a
@@ -153,7 +154,7 @@ is listed with the reason it was left out, never dropped silently: a set whose
 skipped cases are invisible is a set whose coverage cannot be read off the
 summary.
 
-Four reasons leave a case out, and no others:
+Five reasons leave a case out, and no others:
 
 * Its level is one the adapter does not claim, or one the caller excluded.
 * Its formatting request reads what the adapter declared it cannot express
@@ -168,6 +169,13 @@ Four reasons leave a case out, and no others:
   states no stand-in for `undefined`. Each counts its nodes in members that
   hold nothing, and with those members left out it is an object of empty
   objects far short of the limit, which pins none.
+* Its inputs hold a `refusing` tag, and the host has no value the
+  implementation reads whose entries raise where they are read, as a host
+  whose payload and props reach the implementation as a value model of plain
+  data has none (section 4). The runner states it, since it is
+  what builds the value; an adapter declares nothing for it. Leaving the tag
+  out instead would hand over props that refuse nothing, and the case would
+  fail for the reports it no longer meets rather than pin what it states.
 
 ## Building a generated case
 

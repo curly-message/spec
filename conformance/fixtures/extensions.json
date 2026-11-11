@@ -862,6 +862,189 @@
           }
         ]
       }
+    },
+    {
+      "id": "extensions/refusing-props-report-once",
+      "description": "Props that refuse to be read under three properties are one input of the placeholder, so it reports once, and the modifier is handed what the other layers name.",
+      "section": "14.3",
+      "message": "{{v:e}}",
+      "payload": {
+        "v": "x"
+      },
+      "props": {
+        "e": {
+          "$curly": "refusing",
+          "members": [
+            "a",
+            "b",
+            "c"
+          ]
+        }
+      },
+      "messageId": "extensions.refusing-props",
+      "modifiers": {
+        "e": "echo"
+      },
+      "expected": {
+        "output": "x",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "id": "extensions.refusing-props"
+          }
+        ]
+      }
+    },
+    {
+      "id": "extensions/refusing-props-layers-report-once",
+      "description": "The caller's props and a wrapper's props are one input however many layers refuse, so the placeholder still reports once.",
+      "section": "14.3",
+      "message": "{{v:e}}",
+      "payload": {
+        "v": {
+          "value": "x",
+          "props": {
+            "e": {
+              "$curly": "refusing",
+              "members": [
+                "d"
+              ]
+            }
+          }
+        }
+      },
+      "props": {
+        "e": {
+          "$curly": "refusing",
+          "members": [
+            "a",
+            "b",
+            "c"
+          ]
+        }
+      },
+      "messageId": "extensions.refusing-props",
+      "modifiers": {
+        "e": "echo"
+      },
+      "expected": {
+        "output": "x",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "id": "extensions.refusing-props"
+          }
+        ]
+      }
+    },
+    {
+      "id": "extensions/refusing-layer-reports-once",
+      "description": "A layer the host refuses to hand over names nothing and is reported once.",
+      "section": "11.2",
+      "message": "{{v:e}}",
+      "payload": {
+        "v": "x"
+      },
+      "props": {
+        "$curly": "refusing",
+        "members": [
+          "e"
+        ]
+      },
+      "messageId": "extensions.refusing-props",
+      "modifiers": {
+        "e": "echo"
+      },
+      "expected": {
+        "output": "x",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "id": "extensions.refusing-props"
+          }
+        ]
+      }
+    },
+    {
+      "id": "extensions/refusing-props-each-placeholder-reports",
+      "description": "Each placeholder reads the props for itself, so two placeholders over props that refuse report twice, once each.",
+      "section": "14.3",
+      "message": "{{v:e}}{{w:e}}",
+      "payload": {
+        "v": "x",
+        "w": "y"
+      },
+      "props": {
+        "e": {
+          "$curly": "refusing",
+          "members": [
+            "a",
+            "b",
+            "c"
+          ]
+        }
+      },
+      "messageId": "extensions.refusing-props",
+      "modifiers": {
+        "e": "echo"
+      },
+      "expected": {
+        "output": "xy",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "id": "extensions.refusing-props"
+          },
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "id": "extensions.refusing-props"
+          }
+        ]
+      }
+    },
+    {
+      "id": "extensions/refusing-property-names-nothing",
+      "description": "A property the host refuses to read names nothing, so the layer beneath keeps what it named and the modifier receives the rest.",
+      "section": "11.2",
+      "message": "{{v:p}}",
+      "payload": {
+        "v": {
+          "value": "x",
+          "props": {
+            "p": {
+              "$curly": "refusing",
+              "members": [
+                "a"
+              ]
+            }
+          }
+        }
+      },
+      "props": {
+        "p": {
+          "a": 1,
+          "b": 2
+        }
+      },
+      "messageId": "extensions.refusing-props",
+      "modifiers": {
+        "p": "props"
+      },
+      "expected": {
+        "output": "a=1,b=2",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "id": "extensions.refusing-props"
+          }
+        ]
+      }
     }
   ]
 }

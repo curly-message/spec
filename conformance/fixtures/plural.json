@@ -2251,6 +2251,41 @@
           }
         ]
       }
+    },
+    {
+      "id": "plural/refusing-props-report-once",
+      "description": "plural's props and the digits it reads under number are one input, so properties refusing to be read in both report once, and the category is asked of the number as the other layers show it.",
+      "section": "14.3",
+      "message": "{{n:plural; one:ONE; other:OTHER;}}",
+      "payload": {
+        "n": 1
+      },
+      "props": {
+        "number": {
+          "$curly": "refusing",
+          "members": [
+            "maximumFractionDigits"
+          ]
+        },
+        "plural": {
+          "$curly": "refusing",
+          "members": [
+            "type"
+          ]
+        }
+      },
+      "locale": "en",
+      "messageId": "plural.refusing-props-report-once",
+      "expected": {
+        "output": "ONE",
+        "reports": [
+          {
+            "code": "unserializable-value",
+            "origin": "payload",
+            "id": "plural.refusing-props-report-once"
+          }
+        ]
+      }
     }
   ]
 }

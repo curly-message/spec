@@ -229,6 +229,21 @@ message resolves to changes.
   `sha256sum -c` rather than copying the digest out of the release notes,
   which still state it. The README and RUNNER.md name the file, and the
   release it starts at: no earlier release carries one.
+* A fourth tag, `{ "$curly": "refusing", "members": [names] }`, stands for an
+  object whose named entries raise where they are read, which JSON cannot
+  write. The JavaScript runner builds a plain object of getters that throw,
+  and refuses a tag whose `members` is not a list of names. Five cases of the
+  Extensions level use it, through the `echo` and `props` behaviours: props
+  that refuse to be read under three properties, or in two layers, report
+  `unserializable-value` once for the placeholder, and two placeholders over
+  them report once each (section 14.3); a layer the host refuses names
+  nothing, and a property it refuses leaves the layer beneath it what it
+  named (section 11.2). A case of the Intl level uses it too: `plural`'s
+  props and the digits it reads under `number` refusing in both report once
+  (section 14.3). A runner in another language builds the tag, or
+  leaves the cases out under a fifth reason RUNNER.md now gives, where its
+  host has no value whose entries raise; a runner that does neither meets a
+  tag it does not know.
 
 ## 4.1.0
 
