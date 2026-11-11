@@ -177,6 +177,12 @@ differently.**
 - Don't "improve" adjacent code or formatting unrelated to the task.
 - Don't refactor what isn't broken.
 - Remove only the imports/vars/types **your** change orphaned.
+- **A finding in the PR's own change is the PR's.** A defect the PR
+  introduces, or one its code is the first to reach, is fixed in that PR
+  (§4), never moved to an issue or a follow-up. A finding leaves the PR only
+  where it lies in another package or repository, where its fix changes a
+  published surface, the format or an invariant, or where `main` has the
+  defect without the PR and its fix is larger than the PR.
 - **Findings along the way.** Unrelated dead code, a bug or a stale doc is
   not fixed in the same PR, and not left in chat or in the PR's notes alone,
   where it ends with the PR. Once reproduced, a small fix that decides
@@ -223,7 +229,11 @@ change goes through this cycle:
 2. **Develop**, verified as above.
 3. **Review**, its scope picked by the change's risk and by the planned
    issues it touches. Each finding needs a concrete scenario (input → wrong
-   output) and must survive independent skeptics trying to refute it. Every
+   output) and must survive independent skeptics trying to refute it. A
+   finding is **blocking** or a **note**. Blocking: a wrong result or report,
+   a raise or state that outlives a call, a cost nothing bounds, a type that
+   breaks a consumer, a false statement in a document. Anything else is a
+   note: a missing test, wording, a time within its spread. Every
    round also reviews **performance** against the base branch, at runtime and
    in the type checker: what the change adds to a hot path, what it retains
    and whether that stays bounded, what it adds to the consumer's bundle, and
@@ -239,16 +249,18 @@ change goes through this cycle:
    by reproducing it — never from memory.
 5. **Fix red → green** (§13), as fixups into the commit that introduced the
    defect (§6).
-6. **Review the fix.** Each round of fixups gets a review of at least its own
-   delta, and the rounds go on until one confirms nothing. From the third
-   round that still confirms something, the findings are read together:
-   findings that keep coming back in one place or of one kind mean the design
-   is wrong there, so that part goes back to step 1 and the cycle continues
-   from its outcome without waiting on the user — who is asked only when the
-   redesign would change the public surface, the PR's scope or an invariant.
-   A round that touches only prose gets a self-check instead: each changed
-   statement is checked against the code, or reproduced, on every version it
-   claims to hold for.
+6. **Review the fix.** Each round of fixups for blocking findings gets a
+   review of its own delta, not of the design again, and the rounds go on
+   until one confirms nothing blocking. Notes are fixed in the same PR, in
+   one batch, verified as any commit is (above), and start no round; a note
+   whose fix changes what the code does is a fix like any other and gets its
+   round. When a third round still confirms something blocking, the work
+   stops there: the findings are read together and reported to the user with
+   the choices they leave — findings that keep coming back in one place or
+   of one kind mean the design is wrong there — and no fourth round starts
+   without the user's answer. A round that touches only prose gets a
+   self-check instead: each changed statement is checked against the code,
+   or reproduced, on every version it claims to hold for.
 7. **Run it where it is used** when a change touches how a package meets
    something its tests only simulate: the playground against the local build
    of the parser (`site/`), or a scratch project that installs the packed
@@ -263,7 +275,9 @@ CI is green: every run on that head finished and passed. A head with no test
 run is green only where it touches none of a workflow's paths; a PR with a
 merge conflict, or retargeted with no push since, runs nothing. The offer lists each step with its outcome — the design check,
 each review round and what it found, the run where it is used (or why it does
-not apply), CI — and names any step not run.
+not apply), CI — and names any step not run, the notes left as they are with
+the reason for each, and every issue the PR opened (§3) with why it was not
+fixed in the PR.
 
 ### Benchmarks
 
