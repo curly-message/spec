@@ -669,3 +669,46 @@ or for a production on another thread of execution or one suspended part way, is
 not ruled here, and neither is a bound across the process. No case of the
 conformance set pins the bound, since the set's behaviours for a host-defined
 modifier keep nothing between calls and an adapter declares no such bound.
+
+---
+
+## B.3 A read the host refuses, and how often it is reported
+
+**Observed.** Section 14.3 bounded the reports of a resolution at one per
+placeholder per condition, while section 14.2 and section 13 had a placeholder
+report each link of its fallback chain that no conversion can describe, and the
+conformance set pinned two reports from one placeholder whose two payload links
+are undescribable. The reference implementation went further: it reported a
+read of the props the host refused once per property. Write
+`{{n:number}}`, and resolve it over `{ n: 1.5 }` with the caller's props
+holding, under `number`, three properties whose reads raise:
+
+```notation
+{{n:number}}   n 1.5, props number: three properties that raise on read
+    reference implementation  ->  "1.5", unserializable-value three times
+```
+
+What such a property is, the document did not say. Section 11.2 settles only a
+property the layer holds the host's null or undefined under, and section 14.2's
+input a modifier cannot process could be read to cover it, which would take the
+fallback chain with `failed-modifier`.
+
+**Ruling.** A placeholder reports a condition at most once for each input it
+reads: its value, its props, its modifier's answer and each link of its chain it
+reaches (section 14.3). The props are one input however many layers compose
+them, so the case above reports once. A property, or a whole layer, the host
+raises on where it is read names nothing, as one the layer does not hold does,
+and the modifier formats with what the other layers name (section 11.2): props
+are the caller's configuration, and a defect in one property is no reason to
+withhold the rest, nor one a message's author can repair. It is reported as
+`unserializable-value`, whose origin, `payload`, names the code that supplied
+the props. A payload entry, or a wrapper's key, the host raises on where it is
+read is a value no conversion can describe (section 9.2), and so is an entry
+that refuses to name its keys, which is not converted after it refused (section
+4.1): one read, one report.
+
+The count stays a fact about the message. A placeholder reads one value, one set
+of props, one answer and at most the links section 10 gives its chain, so
+nothing a payload or the props hold multiplies the reports, as a count per
+property would.
+

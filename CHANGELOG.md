@@ -23,10 +23,12 @@ describe, as one the host's serializer refuses already was, where 3.1.0 had the
 implementation serialize it. Where the document spelled a rule for ECMAScript
 alone, or left a host's reading of it unstated, it now states for every host
 what it already settled, and where it left another question open, it answers it
-without changing what 3.1.0 settled that any message resolves to. One answer
-does change what an implementation renders where 3.1.0 settled nothing: a chain
+without changing what 3.1.0 settled that any message resolves to. Two answers
+do change what an implementation renders where 3.1.0 settled nothing: a chain
 of reads of inputs that host-defined modifiers kept now stops at a bound the
-implementation keeps, where it went as deep as the host's stack allowed.
+implementation keeps, where it went as deep as the host's stack allowed; and an
+entry that refuses to name its keys is now absent, where an implementation
+could convert it as a value by a conversion that never asked for them.
 
 * Section 4 says what the host's JSON serialization holds: no insignificant
   whitespace, as sections 4.1 and 7 write it, and an object's members in the
@@ -207,6 +209,23 @@ implementation keeps, where it went as deep as the host's stack allowed.
   nothing resolves, reports or runs host code once a resolution has returned.
   Section 13 says what a read made during the resolution counts as, and when it
   is refused.
+* Section 14.3 says what it bounds the reports of one placeholder by: one per
+  condition for each input the placeholder reads, its value, its props, its
+  modifier's answer and each link of its fallback chain it reaches. It said one
+  per placeholder per condition, where section 14.2 and section 13 already had a
+  placeholder report each link of its chain that no conversion can describe.
+  Sections 4.1, 9.2 and 11.2 say what an entry or a property the host raises on
+  where it is read is: a payload entry or a wrapper's key is a value no
+  conversion can describe, and so is an entry that refuses to name its keys,
+  which is not then converted, though a conversion that never asks for its
+  keys could have described it; a property of the props, or a whole layer, names
+  nothing, and the modifier is handed what the other layers name. Each is
+  reported as `unserializable-value`, and the props once for the placeholder
+  however many of their properties refused, and a wrapper's props are read
+  only where a modifier is handed them. 3.1.0 settled none of these reads
+  in so many words. Section 14.2's input a modifier cannot process could be read
+  to cover a property the host refuses, which would take the fallback chain;
+  this revision rules that out, and ruling B.3 records why.
 
 ## 3.1.0
 
