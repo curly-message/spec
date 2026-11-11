@@ -226,6 +226,14 @@ could convert it as a value by a conversion that never asked for them.
   in so many words. Section 14.2's input a modifier cannot process could be read
   to cover a property the host refuses, which would take the fallback chain;
   this revision rules that out, and ruling B.3 records why.
+* Section 14.3 says what a read of the call's own configuration reports: the
+  modifier registry, the formatting defaults, the reporting channel and the
+  call's own inputs are each one input of the call, read once for it. One the
+  host raises on where it is read, or an entry of the registry it raises on, is
+  absent, and is reported at most once for each of those inputs, however many
+  of the registry's entries refused, naming the message rather than a
+  placeholder. 3.1.0 said every report is met at a placeholder, which no read
+  of the configuration is, and did not say what such a read is.
 
 ## 3.1.0
 
