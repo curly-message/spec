@@ -5,8 +5,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { fixtures, mutations, plan, type Adapter, type Case, type ExpectedNode, type Manifest } from '@curly-message/conformance';
+import { fixtures, mutations, plan, type Adapter, type Case, type ExpectedNode, type Fixture, type Manifest } from '@curly-message/conformance';
 import { NAMED } from '../../src/tree';
+import { resolver, type Mutant } from './kept';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
@@ -141,7 +142,45 @@ describe('the shipped set', () => {
   it('writes its generated cases as the runner builds them', () => {
     const generated = resolutions.filter((entry): entry is { name: string; c: Extract<Case, { generate: string }> } => 'generate' in entry.c);
 
-    expect(generated.filter(({ c }) => !['output-at-limit', 'output-over-limit', 'output-over-limit-continues', 'read-at-limit', 'read-over-limit', 'conversion-at-limit', 'conversion-over-limit', 'conversion-over-limit-continues', 'nesting-at-limit', 'nesting-over-limit', 'nesting-over-limit-converts', 'nesting-over-limit-reads', 'nesting-over-limit-read-spent', 'nesting-over-limit-unknown-modifier', 'nesting-over-limit-missing-options', 'nesting-chain-over-limit'].includes(c.generate))).toEqual([]);
+    expect(generated.filter(({ c }) => !['output-at-limit', 'output-over-limit', 'output-over-limit-continues', 'read-at-limit', 'read-over-limit', 'conversion-at-limit', 'conversion-over-limit', 'conversion-over-limit-continues', 'nesting-at-limit', 'nesting-over-limit', 'nesting-over-limit-converts', 'nesting-over-limit-reads', 'nesting-over-limit-read-spent', 'nesting-over-limit-unknown-modifier', 'nesting-over-limit-missing-options', 'nesting-chain-over-limit', 'reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free'].includes(c.generate))).toEqual([]);
+  });
+
+  // The written cases that register a behaviour that keeps, each through an
+  // implementation that reads section 13 as tests/specs/kept.ts does, which
+  // calls `late` where a modifier's input is read after its call returned.
+  const keepers = set.flatMap(({ name, file }) => file.kind === 'tree' ? [] : file.cases.filter((c) => 'keeping' in c && c.keeping).map((c) => ({ name, file: { ...file, cases: [c] } })));
+  const through = (fixture: Fixture, over: Partial<Adapter> = {}, mutant?: Mutant) => {
+    let late = false;
+    const adapter: Adapter = { levels: ['core', 'intl', 'extensions'], limits: { output: 100000, read: 100000, conversion: 100000, nesting: 8 }, reentry: 32, resolve: resolver({ bound: 32, mutant, late: () => {
+      late = true;
+    } }), ...over };
+    const planned = plan(adapter, { fixtures: [fixture] });
+    const outcomes = planned.cases.map((c) => c.execute());
+
+    return { outcomes, skipped: planned.skipped.length > 0, late };
+  };
+
+  // A runner leaves a case out where no modifier can keep an input by the
+  // behaviours it registers, so the set writes no case that reads a kept input
+  // after the modifier that kept it returned but through `keep` or `first`,
+  // and every case that registers either reads one so.
+  it('reads a kept input after the modifier that kept it returned in exactly the cases left out where no modifier can keep one', () => {
+    expect(keepers.length).toBeGreaterThan(0);
+
+    for (const fixture of keepers) {
+      const { outcomes, late } = through(fixture);
+
+      expect(outcomes).toEqual([{ ok: true }]);
+      expect({ id: fixture.file.cases[0].id, skipped: through(fixture, { keeps: false }).skipped }).toEqual({ id: fixture.file.cases[0].id, skipped: late });
+    }
+  });
+
+  it('pins that a read of a default in production is refused at once, and fails nothing', () => {
+    const failing = (mutant: Mutant) => keepers.filter((fixture) => through(fixture, {}, mutant).outcomes.some(({ ok }) => !ok)).map(({ file }) => file.cases[0].id);
+
+    expect(failing('in-progress-read')).toEqual(['limits-extensions/kept-default-read-while-produced']);
+    expect(failing('in-progress-raises')).toEqual(['limits-extensions/kept-default-read-while-produced']);
+    expect(failing('refusal-aborts')).toEqual(['limits-extensions/kept-default-read-while-produced']);
   });
 
   // A defect of what an adapter cannot express is caught only where the set

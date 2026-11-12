@@ -11,8 +11,9 @@ written more than the read budget holds, and a value at the conversion limit,
 which it converts. It also stops pinning what the specification leaves to the
 host, pins what it settles and no case stated, and says what a runner on a
 host other than ECMAScript does with it. An adapter states what its facility
-cannot express by value and by condition as well as by property. Nothing a
-message resolves to changes.
+cannot express by value and by condition as well as by property, and states
+the bound it keeps on counted reads, against which the set now pins the reads
+of an input a modifier kept. Nothing a message resolves to changes.
 
 * `limits/nesting-chain-over-limit`, built from the adapter's declared nesting
   limit like the other limit cases, nests `{{v; default:` twenty thousand levels
@@ -244,6 +245,57 @@ message resolves to changes.
   leaves the cases out under a fifth reason RUNNER.md now gives, where its
   host has no value whose entries raise; a runner that does neither meets a
   tag it does not know.
+* The set pins the reads section 13 counts: a read of an input a modifier kept
+  past its call. No case kept one, so an implementation that let such a read
+  run with no bound, recorded a refused one as produced, or counted the
+  walk's own reads toward the bound passed the set. An adapter MAY state
+  `reentry`, the most counted reads that may be producing their text at once
+  on one thread of execution during one resolution asked for where none was
+  in progress, that resolution not counted: an implementation whose
+  documented bound counts it states one less. 0 is a bound; a value that is
+  not a whole number of 0 or more is refused with the run. An adapter MAY
+  state `keeps` as `false`, where no modifier can keep an input past its call.
+  Both are optional members of the exported `Adapter` type, so an adapter that
+  states neither is measured as before, less the cases below. RUNNER.md says
+  how a runner on a typed host tells either left unset from 0 or `false`.
+* Four behaviours keep an input and read it later: `keep`, `keep-default`,
+  `take`, which claims the input kept last before it reads it, and `first`.
+  `take` and `first` answer the text they read, or `empty` where it is the
+  empty string, so what a case of them expects does not grow with the bound
+  it is built from, and a modifier that went on with a refused read shows. They share their
+  state for one resolution, so the JavaScript runner builds them per
+  resolution with the exported `keeping()`, typed `Keeping`, and leaves them
+  out of `behaviours`; the README's catalogue says a runner and an adapter
+  hold no modifier across resolutions. A case registers them under a field of
+  their own, `keeping`, which the schema and the exported `ConcreteCase` type
+  gain; `modifiers` names the behaviours of `behaviours` alone, as before.
+* `limits-extensions.json`, of the Extensions level, holds six cases.
+  `limits-extensions/kept-default-read-again` reads a kept default, whose
+  inline default names a modifier nobody registered, twice after the modifier
+  that kept it returned: its own read produced it, each later read answers the
+  text recorded, and nothing reports twice. `limits-extensions/kept-default-read-while-produced` has a kept
+  default read the input that holds it while its production is in progress,
+  which is refused at once. Four more are generated from `reentry`:
+  `reentry-at-limit`, `reentry-over-limit`, `reentry-refused-not-recorded` and
+  `reentry-own-reads-free`, added to the schema's enum and to the exported
+  `Generator` type, which README.md gives with the others. A runner leaves the
+  four out where the adapter states no `reentry`, the last also at 0, and
+  every case that reads a kept input after its modifier returned where the
+  adapter states `keeps` as `false`; RUNNER.md gives both as the sixth and
+  seventh reasons a case is left out. The set's tests hold every written case
+  that reads a kept input after its modifier returned to registering `keep` or
+  `first`, which is how a runner tells it.
+* `defects.json` gains `reentry-limit-overstated` and
+  `reentry-limit-understated`, adapters that state a bound on counted reads one
+  higher, or one lower, than the one they keep, and `claims-negative-reentry`,
+  one that states a bound below 0. A correct runner fails the first on every
+  construction of kept reads, the second on `reentry-over-limit` and
+  `reentry-refused-not-recorded`, and refuses the third. An audit counts the
+  first two unreachable where the adapter states no `reentry` or states
+  `keeps` as `false`, or the run holds none of the cases that would fail
+  them, and the second at a bound of 0 as well. All three are added to
+  the exported `Defect` type and to `mutations`, and a runner in another
+  language carries them as well.
 
 ## 4.1.0
 

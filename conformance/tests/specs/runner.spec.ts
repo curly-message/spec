@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
-import { behaviours, check, fixtures, load, plan, run, summarize, type Adapter, type Case, type ConcreteCase, type Fixture, type Level, type Resolved } from '@curly-message/conformance';
+import { behaviours, check, fixtures, load, plan, run, summarize, type Adapter, type Case, type ConcreteCase, type Fixture, type Generator, type Level, type Resolved } from '@curly-message/conformance';
 import { format } from '../../src/cases';
 
 const LIMITS = { output: 100000, read: 100000, conversion: 100000, nesting: 8 };
@@ -111,6 +111,44 @@ describe('plan', () => {
     }
   });
 
+  it('rejects a bound on counted reads that is not a count, and takes 0 as one', () => {
+    const stating = (over: object) => plan({ ...adapter(echo), ...over }, { fixtures: [] });
+
+    expect(() => stating({ reentry: -1 })).toThrow('The adapter must state its bound on counted reads, reentry, as a non-negative integer.');
+    expect(() => stating({ reentry: 1.5 })).toThrow('The adapter must state its bound on counted reads, reentry, as a non-negative integer.');
+    expect(() => stating({ reentry: '2' })).toThrow('The adapter must state its bound on counted reads, reentry, as a non-negative integer.');
+    expect(() => stating({ reentry: 0 })).not.toThrow();
+    expect(() => stating({ reentry: undefined })).not.toThrow();
+    expect(() => stating({ keeps: 'no' })).toThrow('The adapter must state whether a modifier can keep an input past its call, keeps, as true or false.');
+    expect(() => stating({ keeps: false })).not.toThrow();
+  });
+
+  it('leaves out the cases built from the bound on counted reads where the adapter states none, and the own reads at a bound of 0', () => {
+    const constructions: Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free'];
+    const set = [file('extensions', constructions.map((generate) => ({ id: `c/${generate}`, description: `Pins ${generate}.`, generate })), '13')];
+    const skipped = (over: Partial<Adapter>) => plan({ ...adapter(echo, ['core', 'extensions']), ...over }, { fixtures: set }).skipped.map(({ id, reason }) => ({ id, reason }));
+
+    expect(skipped({})).toEqual(constructions.map((generate) => ({ id: `c/${generate}`, reason: 'The adapter states no bound on counted reads.' })));
+    expect(skipped({ reentry: 0 })).toEqual([{ id: 'c/reentry-own-reads-free', reason: 'The adapter states a bound of 0 on counted reads, so no counted read stands for own reads to be made inside.' }]);
+    expect(skipped({ reentry: 1 })).toEqual([]);
+    expect(skipped({ reentry: 1, keeps: true })).toEqual([]);
+    expect(skipped({ reentry: 1, keeps: false })).toEqual(constructions.map((generate) => ({ id: `c/${generate}`, reason: 'The adapter states that a modifier cannot keep an input past its call.' })));
+  });
+
+  it('leaves out a case that reads a kept input after the modifier that kept it returned, where the adapter states a modifier cannot keep one', () => {
+    const registering = (id: string, keeping: ConcreteCase['keeping'], modifiers?: ConcreteCase['modifiers']) => concrete(id, { keeping, modifiers });
+    const set = [file('extensions', [
+      registering('c/keep', { k: 'keep', t: 'take' }),
+      registering('c/first', { d: 'keep-default', f: 'first' }, { u: 'upper' }),
+      registering('c/while-current', { d: 'keep-default', t: 'take' }),
+      registering('c/plain', undefined, { u: 'upper' }),
+    ], '13')];
+    const skipped = (over: Partial<Adapter>) => plan({ ...adapter(echo, ['core', 'extensions']), ...over }, { fixtures: set }).skipped.map(({ id }) => id);
+
+    expect(skipped({ keeps: false })).toEqual(['c/keep', 'c/first']);
+    expect(skipped({})).toEqual([]);
+  });
+
   it('refuses a fixture file targeting a format this set does not read', () => {
     const targeting = (format: string) => {
       const [{ name, file: contents }] = [file('core', [concrete('a/one')])];
@@ -178,6 +216,26 @@ describe('plan', () => {
       defaults: { number: { useGrouping: false } },
     });
     expect('value' in (input.payload as { w: object }).w).toBe(true);
+  });
+
+  it('hands each resolution the behaviours that keep an input afresh, so a case runs alike every time', () => {
+    const resolve = vi.fn(({ modifiers }: Parameters<Adapter['resolve']>[0]) => {
+      const { f, k } = modifiers as Record<string, (input: object) => string>;
+      const input = { value: '1', options: [], props: {}, default: () => 'D' };
+
+      return { output: `${f(input)}${k(input)}`, reports: [] };
+    });
+    const c = concrete('a/kept', { message: '{{x:f}}{{x:k; default:D}}', modifiers: { u: 'upper' }, keeping: { f: 'first', k: 'keep' }, expected: { output: 'none' } });
+    const [planned] = plan(adapter(resolve, ['core', 'extensions']), { fixtures: [file('extensions', [c])] }).cases;
+
+    expect(planned.execute()).toEqual({ ok: true });
+    expect(planned.execute()).toEqual({ ok: true });
+
+    const [first, second] = resolve.mock.calls.map(([input]) => input.modifiers as Record<string, unknown>);
+
+    expect(first.k).not.toBe(second.k);
+    expect(first.u).toBe(behaviours.upper);
+    expect(second.u).toBe(behaviours.upper);
   });
 
   it('leaves what a case does not write undefined', () => {

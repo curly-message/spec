@@ -109,7 +109,7 @@ text, so a case whose id is of another shape leaves it out of what it expects.
 
 The adapter is the implementation's side of the contract, and its shape in
 another language is that language's business; what it must carry is not.
-README.md states it. Three things are worth repeating here, because they are
+README.md states it. Five things are worth repeating here, because they are
 what a runner reads before it runs anything:
 
 * `levels` selects the fixtures. An adapter must claim `core`.
@@ -125,11 +125,22 @@ what a runner reads before it runs anything:
 * `cst`, where the adapter supplies it, is the tree of [`CST.md`](../CST.md):
   the `unit` its spans are counted in, and the call that produces one. An
   adapter that supplies none has the tree cases left out.
+* `reentry`, where the adapter states it, is the bound section 13 lets an
+  implementation keep on the counted reads producing their text at once on
+  one thread of execution, the resolution asked for not counted, and builds
+  the constructions of kept reads. `keeps`, stated as `false`, says that no
+  modifier can keep an input past its call.
 
-The optional claims are `unexpressible` and `cst`; `levels` and `limits` are
-not. A runner on a typed host, whose adapter cannot leave a member out, reads
-those two loosely: an `unexpressible` that names no property, or a `cst` stated
-empty — no unit and no call that produces a tree — is no such claim. It reads
+The optional claims are `unexpressible`, `cst`, `reentry` and `keeps`;
+`levels` and `limits` are not. A runner on a typed host, whose adapter cannot
+leave a member out, reads `unexpressible` and `cst` loosely: an
+`unexpressible` that names no property, or a `cst` stated empty — no unit and
+no call that produces a tree — is no such claim. It reads `reentry` and
+`keeps` loosely by no value they can hold, since 0 is a bound and `false` a
+claim: it gives the adapter a member it can leave unset, an optional or a
+nullable one, or a `keeps` named for the claim it makes, whose zero value is
+the claim unmade. An unset `reentry` states no bound, and an unset `keeps`
+reads as `true`. It reads
 an entry of `unexpressible` loosely too: `values` or `when` stated empty is no
 narrowing, so the entry stands for every value of its property, or in every
 request. An adapter that can leave a member out states no claim by leaving it
@@ -141,8 +152,9 @@ they stand.
 
 A claim outside the vocabulary of sections 2, 11.2, 11.5 and 13, or of section
 4 of `CST.md` — a level that is not one of the three, a limit that is not a
-positive count, a facility the format does not name, a span unit that document
-does not name — is an error, and the runner refuses the whole run. It is not a
+positive count, a `reentry` that is not a count of 0 or more, a `keeps` that
+is not true or false, a facility the format does not name, a span unit that
+document does not name — is an error, and the runner refuses the whole run. It is not a
 skip and not a failure: an adapter that cannot say what it satisfies has not
 been measured, and a run that reports a number for it reports a number that
 means nothing.
@@ -154,7 +166,7 @@ is listed with the reason it was left out, never dropped silently: a set whose
 skipped cases are invisible is a set whose coverage cannot be read off the
 summary.
 
-Five reasons leave a case out, and no others:
+Seven reasons leave a case out, and no others:
 
 * Its level is one the adapter does not claim, or one the caller excluded.
 * Its formatting request reads what the adapter declared it cannot express
@@ -176,17 +188,30 @@ Five reasons leave a case out, and no others:
   what builds the value; an adapter declares nothing for it. Leaving the tag
   out instead would hand over props that refuse nothing, and the case would
   fail for the reports it no longer meets rather than pin what it states.
+* It is one of the four constructions of kept reads, and the adapter states no
+  `reentry`: each is built from that bound, and an implementation that keeps
+  none has no bound to meet. `reentry-own-reads-free` is left out at a
+  `reentry` of 0 as well, where no counted read stands for the walk's own
+  reads to be made inside.
+* It reads an input a modifier kept after that modifier returned, and the
+  adapter states `keeps` as `false`: the four constructions of kept reads,
+  and a written case that registers `keep` or `first` under `keeping`. The
+  set writes no case that reads a kept input so through `keep-default` and
+  `take` alone, and its tests hold every case to that, so a case that reads
+  a kept input while the modifier that kept it is current still runs.
 
 ## Building a generated case
 
 Section 13 states minima and requires an implementation to document what it
 permits, so a case at a limit cannot be written out: the runner builds it from
-the limits the adapter declared. README.md gives the sixteen constructions, the
-message and payload each builds, and what each expects. A runner builds them
+the limits the adapter declared, or from the bound on counted reads it states.
+README.md gives the twenty constructions, the message and payload each builds,
+and what each expects. A runner builds them
 from the adapter's own numbers, not from section 13's minima; an
 implementation that permits more is exercised at what it documents.
 
-Each of the four limits is built at its bound and one past it, and each
+Each of the four limits section 13 states a minimum for is built at its bound
+and one past it, and each
 construction is shaped so that it spends one budget alone. The output
 constructions write their text from an option value, which is the message's
 own text and so costs no reading; the read construction hands over a long
@@ -214,6 +239,27 @@ placeholders are refused in turn. Section 13 has no limit raise, so a chain of
 them twenty thousand levels past the limit resolves like any other message. The
 runner builds that message without recursion of its own, and so should a runner
 in another language.
+
+The bound on counted reads is built from inputs a modifier keeps. The
+behaviours `keep`, `keep-default`, `take` and `first` share one list of what
+was kept, and its claims, and a runner builds them afresh for each resolution
+it asks for, so that nothing one resolution kept is read in another; the
+JavaScript runner builds them with `keeping()`, outside the `behaviours`
+record, which holds no state. `reentry-at-limit` keeps `B` defaults that each
+`take`, and its last `take` reads the one kept last, which reads the one kept
+before it, so `B` counted reads stand one inside another;
+`reentry-over-limit` keeps one more, so the innermost read is refused and
+answers the empty string, and the `take` that made it, written between
+brackets in the second input's default (the `take` after them where `B` is 0),
+answers `empty`; `reentry-refused-not-recorded` then reads the input kept
+first, which the refused read did not record as produced; and
+`reentry-own-reads-free` has the innermost of `B` counted reads render
+modifiers that read their own defaults `N − 1` levels deep, reads the walk
+makes that count toward no bound. `keep` answers the empty string and `take`
+and `first` the text they read, or `empty` for the empty string, so no result
+is longer than `[empty]` whatever `B` is, and the value they read is the empty
+string, which spends none of the read budget; each renders a default at the depth the message
+writes it, so none of them meets the output, read or nesting limit.
 
 ## Executing a case
 
@@ -413,7 +459,13 @@ defect of its reports; one that claims Core alone cannot carry a defect of a
 level it does not claim; one that states no stand-in for `undefined` runs no
 construction at the conversion limit, so a conversion limit stated one higher
 alters nothing it answers, though one stated one lower is still caught past
-the limit, by the construction that continues. A defect is **unreachable**
+the limit, by the construction that continues. One that states no `reentry`,
+or states `keeps` as `false`, runs no construction of kept reads, so a bound
+stated one higher or one lower alters nothing it answers, and one that states
+a bound of 0 has no bound one lower to state. A bound stated one higher is
+caught by every construction of kept reads, and one stated one lower only by
+`reentry-over-limit` and `reentry-refused-not-recorded`, since at the bound
+either bound lets every read through. A defect is **unreachable**
 where applying it changed nothing the adapter answers, and an audit that calls
 those missed sends a port hunting for holes that are not there. The catalogue
 is most informative against an adapter that claims every level its
@@ -423,7 +475,8 @@ The defects are in `defects.json`, a sentence each, in five families: whether
 an adapter answers at all (it raises, or answers with nothing), what it answers
 for the output (truncated, trimmed), what it answers for the reports (dropped,
 added, reordered, each field altered in turn, or withheld entirely), what it
-states about itself and about a formatting request, and what it answers for the
+states about itself — its limits and its bound on counted reads among them —
+and about a formatting request, and what it answers for the
 tree (a node dropped, a node retyped, a span moved, a name left as the message
 spells it, an escape read the other way, and the unit misdeclared or unnamed).
 Each defect names the `section` it pins, and a defect of the tree names the

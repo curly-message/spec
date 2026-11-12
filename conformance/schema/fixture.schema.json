@@ -87,6 +87,16 @@
             "$ref": "#/$defs/behaviour"
           }
         },
+        "keeping": {
+          "description": "Host-defined modifiers to register (section 11.3) that keep an input and read it in a later call, each the name of a behaviour from the catalogue that keeps; the runner builds them afresh for each resolution.",
+          "type": "object",
+          "propertyNames": {
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/keeping"
+          }
+        },
         "defaults": {
           "description": "The implementation-configured defaults: the bottom formatting layer of section 11.2, grouped by modifier name.",
           "type": "object"
@@ -97,7 +107,7 @@
       }
     },
     "generated": {
-      "description": "A case the runner builds from the limits the adapter declares (section 13); the README states each construction.",
+      "description": "A case the runner builds from the limits the adapter declares, or from the bound it states on counted reads (section 13); the README states each construction.",
       "type": "object",
       "required": [
         "id",
@@ -132,7 +142,11 @@
             "nesting-over-limit-read-spent",
             "nesting-over-limit-unknown-modifier",
             "nesting-over-limit-missing-options",
-            "nesting-chain-over-limit"
+            "nesting-chain-over-limit",
+            "reentry-at-limit",
+            "reentry-over-limit",
+            "reentry-refused-not-recorded",
+            "reentry-own-reads-free"
           ]
         }
       }
@@ -154,6 +168,14 @@
         "props",
         "locale",
         "object"
+      ]
+    },
+    "keeping": {
+      "enum": [
+        "keep",
+        "keep-default",
+        "take",
+        "first"
       ]
     },
     "expected": {
