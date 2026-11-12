@@ -2,7 +2,9 @@ import type { ModifierBehaviour, Report, Resolution, Resolved } from '@curly-mes
 
 // A resolver of the messages the cases of kept reads write, as section 13
 // reads them: what a counted read is, the bound it meets, the refusal of a
-// read whose own production is in progress, and the record a read leaves.
+// read whose own production is in progress, and the record a read leaves,
+// whether a modifier, the conversion of its answer or a resolution asked for
+// inside another makes the read.
 // It reads placeholders of a key, a host-defined modifier and options, and
 // nothing else the format holds; each mutant is one way to read section 13
 // wrongly, for a case to be held to telling it apart.
@@ -16,7 +18,9 @@ export type Mutant =
   | 'refusal-aborts'
   | 'in-progress-read'
   | 'in-progress-raises'
-  | 'own-reads-counted';
+  | 'own-reads-counted'
+  | 'conversion-refusal-fails'
+  | 'in-progress-per-resolution';
 
 type Part = string | Placeholder;
 
@@ -102,96 +106,146 @@ type Reading = {
   late?: () => void;
 };
 
-export const resolver = ({ bound, mutant, late }: Reading) => ({ message, payload, id, modifiers = {} }: Resolution): Resolved => {
-  const reports: Report[] = [];
-  const values = (payload ?? {}) as Record<string, unknown>;
-  // The placeholders whose modifiers are in their calls, the innermost last.
-  const current: Placeholder[] = [];
+// What runs innermost beneath the walk: a modifier's call, or the conversion
+// of its answer.
+type Frame = 'call' | 'conversion';
+
+export const resolver = ({ bound, mutant, late }: Reading) => {
   const limit = mutant === 'unbounded' ? Infinity : bound + (mutant === 'bound-short' ? -1 : mutant === 'bound-long' ? 1 : 0);
+  // The thread of execution's, which a resolution asked for inside another
+  // shares: the counted reads producing their text, and the resolutions in
+  // progress.
   let counted = 0;
+  let active = 0;
 
-  const render = (parts: Part[]): string => parts.map((part) => typeof part === 'string' ? part : resolve(part)).join('');
+  return ({ message, payload, id, modifiers = {} }: Resolution): Resolved => {
+    const reports: Report[] = [];
+    const values = (payload ?? {}) as Record<string, unknown>;
+    // The placeholders whose modifiers are in their calls, the innermost last.
+    const current: Placeholder[] = [];
+    const frames: Frame[] = [];
+    const level = active += 1;
 
-  // A read of a placeholder's default: the walk's where that placeholder's
-  // modifier is current and the default is not being produced, and counted
-  // otherwise.
-  const reader = (placeholder: Placeholder, call: { returned: boolean }) => {
-    const production: { text?: string; producing: number } = { producing: 0 };
+    // A refused read, made by a conversion where the mutant fails it there.
+    const refuse = (refusal: () => string) => {
+      if (mutant === 'conversion-refusal-fails' && frames.at(-1) === 'conversion') throw new Error('A refused read in a conversion.');
 
-    return () => {
-      if (call.returned) late?.();
-
-      if (production.text !== undefined) return production.text;
-
-      if (production.producing && mutant !== 'in-progress-read') {
-        if (mutant === 'in-progress-raises') throw new Error('A read in progress.');
-
-        if (mutant === 'refusal-aborts') throw ABORTED;
-
-        return '';
-      }
-
-      const counts = current.at(-1) !== placeholder || production.producing > 0 || mutant === 'own-reads-counted';
-
-      if (counts && counted + 1 > limit) {
-        if (mutant === 'refusal-raises') throw new Error('A read past the bound.');
-
-        if (mutant === 'refusal-aborts') throw ABORTED;
-
-        if (mutant === 'refusal-recorded') production.text = '';
-
-        return '';
-      }
-
-      counted += counts ? 1 : 0;
-      production.producing += 1;
-
-      const text = render(placeholder.fallback);
-
-      production.producing -= 1;
-      counted -= counts ? 1 : 0;
-      production.text = text;
-
-      return text;
+      return refusal();
     };
-  };
 
-  const resolve = (placeholder: Placeholder): string => {
-    const { key, modifier, options, fallback } = placeholder;
+    const render = (parts: Part[]): string => parts.map((part) => typeof part === 'string' ? part : resolve(part)).join('');
 
-    if (modifier !== undefined && !Object.hasOwn(modifiers, modifier)) {
-      reports.push({ code: 'unknown-modifier', origin: 'message', id });
+    // A read of a placeholder's default: the walk's where that placeholder's
+    // modifier is current and the default is not being produced, and counted
+    // otherwise.
+    const reader = (placeholder: Placeholder, call: { returned: boolean }) => {
+      const production: { text?: string; producing: number; by?: number } = { producing: 0 };
 
-      return render(fallback);
-    }
+      return () => {
+        if (call.returned) late?.();
 
-    if (!Object.hasOwn(values, key)) return render(fallback);
+        if (production.text !== undefined) return production.text;
 
-    if (modifier === undefined) return String(values[key]);
+        const seen = production.producing > 0 && (mutant !== 'in-progress-per-resolution' || production.by === active);
 
-    const call = { returned: false };
-    const behaviour: ModifierBehaviour = modifiers[modifier];
-    let answer: unknown;
-    let failed = false;
+        if (seen && mutant !== 'in-progress-read') {
+          return refuse(() => {
+            if (mutant === 'in-progress-raises') throw new Error('A read in progress.');
 
-    current.push(placeholder);
+            if (mutant === 'refusal-aborts') throw ABORTED;
+
+            return '';
+          });
+        }
+
+        const counts = current.at(-1) !== placeholder || production.producing > 0 || mutant === 'own-reads-counted';
+
+        if (counts && counted + 1 > limit) {
+          return refuse(() => {
+            if (mutant === 'refusal-raises') throw new Error('A read past the bound.');
+
+            if (mutant === 'refusal-aborts') throw ABORTED;
+
+            if (mutant === 'refusal-recorded') production.text = '';
+
+            return '';
+          });
+        }
+
+        counted += counts ? 1 : 0;
+        production.producing += 1;
+        production.by = active;
+
+        try {
+          production.text = render(placeholder.fallback);
+        } finally {
+          production.producing -= 1;
+          counted -= counts ? 1 : 0;
+        }
+
+        return production.text;
+      };
+    };
+
+    const resolve = (placeholder: Placeholder): string => {
+      const { key, modifier, options, fallback } = placeholder;
+
+      if (modifier !== undefined && !Object.hasOwn(modifiers, modifier)) {
+        reports.push({ code: 'unknown-modifier', origin: 'message', id });
+
+        return render(fallback);
+      }
+
+      if (!Object.hasOwn(values, key)) return render(fallback);
+
+      if (modifier === undefined) return String(values[key]);
+
+      const call = { returned: false };
+      const behaviour: ModifierBehaviour = modifiers[modifier];
+      let answer: unknown;
+      let failed = false;
+
+      current.push(placeholder);
+      frames.push('call');
+
+      try {
+        answer = behaviour({ value: String(values[key]), options: options.map((option) => ({ key: option.key, value: render(option.value) })), props: {}, default: reader(placeholder, call) });
+      } catch (error) {
+        if (error === ABORTED) answer = '';
+        else failed = true;
+      } finally {
+        current.pop();
+        frames.pop();
+        call.returned = true;
+      }
+
+      if (failed) {
+        reports.push({ code: 'failed-modifier', origin: 'message', id });
+
+        return render(fallback);
+      }
+
+      // Converting the answer runs host code, and a failure there is contained:
+      // no conversion describes the answer, so the placeholder takes its chain.
+      frames.push('conversion');
+
+      try {
+        return String(answer);
+      } catch (error) {
+        if (error === ABORTED) return '';
+
+        reports.push({ code: 'unserializable-value', origin: 'payload', id });
+
+        return render(fallback);
+      } finally {
+        frames.pop();
+      }
+    };
 
     try {
-      answer = behaviour({ value: String(values[key]), options: options.map((option) => ({ key: option.key, value: render(option.value) })), props: {}, default: reader(placeholder, call) });
-    } catch (error) {
-      if (error === ABORTED) answer = '';
-      else failed = true;
+      return { output: render(parse(String(message))), reports };
     } finally {
-      current.pop();
-      call.returned = true;
+      active = level - 1;
     }
-
-    if (!failed) return String(answer);
-
-    reports.push({ code: 'failed-modifier', origin: 'message', id });
-
-    return render(fallback);
   };
-
-  return { output: render(parse(String(message))), reports };
 };

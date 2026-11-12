@@ -242,11 +242,11 @@ const realizations: Record<Defect, (adapter: Adapter, run?: Run) => Mutation> = 
   // Every construction built from the bound then asks for one read more than
   // the implementation lets stand: at the bound it pins what that read
   // answers, and past it which `take` the refusal reaches.
-  'reentry-limit-overstated': reentering(1, ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free']),
+  'reentry-limit-overstated': reentering(1, ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion']),
 
   // Only the constructions past the bound then let one read through that the
   // case expects refused; at it, either bound lets every read through.
-  'reentry-limit-understated': reentering(-1, ['reentry-over-limit', 'reentry-refused-not-recorded']),
+  'reentry-limit-understated': reentering(-1, ['reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-over-limit-by-a-conversion']),
 
   'claims-negative-reentry': (adapter) => claiming(adapter, { reentry: -1 }),
 

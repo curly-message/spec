@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { behaviours, keeping, type ModifierInput } from '@curly-message/conformance';
+import { behaviours, keeping, type ModifierInput, type Resolution, type Resolved } from '@curly-message/conformance';
 
 const input = (over: Partial<ModifierInput> = {}): ModifierInput => ({ value: 'v', options: [], props: {}, default: () => 'D', ...over });
 
@@ -62,8 +62,13 @@ describe('behaviours', () => {
 });
 
 describe('keeping', () => {
+  // An adapter no behaviour but `nest` asks.
+  const unasked = { resolve: () => {
+    throw new Error('Only nest asks the adapter.');
+  } };
+
   it('keep keeps the default unread and answers the empty string, and keep-default keeps it and answers what it reads', () => {
-    const { keep, 'keep-default': keepDefault, first } = keeping();
+    const { keep, 'keep-default': keepDefault, first } = keeping(unasked);
     const read = vi.fn(() => 'D');
 
     expect(keep(input({ default: read }))).toBe('');
@@ -74,7 +79,7 @@ describe('keeping', () => {
   });
 
   it('take claims the input kept last that no take claimed, before it reads it, and answers none where nothing is left', () => {
-    const { keep, take } = keeping();
+    const { keep, take } = keeping(unasked);
     const order: string[] = [];
 
     keep(input({ default: () => `<${String(take(input()))}>` }));
@@ -90,7 +95,7 @@ describe('keeping', () => {
   });
 
   it('first reads the input kept first without claiming it, and answers none where nothing is kept', () => {
-    const { keep, take, first } = keeping();
+    const { keep, take, first } = keeping(unasked);
 
     expect(first(input())).toBe('none');
 
@@ -103,7 +108,7 @@ describe('keeping', () => {
   });
 
   it('take and first answer empty where the read they make answers the empty string', () => {
-    const { keep, take, first } = keeping();
+    const { keep, take, first } = keeping(unasked);
 
     keep(input({ default: () => '' }));
 
@@ -112,13 +117,46 @@ describe('keeping', () => {
   });
 
   it('keeps what one call kept apart from what another kept, and stays out of the catalogue of behaviours', () => {
-    const one = keeping();
-    const another = keeping();
+    const one = keeping(unasked);
+    const another = keeping(unasked);
 
     one.keep(input({ default: () => 'A' }));
 
     expect(another.first(input())).toBe('none');
     expect(another.keep).not.toBe(one.keep);
     expect(Object.keys(behaviours).filter((name) => Object.hasOwn(one, name))).toEqual([]);
+  });
+
+  it('taking answers a value whose conversion takes, once each time it is converted, and reads nothing in its call', () => {
+    const { keep, taking } = keeping(unasked);
+    const read = vi.fn(() => '');
+
+    keep(input({ default: read }));
+
+    const answer = taking(input());
+
+    expect(read).not.toHaveBeenCalled();
+    expect(typeof answer).toBe('object');
+    expect(Object.getPrototypeOf(answer)).not.toBe(Object.prototype);
+    expect(String(answer)).toBe('empty');
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(String(answer)).toBe('none');
+  });
+
+  it('nest answers the output of a resolution of a take it asks the adapter for, handing it the same behaviours', () => {
+    const resolve = vi.fn(({ modifiers }: Resolution) => ({ output: String((modifiers as Record<string, (input: ModifierInput) => unknown>).take(input())) }));
+    const kept = keeping({ resolve });
+
+    kept.keep(input({ default: () => 'A' }));
+
+    expect(kept.nest(input())).toBe('A');
+    expect(resolve).toHaveBeenCalledWith({ message: '{{x:take; default:F}}', payload: { x: '' }, modifiers: kept });
+    expect(kept.nest(input())).toBe('none');
+  });
+
+  it('nest raises where the resolution it asks for raises or answers no output', () => {
+    expect(() => keeping(unasked).nest(input())).toThrow('Only nest asks the adapter.');
+    expect(() => keeping({ resolve: () => undefined as unknown as Resolved }).nest(input())).toThrow('The resolution nest asked for answered no output.');
+    expect(() => keeping({ resolve: () => ({ output: 1 }) as unknown as Resolved }).nest(input())).toThrow('The resolution nest asked for answered no output.');
   });
 });

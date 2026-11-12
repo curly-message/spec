@@ -268,7 +268,7 @@ describe('generated cases', () => {
   const TAKE = '{{x:take; default:F}}';
   const keeps = (count: number, body = TAKE) => `{{x:keep; default:${body}}}`.repeat(count);
 
-  it('hands each construction of kept reads the behaviours that keep an input, afresh for each resolution, over a value that reads nothing', () => {
+  it('hands each construction of kept reads the behaviours over a list of what was kept, afresh for each resolution, over a value that reads nothing', () => {
     const { input } = kept('reentry-at-limit', 'none');
     const again = kept('reentry-at-limit', 'none').input;
 
@@ -303,6 +303,21 @@ describe('generated cases', () => {
     expect(kept('reentry-over-limit', 'empty', 0)).toMatchObject({ input: { message: `${keeps(1)}${TAKE}` }, outcome: { ok: true } });
   });
 
+  it('reentry-over-limit-by-a-conversion makes the read past the bound in a conversion, and expects it refused, failing nothing', () => {
+    const { input, outcome } = kept('reentry-over-limit-by-a-conversion', '[empty]');
+    const TAKING = '{{x:taking; default:F}}';
+
+    expect(input.message).toBe(`${keeps(1)}${keeps(1, `[${TAKING}]`)}${keeps(1)}${TAKE}`);
+    expect(Object.keys(input.modifiers ?? {})).toEqual(['read', 'keep', 'take', 'first', 'taking']);
+    expect(outcome).toEqual({ ok: true });
+    // An implementation that lets the conversion's read through, one whose
+    // refusal fails the conversion, and one whose refusal ends it.
+    expect(kept('reentry-over-limit-by-a-conversion', '[none]').outcome).toMatchObject({ ok: false, reason: 'The output differs.', expected: '[empty]' });
+    expect(build('reentry-over-limit-by-a-conversion', () => ({ output: '[F]', reports: [{ code: 'unserializable-value', origin: 'payload', id: 'limits' }] }), limits, 2).outcome).toMatchObject({ ok: false, reason: 'The output differs.', expected: '[empty]' });
+    expect(kept('reentry-over-limit-by-a-conversion', '[]').outcome).toMatchObject({ ok: false, reason: 'The output differs.', expected: '[empty]' });
+    expect(kept('reentry-over-limit-by-a-conversion', 'empty', 0)).toMatchObject({ input: { message: `${keeps(1)}${TAKING}` }, outcome: { ok: true } });
+  });
+
   it('reentry-refused-not-recorded reads the refused input again, and expects it produced', () => {
     const { input, outcome } = kept('reentry-refused-not-recorded', '[empty]none');
 
@@ -325,7 +340,7 @@ describe('generated cases', () => {
   });
 
   it('expects of the constructions of kept reads an output that does not grow with the bound, over a value that reads nothing', () => {
-    const expected = { 'reentry-at-limit': 'none', 'reentry-over-limit': '[empty]', 'reentry-refused-not-recorded': '[empty]none', 'reentry-own-reads-free': 'z' } as const;
+    const expected = { 'reentry-at-limit': 'none', 'reentry-over-limit': '[empty]', 'reentry-refused-not-recorded': '[empty]none', 'reentry-own-reads-free': 'z', 'reentry-over-limit-by-a-conversion': '[empty]' } as const;
 
     for (const [generate, output] of Object.entries(expected) as [Generator, string][]) {
       expect(kept(generate, output, 40000)).toMatchObject({ input: { payload: { x: '' } }, outcome: { ok: true } });
@@ -335,7 +350,7 @@ describe('generated cases', () => {
   // An implementation that reads section 13 as the cases do passes every
   // construction at every bound, and each way to read it wrongly fails one.
   const reading = (bound: number, mutant?: Mutant) => (generate: Generator) => build(generate, resolver({ bound, mutant }), { ...limits, nesting: 4 }, bound).outcome.ok;
-  const CONSTRUCTIONS: Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free'];
+  const CONSTRUCTIONS: Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion'];
 
   it('passes an implementation that keeps the bound it states at every construction of kept reads', () => {
     for (const bound of [0, 1, 2, 3]) expect(CONSTRUCTIONS.filter((generate) => bound > 0 || generate !== 'reentry-own-reads-free').map(reading(bound))).toEqual(CONSTRUCTIONS.filter((generate) => bound > 0 || generate !== 'reentry-own-reads-free').map(() => true));
@@ -347,17 +362,21 @@ describe('generated cases', () => {
 
     // A bound kept one lower than stated, or one higher, or none.
     expect(failing('bound-short')).toEqual(each(...CONSTRUCTIONS));
-    expect(failing('bound-long')).toEqual(each('reentry-over-limit', 'reentry-refused-not-recorded'));
-    expect(failing('unbounded')).toEqual(each('reentry-over-limit', 'reentry-refused-not-recorded'));
+    expect(failing('bound-long')).toEqual(each('reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-over-limit-by-a-conversion'));
+    expect(failing('unbounded')).toEqual(each('reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-over-limit-by-a-conversion'));
     // A refused read recorded, one that fails the modifier that made it, and
     // one that ends that modifier's call with nothing reported.
     expect(failing('refusal-recorded')).toEqual(each('reentry-refused-not-recorded'));
-    expect(failing('refusal-raises')).toEqual(each('reentry-over-limit', 'reentry-refused-not-recorded'));
-    expect(failing('refusal-aborts')).toEqual(each('reentry-over-limit', 'reentry-refused-not-recorded'));
-    expect(['reentry-over-limit', 'reentry-refused-not-recorded'].map((generate) => reading(0, 'refusal-aborts')(generate as Generator))).toEqual([false, false]);
+    expect(failing('refusal-raises')).toEqual(each('reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-over-limit-by-a-conversion'));
+    expect(failing('refusal-aborts')).toEqual(each('reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-over-limit-by-a-conversion'));
+    expect(['reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-over-limit-by-a-conversion'].map((generate) => reading(0, 'refusal-aborts')(generate as Generator))).toEqual([false, false, false]);
+    // A refused read failed where a conversion makes it, at every bound.
+    expect(failing('conversion-refusal-fails')).toEqual(each('reentry-over-limit-by-a-conversion'));
+    expect(reading(0, 'conversion-refusal-fails')('reentry-over-limit-by-a-conversion')).toBe(false);
     // Own reads counted toward the bound.
     expect(failing('own-reads-counted')).toEqual(each('reentry-own-reads-free'));
     // A read of a default in production is the written case's to pin.
     expect(failing('in-progress-read')).toEqual(each());
+    expect(failing('in-progress-per-resolution')).toEqual(each());
   });
 });

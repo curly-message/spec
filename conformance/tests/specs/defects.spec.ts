@@ -33,6 +33,9 @@ const CASES: Record<string, Case> = {
   'c.over': { id: 'c/over', description: 'Pins the declared bound on counted reads from past it.', generate: 'reentry-over-limit' },
   'c.refused': { id: 'c/refused', description: 'Pins that a refused read is not recorded.', generate: 'reentry-refused-not-recorded' },
   'c.own': { id: 'c/own', description: 'Pins that own reads count toward no bound.', generate: 'reentry-own-reads-free' },
+  'c.conversion': { id: 'c/conversion', description: 'Pins the declared bound on counted reads from past it, by a conversion.', generate: 'reentry-over-limit-by-a-conversion' },
+  'c.converted': { id: 'c/converted', description: 'Pins that a conversion\'s read of a default in production is refused.', message: '{{x:keep-default; default:<{{x:taking; default:F}}>}}', payload: { x: '' }, keeping: { 'keep-default': 'keep-default', taking: 'taking' }, expected: { output: '<empty>' } },
+  'c.nested': { id: 'c/nested', description: 'Pins that a nested resolution\'s read of a default in production is refused.', message: '{{x:keep-default; default:<{{x:nest; default:F}}>}}', payload: { x: '' }, keeping: { 'keep-default': 'keep-default', nest: 'nest' }, expected: { output: '<empty>' } },
 };
 
 // What the implementation behind the adapter produced for each, keyed by the
@@ -238,7 +241,7 @@ describe('audit', () => {
 
       return { overstated, understated, negative };
     };
-    const ALL: Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free'];
+    const ALL: Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion'];
     // An implementation that keeps a bound of 0, as section 13 lets it.
     const none = conforming({ reentry: 0, resolve: (input) => isKept(input.message) ? kept(0)(input) : answer(input) });
 
@@ -246,6 +249,7 @@ describe('audit', () => {
     expect(reentry(only('reentry-over-limit'))).toEqual({ overstated: 'caught', understated: 'caught', negative: 'caught' });
     expect(reentry(only('reentry-refused-not-recorded'))).toEqual({ overstated: 'caught', understated: 'caught', negative: 'caught' });
     expect(reentry(only('reentry-own-reads-free'))).toEqual({ overstated: 'caught', understated: 'unreachable', negative: 'caught' });
+    expect(reentry(only('reentry-over-limit-by-a-conversion'))).toEqual({ overstated: 'caught', understated: 'caught', negative: 'caught' });
     expect(reentry(only(...ALL), none)).toEqual({ overstated: 'caught', understated: 'unreachable', negative: 'caught' });
     expect(reentry(only(...ALL), conforming({ reentry: undefined }))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
     expect(reentry(only(...ALL), conforming({ keeps: false }))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });

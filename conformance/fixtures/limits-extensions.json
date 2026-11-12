@@ -40,6 +40,36 @@
       }
     },
     {
+      "id": "limits-extensions/kept-default-read-by-a-conversion",
+      "description": "A read of a default whose own production is in progress, made by the conversion of a modifier's answer, is refused at once: the conversion is handed the empty string and goes on, and nothing fails.",
+      "message": "{{x:keep-default; default:<{{x:taking; default:F}}>}}",
+      "payload": {
+        "x": ""
+      },
+      "keeping": {
+        "keep-default": "keep-default",
+        "taking": "taking"
+      },
+      "expected": {
+        "output": "<empty>"
+      }
+    },
+    {
+      "id": "limits-extensions/kept-default-read-in-a-nested-resolution",
+      "description": "A read of a default whose own production is in progress, made in a resolution a modifier asks for on the same thread of execution, is refused at once: it answers the empty string, and nothing fails in either resolution.",
+      "message": "{{x:keep-default; default:<{{x:nest; default:F}}>}}",
+      "payload": {
+        "x": ""
+      },
+      "keeping": {
+        "keep-default": "keep-default",
+        "nest": "nest"
+      },
+      "expected": {
+        "output": "<empty>"
+      }
+    },
+    {
       "id": "limits-extensions/reentry-at-limit",
       "description": "As many counted reads of kept inputs as the bound lets stand at once each produce their text.",
       "generate": "reentry-at-limit"
@@ -48,6 +78,11 @@
       "id": "limits-extensions/reentry-over-limit",
       "description": "A counted read past the bound is refused: it answers the empty string and fails nothing.",
       "generate": "reentry-over-limit"
+    },
+    {
+      "id": "limits-extensions/reentry-over-limit-by-a-conversion",
+      "description": "A counted read past the bound made by the conversion of a modifier's answer is refused: the conversion is handed the empty string and goes on, and nothing fails.",
+      "generate": "reentry-over-limit-by-a-conversion"
     },
     {
       "id": "limits-extensions/reentry-refused-not-recorded",

@@ -142,12 +142,13 @@ describe('the shipped set', () => {
   it('writes its generated cases as the runner builds them', () => {
     const generated = resolutions.filter((entry): entry is { name: string; c: Extract<Case, { generate: string }> } => 'generate' in entry.c);
 
-    expect(generated.filter(({ c }) => !['output-at-limit', 'output-over-limit', 'output-over-limit-continues', 'read-at-limit', 'read-over-limit', 'conversion-at-limit', 'conversion-over-limit', 'conversion-over-limit-continues', 'nesting-at-limit', 'nesting-over-limit', 'nesting-over-limit-converts', 'nesting-over-limit-reads', 'nesting-over-limit-read-spent', 'nesting-over-limit-unknown-modifier', 'nesting-over-limit-missing-options', 'nesting-chain-over-limit', 'reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free'].includes(c.generate))).toEqual([]);
+    expect(generated.filter(({ c }) => !['output-at-limit', 'output-over-limit', 'output-over-limit-continues', 'read-at-limit', 'read-over-limit', 'conversion-at-limit', 'conversion-over-limit', 'conversion-over-limit-continues', 'nesting-at-limit', 'nesting-over-limit', 'nesting-over-limit-converts', 'nesting-over-limit-reads', 'nesting-over-limit-read-spent', 'nesting-over-limit-unknown-modifier', 'nesting-over-limit-missing-options', 'nesting-chain-over-limit', 'reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion'].includes(c.generate))).toEqual([]);
   });
 
-  // The written cases that register a behaviour that keeps, each through an
-  // implementation that reads section 13 as tests/specs/kept.ts does, which
-  // calls `late` where a modifier's input is read after its call returned.
+  // The written cases that register a behaviour over a list of what was kept,
+  // each through an implementation that reads section 13 as tests/specs/kept.ts
+  // does, which calls `late` where a modifier's input is read after its call
+  // returned, whether a modifier, a conversion or a nested resolution reads it.
   const keepers = set.flatMap(({ name, file }) => file.kind === 'tree' ? [] : file.cases.filter((c) => 'keeping' in c && c.keeping).map((c) => ({ name, file: { ...file, cases: [c] } })));
   const through = (fixture: Fixture, over: Partial<Adapter> = {}, mutant?: Mutant) => {
     let late = false;
@@ -175,12 +176,17 @@ describe('the shipped set', () => {
     }
   });
 
-  it('pins that a read of a default in production is refused at once, and fails nothing', () => {
+  it('pins that a read of a default in production is refused at once, and fails nothing, whoever makes it', () => {
     const failing = (mutant: Mutant) => keepers.filter((fixture) => through(fixture, {}, mutant).outcomes.some(({ ok }) => !ok)).map(({ file }) => file.cases[0].id);
+    const every = ['limits-extensions/kept-default-read-while-produced', 'limits-extensions/kept-default-read-by-a-conversion', 'limits-extensions/kept-default-read-in-a-nested-resolution'];
 
-    expect(failing('in-progress-read')).toEqual(['limits-extensions/kept-default-read-while-produced']);
-    expect(failing('in-progress-raises')).toEqual(['limits-extensions/kept-default-read-while-produced']);
-    expect(failing('refusal-aborts')).toEqual(['limits-extensions/kept-default-read-while-produced']);
+    expect(failing('in-progress-read')).toEqual(every);
+    expect(failing('in-progress-raises')).toEqual(every);
+    expect(failing('refusal-aborts')).toEqual(every);
+    // A refused read failed where a conversion makes it, and a production in
+    // progress seen only by the resolution that started it.
+    expect(failing('conversion-refusal-fails')).toEqual(['limits-extensions/kept-default-read-by-a-conversion']);
+    expect(failing('in-progress-per-resolution')).toEqual(['limits-extensions/kept-default-read-in-a-nested-resolution']);
   });
 
   // A defect of what an adapter cannot express is caught only where the set

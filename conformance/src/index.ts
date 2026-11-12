@@ -128,20 +128,31 @@ const unexpressible = (c: Case, adapter: Adapter) => {
 // returned: `keep` reads nothing it keeps, so only a later modifier does, and
 // `first` reads only what an earlier one kept. The set holds to it: a written
 // case that registers neither reads a kept input, where it reads one, while
-// the modifier that kept it is current.
+// the call of the modifier that kept it is in progress, the read a `taking`'s
+// conversion or a `nest`'s resolution makes included.
 const LATER = ['keep', 'first'];
+
+const KEEPS = 'The adapter states that a modifier cannot keep an input past its call.';
 
 // A case built from the bound on counted reads, or one that reads a kept
 // input after the modifier that kept it returned, measures what the adapter
-// stated it does not do, and is left out the way an unclaimed level is.
+// stated it does not do, and is left out the way an unclaimed level is. So is
+// a resolution asked for inside another at a bound of 0, which an
+// implementation whose bound counts resolutions refuses.
 const kept = (c: Case, adapter: Adapter) => {
-  const later = 'generate' in c ? COUNTED.includes(c.generate) : Object.values(c.keeping ?? {}).some((behaviour) => LATER.includes(behaviour));
+  if (!('generate' in c)) {
+    const registered = Object.values(c.keeping ?? {});
 
-  if (!later) return undefined;
+    if (adapter.keeps === false && registered.some((behaviour) => LATER.includes(behaviour))) return KEEPS;
 
-  if (adapter.keeps === false) return 'The adapter states that a modifier cannot keep an input past its call.';
+    if (adapter.reentry === 0 && registered.includes('nest')) return 'The adapter states a bound of 0 on counted reads, so the resolution a modifier asks for inside another may be refused.';
 
-  if (!('generate' in c)) return undefined;
+    return undefined;
+  }
+
+  if (!COUNTED.includes(c.generate)) return undefined;
+
+  if (adapter.keeps === false) return KEEPS;
 
   if (adapter.reentry === undefined) return 'The adapter states no bound on counted reads.';
 

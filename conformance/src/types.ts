@@ -53,11 +53,15 @@ export type ModifierBehaviour = (input: ModifierInput) => unknown;
 export type Behaviour = 'upper' | 'echo' | 'empty' | 'nothing' | 'raise' | 'default' | 'options' | 'props' | 'locale' | 'object';
 
 /**
- * The names of the catalogue's behaviours that keep an input (section 11.3)
- * and read it in a later call; README.md states each. They share what was kept
- * for the length of one resolution, so `keeping` builds them afresh for each.
+ * The names of the catalogue's behaviours over one list of what host-defined
+ * modifiers kept (section 11.3): the ones that keep an input, the ones that
+ * read it in a later call, `taking`, whose answer reads it as it is
+ * converted, and `nest`, which asks for a resolution that reads it; README.md
+ * states each. They share that list with the resolution they are registered
+ * for and with the one a `nest` among them asks for while it is in progress,
+ * so `keeping` builds them afresh for each resolution a runner asks for.
  */
-export type Keeping = 'keep' | 'keep-default' | 'take' | 'first';
+export type Keeping = 'keep' | 'keep-default' | 'take' | 'first' | 'taking' | 'nest';
 
 /**
  * One resolution's inputs, decoded into host values: the four inputs of
@@ -152,7 +156,9 @@ export type Adapter = {
    * not counted. An implementation whose documented bound counts that
    * resolution states one less. An adapter that leaves it out states that the
    * implementation keeps no such bound, and the cases built from it are left
-   * out.
+   * out. At 0 the case whose modifier asks for a resolution while one is in
+   * progress is left out as well: an implementation whose bound counts
+   * resolutions and is documented as 1 states 0, and refuses that one.
    */
   reentry?: number;
   /**
@@ -163,6 +169,12 @@ export type Adapter = {
    * left out.
    */
   keeps?: boolean;
+  /**
+   * Resolves one case's inputs and answers at once. It is re-entrant: the
+   * `nest` this runner hands it calls it again on the same thread of
+   * execution while a call to it is in progress, and each call answers its
+   * own resolution, with its own reports.
+   */
   resolve: (input: Resolution) => Resolved;
   /**
    * The concrete syntax tree, where the implementation offers one (CST.md).
@@ -255,17 +267,18 @@ export type ConcreteCase = {
   messageId?: unknown;
   modifiers?: Record<string, Behaviour>;
   /**
-   * Host-defined modifiers to register (section 11.3) that keep an input and
-   * read it in a later call, each the name of a behaviour that keeps. They
-   * share one list of what was kept for the resolution, so a runner builds
-   * them afresh for each, with `keeping`.
+   * Host-defined modifiers to register (section 11.3) over one list of what
+   * was kept, each the name of one of those behaviours. They share it with
+   * the resolution and with the one a `nest` among them asks for while it is
+   * in progress, so a runner builds them afresh for each resolution it asks
+   * for, with `keeping`.
    */
   keeping?: Record<string, Keeping>;
   defaults?: Record<string, unknown>;
   expected: Expected;
 };
 
-export type Generator = 'output-at-limit' | 'output-over-limit' | 'output-over-limit-continues' | 'read-at-limit' | 'read-over-limit' | 'conversion-at-limit' | 'conversion-over-limit' | 'conversion-over-limit-continues' | 'nesting-at-limit' | 'nesting-over-limit' | 'nesting-over-limit-converts' | 'nesting-over-limit-reads' | 'nesting-over-limit-read-spent' | 'nesting-over-limit-unknown-modifier' | 'nesting-over-limit-missing-options' | 'nesting-chain-over-limit' | 'reentry-at-limit' | 'reentry-over-limit' | 'reentry-refused-not-recorded' | 'reentry-own-reads-free';
+export type Generator = 'output-at-limit' | 'output-over-limit' | 'output-over-limit-continues' | 'read-at-limit' | 'read-over-limit' | 'conversion-at-limit' | 'conversion-over-limit' | 'conversion-over-limit-continues' | 'nesting-at-limit' | 'nesting-over-limit' | 'nesting-over-limit-converts' | 'nesting-over-limit-reads' | 'nesting-over-limit-read-spent' | 'nesting-over-limit-unknown-modifier' | 'nesting-over-limit-missing-options' | 'nesting-chain-over-limit' | 'reentry-at-limit' | 'reentry-over-limit' | 'reentry-refused-not-recorded' | 'reentry-own-reads-free' | 'reentry-over-limit-by-a-conversion';
 
 /** A case the runner builds from the adapter's limits, or from the bound it states on counted reads. */
 export type GeneratedCase = {

@@ -42,12 +42,14 @@ export const format = ({ api, options, input }: FormatRequest, locale?: string):
   }
 };
 
-// The behaviours that keep an input share one list for the resolution they are
-// registered for, so each registration builds them afresh.
-const register = (modifiers: ConcreteCase['modifiers'], keepers: ConcreteCase['keeping']) => {
+// The behaviours over a list of what was kept share one for the resolution
+// they are registered for, so each registration builds them afresh, and a
+// `nest` among them asks the adapter the case is run against, so that in an
+// audit it asks the adapter the defect was applied to.
+const register = (modifiers: ConcreteCase['modifiers'], keepers: ConcreteCase['keeping'], adapter: Adapter) => {
   if (!modifiers && !keepers) return undefined;
 
-  const kept = keeping();
+  const kept = keeping(adapter);
 
   return Object.fromEntries([
     ...Object.entries(modifiers ?? {}).map(([name, behaviour]) => [name, behaviours[behaviour]]),
@@ -80,7 +82,7 @@ const output = (c: ConcreteCase) => {
   throw new Error(`The case ${c.id} expects neither an output nor a format.`);
 };
 
-const concrete = (c: ConcreteCase): Prepared => ({
+const concrete = (c: ConcreteCase, adapter: Adapter): Prepared => ({
   input: {
     message: decode(c.message),
     payload: decode(c.payload),
@@ -88,7 +90,7 @@ const concrete = (c: ConcreteCase): Prepared => ({
     locale: c.locale,
     id: decode(c.messageId),
     defaults: decode(c.defaults),
-    modifiers: register(c.modifiers, c.keeping),
+    modifiers: register(c.modifiers, c.keeping, adapter),
   },
   expected: { output: output(c), format: c.expected.format, categories: c.expected.categories, reports: c.expected.reports ?? [] },
 });
@@ -148,11 +150,15 @@ const limit = (code: 'nesting-limit' | 'output-limit' | 'read-limit', origin: Ex
 
 // The constructions built from the bound the adapter states on counted reads
 // (section 13) rather than from its limits.
-export const COUNTED: readonly Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free'];
+export const COUNTED: readonly Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion'];
 
 // A placeholder that reads the input kept last that no `take` has claimed.
 // Its inline default stands for a `take` that failed, which no case expects.
 const TAKE = '{{x:take; default:F}}';
+
+// A placeholder whose modifier answers a value that reads the input kept last
+// that no `take` has claimed, as it is converted.
+const TAKING = '{{x:taking; default:F}}';
 
 // Placeholders that each keep their default unread, the default taking the
 // input kept before it. A `take` after them claims the last one kept and reads
@@ -163,22 +169,23 @@ const TAKE = '{{x:take; default:F}}';
 // budget.
 const keeps = (count: number, body = TAKE) => `{{x:keep; default:${body}}}`.repeat(count);
 
-// One input more than the bound lets be read at once. The `take` that makes
-// the read past it is the one in the second input's default, which writes it
-// between brackets, so what that `take` answers reaches the output as it
-// answered it; where the bound is 0 it is the `take` after them.
-const refusing = (bound: number) => bound ? `${keeps(1)}${keeps(1, `[${TAKE}]`)}${keeps(bound - 1)}${TAKE}` : `${keeps(1)}${TAKE}`;
+// One input more than the bound lets be read at once. The read past it is
+// made by the placeholder in the second input's default, written between
+// brackets, so what it answers reaches the output as it answered it; where the
+// bound is 0 it is the placeholder after them. It is a `take`, or one whose
+// answer's conversion makes the read.
+const refusing = (bound: number, reader = TAKE) => bound ? `${keeps(1)}${keeps(1, `[${reader}]`)}${keeps(bound - 1)}${TAKE}` : `${keeps(1)}${reader}`;
 
 // The stated number of levels of own reads: each placeholder's modifier reads
 // its own default, which holds the next, and the innermost answers `z`.
 const own = (levels: number) => `${'{{x:read; default:'.repeat(levels)}z${'}}'.repeat(levels)}`;
 
-const reentering = (message: string, output: string): Prepared => ({
-  input: { message, payload: { x: '' }, id: ID, modifiers: register({ read: 'default' }, { keep: 'keep', take: 'take', first: 'first' }) },
+const reentering = (adapter: Adapter, message: string, output: string, keepers: ConcreteCase['keeping'] = { keep: 'keep', take: 'take', first: 'first' }): Prepared => ({
+  input: { message, payload: { x: '' }, id: ID, modifiers: register({ read: 'default' }, keepers, adapter) },
   expected: { output, reports: [] },
 });
 
-const generators: Record<Generator, (limits: Limits, reentry: number) => Prepared> = {
+const generators: Record<Generator, (limits: Limits, reentry: number, adapter: Adapter) => Prepared> = {
   'output-at-limit': ({ output: length }) => ({
     input: { message: writes(length), payload: { v: 'a' }, id: ID },
     expected: { output: 'x'.repeat(length), reports: [] },
@@ -269,18 +276,21 @@ const generators: Record<Generator, (limits: Limits, reentry: number) => Prepare
   }),
   // As many reads as the bound lets stand at once: the innermost `take` finds
   // nothing left to claim.
-  'reentry-at-limit': (_, bound) => reentering(`${keeps(bound)}${TAKE}`, 'none'),
+  'reentry-at-limit': (_, bound, adapter) => reentering(adapter, `${keeps(bound)}${TAKE}`, 'none'),
   // One read more: it is refused, produces nothing and answers the empty
   // string, and the `take` that made it goes on with it.
-  'reentry-over-limit': (_, bound) => reentering(refusing(bound), bound ? '[empty]' : 'empty'),
+  'reentry-over-limit': (_, bound, adapter) => reentering(adapter, refusing(bound), bound ? '[empty]' : 'empty'),
   // The refused read was not recorded, so a read of the same input afterwards,
   // with no other read in progress, produces it: its `take` finds every input
   // claimed. Where the bound is 0, that read is refused as well.
-  'reentry-refused-not-recorded': (_, bound) => reentering(`${refusing(bound)}{{x:first; default:F}}`, bound ? '[empty]none' : 'emptyempty'),
+  'reentry-refused-not-recorded': (_, bound, adapter) => reentering(adapter, `${refusing(bound)}{{x:first; default:F}}`, bound ? '[empty]none' : 'emptyempty'),
   // The innermost of as many counted reads as the bound lets stand produces
   // a stack of own reads as deep as the nesting limit leaves room for: they
   // are the walk's and count toward no bound, so every one of them resolves.
-  'reentry-own-reads-free': ({ nesting }, bound) => reentering(`${keeps(1, own(Math.max(nesting - 1, 1)))}${keeps(bound - 1)}${TAKE}`, 'z'),
+  'reentry-own-reads-free': ({ nesting }, bound, adapter) => reentering(adapter, `${keeps(1, own(Math.max(nesting - 1, 1)))}${keeps(bound - 1)}${TAKE}`, 'z'),
+  // One read more, made by the conversion of an answer rather than by a
+  // modifier: it is refused, and the conversion goes on with the empty string.
+  'reentry-over-limit-by-a-conversion': (_, bound, adapter) => reentering(adapter, refusing(bound, TAKING), bound ? '[empty]' : 'empty', { keep: 'keep', take: 'take', first: 'first', taking: 'taking' }),
 };
 
 // Property order is the host's, so a request is compared by its entries and
@@ -428,7 +438,7 @@ const execute = (adapter: Adapter, { input, expected }: Prepared): Outcome => {
 };
 
 /** Runs a written-out case: decodes its inputs, computes its expectation, and compares. */
-export const executeConcrete = (adapter: Adapter, c: ConcreteCase) => execute(adapter, concrete(c));
+export const executeConcrete = (adapter: Adapter, c: ConcreteCase) => execute(adapter, concrete(c, adapter));
 
 /** Runs a generated case: builds it from the adapter's limits, or from the bound it states on counted reads, and compares. */
 export const executeGenerated = (adapter: Adapter, c: GeneratedCase) => {
@@ -436,5 +446,5 @@ export const executeGenerated = (adapter: Adapter, c: GeneratedCase) => {
 
   if (COUNTED.includes(c.generate) && adapter.reentry === undefined) throw new Error(`The case ${c.id} is built from a bound on counted reads the adapter does not state.`);
 
-  return execute(adapter, generators[c.generate](adapter.limits, adapter.reentry ?? 0));
+  return execute(adapter, generators[c.generate](adapter.limits, adapter.reentry ?? 0, adapter));
 };
