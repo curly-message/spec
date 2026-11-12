@@ -128,6 +128,24 @@
       "expects": "fail"
     },
     {
+      "id": "reentry-limit-overstated",
+      "description": "States a bound on counted reads one higher than the one it keeps.",
+      "section": "13",
+      "expects": "fail"
+    },
+    {
+      "id": "reentry-limit-understated",
+      "description": "States a bound on counted reads one lower than the one it keeps.",
+      "section": "13",
+      "expects": "fail"
+    },
+    {
+      "id": "claims-negative-reentry",
+      "description": "States a bound on counted reads below 0.",
+      "section": "13",
+      "expects": "error"
+    },
+    {
       "id": "tree-unoffered",
       "description": "Offers no tree, though the implementation produces one.",
       "document": "CST.md",

@@ -1,4 +1,4 @@
-import { behaviours } from './behaviours';
+import { behaviours, keeping } from './behaviours';
 import { decode } from './decode';
 import type { Adapter, Category, ConcreteCase, ExpectedReport, ExposedRequest, Failure, FormatApi, FormatRequest, GeneratedCase, Generator, Limits, Outcome, Report, Resolution, Resolved, Unexpressible } from './types';
 
@@ -42,7 +42,18 @@ export const format = ({ api, options, input }: FormatRequest, locale?: string):
   }
 };
 
-const register = (modifiers: ConcreteCase['modifiers']) => modifiers && Object.fromEntries(Object.entries(modifiers).map(([name, behaviour]) => [name, behaviours[behaviour]]));
+// The behaviours that keep an input share one list for the resolution they are
+// registered for, so each registration builds them afresh.
+const register = (modifiers: ConcreteCase['modifiers'], keepers: ConcreteCase['keeping']) => {
+  if (!modifiers && !keepers) return undefined;
+
+  const kept = keeping();
+
+  return Object.fromEntries([
+    ...Object.entries(modifiers ?? {}).map(([name, behaviour]) => [name, behaviours[behaviour]]),
+    ...Object.entries(keepers ?? {}).map(([name, behaviour]) => [name, kept[behaviour]]),
+  ]);
+};
 
 const CATEGORIES: readonly Category[] = ['zero', 'one', 'two', 'few', 'many', 'other'];
 
@@ -77,7 +88,7 @@ const concrete = (c: ConcreteCase): Prepared => ({
     locale: c.locale,
     id: decode(c.messageId),
     defaults: decode(c.defaults),
-    modifiers: register(c.modifiers),
+    modifiers: register(c.modifiers, c.keeping),
   },
   expected: { output: output(c), format: c.expected.format, categories: c.expected.categories, reports: c.expected.reports ?? [] },
 });
@@ -135,7 +146,39 @@ const chain = (levels: number) => `${'{{v; default:'.repeat(levels)}x${'}}'.repe
 
 const limit = (code: 'nesting-limit' | 'output-limit' | 'read-limit', origin: ExpectedReport['origin'], declared: number): Expectation['reports'][number] => ({ code, origin, id: ID, limit: declared });
 
-const generators: Record<Generator, (limits: Limits) => Prepared> = {
+// The constructions built from the bound the adapter states on counted reads
+// (section 13) rather than from its limits.
+export const COUNTED: readonly Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free'];
+
+// A placeholder that reads the input kept last that no `take` has claimed.
+// Its inline default stands for a `take` that failed, which no case expects.
+const TAKE = '{{x:take; default:F}}';
+
+// Placeholders that each keep their default unread, the default taking the
+// input kept before it. A `take` after them claims the last one kept and reads
+// it, and each read takes the one kept before, so the reads stand one inside
+// another as deep as the placeholders kept, while the message nests two levels.
+// What each answers is the text it read, or `empty`, so no result grows with
+// the bound, and `x` holds the empty string, so no placeholder spends the read
+// budget.
+const keeps = (count: number, body = TAKE) => `{{x:keep; default:${body}}}`.repeat(count);
+
+// One input more than the bound lets be read at once. The `take` that makes
+// the read past it is the one in the second input's default, which writes it
+// between brackets, so what that `take` answers reaches the output as it
+// answered it; where the bound is 0 it is the `take` after them.
+const refusing = (bound: number) => bound ? `${keeps(1)}${keeps(1, `[${TAKE}]`)}${keeps(bound - 1)}${TAKE}` : `${keeps(1)}${TAKE}`;
+
+// The stated number of levels of own reads: each placeholder's modifier reads
+// its own default, which holds the next, and the innermost answers `z`.
+const own = (levels: number) => `${'{{x:read; default:'.repeat(levels)}z${'}}'.repeat(levels)}`;
+
+const reentering = (message: string, output: string): Prepared => ({
+  input: { message, payload: { x: '' }, id: ID, modifiers: register({ read: 'default' }, { keep: 'keep', take: 'take', first: 'first' }) },
+  expected: { output, reports: [] },
+});
+
+const generators: Record<Generator, (limits: Limits, reentry: number) => Prepared> = {
   'output-at-limit': ({ output: length }) => ({
     input: { message: writes(length), payload: { v: 'a' }, id: ID },
     expected: { output: 'x'.repeat(length), reports: [] },
@@ -224,6 +267,20 @@ const generators: Record<Generator, (limits: Limits) => Prepared> = {
     // the walk carries on to the innermost text.
     expected: { output: 'x', reports: Array.from({ length: CHAIN }, () => limit('nesting-limit', 'message', nesting)) },
   }),
+  // As many reads as the bound lets stand at once: the innermost `take` finds
+  // nothing left to claim.
+  'reentry-at-limit': (_, bound) => reentering(`${keeps(bound)}${TAKE}`, 'none'),
+  // One read more: it is refused, produces nothing and answers the empty
+  // string, and the `take` that made it goes on with it.
+  'reentry-over-limit': (_, bound) => reentering(refusing(bound), bound ? '[empty]' : 'empty'),
+  // The refused read was not recorded, so a read of the same input afterwards,
+  // with no other read in progress, produces it: its `take` finds every input
+  // claimed. Where the bound is 0, that read is refused as well.
+  'reentry-refused-not-recorded': (_, bound) => reentering(`${refusing(bound)}{{x:first; default:F}}`, bound ? '[empty]none' : 'emptyempty'),
+  // The innermost of as many counted reads as the bound lets stand produces
+  // a stack of own reads as deep as the nesting limit leaves room for: they
+  // are the walk's and count toward no bound, so every one of them resolves.
+  'reentry-own-reads-free': ({ nesting }, bound) => reentering(`${keeps(1, own(Math.max(nesting - 1, 1)))}${keeps(bound - 1)}${TAKE}`, 'z'),
 };
 
 // Property order is the host's, so a request is compared by its entries and
@@ -373,9 +430,11 @@ const execute = (adapter: Adapter, { input, expected }: Prepared): Outcome => {
 /** Runs a written-out case: decodes its inputs, computes its expectation, and compares. */
 export const executeConcrete = (adapter: Adapter, c: ConcreteCase) => execute(adapter, concrete(c));
 
-/** Runs a generated case: builds it from the adapter's limits, and compares. */
+/** Runs a generated case: builds it from the adapter's limits, or from the bound it states on counted reads, and compares. */
 export const executeGenerated = (adapter: Adapter, c: GeneratedCase) => {
   if (!Object.hasOwn(generators, c.generate)) throw new Error(`The case ${c.id} names no construction: ${JSON.stringify(c.generate)}.`);
 
-  return execute(adapter, generators[c.generate](adapter.limits));
+  if (COUNTED.includes(c.generate) && adapter.reentry === undefined) throw new Error(`The case ${c.id} is built from a bound on counted reads the adapter does not state.`);
+
+  return execute(adapter, generators[c.generate](adapter.limits, adapter.reentry ?? 0));
 };

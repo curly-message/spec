@@ -71,13 +71,14 @@ A case is either written out or generated. A written-out case has:
 | `locale` | The locale. |
 | `messageId` | The message's id (section 4), spelled out because a case's own `id` names the case. Any JSON value: no step of resolution reads it, and reports name it (section 14.3). |
 | `modifiers` | Host-defined modifiers to register (section 11.3): a name to a behaviour from the catalogue below. |
+| `keeping` | Host-defined modifiers to register that keep an input and read it in a later call: a name to one of the behaviours below that keep, which the runner builds afresh for each resolution. A case may write it beside `modifiers`, and names no modifier in both. |
 | `defaults` | The implementation-configured defaults, the bottom formatting layer of section 11.2, grouped by modifier name. |
 | `expected` | What the resolution must produce: an `output`, or for a locale-dependent one a `format` request — for a selection request with the output each of its `categories` selects; and the `reports`, in the order they are emitted, none where the field is omitted. |
 
 A generated case has an `id`, a `description`, optionally a `section`, and a
 `generate` naming one of the constructions under *Generated cases* below. The
 runner builds its inputs and its expectation from the limits the adapter
-declares.
+declares, or from the bound on counted reads it states.
 
 ### Tagged values
 
@@ -122,6 +123,29 @@ implementation's own modifier signature.
 | `props` | The props it received, each own property `name=value` with the value written as ECMAScript's `JSON.stringify` writes it, sorted by name and joined by commas: `maximumFractionDigits=1,useGrouping=true` (sections 11.2, 11.3). That spelling is compact, writes a whole number without a fraction — `1`, not `1.0`, whatever type the implementation hands it on as — and escapes text as `JSON.stringify` does, which leaves `/` and every character outside ASCII as it is, and escapes a lone surrogate. |
 | `locale` | The locale it received, or `none` where it received none. An empty locale answers empty. |
 | `object` | A plain object holding the value under `answer`, so the answer serializes (section 11): `{"answer":"X"}`. |
+
+Four behaviours more, which a case registers under `keeping`, keep an input —
+the default, as the `default` call that reads it — and read it in a later
+call, which section 13 counts. They share one list of what was kept, and its
+claims, for the length of one resolution: a runner builds them afresh for each
+resolution it asks for, and the modifiers handed to `resolve` belong to that
+resolution, so an adapter does not cache them, or a parser built from them,
+across resolutions. The JavaScript runner builds them with `keeping()`, and
+leaves them out of `behaviours`, which holds no state.
+
+| Behaviour | Answers with |
+| --- | --- |
+| `keep` | The empty string. It keeps its default without reading it. |
+| `keep-default` | The default, read through the chain (section 10). It keeps the default first, then reads it. |
+| `take` | The text a read of the input kept last that no `take` has claimed answers, or `empty` where it answers the empty string, so a `take` that went on with a refused read shows. It claims that input before it reads it, whatever the read answers, so a read that reaches `take` again finds the one kept before it. Where every input kept is claimed, or none is kept, `none`. |
+| `first` | The text a read of the input kept first answers, or `empty` where it answers the empty string, claiming nothing; `none` where nothing is kept. |
+
+`keep` reads nothing it keeps and `first` reads only what an earlier call
+kept, so a case that registers either reads a kept input after the modifier
+that kept it returned. The set writes no case that reads one so through
+`keep-default` and `take` alone: a case that registers neither `keep` nor
+`first` reads a kept input, where it reads one, while the modifier that kept
+it is current, and the set's own tests hold every case to that.
 
 ### Locale-dependent expectations
 
@@ -204,8 +228,9 @@ Section 13 lets an implementation permit more than its minima and requires it
 to document what it permits, so a case at a limit cannot be written out: it is
 built from the limits the adapter declares, and exercises the implementation at
 the bounds it documents. `L` is the declared output limit, `R` the read limit,
-`C` the conversion limit, `N` the nesting limit, and every generated case
-reports under the id `limits`.
+`C` the conversion limit, `N` the nesting limit, `B` the bound on counted reads
+the adapter states as `reentry`, and every generated case is resolved under the
+id `limits`.
 
 Each construction spends one budget and leaves the others room, so a case
 built at one limit cannot be failed by another: the output constructions write
@@ -233,6 +258,18 @@ nested too deep on purpose: they pin the order section 9 decides those in.
 | `nesting-over-limit-unknown-modifier` | The `N + 1` levels of `nesting-over-limit`, the innermost being `{{w:zz; default:fallback;}}`, with `v` holding `a` and `w` holding `x`. No modifier `zz` is registered. | `fallback` and one `nesting-limit` report of origin `message`, and no `unknown-modifier` report: the nesting limit is the first message error decided, and a placeholder that meets one meets none after it. |
 | `nesting-over-limit-missing-options` | The same levels, the innermost being `{{w:eq; default:fallback;}}`. | `fallback` and one `nesting-limit` report of origin `message`, and no `missing-options` report, for the same reason. |
 | `nesting-chain-over-limit` | `N + 20000` placeholders `{{v; default:`, each the inline default of the one before it, around `x`, then as many `}}`. The payload is empty. | `x` and 20 000 `nesting-limit` reports of origin `message`: every level takes its chain, whose last link is the next, and each one past the limit is refused and reported once. No limit raises, so the chain resolves however deep it is; a walk that recurses once per level overflows at this depth on some hosts, Node's default stack among them, though not on every one. |
+| `reentry-at-limit` | `B` placeholders `{{x:keep; default:T}}`, then `T`, where `T` is `{{x:take; default:F}}`, with `x` holding the empty string, `read` registered as `default`, and `keep`, `take` and `first` registered under `keeping` as the behaviours of those names. | `none`, no reports: the last `take` reads the input kept last, whose `take` reads the one kept before it, and so on, so `B` counted reads stand one inside another and each produces its text; the innermost `take` finds every input claimed, and each answers what it read. |
+| `reentry-over-limit` | `B + 1` placeholders that keep, the second of them with the default `[T]` and the others `T`, then `T`; where `B` is 0, `{{x:keep; default:T}}T`. | `[empty]`, no reports: the read past the bound is the one the `take` in the second default makes, and it is refused, produces nothing and answers the empty string; that `take` goes on with it and answers `empty` (section 13), and each read around it answers what it produced. A `take` that fails takes its chain to `F`, and one whose call the refusal ended leaves `[]`. Where `B` is 0, the `take` after them makes the refused read, and the output is `empty`. |
+| `reentry-refused-not-recorded` | The same message followed by `{{x:first; default:F}}`. | `[empty]none`, no reports: the refused read was not recorded, so `first` reads the input kept first with nothing in progress, and it produces its text now, its `take` finding every input claimed. Where `B` is 0 that read is refused as well, and the output is `emptyempty`. |
+| `reentry-own-reads-free` | `{{x:keep; default:S}}`, then `B − 1` placeholders `{{x:keep; default:T}}`, then `T`, where `S` is `N − 1` levels of `{{x:read; default:…}}`, each default holding the next and the innermost `z`. Left out where `B` is 0. | `z`, no reports: the innermost of `B` counted reads produces `S`, whose modifiers each read their own default, and those reads are the walk's and count toward no bound. |
+
+The four constructions of kept reads are of the Extensions level, since they
+register modifiers, and none of them reaches the output, read or nesting limit
+whatever `B` is: no placeholder's result is longer than `[empty]`, the value they
+read is the empty string, and each read renders a default at the depth the
+message writes it, so they nest two levels, and `reentry-own-reads-free` `N`.
+They are left out where the adapter states no `reentry`, and where it states
+`keeps` as `false`.
 
 An adapter whose reports carry a `limit` is held to the declared limit on the
 `output-limit`, `read-limit` and `nesting-limit` reports.
@@ -297,7 +334,8 @@ export const adapter: Adapter = {
 `levels` is the statement section 2 requires: the levels the implementation
 satisfies. The runner selects the fixtures those levels require and skips the
 rest, and the skipped cases are listed, not hidden. `limits` is the statement
-section 13 requires, and is what the generated cases are built from. Each
+section 13 requires of its four limits, and is what the generated cases are
+built from. Each
 limit is the most the implementation lets through: the conversion limit is the
 most nodes a serialization may visit and still describe the value, so an
 implementation that abandons one on reaching its hundred-thousandth node, as
@@ -306,6 +344,23 @@ section 13 allows, declares 99 999. An adapter MAY make a third statement,
 property, or a value of one, in every request or in the requests whose other
 properties hold given values — under the request that reads it, which leaves
 out the cases that would measure the host rather than the implementation.
+
+Two more statements are about the inputs a host-defined modifier keeps (section
+11.3), and an adapter MAY make either. `reentry` is the bound on one thread of
+execution that section 13 lets an implementation keep, as it reaches the reads
+a kept input is read through: the most counted reads that may be producing
+their text at once on one thread of execution during one resolution asked for
+where none was in progress, that resolution itself not counted. An
+implementation whose documented bound counts that resolution states one less: a
+bound of 16 resolutions in progress at once is a `reentry` of 15. Section 13
+sets no minimum for the bound, so 0 is one; a `reentry` that is not a whole
+number of 0 or more is an error rather than a skip. An adapter that leaves it
+out states that the implementation keeps no such bound, and the constructions
+built from it are left out. `keeps`, stated as `false`, says that the
+implementation hands a modifier inputs that end with its call, so that no
+modifier can keep one and read it in a later call; every case that reads a
+kept input after the modifier that kept it returned is then left out, and the
+one that reads it while that modifier is current still runs.
 
 An adapter MAY offer a fourth thing, `cst`: the concrete syntax tree of
 [`CST.md`](../CST.md), as the `unit` its spans are counted in — `utf-8`,
@@ -379,9 +434,9 @@ skipped wherever the adapter offers no `cst`.
 The package also exports what those are built from: `fixtures()` reads the
 shipped set and `load(directory)` any directory of fixture files, both sorted
 by file name, which is what the `fixtures` option takes; `summarize(result)`
-renders what the command prints; and `decode` and `behaviours` are the tagged
-values and the catalogue as this runner implements them, for an adapter's own
-tests to reuse.
+renders what the command prints; and `decode`, `behaviours` and `keeping` are
+the tagged values and the catalogue as this runner implements them, for an
+adapter's own tests to reuse.
 
 From the command line, with a module that exports the adapter as `adapter` or
 as its default export:
@@ -416,7 +471,9 @@ runner observed, and whether that counts as `caught`, `missed` or
 `unreachable`. The last is for a defect the adapter gives the runner nothing to
 catch — what an implementation that observes no reports does to every defect of
 its reports, one that claims Core alone to every defect of a level it does not
-claim, one that offers no tree to every defect of the tree, and one whose own
+claim, one that offers no tree to every defect of the tree, one that states no
+`reentry`, or states `keeps` as `false`, to a bound stated one higher or one
+lower than the one it keeps, and one whose own
 `unexpressible` already leaves out every case of the run whose request a defect
 of what it cannot express covers to that defect. A defect names
 the `section` it pins and, where that is a heading of `CST.md` rather than of

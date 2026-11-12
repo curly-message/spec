@@ -1,0 +1,63 @@
+{
+  "format": "curly-message-3",
+  "level": "extensions",
+  "section": "13",
+  "cases": [
+    {
+      "id": "limits-extensions/kept-default-read-again",
+      "description": "A default a modifier kept is produced once, by its own read, and every later read of it answers the text recorded, reporting nothing again.",
+      "message": "{{x:keep-default; default:{{y:zz; default:D}}}}{{x:first}}{{x:first}}",
+      "payload": {
+        "x": ""
+      },
+      "keeping": {
+        "keep-default": "keep-default",
+        "first": "first"
+      },
+      "expected": {
+        "output": "DDD",
+        "reports": [
+          {
+            "code": "unknown-modifier",
+            "origin": "message"
+          }
+        ]
+      }
+    },
+    {
+      "id": "limits-extensions/kept-default-read-while-produced",
+      "description": "A read of a default whose own production is in progress is refused at once, whether or not a bound is kept: it answers the empty string and fails nothing.",
+      "message": "{{x:keep-default; default:<{{x:take; default:F}}>}}",
+      "payload": {
+        "x": ""
+      },
+      "keeping": {
+        "keep-default": "keep-default",
+        "take": "take"
+      },
+      "expected": {
+        "output": "<empty>"
+      }
+    },
+    {
+      "id": "limits-extensions/reentry-at-limit",
+      "description": "As many counted reads of kept inputs as the bound lets stand at once each produce their text.",
+      "generate": "reentry-at-limit"
+    },
+    {
+      "id": "limits-extensions/reentry-over-limit",
+      "description": "A counted read past the bound is refused: it answers the empty string and fails nothing.",
+      "generate": "reentry-over-limit"
+    },
+    {
+      "id": "limits-extensions/reentry-refused-not-recorded",
+      "description": "A refused read is not recorded, so a later read of the same input that is not refused produces its text.",
+      "generate": "reentry-refused-not-recorded"
+    },
+    {
+      "id": "limits-extensions/reentry-own-reads-free",
+      "description": "Own reads made inside counted reads are the walk's and count toward no bound, so they stand as deep as the nesting limit allows.",
+      "generate": "reentry-own-reads-free"
+    }
+  ]
+}

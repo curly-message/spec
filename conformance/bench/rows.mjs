@@ -10,6 +10,7 @@ const bundle = () => readFileSync(new URL('../dist/index.js', import.meta.url));
 const ADAPTER = {
   levels: ['core', 'intl', 'extensions'],
   limits: { output: 100000, read: 100000, conversion: 100000, nesting: 8 },
+  reentry: 32,
   resolve: () => ({ output: '', reports: [] }),
   cst: { unit: 'utf-16', parse: (message) => ({ type: 'message', start: 0, end: message.length, nodes: [] }) },
 };

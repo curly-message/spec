@@ -1,4 +1,4 @@
-import { covers, executeConcrete, executeGenerated } from './cases';
+import { COUNTED, covers, executeConcrete, executeGenerated } from './cases';
 import { defects, mutations, realize } from './defects';
 import { fixtures } from './set';
 import { UNITS, executeTree } from './tree';
@@ -6,7 +6,7 @@ import type { Adapter, Audited, Case, Fixture, FixtureFile, FormatApi, Identity,
 
 export type * from './types';
 
-export { behaviours } from './behaviours';
+export { behaviours, keeping } from './behaviours';
 export { decode } from './decode';
 export { defects, mutations } from './defects';
 export { fixtures, load } from './set';
@@ -66,6 +66,17 @@ const treeClaim = (adapter: Adapter) => {
   if (!UNITS.includes(cst.unit)) throw new Error(`The adapter counts its spans in ${JSON.stringify(cst.unit)}; the units are ${UNITS.join(', ')}.`);
 };
 
+// The two statements an adapter makes about kept inputs (sections 11.3, 13).
+// Section 13 sets no minimum for the bound on counted reads, so 0 is one an
+// implementation may keep; a bound below it, or not a count, is no bound.
+const keptClaims = (adapter: Adapter) => {
+  const { reentry, keeps } = adapter;
+
+  if (reentry !== undefined && (!Number.isInteger(reentry) || reentry < 0)) throw new Error('The adapter must state its bound on counted reads, reentry, as a non-negative integer.');
+
+  if (keeps !== undefined && typeof keeps !== 'boolean') throw new Error('The adapter must state whether a modifier can keep an input past its call, keeps, as true or false.');
+};
+
 // The adapter's statements about itself, and the levels option, are held to
 // the vocabulary of sections 2, 11.2, 11.5 and 13 before anything runs: a
 // level that is not one of the three, or a limit that is not a count, is an
@@ -97,6 +108,7 @@ const claims = (adapter: Adapter, options: Options) => {
 
   if (undeclared) throw new Error(`The adapter must declare its ${undeclared} limit as a positive integer.`);
 
+  keptClaims(adapter);
   unexpressibleClaim(adapter);
   treeClaim(adapter);
 };
@@ -110,6 +122,32 @@ const unexpressible = (c: Case, adapter: Adapter) => {
   const { api, options = {} } = c.expected.format;
 
   return adapter.unexpressible?.[api]?.reduce<string | undefined>((found, entry) => found ?? covers(entry, api, options), undefined);
+};
+
+// The behaviours that read a kept input only after the modifier that kept it
+// returned: `keep` reads nothing it keeps, so only a later modifier does, and
+// `first` reads only what an earlier one kept. The set holds to it: a written
+// case that registers neither reads a kept input, where it reads one, while
+// the modifier that kept it is current.
+const LATER = ['keep', 'first'];
+
+// A case built from the bound on counted reads, or one that reads a kept
+// input after the modifier that kept it returned, measures what the adapter
+// stated it does not do, and is left out the way an unclaimed level is.
+const kept = (c: Case, adapter: Adapter) => {
+  const later = 'generate' in c ? COUNTED.includes(c.generate) : Object.values(c.keeping ?? {}).some((behaviour) => LATER.includes(behaviour));
+
+  if (!later) return undefined;
+
+  if (adapter.keeps === false) return 'The adapter states that a modifier cannot keep an input past its call.';
+
+  if (!('generate' in c)) return undefined;
+
+  if (adapter.reentry === undefined) return 'The adapter states no bound on counted reads.';
+
+  if (c.generate === 'reentry-own-reads-free' && adapter.reentry === 0) return 'The adapter states a bound of 0 on counted reads, so no counted read stands for own reads to be made inside.';
+
+  return undefined;
 };
 
 // Why a level's cases are left out, or nothing where they run.
@@ -126,7 +164,7 @@ const reason = (c: Case, level: Level, adapter: Adapter, options: Options) => {
 
   if (excluded) return excluded;
 
-  return unexpressible(c, adapter);
+  return unexpressible(c, adapter) ?? kept(c, adapter);
 };
 
 // A file whose format this set does not read is refused rather than skipped:

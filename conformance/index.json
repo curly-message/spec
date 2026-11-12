@@ -63,6 +63,12 @@
       "cases": 126
     },
     {
+      "path": "fixtures/limits-extensions.json",
+      "level": "extensions",
+      "section": "13",
+      "cases": 6
+    },
+    {
       "path": "fixtures/limits.json",
       "level": "core",
       "section": "13",

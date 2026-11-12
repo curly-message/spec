@@ -81,6 +81,23 @@ const converting = (by: number, constructions: readonly Generator[]) => (adapter
   () => set.some(({ file }) => file.kind !== 'tree' && levels.includes(file.level) && file.cases.some((c) => 'generate' in c && constructions.includes(c.generate))),
 );
 
+// A defect of the bound on counted reads the adapter states. An adapter that
+// states none, or states 0 where the defect would state one lower, carries
+// nothing to alter. Otherwise the bound is read only by the constructions
+// built from it, which run where the adapter states that a modifier can keep
+// an input, so the defect reaches the runner where the run holds one of the
+// stated constructions at a level it runs.
+const reentering = (by: number, constructions: readonly Generator[]) => (adapter: Adapter, { set, levels }: Run = { set: fixtures(), levels: adapter.levels }): Mutation => {
+  const declared = adapter.reentry === undefined ? -1 : adapter.reentry + by;
+
+  return claiming(
+    adapter,
+    declared < 0 ? {} : { reentry: declared },
+    () => declared >= 0 && adapter.keeps !== false
+      && set.some(({ file }) => file.kind !== 'tree' && levels.includes(file.level) && file.cases.some((c) => 'generate' in c && constructions.includes(c.generate))),
+  );
+};
+
 // A defect of the tree, which an implementation need not offer at all. An
 // adapter that offers none carries nothing to alter, so the defect is
 // unreachable rather than missed.
@@ -221,6 +238,17 @@ const realizations: Record<Defect, (adapter: Adapter, run?: Run) => Mutation> = 
   // Only the constructions past the limit then visit no node more than the
   // implementation's limit; at it, either limit lets the value through.
   'conversion-limit-understated': converting(-1, ['conversion-over-limit', 'conversion-over-limit-continues']),
+
+  // Every construction built from the bound then asks for one read more than
+  // the implementation lets stand: at the bound it pins what that read
+  // answers, and past it which `take` the refusal reaches.
+  'reentry-limit-overstated': reentering(1, ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free']),
+
+  // Only the constructions past the bound then let one read through that the
+  // case expects refused; at it, either bound lets every read through.
+  'reentry-limit-understated': reentering(-1, ['reentry-over-limit', 'reentry-refused-not-recorded']),
+
+  'claims-negative-reentry': (adapter) => claiming(adapter, { reentry: -1 }),
 
   'tree-unoffered': (adapter) => claiming(adapter, { cst: undefined }, () => adapter.cst !== undefined),
 
