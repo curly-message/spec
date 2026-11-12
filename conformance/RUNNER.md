@@ -188,24 +188,36 @@ Seven reasons leave a case out, and no others:
   what builds the value; an adapter declares nothing for it. Leaving the tag
   out instead would hand over props that refuse nothing, and the case would
   fail for the reports it no longer meets rather than pin what it states.
-* It is one of the four constructions of kept reads, and the adapter states no
+* It is one of the five constructions of kept reads, and the adapter states no
   `reentry`: each is built from that bound, and an implementation that keeps
   none has no bound to meet. `reentry-own-reads-free` is left out at a
   `reentry` of 0 as well, where no counted read stands for the walk's own
-  reads to be made inside.
+  reads to be made inside. A written case that registers `nest` under
+  `keeping` is left out where the adapter states a `reentry` of 0, and runs
+  where it states none: an implementation whose bound counts resolutions and
+  is documented as 1 states 0 and refuses the resolution `nest` asks for.
 * It reads an input a modifier kept after that modifier returned, and the
-  adapter states `keeps` as `false`: the four constructions of kept reads,
+  adapter states `keeps` as `false`: the five constructions of kept reads,
   and a written case that registers `keep` or `first` under `keeping`. The
-  set writes no case that reads a kept input so through `keep-default` and
-  `take` alone, and its tests hold every case to that, so a case that reads
-  a kept input while the modifier that kept it is current still runs.
+  set writes no case that reads a kept input so through `keep-default`,
+  `take`, `taking` and `nest` alone, and its tests hold every case to that,
+  so a case that reads a kept input while the call of the modifier that kept
+  it is in progress still runs, the read a conversion or a nested resolution
+  makes included.
+
+Section 13 also lets an implementation bound, across the process, the
+resolutions asked for inside another, and sets no minimum for that bound. No
+adapter statement covers it: the set assumes, whatever `reentry` an adapter
+states and where it states none, that such a bound, where one is kept, lets
+one resolution asked for inside another stand, as the written case that
+registers `nest` asks for one.
 
 ## Building a generated case
 
 Section 13 states minima and requires an implementation to document what it
 permits, so a case at a limit cannot be written out: the runner builds it from
 the limits the adapter declared, or from the bound on counted reads it states.
-README.md gives the twenty constructions, the message and payload each builds,
+README.md gives the twenty-one constructions, the message and payload each builds,
 and what each expects. A runner builds them
 from the adapter's own numbers, not from section 13's minima; an
 implementation that permits more is exercised at what it documents.
@@ -241,18 +253,22 @@ runner builds that message without recursion of its own, and so should a runner
 in another language.
 
 The bound on counted reads is built from inputs a modifier keeps. The
-behaviours `keep`, `keep-default`, `take` and `first` share one list of what
-was kept, and its claims, and a runner builds them afresh for each resolution
-it asks for, so that nothing one resolution kept is read in another; the
-JavaScript runner builds them with `keeping()`, outside the `behaviours`
-record, which holds no state. `reentry-at-limit` keeps `B` defaults that each
+behaviours `keep`, `keep-default`, `take`, `first`, `taking` and `nest` share
+one list of what was kept, and its claims, and a runner builds them afresh for
+each resolution it asks for where none of its own is in progress, so that
+nothing one resolution kept is read in another but the one a `nest` asks for
+while its call is in progress, which shares the list; the JavaScript runner
+builds them with `keeping(adapter)`, outside the `behaviours` record, which
+holds no state. `reentry-at-limit` keeps `B` defaults that each
 `take`, and its last `take` reads the one kept last, which reads the one kept
 before it, so `B` counted reads stand one inside another;
 `reentry-over-limit` keeps one more, so the innermost read is refused and
 answers the empty string, and the `take` that made it, written between
 brackets in the second input's default (the `take` after them where `B` is 0),
 answers `empty`; `reentry-refused-not-recorded` then reads the input kept
-first, which the refused read did not record as produced; and
+first, which the refused read did not record as produced;
+`reentry-over-limit-by-a-conversion` has the read past the bound made by the
+conversion of `taking`'s answer, where `reentry-over-limit` has a `take`; and
 `reentry-own-reads-free` has the innermost of `B` counted reads render
 modifiers that read their own defaults `N − 1` levels deep, reads the walk
 makes that count toward no bound. `keep` answers the empty string and `take`
@@ -260,6 +276,39 @@ and `first` the text they read, or `empty` for the empty string, so no result
 is longer than `[empty]` whatever `B` is, and the value they read is the empty
 string, which spends none of the read budget; each renders a default at the depth the message
 writes it, so none of them meets the output, read or nesting limit.
+
+`taking` answers a host value whose ordinary string conversion (section 4)
+runs code: an instance of a class with a `toString` of its own in JavaScript,
+an `fmt.Stringer` in Go, `Value::host` of a type that implements `Display` in
+Rust, whose `fmt` makes the read, a `Stringable` in PHP, an object with
+`__str__` in Python. A runner never builds it as text computed in the call,
+which moves the read out of the conversion, and never as a plain object or
+map, which serializes and fails the case. A correct implementation refuses
+the read a runner that builds text makes in the call the same way it refuses
+the conversion's, so that runner passes the set and no defect the audit
+applies tells it apart; a port checks in its own tests that the read is made
+by the conversion.
+Section 13 has a resolution convert a value no more than once observably, so
+the conversion reads once.
+
+`nest` is defined by what it resolves, not by the entry point it calls: a
+resolution, by the implementation under test, of `{{x:take; default:F}}`,
+asked for on the thread of execution its call runs on while its call is in
+progress, whose modifiers are the six behaviours sharing the list of what was
+kept, and its claims, with the resolution around it. A runner that hands an
+adapter the behaviours themselves, as the JavaScript runner does, builds
+`nest` over the adapter the case runs against, so that adapter's `resolve`
+must be re-entrant — called again on the same thread while a call to it is in
+progress, each call answering its own resolution with its own reports — and in
+an audit the inner resolution goes through the defect as well. An adapter that
+builds the behaviours from their names builds `nest` itself, resolving with
+the implementation over the list it built for the resolution in progress,
+never through a call that builds a fresh list, whose `take` finds nothing kept
+and answers `none`; its inner resolution goes through no defect in an audit,
+which changes no outcome, since every defect that wraps `resolve` already
+alters the resolution around it, and the inner one reports nothing. Either
+way, `nest` raises where the resolution it asks for raises or answers no text,
+which the implementation contains as a failed modifier, and the case fails.
 
 ## Executing a case
 
@@ -464,7 +513,8 @@ or states `keeps` as `false`, runs no construction of kept reads, so a bound
 stated one higher or one lower alters nothing it answers, and one that states
 a bound of 0 has no bound one lower to state. A bound stated one higher is
 caught by every construction of kept reads, and one stated one lower only by
-`reentry-over-limit` and `reentry-refused-not-recorded`, since at the bound
+`reentry-over-limit`, `reentry-refused-not-recorded` and
+`reentry-over-limit-by-a-conversion`, since at the bound
 either bound lets every read through. A defect is **unreachable**
 where applying it changed nothing the adapter answers, and an audit that calls
 those missed sends a port hunting for holes that are not there. The catalogue

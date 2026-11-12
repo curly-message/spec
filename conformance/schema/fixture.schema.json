@@ -88,7 +88,7 @@
           }
         },
         "keeping": {
-          "description": "Host-defined modifiers to register (section 11.3) that keep an input and read it in a later call, each the name of a behaviour from the catalogue that keeps; the runner builds them afresh for each resolution.",
+          "description": "Host-defined modifiers to register (section 11.3) over one list of what was kept, each the name of one of the catalogue's behaviours over that list; the runner builds them afresh for each resolution it asks for, and the resolution a nest among them asks for has the six behaviours over that same list as its modifiers, under their own names.",
           "type": "object",
           "propertyNames": {
             "minLength": 1
@@ -146,7 +146,8 @@
             "reentry-at-limit",
             "reentry-over-limit",
             "reentry-refused-not-recorded",
-            "reentry-own-reads-free"
+            "reentry-own-reads-free",
+            "reentry-over-limit-by-a-conversion"
           ]
         }
       }
@@ -175,7 +176,9 @@
         "keep",
         "keep-default",
         "take",
-        "first"
+        "first",
+        "taking",
+        "nest"
       ]
     },
     "expected": {

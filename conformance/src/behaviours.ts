@@ -1,4 +1,4 @@
-import type { Behaviour, Keeping, ModifierBehaviour } from './types';
+import type { Adapter, Behaviour, Keeping, ModifierBehaviour } from './types';
 
 /** The catalogue of README.md, each behaviour a function of section 11's inputs. */
 export const behaviours: Record<Behaviour, ModifierBehaviour> = {
@@ -20,12 +20,32 @@ export const behaviours: Record<Behaviour, ModifierBehaviour> = {
 // answers: never empty, so a modifier that did not go on shows.
 const shown = (text: string) => text || 'empty';
 
+// What `taking` answers. A class instance is converted by the host's ordinary
+// string conversion (section 4), which runs `toString`, where a plain object
+// with a `toString` of its own would be serialized instead, to `{}`.
+class Taking {
+  readonly #read: () => string;
+
+  constructor(read: () => string) {
+    this.#read = read;
+  }
+
+  toString() {
+    return this.#read();
+  }
+}
+
+// The message `nest` asks a resolution of.
+const NESTED = '{{x:take; default:F}}';
+
 /**
- * The behaviours of README.md that keep an input, over one list of what they
- * kept. Each call builds them afresh, so what one resolution kept is never
- * read by another: a runner calls it once per resolution it asks for.
+ * The behaviours of README.md over one list of what was kept. Each call builds
+ * them afresh, so what one resolution kept is read by no other but the one a
+ * `nest` among them asks `adapter` for while its call is in progress, handing
+ * it these same behaviours: a runner calls it once per resolution it asks for,
+ * with the adapter it asks.
  */
-export const keeping = (): Record<Keeping, ModifierBehaviour> => {
+export const keeping = (adapter: Pick<Adapter, 'resolve'>): Record<Keeping, ModifierBehaviour> => {
   const kept: (() => string)[] = [];
   const claimed = new Set<number>();
 
@@ -43,7 +63,13 @@ export const keeping = (): Record<Keeping, ModifierBehaviour> => {
     return undefined;
   };
 
-  return {
+  const take = () => {
+    const read = claim();
+
+    return read ? shown(read()) : 'none';
+  };
+
+  const record: Record<Keeping, ModifierBehaviour> = {
     keep: ({ default: read }) => {
       kept.push(read);
 
@@ -54,11 +80,18 @@ export const keeping = (): Record<Keeping, ModifierBehaviour> => {
 
       return read();
     },
-    take: () => {
-      const read = claim();
-
-      return read ? shown(read()) : 'none';
-    },
+    take,
     first: () => kept.length ? shown(kept[0]()) : 'none',
+    taking: () => new Taking(take),
+    nest: () => {
+      const resolved: unknown = adapter.resolve({ message: NESTED, payload: { x: '' }, modifiers: record });
+      const output = resolved !== null && typeof resolved === 'object' ? (resolved as { output?: unknown }).output : undefined;
+
+      if (typeof output !== 'string') throw new Error('The resolution nest asked for answered no output.');
+
+      return output;
+    },
   };
+
+  return record;
 };

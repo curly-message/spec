@@ -124,7 +124,7 @@ describe('plan', () => {
   });
 
   it('leaves out the cases built from the bound on counted reads where the adapter states none, and the own reads at a bound of 0', () => {
-    const constructions: Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free'];
+    const constructions: Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion'];
     const set = [file('extensions', constructions.map((generate) => ({ id: `c/${generate}`, description: `Pins ${generate}.`, generate })), '13')];
     const skipped = (over: Partial<Adapter>) => plan({ ...adapter(echo, ['core', 'extensions']), ...over }, { fixtures: set }).skipped.map(({ id, reason }) => ({ id, reason }));
 
@@ -141,12 +141,47 @@ describe('plan', () => {
       registering('c/keep', { k: 'keep', t: 'take' }),
       registering('c/first', { d: 'keep-default', f: 'first' }, { u: 'upper' }),
       registering('c/while-current', { d: 'keep-default', t: 'take' }),
+      registering('c/converted', { d: 'keep-default', t: 'taking' }),
+      registering('c/nested', { d: 'keep-default', n: 'nest' }),
       registering('c/plain', undefined, { u: 'upper' }),
     ], '13')];
     const skipped = (over: Partial<Adapter>) => plan({ ...adapter(echo, ['core', 'extensions']), ...over }, { fixtures: set }).skipped.map(({ id }) => id);
 
     expect(skipped({ keeps: false })).toEqual(['c/keep', 'c/first']);
     expect(skipped({})).toEqual([]);
+  });
+
+  // An implementation whose bound counts resolutions and is documented as 1
+  // states 0, and refuses the resolution a `nest` asks for; one that states
+  // no bound keeps none that could.
+  it('leaves out a case that asks for a resolution inside another where the adapter states a bound of 0', () => {
+    const set = [file('extensions', [
+      concrete('c/nested', { keeping: { d: 'keep-default', n: 'nest' } }),
+      concrete('c/converted', { keeping: { d: 'keep-default', t: 'taking' } }),
+    ], '13')];
+    const skipped = (over: Partial<Adapter>) => plan({ ...adapter(echo, ['core', 'extensions']), ...over }, { fixtures: set }).skipped.map(({ id, reason }) => ({ id, reason }));
+
+    expect(skipped({ reentry: 0 })).toEqual([{ id: 'c/nested', reason: 'The adapter states a bound of 0 on counted reads, so the resolution a modifier asks for inside another may be refused.' }]);
+    expect(skipped({ reentry: 0, keeps: false })).toEqual([{ id: 'c/nested', reason: 'The adapter states a bound of 0 on counted reads, so the resolution a modifier asks for inside another may be refused.' }]);
+    expect(skipped({ reentry: 1 })).toEqual([]);
+    expect(skipped({})).toEqual([]);
+    expect(skipped({ keeps: false })).toEqual([]);
+  });
+
+  // In an audit, the resolution a `nest` asks for goes through the adapter
+  // the defect was applied to, as the one around it does.
+  it('hands nest the adapter the case runs against', () => {
+    const asked: string[] = [];
+    const resolving = (name: string) => vi.fn(({ message, modifiers }: Parameters<Adapter['resolve']>[0]) => {
+      asked.push(`${name}:${String(message)}`);
+
+      return { output: message === '{{x:take; default:F}}' ? 'none' : String((modifiers as Record<string, (input: object) => unknown>).n({ value: '', options: [], props: {}, default: () => '' })), reports: [] };
+    });
+    const c = concrete('a/nested', { message: '{{x:n}}', keeping: { n: 'nest' }, expected: { output: 'none' } });
+    const [planned] = plan(adapter(resolving('given'), ['core', 'extensions']), { fixtures: [file('extensions', [c])] }).cases;
+
+    expect(planned.execute()).toEqual({ ok: true });
+    expect(asked).toEqual(['given:{{x:n}}', 'given:{{x:take; default:F}}']);
   });
 
   it('refuses a fixture file targeting a format this set does not read', () => {
@@ -218,7 +253,7 @@ describe('plan', () => {
     expect('value' in (input.payload as { w: object }).w).toBe(true);
   });
 
-  it('hands each resolution the behaviours that keep an input afresh, so a case runs alike every time', () => {
+  it('hands each resolution the behaviours over a list of what was kept afresh, so a case runs alike every time', () => {
     const resolve = vi.fn(({ modifiers }: Parameters<Adapter['resolve']>[0]) => {
       const { f, k } = modifiers as Record<string, (input: object) => string>;
       const input = { value: '1', options: [], props: {}, default: () => 'D' };
