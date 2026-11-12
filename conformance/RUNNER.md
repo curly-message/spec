@@ -69,7 +69,7 @@ names:
 | `{ "$curly": "undefined" }` | The host's own absence: what a caller passes where it passes nothing. |
 | `{ "$curly": "unserializable" }` | A value the host's serialization cannot describe. On a host whose serialization follows references, an object holding itself is one. |
 | `{ "$curly": "nodes", "count": N }` | A value whose serialization visits at least `N` nodes, holding no cycle. A tree that doubles per level reaches any count in few levels. |
-| `{ "$curly": "refusing", "members": [names] }` | A mapping that holds each of `names` as an entry, where reading any of them raises. A Python `Mapping` whose `__getitem__` raises and a PHP `ArrayAccess` whose `offsetGet` throws are such values, where the implementation reads one. |
+| `{ "$curly": "refusing", "members": [names] }` | A mapping that holds each of `names` as an entry, where reading any of them raises. A Python `Mapping` whose `__getitem__` raises and a PHP `ArrayAccess` whose `offsetGet` throws are such values for an implementation that reads its entries through those hooks. One that reads only plain storage, a `dict` or an array, never calls them, so its host has no such value and the case is left out (see *Planning*). |
 
 The replacement is by the value's own shape, everywhere in the inputs and at
 every depth, and nowhere in the expectations: an expectation names text, and a
