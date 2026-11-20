@@ -121,15 +121,37 @@ describe('plan', () => {
     expect(() => stating({ reentry: undefined })).not.toThrow();
     expect(() => stating({ keeps: 'no' })).toThrow('The adapter must state whether a modifier can keep an input past its call, keeps, as true or false.');
     expect(() => stating({ keeps: false })).not.toThrow();
+    expect(() => stating({ resolutions: 'true' })).toThrow('The adapter must state whether its bound counts a resolution asked for inside another, resolutions, as true or false.');
+    expect(() => stating({ resolutions: 1 })).toThrow('The adapter must state whether its bound counts a resolution asked for inside another, resolutions, as true or false.');
+    expect(() => stating({ resolutions: false })).not.toThrow();
+    expect(() => stating({ resolutions: true })).not.toThrow();
+  });
+
+  it('leaves out the case of resolutions one inside another unless the adapter states a bound that counts them and an output limit that holds them', () => {
+    const set = [file('extensions', [{ id: 'c/renested', description: 'Pins reentry-resolutions-over-limit.', generate: 'reentry-resolutions-over-limit' as Generator }], '13')];
+    const skipped = (over: Partial<Adapter>) => plan({ ...adapter(echo, ['core', 'extensions']), ...over }, { fixtures: set }).skipped.map(({ reason }) => reason);
+    const unstated = 'The adapter does not state that its bound counts a resolution asked for inside another.';
+
+    expect(skipped({ resolutions: true })).toEqual(['The adapter states no bound on counted reads.']);
+    expect(skipped({ reentry: 1 })).toEqual([unstated]);
+    expect(skipped({ reentry: 1, resolutions: false })).toEqual([unstated]);
+    expect(skipped({ reentry: 1, resolutions: true })).toEqual([]);
+    expect(skipped({ reentry: 1, resolutions: true, keeps: false })).toEqual([]);
+    // Two brackets for each of the two resolutions that stand, and the text.
+    expect(skipped({ reentry: 1, resolutions: true, limits: { output: 5, read: 5, conversion: 5, nesting: 5 } })).toEqual([]);
+    expect(skipped({ reentry: 1, resolutions: true, limits: { output: 4, read: 5, conversion: 5, nesting: 5 } })).toEqual(['The output limit the adapter states does not hold the brackets of as many resolutions as its bound lets stand.']);
   });
 
   it('leaves out the cases built from the bound on counted reads where the adapter states none, and the own reads at a bound of 0', () => {
-    const constructions: Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion'];
+    const constructions: Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion', 'reentry-own-read-in-a-nested-resolution'];
     const set = [file('extensions', constructions.map((generate) => ({ id: `c/${generate}`, description: `Pins ${generate}.`, generate })), '13')];
     const skipped = (over: Partial<Adapter>) => plan({ ...adapter(echo, ['core', 'extensions']), ...over }, { fixtures: set }).skipped.map(({ id, reason }) => ({ id, reason }));
 
     expect(skipped({})).toEqual(constructions.map((generate) => ({ id: `c/${generate}`, reason: 'The adapter states no bound on counted reads.' })));
-    expect(skipped({ reentry: 0 })).toEqual([{ id: 'c/reentry-own-reads-free', reason: 'The adapter states a bound of 0 on counted reads, so no counted read stands for own reads to be made inside.' }]);
+    expect(skipped({ reentry: 0 })).toEqual([
+      { id: 'c/reentry-own-reads-free', reason: 'The adapter states a bound of 0 on counted reads, so no counted read stands for own reads to be made inside.' },
+      { id: 'c/reentry-own-read-in-a-nested-resolution', reason: 'The adapter states a bound of 0 on counted reads, so the resolution a modifier asks for inside another may be refused.' },
+    ]);
     expect(skipped({ reentry: 1 })).toEqual([]);
     expect(skipped({ reentry: 1, keeps: true })).toEqual([]);
     expect(skipped({ reentry: 1, keeps: false })).toEqual(constructions.map((generate) => ({ id: `c/${generate}`, reason: 'The adapter states that a modifier cannot keep an input past its call.' })));
@@ -157,12 +179,15 @@ describe('plan', () => {
   it('leaves out a case that asks for a resolution inside another where the adapter states a bound of 0', () => {
     const set = [file('extensions', [
       concrete('c/nested', { keeping: { d: 'keep-default', n: 'nest' } }),
+      concrete('c/keep-nested', { keeping: { k: 'keep-nest', t: 'taking' } }),
       concrete('c/converted', { keeping: { d: 'keep-default', t: 'taking' } }),
     ], '13')];
     const skipped = (over: Partial<Adapter>) => plan({ ...adapter(echo, ['core', 'extensions']), ...over }, { fixtures: set }).skipped.map(({ id, reason }) => ({ id, reason }));
 
-    expect(skipped({ reentry: 0 })).toEqual([{ id: 'c/nested', reason: 'The adapter states a bound of 0 on counted reads, so the resolution a modifier asks for inside another may be refused.' }]);
-    expect(skipped({ reentry: 0, keeps: false })).toEqual([{ id: 'c/nested', reason: 'The adapter states a bound of 0 on counted reads, so the resolution a modifier asks for inside another may be refused.' }]);
+    const reason = 'The adapter states a bound of 0 on counted reads, so the resolution a modifier asks for inside another may be refused.';
+
+    expect(skipped({ reentry: 0 })).toEqual([{ id: 'c/nested', reason }, { id: 'c/keep-nested', reason }]);
+    expect(skipped({ reentry: 0, keeps: false })).toEqual([{ id: 'c/nested', reason }, { id: 'c/keep-nested', reason }]);
     expect(skipped({ reentry: 1 })).toEqual([]);
     expect(skipped({})).toEqual([]);
     expect(skipped({ keeps: false })).toEqual([]);

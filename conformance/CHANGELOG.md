@@ -258,8 +258,9 @@ of an input a modifier kept. Nothing a message resolves to changes.
   Both are optional members of the exported `Adapter` type, so an adapter that
   states neither is measured as before, less the cases below. RUNNER.md says
   how a runner on a typed host tells either left unset from 0 or `false`.
-* Six behaviours over one list of what was kept: `keep` and `keep-default`,
-  which keep an input, `take`, which claims the input kept last before it
+* Seven behaviours over one list of what was kept: `keep` and `keep-default`,
+  which keep an input, `keep-nest`, which keeps one and then does what `nest`
+  does over a `taking`, `take`, which claims the input kept last before it
   reads it, `first`, `taking`, whose answer makes `take`'s read as it is
   converted, and `nest`, which asks, on the thread of execution its call runs
   on and while its call is in progress, for a resolution by the implementation whose `take`
@@ -276,7 +277,7 @@ of an input a modifier kept. Nothing a message resolves to changes.
   behaviours from their names builds `nest`, and RUNNER.md how a port builds
   `taking`. A case registers them under a field of their own, `keeping`, which the schema and the exported `ConcreteCase` type
   gain; `modifiers` names the behaviours of `behaviours` alone, as before.
-* `limits-extensions.json`, of the Extensions level, holds nine cases.
+* `limits-extensions.json`, of the Extensions level, holds ten cases.
   `limits-extensions/kept-default-read-again` reads a kept default, whose
   inline default names a modifier nobody registered, twice after the modifier
   that kept it returned: its own read produced it, each later read answers the
@@ -287,24 +288,41 @@ of an input a modifier kept. Nothing a message resolves to changes.
   `limits-extensions/kept-default-read-in-a-nested-resolution` have that read
   made by the conversion of a modifier's answer, and in a resolution a
   modifier asks for on the same thread of execution; it is refused at once
-  there as well, and fails nothing. Five more are generated from `reentry`:
+  there as well, and fails nothing. Six more are generated from `reentry`:
   `reentry-at-limit`, `reentry-over-limit`, `reentry-refused-not-recorded`,
-  `reentry-own-reads-free` and `reentry-over-limit-by-a-conversion`, whose read
-  past the bound a conversion makes, added to the schema's enum and to the
+  `reentry-own-reads-free`, `reentry-over-limit-by-a-conversion`, whose read
+  past the bound a conversion makes, and
+  `reentry-own-read-in-a-nested-resolution`, where a modifier keeps its
+  default and asks for a resolution in which a conversion reads it: the
+  modifier stays current there, so the read counts toward no bound. They are added to the schema's enum and to the
   exported `Generator` type, which README.md gives with the others. A runner
-  leaves the five out where the adapter states no `reentry`,
-  `reentry-own-reads-free` also at 0, and at 0 the written case that
-  registers `nest` as well, and every case that reads a kept input after its modifier returned
+  leaves the six out where the adapter states no `reentry`,
+  `reentry-own-reads-free` and `reentry-own-read-in-a-nested-resolution` also
+  at 0, and at 0 the written case that registers `nest` as well, and every case that reads a kept input after its modifier returned
   where the adapter states `keeps` as `false`; RUNNER.md gives both as the
   sixth and seventh reasons a case is left out, and states what the set
   assumes of a bound across the process, which no adapter statement covers. The set's tests hold every written case
   that reads a kept input after its modifier returned to registering `keep` or
   `first`, which is how a runner tells it.
+* `limits-extensions/reentry-resolutions-over-limit` pins that a resolution
+  asked for inside another is counted, where an adapter states `resolutions` as
+  `true`: `[{{x:renest; default:F}}]`, whose modifier asks for a resolution of
+  the same message, resolves to `reentry + 1` brackets around `F`, the
+  resolution asked for past the bound being refused. It is left out where the
+  adapter states no `reentry`, does not state `resolutions` as `true`, or states
+  an output limit that does not hold those brackets. The generator is
+  `reentry-resolutions-over-limit`, added to the schema's enum and to the
+  exported `Generator` type, and the adapter's optional `resolutions` to the
+  exported `Adapter`; a `resolutions` that is not true or false refuses the run.
+  `defects.json` gains `resolutions-overstated`, an adapter that states it over
+  an implementation whose bound counts reads alone, which a correct runner fails
+  on that case, and `claims-non-boolean-resolutions`, which it refuses.
 * `defects.json` gains `reentry-limit-overstated` and
   `reentry-limit-understated`, adapters that state a bound on counted reads one
   higher, or one lower, than the one they keep, and `claims-negative-reentry`,
   one that states a bound below 0. A correct runner fails the first on every
-  construction of kept reads, the second on `reentry-over-limit`,
+  construction of kept reads but `reentry-own-read-in-a-nested-resolution`,
+  which stands one counted read short of the bound, the second on `reentry-over-limit`,
   `reentry-refused-not-recorded` and `reentry-over-limit-by-a-conversion`, and
   refuses the third. An audit counts the
   first two unreachable where the adapter states no `reentry` or states

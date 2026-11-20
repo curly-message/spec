@@ -93,6 +93,16 @@
       "id": "limits-extensions/reentry-own-reads-free",
       "description": "Own reads made inside counted reads are the walk's and count toward no bound, so they stand as deep as the nesting limit allows.",
       "generate": "reentry-own-reads-free"
+    },
+    {
+      "id": "limits-extensions/reentry-own-read-in-a-nested-resolution",
+      "description": "A modifier stays current in a resolution it asks for, so a read of its own default made there by the conversion of an answer is the walk's and counts toward no bound.",
+      "generate": "reentry-own-read-in-a-nested-resolution"
+    },
+    {
+      "id": "limits-extensions/reentry-resolutions-over-limit",
+      "description": "A resolution asked for inside another counts toward the bound where the adapter states that it does, and one asked for past the bound is refused: the modifier that asked fails, its placeholder takes its fallback chain, and every resolution around it answers.",
+      "generate": "reentry-resolutions-over-limit"
     }
   ]
 }

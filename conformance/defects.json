@@ -146,6 +146,18 @@
       "expects": "error"
     },
     {
+      "id": "resolutions-overstated",
+      "description": "States that the bound counts a resolution asked for inside another, over an implementation whose bound counts reads alone.",
+      "section": "13",
+      "expects": "fail"
+    },
+    {
+      "id": "claims-non-boolean-resolutions",
+      "description": "States whether the bound counts a resolution asked for inside another as something other than true or false.",
+      "section": "13",
+      "expects": "error"
+    },
+    {
       "id": "tree-unoffered",
       "description": "Offers no tree, though the implementation produces one.",
       "document": "CST.md",

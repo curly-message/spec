@@ -35,15 +35,51 @@ class Taking {
   }
 }
 
-// The message `nest` asks a resolution of.
+// The message `nest` asks a resolution of, and the one `keep-nest` does.
 const NESTED = '{{x:take; default:F}}';
+const NESTED_TAKING = '{{x:taking; default:F}}';
+
+// The message `renest` asks a resolution of: the one it is registered in.
+export const RENESTED = '[{{x:renest; default:F}}]';
+
+/**
+ * The `renest` of README.md, which asks `adapter` for a resolution of the
+ * message it is registered in, with itself registered, and answers its
+ * output. It raises where that resolution answered none, which is how an
+ * adapter shows one its implementation refused. One level past what `bound`
+ * lets stand it asks for nothing and answers `unrefused`, so an
+ * implementation that refuses nothing fails the case in place of nesting
+ * until its host ends it.
+ */
+export const renesting = (adapter: Pick<Adapter, 'resolve'>, bound: number): ModifierBehaviour => {
+  let standing = 0;
+
+  const renest: ModifierBehaviour = () => {
+    if (standing > bound) return 'unrefused';
+
+    standing += 1;
+
+    try {
+      const resolved: unknown = adapter.resolve({ message: RENESTED, payload: { x: '' }, modifiers: { renest } });
+      const output = resolved !== null && typeof resolved === 'object' ? (resolved as { output?: unknown }).output : undefined;
+
+      if (typeof output !== 'string') throw new Error('The resolution renest asked for answered no output.');
+
+      return output;
+    } finally {
+      standing -= 1;
+    }
+  };
+
+  return renest;
+};
 
 /**
  * The behaviours of README.md over one list of what was kept. Each call builds
  * them afresh, so what one resolution kept is read by no other but the one a
- * `nest` among them asks `adapter` for while its call is in progress, handing
- * it these same behaviours: a runner calls it once per resolution it asks for,
- * with the adapter it asks.
+ * `nest` or a `keep-nest` among them asks `adapter` for while its call is in
+ * progress, handing it these same behaviours: a runner calls it once per
+ * resolution it asks for, with the adapter it asks.
  */
 export const keeping = (adapter: Pick<Adapter, 'resolve'>): Record<Keeping, ModifierBehaviour> => {
   const kept: (() => string)[] = [];
@@ -69,6 +105,17 @@ export const keeping = (adapter: Pick<Adapter, 'resolve'>): Record<Keeping, Modi
     return read ? shown(read()) : 'none';
   };
 
+  // The output of a resolution of `message` asked of the adapter, over these
+  // same behaviours.
+  const nested = (message: string) => {
+    const resolved: unknown = adapter.resolve({ message, payload: { x: '' }, modifiers: record });
+    const output = resolved !== null && typeof resolved === 'object' ? (resolved as { output?: unknown }).output : undefined;
+
+    if (typeof output !== 'string') throw new Error('The resolution nest asked for answered no output.');
+
+    return output;
+  };
+
   const record: Record<Keeping, ModifierBehaviour> = {
     keep: ({ default: read }) => {
       kept.push(read);
@@ -83,13 +130,11 @@ export const keeping = (adapter: Pick<Adapter, 'resolve'>): Record<Keeping, Modi
     take,
     first: () => kept.length ? shown(kept[0]()) : 'none',
     taking: () => new Taking(take),
-    nest: () => {
-      const resolved: unknown = adapter.resolve({ message: NESTED, payload: { x: '' }, modifiers: record });
-      const output = resolved !== null && typeof resolved === 'object' ? (resolved as { output?: unknown }).output : undefined;
+    nest: () => nested(NESTED),
+    'keep-nest': ({ default: read }) => {
+      kept.push(read);
 
-      if (typeof output !== 'string') throw new Error('The resolution nest asked for answered no output.');
-
-      return output;
+      return nested(NESTED_TAKING);
     },
   };
 
