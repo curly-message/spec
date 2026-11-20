@@ -124,11 +124,11 @@ implementation's own modifier signature.
 | `locale` | The locale it received, or `none` where it received none. An empty locale answers empty. |
 | `object` | A plain object holding the value under `answer`, so the answer serializes (section 11): `{"answer":"X"}`. |
 
-Seven behaviours more, which a case registers under `keeping`, work over one
+Eight behaviours more, which a case registers under `keeping`, work over one
 list of what was kept: they keep an input — the default, as the `default` call
 that reads it — read it in a later call, read it as their answer is
 converted, or ask for a resolution that reads it, reads section 13 governs. They share one list of what was kept, and its claims, for
-the length of one resolution and of the one a `nest` or a `keep-nest` among them asks for while
+the length of one resolution and of the one a `nest`, a `keep-nest` or a `keep-nest-ne` among them asks for while
 its call is in progress: a runner builds them afresh for each resolution it
 asks for where none of its own is in progress, and the modifiers handed to
 `resolve` belong to that resolution, so an adapter does not cache them, or a
@@ -143,13 +143,14 @@ leaves them out of `behaviours`, which holds no state.
 | `take` | The text a read of the input kept last that no `take` has claimed answers, or `empty` where it answers the empty string, so a `take` that went on with a refused read shows. It claims that input before it reads it, whatever the read answers, so a read that reaches `take` again finds the one kept before it. Where every input kept is claimed, or none is kept, `none`. |
 | `first` | The text a read of the input kept first answers, or `empty` where it answers the empty string, claiming nothing; `none` where nothing is kept. |
 | `taking` | A host value that reads nothing in the call. Where the implementation converts it, by the host's ordinary string conversion (section 4), the conversion does what `take` does and converts to the text `take` would answer, so the read is made by the conversion of the answer, after the call has returned. Section 13 has a resolution convert it no more than once observably, so it reads once. A runner builds it as a host value whose conversion runs code, never as text computed in the call, and never as a plain object or map, which serializes; the JavaScript runner builds it as an instance of a class with a `toString` of its own. |
-| `nest` | The output of a resolution, by the implementation under test, that it asks for on the thread of execution its call runs on, while its call is in progress: of the message `{{x:take; default:F}}`, with `x` holding the empty string and no props, locale, `id` or defaults, whose modifiers are the seven behaviours of this list, under their own names, sharing its list of what was kept and its claims. It does not observe that resolution's reports, and it raises where that resolution raises or answers no text. |
+| `nest` | The output of a resolution, by the implementation under test, that it asks for on the thread of execution its call runs on, while its call is in progress: of the message `{{x:take; default:F}}`, with `x` holding the empty string and no props, locale, `id` or defaults, whose modifiers are the eight behaviours of this list, under their own names, sharing its list of what was kept and its claims. It does not observe that resolution's reports, and it raises where that resolution raises or answers no text. |
 | `keep-nest` | What `nest` answers, of the message `{{x:taking; default:F}}`. It keeps its default without reading it, then asks for that resolution while its call is in progress, so the conversion of `taking`'s answer there reads the default it kept while it is the current modifier (section 13). |
+| `keep-nest-ne` | What `keep-nest` answers, of the message `{{x:ne; b:{{x:taking; default:F}}}}`. `ne` is the format's own comparison, and nothing is registered under its name: the empty string differs from `b`, so it selects that option and produces it during its call (sections 9.4 and 11), and the conversion of `taking`'s answer there reads the default kept while `ne` is the current modifier (section 13). |
 
 `keep` reads nothing it keeps and `first` reads only what an earlier call
 kept, so a case that registers either reads a kept input after the modifier
 that kept it returned. The set writes no case that reads one so through
-`keep-default`, `take`, `taking`, `nest` and `keep-nest` alone: a case that registers
+`keep-default`, `take`, `taking`, `nest`, `keep-nest` and `keep-nest-ne` alone: a case that registers
 neither `keep` nor `first` reads a kept input, where it reads one, while the
 call of the modifier that kept it is in progress, the read a conversion or a
 nested resolution makes included, and the set's own tests hold every case to
@@ -271,18 +272,31 @@ nested too deep on purpose: they pin the order section 9 decides those in.
 | `reentry-refused-not-recorded` | The same message followed by `{{x:first; default:F}}`. | `[empty]none`, no reports: the refused read was not recorded, so `first` reads the input kept first with nothing in progress, and it produces its text now, its `take` finding every input claimed. Where `B` is 0 that read is refused as well, and the output is `emptyempty`. |
 | `reentry-over-limit-by-a-conversion` | `reentry-over-limit`'s message with `{{x:taking; default:F}}` in place of the `T` that makes the read past the bound: between the brackets of the second default, or after the placeholder that keeps where `B` is 0; `taking` is registered under `keeping` as well. | `[empty]`, no reports: the read past the bound is made by the conversion of `taking`'s answer, and it is refused, produces nothing and answers the empty string; the conversion goes on with it and converts to `empty` (section 13), and each read around it answers what it produced. A conversion the refusal fails takes its chain to `F`, with a report. Where `B` is 0 no modifier is current during that conversion, the read is refused all the same, and the output is `empty`. |
 | `reentry-own-reads-free` | `{{x:keep; default:S}}`, then `B − 1` placeholders `{{x:keep; default:T}}`, then `T`, where `S` is `N − 1` levels of `{{x:read; default:…}}`, each default holding the next and the innermost `z`. Left out where `B` is 0. | `z`, no reports: the innermost of `B` counted reads produces `S`, whose modifiers each read their own default, and those reads are the walk's and count toward no bound. |
-| `reentry-own-read-in-a-nested-resolution` | `{{x:keep; default:K}}`, then `B − 2` placeholders `{{x:keep; default:T}}`, then `T`, where `K` is `{{x:keep-nest; default:z}}`; where `B` is 1, `K` alone. `taking` and `keep-nest` are registered under `keeping` as well. Left out where `B` is 0. | `z`, no reports: inside `B − 1` counted reads, `keep-nest` keeps its default and asks for a resolution, and the conversion of `taking`'s answer there reads that default. The modifier stays current in the resolution it asked for (section 13), so the read is the walk's and counts toward no bound. Only an implementation whose bound counts that resolution as well stands at the bound there, so only such a one fails the case where it counts the read; one whose bound counts reads alone has room for it either way. |
+| `reentry-own-read-in-a-nested-resolution` | `K` resolved with `B − 1` places of the bound taken, where `K` is `{{x:keep-nest; default:z}}`, so that the resolution `keep-nest` asks for takes the last where the bound counts resolutions. Where the adapter states `resolutions` as `true`: `{{x:descend; default:F}}`, or `K` alone where `B` is 1, with the eight behaviours of `keeping` and `descend` registered; `descend` asks, as `nest` does, for `B − 1` resolutions one inside another, each of that same message but the innermost, which is of `K`, so the resolution `keep-nest` asks for is the `B`th. Otherwise: `{{x:keep; default:K}}`, then `B − 2` placeholders `{{x:keep; default:T}}`, then `T`, or `K` alone where `B` is 1, with `taking` and `keep-nest` registered under `keeping` as well, so `K` is produced by the innermost of `B − 1` counted reads. Left out where `B` is 0. | `z`, no reports: `keep-nest` keeps its default and asks for a resolution, and the conversion of `taking`'s answer there reads that default. The modifier stays current in the resolution it asked for (section 13), so the read is the walk's and counts toward no bound. Where the bound counts that resolution it stands there, so an implementation that counts the read refuses it, and the output is `empty`; one whose bound counts reads alone has a place left for the read either way, and built from kept reads the case passes over both, since the adapter need not say which it is. Built from resolutions, the case answers `z` as well where the resolution `keep-nest` asks for is refused, since `keep-nest` then fails and takes its chain. That failure is reported in the resolution that holds `keep-nest`, which is the one the case asks for only where `B` is 1; deeper, `descend` answers its output alone. So where `B` is above 1, or the adapter observes no reports, the case pins that the read is free at the bound only beside the next case, whose output that refusal changes. |
+| `reentry-over-limit-beneath-a-defined-modifier` | The same, with `D` in place of `K`, where `D` is `<{{x:keep-nest-ne; default:{{x:keep-nest-ne; default:z}}}}>`, and `keep-nest-ne` registered in place of `keep-nest`. Left out where `B` is 0. | `<empty>`, no reports: the resolution `keep-nest-ne` asks for holds `{{x:ne; b:…}}`, and `ne` selects `b` and produces it during its call, so the conversion of `taking`'s answer reads the default kept while `ne` is the current modifier. A modifier the format defines is current as one a host defines is (section 13), so the read is not `keep-nest-ne`'s own: it is counted. Where the bound counts the resolution, the bound stands there and the read is refused. Where it counts reads alone, the read takes the last place and produces the default, whose `keep-nest-ne` does the same one read deeper, and that read is one past the bound and refused. The text is the same either way, so the case holds whether or not the bound counts resolutions, and whether or not the adapter says so. An implementation that takes only host-defined modifiers as current leaves each read to `keep-nest-ne` and answers `<z>`, as does one that keeps a higher bound than it states, or a lower one where its bound counts resolutions, since the `keep-nest-ne` whose resolution is refused fails and takes its chain. |
 | `reentry-resolutions-over-limit` | `[{{x:renest; default:F}}]`, with `x` holding the empty string and `renest` registered alone: it asks, as `nest` does and while its call is in progress, for a resolution of that same message with itself registered, and answers its output, raising where that resolution is refused. | `B + 1` times `[`, then `F`, then `B + 1` times `]`: `B + 1` resolutions stand one inside another, the one asked for past them is refused, and the `renest` that asked fails, so its placeholder takes its chain. No reports, since the failure is reported in the innermost resolution, not in the one the case asks for; where `B` is 0 that one is the innermost, and it reports one `failed-modifier` of origin `payload`. |
 
-The six constructions of kept reads are of the Extensions level, since they
+The seven constructions of kept reads are of the Extensions level, since they
 register modifiers, and none of them reaches the output, read or nesting limit
 whatever `B` is: no placeholder's result is longer than `[empty]`, the value they
 read is the empty string, and each read renders a default at the depth the
-message writes it, so they nest two levels, and `reentry-own-reads-free` `N`.
+message writes it, so they nest two levels,
+`reentry-over-limit-beneath-a-defined-modifier` three, and
+`reentry-own-reads-free` `N`.
 They are left out where the adapter states no `reentry`, and where it states
-`keeps` as `false`; `reentry-own-read-in-a-nested-resolution` is left out at a
-`reentry` of 0 as well, as a written case that registers `nest` is.
-`reentry-resolutions-over-limit` is a seventh construction of the level, built
+`keeps` as `false`. The two built around a resolution a modifier asks for,
+`reentry-own-read-in-a-nested-resolution` and
+`reentry-over-limit-beneath-a-defined-modifier`, are left out at a `reentry` of
+0 as well, as a written case that registers `nest` is; built from resolutions
+they read no kept input after the modifier that kept it returned, so an
+adapter that states `resolutions` as `true` runs them whatever it states of
+`keeps`. `descend` is a behaviour of those two alone, as `renest` is of the
+next construction: with fewer than `B − 1` of its calls in progress it asks
+for a resolution of `{{x:descend; default:F}}`, with exactly `B − 1` for one of
+the message that holds the modifier that keeps, each over `x` holding the empty
+string with the same behaviours registered, and it answers that resolution's
+output, raising as `nest` does.
+`reentry-resolutions-over-limit` is an eighth construction of the level, built
 from the same bound, and keeps nothing: it is left out where the adapter states
 no `reentry`, does not state `resolutions` as `true`, or states an output limit
 below `2 * (B + 1) + 1`, which the brackets take. With more than `B` calls of
@@ -391,11 +405,15 @@ implementation whose bound counts resolutions and is documented as 1 states 0,
 and refuses that resolution. Section 13 also lets an implementation bound,
 across the process, the resolutions asked for inside another, with no minimum;
 the set assumes, at every `reentry` and where none is stated, that such a
-bound, where one is kept, lets one resolution asked for inside another stand.
+bound, where one is kept, lets one resolution asked for inside another stand,
+and as many as `reentry` states where the adapter states `resolutions` as
+`true`.
 `resolutions`, stated as `true`, says that the bound `reentry` states counts a
 resolution asked for inside another, as `nest` asks for one, as it counts a
 read: `reentry + 1` resolutions stand one inside another, and the next is
-refused. An implementation that keeps its bound for reads alone, as section 13
+refused. The two constructions built around a resolution a modifier asks for
+are then built from resolutions, and from kept reads otherwise, where they
+hold whether or not the bound counts that resolution. An implementation that keeps its bound for reads alone, as section 13
 lets one whose host signals its limit, leaves it out or states `false`. One
 whose bound counts those resolutions states it, and one that counts along a
 lineage does so of need, since that count is its only guard.
@@ -516,7 +534,8 @@ runner observed, and whether that counts as `caught`, `missed` or
 catch — what an implementation that observes no reports does to every defect of
 its reports, one that claims Core alone to every defect of a level it does not
 claim, one that offers no tree to every defect of the tree, one that states no
-`reentry`, or states `keeps` as `false`, to a bound stated one higher or one
+`reentry`, or states `keeps` as `false` without stating `resolutions` as
+`true`, to a bound stated one higher or one
 lower than the one it keeps, and one whose own
 `unexpressible` already leaves out every case of the run whose request a defect
 of what it cannot express covers to that defect. A defect names

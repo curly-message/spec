@@ -11,14 +11,15 @@ const fixture = (generate: Generator): Fixture => ({
 
 // Runs one construction through an adapter that answers as scripted, and
 // hands back what the adapter was given beside the outcome.
-const build = (generate: Generator, answer: (input: Resolution) => Resolved, declared = limits, reentry?: number) => {
+const build = (generate: Generator, answer: (input: Resolution) => Resolved, declared = limits, reentry?: number, stated: Partial<Adapter> = {}) => {
   let received: Resolution | undefined;
   const adapter: Adapter = {
     levels: ['core', 'extensions'],
     limits: declared,
     reentry,
+    ...stated,
     resolve: (input) => {
-      received = input;
+      received ??= input;
 
       return answer(input);
     },
@@ -339,9 +340,16 @@ describe('generated cases', () => {
     expect(kept('reentry-own-reads-free', 'z', 1)).toMatchObject({ input: { message: `${keeps(1, own)}${TAKE}` }, outcome: { ok: true } });
   });
 
+  // The two constructions that stand at the bound around one resolution asked
+  // for, by kept inputs each read by the last, and by resolutions one inside
+  // another where the adapter states its bound counts them.
+  const nest = '{{x:keep-nest; default:z}}';
+  const defined = '<{{x:keep-nest-ne; default:{{x:keep-nest-ne; default:z}}}}>';
+  const DESCEND = '{{x:descend; default:F}}';
+  const counting = (generate: Generator, output: string, reentry: number) => build(generate, () => ({ output, reports: [] }), limits, reentry, { resolutions: true });
+
   it('reentry-own-read-in-a-nested-resolution keeps a default and asks for a resolution inside one counted read fewer than the bound, and expects the read made there resolved', () => {
     const { input, outcome } = kept('reentry-own-read-in-a-nested-resolution', 'z', 3);
-    const nest = '{{x:keep-nest; default:z}}';
 
     expect(input.message).toBe(`${keeps(1, nest)}${keeps(1)}${TAKE}`);
     expect(Object.keys(input.modifiers ?? {})).toEqual(['read', 'keep', 'take', 'first', 'taking', 'keep-nest']);
@@ -352,8 +360,50 @@ describe('generated cases', () => {
     expect(kept('reentry-own-read-in-a-nested-resolution', 'z', 1)).toMatchObject({ input: { message: nest }, outcome: { ok: true } });
   });
 
+  it('reentry-over-limit-beneath-a-defined-modifier asks there for a comparison of the format that converts an answer reading the default kept, and expects that read refused', () => {
+    const { input, outcome } = kept('reentry-over-limit-beneath-a-defined-modifier', '<empty>', 3);
+
+    expect(input.message).toBe(`${keeps(1, defined)}${keeps(1)}${TAKE}`);
+    // Nothing is registered under the name of the format's own modifier.
+    expect(Object.keys(input.modifiers ?? {})).toEqual(['read', 'keep', 'take', 'first', 'taking', 'keep-nest-ne']);
+    expect(outcome).toEqual({ ok: true });
+    // An implementation that takes only a host-defined modifier as current
+    // leaves the read to the modifier that kept the default, one that refuses
+    // the resolution takes the chain, and one whose refusal fails the
+    // conversion takes the comparison's.
+    expect(kept('reentry-over-limit-beneath-a-defined-modifier', '<z>', 3).outcome).toMatchObject({ ok: false, reason: 'The output differs.', expected: '<empty>' });
+    expect(kept('reentry-over-limit-beneath-a-defined-modifier', 'z', 3).outcome).toMatchObject({ ok: false, reason: 'The output differs.', expected: '<empty>' });
+    expect(kept('reentry-over-limit-beneath-a-defined-modifier', '<F>', 3).outcome).toMatchObject({ ok: false, reason: 'The output differs.', expected: '<empty>' });
+    expect(kept('reentry-over-limit-beneath-a-defined-modifier', '<empty>', 1)).toMatchObject({ input: { message: defined }, outcome: { ok: true } });
+  });
+
+  it('stands at the bound by resolutions one inside another where the adapter states its bound counts them, with no modifier that reads a kept input after its call', () => {
+    for (const [generate, inner, output] of [['reentry-own-read-in-a-nested-resolution', nest, 'z'], ['reentry-over-limit-beneath-a-defined-modifier', defined, '<empty>']] as const) {
+      const { input, outcome } = counting(generate, output, 3);
+
+      expect(input).toMatchObject({ message: DESCEND, payload: { x: '' }, id: 'limits' });
+      expect(Object.keys(input.modifiers ?? {})).toEqual(['keep', 'keep-default', 'take', 'first', 'taking', 'nest', 'keep-nest', 'keep-nest-ne', 'descend']);
+      expect(outcome).toEqual({ ok: true });
+      // At a bound of 1 the resolution the modifier asks for is the one that stands.
+      expect(counting(generate, output, 1)).toMatchObject({ input: { message: inner }, outcome: { ok: true } });
+      expect(counting(generate, output, 40000)).toMatchObject({ input: { message: DESCEND }, outcome: { ok: true } });
+    }
+  });
+
+  it('leaves the two out where nothing can stand at the bound', () => {
+    const left = (stated: Partial<Adapter>) => (['reentry-own-read-in-a-nested-resolution', 'reentry-over-limit-beneath-a-defined-modifier'] as const).map((generate) => plan({ levels: ['core', 'extensions'], limits, resolve: () => ({ output: '' }), ...stated }, { fixtures: [fixture(generate)] })).map(({ cases, skipped }) => [cases.length, skipped.length]);
+
+    expect(left({ reentry: 2 })).toEqual([[1, 0], [1, 0]]);
+    expect(left({ reentry: 2, keeps: false, resolutions: true })).toEqual([[1, 0], [1, 0]]);
+    expect(left({ reentry: 2, keeps: false })).toEqual([[0, 1], [0, 1]]);
+    expect(left({ reentry: 2, keeps: false, resolutions: false })).toEqual([[0, 1], [0, 1]]);
+    expect(left({ reentry: 0 })).toEqual([[0, 1], [0, 1]]);
+    expect(left({ reentry: 0, resolutions: true })).toEqual([[0, 1], [0, 1]]);
+    expect(left({})).toEqual([[0, 1], [0, 1]]);
+  });
+
   it('expects of the constructions of kept reads an output that does not grow with the bound, over a value that reads nothing', () => {
-    const expected = { 'reentry-at-limit': 'none', 'reentry-over-limit': '[empty]', 'reentry-refused-not-recorded': '[empty]none', 'reentry-own-reads-free': 'z', 'reentry-over-limit-by-a-conversion': '[empty]', 'reentry-own-read-in-a-nested-resolution': 'z' } as const;
+    const expected = { 'reentry-at-limit': 'none', 'reentry-over-limit': '[empty]', 'reentry-refused-not-recorded': '[empty]none', 'reentry-own-reads-free': 'z', 'reentry-over-limit-by-a-conversion': '[empty]', 'reentry-own-read-in-a-nested-resolution': 'z', 'reentry-over-limit-beneath-a-defined-modifier': '<empty>' } as const;
 
     for (const [generate, output] of Object.entries(expected) as [Generator, string][]) {
       expect(kept(generate, output, 40000)).toMatchObject({ input: { payload: { x: '' } }, outcome: { ok: true } });
@@ -393,20 +443,96 @@ describe('generated cases', () => {
     expect(failing('in-progress-per-resolution')).toEqual(each());
   });
 
-  // The modifier that asks for a resolution stays current in it. Only an
-  // implementation whose bound counts that resolution as well stands at the
-  // bound there, so only it shows a read counted that should be free.
-  it('passes reentry-own-read-in-a-nested-resolution whether the bound counts the resolution asked for or not, and fails one that counts the read there where it does', () => {
-    const nested = (bound: number, resolutions: boolean, mutant?: Mutant) => build('reentry-own-read-in-a-nested-resolution', resolver({ bound, mutant, resolutions }), { ...limits, nesting: 4 }, bound).outcome.ok;
-    const BOUNDS = [1, 2, 3];
+  // The two constructions that stand at the bound around a resolution asked
+  // for, each as it is built for an implementation whose bound counts that
+  // resolution and for one whose bound counts reads alone.
+  const framed = (generate: Generator, resolutions: boolean, mutant?: Mutant, stated = resolutions) => [1, 2, 3].map((bound) => {
+    const { outcome } = build(generate, resolver({ bound, mutant, resolutions }), { ...limits, nesting: 4 }, bound, { resolutions: stated });
 
-    expect(BOUNDS.map((bound) => nested(bound, false))).toEqual([true, true, true]);
-    expect(BOUNDS.map((bound) => nested(bound, true))).toEqual([true, true, true]);
-    expect(BOUNDS.map((bound) => nested(bound, true, 'current-per-resolution'))).toEqual([false, false, false]);
-    expect(BOUNDS.map((bound) => nested(bound, true, 'own-reads-counted'))).toEqual([false, false, false]);
-    expect(BOUNDS.map((bound) => nested(bound, false, 'current-per-resolution'))).toEqual([true, true, true]);
+    return outcome.ok ? 'ok' : outcome.actual;
+  });
+  const OWN = 'reentry-own-read-in-a-nested-resolution';
+  const DEFINED = 'reentry-over-limit-beneath-a-defined-modifier';
+  const each = (output: string) => [output, output, output];
+
+  // The modifier that asks for a resolution stays current in it, and its read
+  // there is free at the bound itself, which an implementation stands at
+  // where its bound counts that resolution.
+  it('passes reentry-own-read-in-a-nested-resolution however it is built, and fails a read there that is counted where the bound counts the resolution', () => {
+    for (const stated of [true, false]) {
+      expect(framed(OWN, true, undefined, stated)).toEqual(each('ok'));
+      expect(framed(OWN, true, 'current-per-resolution', stated)).toEqual(each('empty'));
+      expect(framed(OWN, true, 'own-reads-counted', stated)).toEqual(each('empty'));
+      expect(framed(OWN, true, 'defined-not-current', stated)).toEqual(each('ok'));
+    }
+
+    // One whose bound counts reads alone has a place left for the read.
+    expect(framed(OWN, false)).toEqual(each('ok'));
+    expect(framed(OWN, false, 'current-per-resolution')).toEqual(each('ok'));
     // The other constructions read no kept input in a resolution asked for.
-    expect(BOUNDS.map((bound) => CONSTRUCTIONS.filter((generate) => !reading(bound, 'current-per-resolution')(generate)))).toEqual([[], [], []]);
+    expect([1, 2, 3].map((bound) => CONSTRUCTIONS.filter((generate) => !reading(bound, 'current-per-resolution')(generate)))).toEqual([[], [], []]);
+  });
+
+  // A modifier the format defines is current while it runs, so the read made
+  // beneath it is counted, and refused at the bound: the first where the
+  // bound counts the resolution, the second where it counts reads alone.
+  it('passes reentry-over-limit-beneath-a-defined-modifier however it is built and whatever the bound counts, and fails only there a modifier of the format that is not current', () => {
+    for (const [resolutions, stated] of [[false, false], [true, true], [true, false]] as const) {
+      expect(framed(DEFINED, resolutions, undefined, stated)).toEqual(each('ok'));
+      expect(framed(DEFINED, resolutions, 'defined-not-current', stated)).toEqual(each('<z>'));
+      // A bound kept one higher than stated, or none, lets the read through.
+      expect(framed(DEFINED, resolutions, 'bound-long', stated)).toEqual(each('<z>'));
+      expect(framed(DEFINED, resolutions, 'unbounded', stated)).toEqual(each('<z>'));
+      // Neither own read is this case's to pin.
+      expect(framed(DEFINED, resolutions, 'current-per-resolution', stated)).toEqual(each('ok'));
+    }
+
+    expect([1, 2, 3].map((bound) => CONSTRUCTIONS.filter((generate) => !reading(bound, 'defined-not-current')(generate)))).toEqual([[], [], []]);
+  });
+
+  // An adapter need not state that its bound counts a resolution asked for
+  // inside another, so the two built from kept reads hold over an
+  // implementation whose bound does, as over one whose bound counts reads
+  // alone, and the one whose read is refused fails a modifier of the format
+  // that is not current over both.
+  it('passes both built from kept reads over an implementation whose bound counts resolutions and whose adapter does not say so', () => {
+    expect(framed(OWN, true, undefined, false)).toEqual(each('ok'));
+    expect(framed(DEFINED, true, undefined, false)).toEqual(each('ok'));
+    expect(framed(DEFINED, true, 'defined-not-current', false)).toEqual(each('<z>'));
+    expect(framed(OWN, true, 'current-per-resolution', false)).toEqual(each('empty'));
+  });
+
+  // The near miss answers `z` where the read is free and where the resolution
+  // it asks for was refused alike, so a bound kept lower than stated shows in
+  // it only by the report of the modifier that asked, where that modifier
+  // sits in the resolution the case asks for, and at every bound in the
+  // output of the case beside it.
+  it('pins that the bound is stood at only with both: a bound kept one lower fails the one by a report alone and the other by its output, where it counts resolutions', () => {
+    expect(framed(OWN, true, 'bound-short').slice(1)).toEqual(['ok', 'ok']);
+    expect(framed(OWN, true, 'bound-short')[0]).not.toBe('ok');
+    expect(framed(DEFINED, true, 'bound-short')).toEqual(each('<z>'));
+    // Built from kept reads the modifier sits in the resolution the case asks for.
+    expect(framed(OWN, true, 'bound-short', false).filter((outcome) => outcome === 'ok')).toEqual([]);
+    expect(framed(DEFINED, true, 'bound-short', false)).toEqual(each('<z>'));
+    // One whose bound counts reads alone stands a place short, and shows nothing.
+    expect(framed(OWN, false, 'bound-short')).toEqual(each('ok'));
+    expect(framed(DEFINED, false, 'bound-short')).toEqual(each('ok'));
+    expect(framed(OWN, true, 'bound-long')).toEqual(each('ok'));
+    expect(framed(OWN, false, 'bound-long')).toEqual(each('ok'));
+  });
+
+  // Built by resolutions, the two read no kept input after the modifier that
+  // kept it returned, so they run where no modifier can keep one.
+  it('reads no kept input after its modifier returned where the two are built by resolutions', () => {
+    for (const generate of [OWN, DEFINED] as const) {
+      let late = false;
+      const resolve = resolver({ bound: 3, resolutions: true, late: () => {
+        late = true;
+      } });
+
+      expect(build(generate, resolve, { ...limits, nesting: 4 }, 3, { resolutions: true, keeps: false }).outcome).toEqual({ ok: true });
+      expect(late).toBe(false);
+    }
   });
 
   // The construction of resolutions one inside another, through an

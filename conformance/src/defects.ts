@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { RESOLUTIONS, covers, renested } from './cases';
+import { FRAMED, RESOLUTIONS, covers, renested } from './cases';
 import { fixtures } from './set';
 import { NAMED, boundaries } from './tree';
 import type { Adapter, Catalogue, Defect, Fixture, FormatRequest, Generator, Level, Mutation, Node, Report, ReportCode, ReportOrigin, Resolved, SpanUnit, Unexpressible } from './types';
@@ -81,21 +81,50 @@ const converting = (by: number, constructions: readonly Generator[]) => (adapter
   () => set.some(({ file }) => file.kind !== 'tree' && levels.includes(file.level) && file.cases.some((c) => 'generate' in c && constructions.includes(c.generate))),
 );
 
+// The construction whose read is refused beneath a modifier of the format.
+const DEFINED: Generator = 'reentry-over-limit-beneath-a-defined-modifier';
+
 // A defect of the bound on counted reads the adapter states. An adapter that
 // states none, or states 0 where the defect would state one lower, carries
 // nothing to alter. Otherwise the bound is read only by the constructions
-// built from it, which run where the adapter states that a modifier can keep
-// an input, so the defect reaches the runner where the run holds one of the
-// stated constructions at a level it runs.
+// built from it. Those built from kept reads run where the adapter states
+// that a modifier can keep an input. The two built inside a resolution a
+// modifier asks for run at a bound above 0, and from resolutions, whatever
+// the adapter states of keeping, where it states that its bound counts them.
+// The one whose read is refused shows a bound stated one lower however it is
+// built, by a read let through, and one stated one higher only built from
+// resolutions: built from kept reads it stands a place short of the bound
+// where the bound counts reads alone, which the adapter need not say. The
+// other answers the same text where the resolution is refused, and shows
+// only a bound stated one higher, built from resolutions, in the report of
+// the modifier that asked, which reaches the runner where that modifier sits
+// in the resolution the case asks for, at a stated bound of 1, and the
+// adapter observes reports. So the defect reaches the runner where the run
+// holds, at a level it runs, one of the stated constructions as it is built
+// for this adapter.
 const reentering = (by: number, constructions: readonly Generator[]) => (adapter: Adapter, { set, levels }: Run = { set: fixtures(), levels: adapter.levels }): Mutation => {
   const declared = adapter.reentry === undefined ? -1 : adapter.reentry + by;
+  const counts = adapter.resolutions === true;
+  let observes = false;
+  const shows = (generate: Generator) => constructions.includes(generate) && (FRAMED.includes(generate)
+    ? declared > 0 && (generate === DEFINED ? counts || (by < 0 && adapter.keeps !== false) : counts && by > 0 && declared === 1 && observes)
+    : adapter.keeps !== false);
 
-  return claiming(
-    adapter,
-    declared < 0 ? {} : { reentry: declared },
-    () => declared >= 0 && adapter.keeps !== false
-      && set.some(({ file }) => file.kind !== 'tree' && levels.includes(file.level) && file.cases.some((c) => 'generate' in c && constructions.includes(c.generate))),
-  );
+  return {
+    adapter: {
+      ...adapter,
+      ...declared < 0 ? {} : { reentry: declared },
+      resolve: (input) => {
+        const resolved = adapter.resolve(input);
+
+        observes ||= (resolved as Partial<Resolved> | undefined)?.reports !== undefined;
+
+        return resolved;
+      },
+    },
+    reached: () => declared >= 0
+      && set.some(({ file }) => file.kind !== 'tree' && levels.includes(file.level) && file.cases.some((c) => 'generate' in c && shows(c.generate))),
+  };
 };
 
 // A defect of the tree, which an implementation need not offer at all. An
@@ -242,24 +271,32 @@ const realizations: Record<Defect, (adapter: Adapter, run?: Run) => Mutation> = 
   // Every construction that stands at the bound then asks for one read more
   // than the implementation lets stand: at the bound it pins what that read
   // answers, and past it which `take` the refusal reaches.
-  'reentry-limit-overstated': reentering(1, ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion']),
+  'reentry-limit-overstated': reentering(1, ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion', 'reentry-own-read-in-a-nested-resolution', DEFINED]),
 
   // Only the constructions past the bound then let one read through that the
   // case expects refused; at it, either bound lets every read through.
-  'reentry-limit-understated': reentering(-1, ['reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-over-limit-by-a-conversion']),
+  'reentry-limit-understated': reentering(-1, ['reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-over-limit-by-a-conversion', DEFINED]),
 
   'claims-negative-reentry': (adapter) => claiming(adapter, { reentry: -1 }),
 
   // The construction of resolutions one inside another then runs over an
-  // implementation that refuses none of them. An adapter that states the
-  // claim itself carries nothing to alter, and the case is left out all the
-  // same where it states no bound or its output limit does not hold it.
-  'resolutions-overstated': (adapter, { set, levels }: Run = { set: fixtures(), levels: adapter.levels }) => claiming(
-    adapter,
-    { resolutions: true },
-    () => adapter.resolutions !== true && adapter.reentry !== undefined && renested(adapter.reentry).length <= adapter.limits.output
-      && set.some(({ file }) => file.kind !== 'tree' && levels.includes(file.level) && file.cases.some((c) => 'generate' in c && c.generate === RESOLUTIONS)),
-  ),
+  // implementation that refuses none of them, and the one whose read is
+  // refused beneath a modifier of the format is built from resolutions that
+  // take no place, so above a bound of 1 its read is let through. An adapter that
+  // states the claim itself carries nothing to alter; the first is left out
+  // all the same where it states no bound or its output limit does not hold
+  // it, and the second shows nothing where it states none, 0 or 1.
+  'resolutions-overstated': (adapter, { set, levels }: Run = { set: fixtures(), levels: adapter.levels }) => {
+    const { reentry } = adapter;
+    const shows = (generate: Generator) => reentry !== undefined && (generate === RESOLUTIONS ? renested(reentry).length <= adapter.limits.output : generate === DEFINED && reentry > 1);
+
+    return claiming(
+      adapter,
+      { resolutions: true },
+      () => adapter.resolutions !== true
+        && set.some(({ file }) => file.kind !== 'tree' && levels.includes(file.level) && file.cases.some((c) => 'generate' in c && shows(c.generate))),
+    );
+  },
 
   'claims-non-boolean-resolutions': (adapter) => claiming(adapter, { resolutions: 'true' as unknown as boolean }),
 

@@ -132,7 +132,9 @@ what a runner reads before it runs anything:
   the constructions of kept reads. `keeps`, stated as `false`, says that no
   modifier can keep an input past its call. `resolutions`, stated as `true`,
   says that the bound counts a resolution asked for inside another as it counts
-  a read, and builds `reentry-resolutions-over-limit`.
+  a read, builds `reentry-resolutions-over-limit`, and has the two
+  constructions built around a resolution a modifier asks for stand at the
+  bound by resolutions in place of kept reads.
 
 The optional claims are `unexpressible`, `cst`, `reentry`, `keeps` and
 `resolutions`;
@@ -199,37 +201,44 @@ Eight reasons leave a case out, and no others:
   as well where the output limit the adapter states is less than `2 * (reentry +
   1) + 1`, the brackets of the resolutions that stand and the text they hold.
   What the adapter states of `keeps` does not reach it: it keeps no input.
-* It is one of the six constructions of kept reads, and the adapter states no
+* It is one of the seven constructions of kept reads, and the adapter states no
   `reentry`: each is built from that bound, and an implementation that keeps
   none has no bound to meet. `reentry-own-reads-free` is left out at a
   `reentry` of 0 as well, where no counted read stands for the walk's own
-  reads to be made inside. A written case that registers `nest` or `keep-nest`
-  under `keeping`, and `reentry-own-read-in-a-nested-resolution`, which
-  registers `keep-nest`, are left out where the adapter states a `reentry` of 0; the written case runs
+  reads to be made inside. A written case that registers `nest`, `keep-nest`
+  or `keep-nest-ne` under `keeping`, and
+  `reentry-own-read-in-a-nested-resolution` and
+  `reentry-over-limit-beneath-a-defined-modifier`, which register the last
+  two, are left out where the adapter states a `reentry` of 0; the written case runs
   where it states none: an implementation whose bound counts resolutions and
   is documented as 1 states 0 and refuses the resolution `nest` asks for.
 * It reads an input a modifier kept after that modifier returned, and the
-  adapter states `keeps` as `false`: the six constructions of kept reads,
+  adapter states `keeps` as `false`: the seven constructions of kept reads,
   and a written case that registers `keep` or `first` under `keeping`. The
   set writes no case that reads a kept input so through `keep-default`,
-  `take`, `taking`, `nest` and `keep-nest` alone, and its tests hold every case to that,
+  `take`, `taking`, `nest`, `keep-nest` and `keep-nest-ne` alone, and its tests hold every case to that,
   so a case that reads a kept input while the call of the modifier that kept
   it is in progress still runs, the read a conversion or a nested resolution
-  makes included.
+  makes included. `reentry-own-read-in-a-nested-resolution` and
+  `reentry-over-limit-beneath-a-defined-modifier` are of those where the
+  adapter states `resolutions` as `true`: built from resolutions they
+  register no `keep`, and run whatever the adapter states of `keeps`.
 
 Section 13 also lets an implementation bound, across the process, the
 resolutions asked for inside another, and sets no minimum for that bound. No
 adapter statement covers it: the set assumes, whatever `reentry` an adapter
 states and where it states none, that such a bound, where one is kept, lets
 one resolution asked for inside another stand, as the written case that
-registers `nest` asks for one.
+registers `nest` asks for one, and, of an adapter that states `resolutions` as
+`true`, that it lets as many stand as the `reentry` it states, as the
+constructions built from resolutions ask for.
 
 ## Building a generated case
 
 Section 13 states minima and requires an implementation to document what it
 permits, so a case at a limit cannot be written out: the runner builds it from
 the limits the adapter declared, or from the bound on counted reads it states.
-README.md gives the twenty-two constructions, the message and payload each builds,
+README.md gives the twenty-four constructions, the message and payload each builds,
 and what each expects. A runner builds them
 from the adapter's own numbers, not from section 13's minima; an
 implementation that permits more is exercised at what it documents.
@@ -265,10 +274,10 @@ runner builds that message without recursion of its own, and so should a runner
 in another language.
 
 The bound on counted reads is built from inputs a modifier keeps. The
-behaviours `keep`, `keep-default`, `take`, `first`, `taking`, `nest` and `keep-nest` share
+behaviours `keep`, `keep-default`, `take`, `first`, `taking`, `nest`, `keep-nest` and `keep-nest-ne` share
 one list of what was kept, and its claims, and a runner builds them afresh for
 each resolution it asks for where none of its own is in progress, so that
-nothing one resolution kept is read in another but the one a `nest` or a `keep-nest` asks for
+nothing one resolution kept is read in another but the one a `nest`, a `keep-nest` or a `keep-nest-ne` asks for
 while its call is in progress, which shares the list; the JavaScript runner
 builds them with `keeping(adapter)`, outside the `behaviours` record, which
 holds no state. `reentry-at-limit` keeps `B` defaults that each
@@ -284,9 +293,15 @@ conversion of `taking`'s answer, where `reentry-over-limit` has a `take`; and
 `reentry-own-reads-free` has the innermost of `B` counted reads render
 modifiers that read their own defaults `N − 1` levels deep, reads the walk
 makes that count toward no bound; and `reentry-own-read-in-a-nested-resolution`
-has a `keep-nest` inside `B − 1` counted reads keep its default and ask for a
-resolution, where the conversion of `taking`'s answer reads that default, a
-read the walk makes since the modifier stays current there. `keep` answers the empty string and `take`
+has a `keep-nest`, one place short of the bound, keep its default and ask for
+a resolution, where the conversion of `taking`'s answer reads that default, a
+read the walk makes since the modifier stays current there; and
+`reentry-over-limit-beneath-a-defined-modifier` has a `keep-nest-ne` ask there
+for a resolution in which the format's own `ne` produces the option that
+holds `taking`, so the read is made while `ne` is current, is no modifier's
+own, and is counted: it is refused where the resolution took the last place,
+and otherwise takes it and produces a second `keep-nest-ne`, whose read is
+refused one past the bound. `keep` answers the empty string and `take`
 and `first` the text they read, or `empty` for the empty string, so no result
 is longer than `[empty]` whatever `B` is, and the value they read is the empty
 string, which spends none of the read budget; each renders a default at the depth the message
@@ -310,7 +325,7 @@ the conversion reads once.
 resolution, by the implementation under test, of `{{x:take; default:F}}`,
 asked for on the thread of execution its call runs on while its call is in
 progress, through the means the implementation hands a modifier where section
-13 has it hand one, whose modifiers are the seven behaviours sharing the list
+13 has it hand one, whose modifiers are the eight behaviours sharing the list
 of what was kept, and its claims, with the resolution around it. A runner that
 hands an
 adapter the behaviours themselves, as the JavaScript runner does, builds
@@ -327,10 +342,71 @@ alters the resolution around it, and the inner one reports nothing. Either
 way, `nest` raises where the resolution it asks for raises or answers no text,
 which the implementation contains as a failed modifier, and the case fails.
 `keep-nest` keeps its default unread and then does what `nest` does, of
-`{{x:taking; default:F}}`, and is built the same way.
+`{{x:taking; default:F}}`, and is built the same way. So is `keep-nest-ne`, of
+`{{x:ne; b:{{x:taking; default:F}}}}` over the same `x`, the empty string,
+which differs from `b`: `ne` there is the implementation's own, and a runner
+registers nothing under that name, in the resolution it asks for or in the
+one around it.
+
+The two constructions around `keep-nest` and `keep-nest-ne` resolve a
+placeholder with `B − 1` places of the bound taken, so that the resolution its
+modifier asks for takes the last where the bound counts resolutions. The
+placeholder is `{{x:keep-nest; default:z}}` for the first and
+`<{{x:keep-nest-ne; default:{{x:keep-nest-ne; default:z}}}}>`, brackets
+included, for the second. Where the adapter states `resolutions` as
+`true`, the places are resolutions: the message is `{{x:descend; default:F}}`,
+and `descend`, registered beside the eight and sharing their list, does what
+`nest` does, counting its own calls in progress: of that same message with
+fewer than `B − 1` of them in progress, and of the placeholder with `B − 1`,
+so that `B − 1` resolutions stand one inside another and the one the modifier
+asks for is the `B`th; where `B` is 1 the message is that placeholder alone.
+Built so, nothing is read after the modifier that kept it returned. Otherwise
+the places are counted reads: `{{x:keep; default:K}}`, then `B − 2`
+placeholders that keep a `take`, then a `take`, where `K` is that placeholder,
+so the innermost of `B − 1` counted reads produces it; where `B` is 1 the
+message is `K` alone. An adapter that leaves `resolutions` unstated has not
+said that its bound counts reads alone, so built from kept reads both hold
+over either implementation. The first has a place left for its read where the
+bound counts reads alone, and stands at the bound where it counts the
+resolution, which is where it shows a read counted that should be free. In
+the second, where the bound counts the resolution, the read `ne`'s call makes
+is refused there; where it counts reads alone, that read takes the last place
+and produces the default, whose own `keep-nest-ne` asks for a resolution in
+which the same read is one past the bound. `<empty>` is the output either
+way, and `<z>` wherever a read made beneath `ne` was taken as
+`keep-nest-ne`'s own. The first
+answers `z` where the read is free and, built from resolutions, where the
+resolution the modifier asks for was refused as well, since the modifier then
+fails and takes its chain. That failure is reported in the resolution that
+holds the modifier: the one the case asks for where `B` is 1, where a runner
+that observes reports fails the case on it, and one a `descend` asked for
+where `B` is higher, whose reports `descend` does not observe. So alone,
+built from resolutions, the first shows an implementation that stood short of
+the bound only at a `B` of 1 and through its reports; the second answers
+`<empty>` only where the first resolution a `keep-nest-ne` asked for ran and
+a read in it was refused, and `<z>` where that resolution was refused, so it
+shows one at every `B` by its output, and the two together pin that the read
+is free with the bound stood at.
+
+No defect of the catalogue is an implementation that takes only host-defined
+modifiers as current: a wrap of `resolve` cannot make a modifier of the format
+stop being current, and an adapter that builds `keep-nest-ne` itself sends the
+resolution it asks for through no defect. A runner that registered a modifier
+of its own under `ne`, or built the option's text before the comparison ran,
+would pass such an implementation, and no defect the audit applies tells that
+runner apart; a port checks in its own tests that
+`reentry-over-limit-beneath-a-defined-modifier` fails, answering `<z>`, over an
+implementation in which a modifier the format defines is not current. That
+implementation must not take the permission section 13 gives to count an own
+read while an option value or default of another placeholder, begun beneath
+the modifier's call, is in production: the option `ne` selected is one, so an
+implementation that takes it refuses the read whichever modifier it holds
+current, answers `<empty>`, and tells nothing of the runner. A port whose
+implementation takes the permission checks against a reading that does not,
+as the JavaScript runner does against the one its tests carry.
 
 `renest` is the behaviour of `reentry-resolutions-over-limit` alone, and shares
-nothing with the seven: it does what `nest` does, of the message `[{{x:renest;
+nothing with the eight: it does what `nest` does, of the message `[{{x:renest;
 default:F}}]` with itself registered, so each resolution it asks for asks for
 the next, through the means the implementation hands a modifier where section 13
 has it hand one. It raises where the resolution it asks for is refused or
@@ -540,19 +616,33 @@ defect of its reports; one that claims Core alone cannot carry a defect of a
 level it does not claim; one that states no stand-in for `undefined` runs no
 construction at the conversion limit, so a conversion limit stated one higher
 alters nothing it answers, though one stated one lower is still caught past
-the limit, by the construction that continues. One that states no `reentry`,
-or states `keeps` as `false`, runs no construction of kept reads, so a bound
+the limit, by the construction that continues. One that states no `reentry`
+runs no construction of kept reads, and neither does one that states `keeps`
+as `false` unless it states `resolutions` as `true`, which runs the two built
+from resolutions; where none runs, a bound
 stated one higher or one lower alters nothing it answers, and one that states
 a bound of 0 has no bound one lower to state. A bound stated one higher is
-caught by every construction of kept reads but
-`reentry-own-read-in-a-nested-resolution`, which stands one counted read short
-of the bound, and one stated one lower only by
-`reentry-over-limit`, `reentry-refused-not-recorded` and
-`reentry-over-limit-by-a-conversion`, since at the bound
-either bound lets every read through. A `resolutions` stated over an
+caught by the five constructions of kept reads that stand at the bound or
+past it, and one stated one lower only by
+`reentry-over-limit`, `reentry-refused-not-recorded`,
+`reentry-over-limit-by-a-conversion` and
+`reentry-over-limit-beneath-a-defined-modifier`, since at the bound
+either bound lets every read through. The two built around a resolution a
+modifier asks for stand, built from kept reads, a place short of a bound that
+counts reads alone, so neither shows a bound stated one higher there. Built
+from resolutions,
+`reentry-over-limit-beneath-a-defined-modifier` shows both by its output, and
+`reentry-own-read-in-a-nested-resolution` never shows a bound stated one
+lower, and shows one stated one higher only where the bound stated is then 1
+and the adapter observes reports, by the `failed-modifier` of the modifier
+whose resolution was refused: at a higher bound that report stays in a
+resolution `descend` asked for, and the output is the same either way. A
+bound stated one lower than 1 leaves both out. A `resolutions` stated over an
 implementation whose bound counts reads alone is caught by
-`reentry-resolutions-over-limit`, and reaches a runner only through an adapter
-that does not state it and whose run holds that case: an adapter whose
+`reentry-resolutions-over-limit`, and by
+`reentry-over-limit-beneath-a-defined-modifier` at a `reentry` above 1, which
+is then built from resolutions that take no place, and reaches a runner only
+through an adapter that does not state it and whose run holds one of the two: an adapter whose
 implementation counts a resolution asked for inside another states
 `resolutions`, or the audit shows that defect missed. A defect is **unreachable**
 where applying it changed nothing the adapter answers, and an audit that calls

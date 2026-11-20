@@ -142,7 +142,12 @@ const visits = (value: unknown) => {
 // keeps, as section 13 reads it.
 const kept = (bound: number) => resolver({ bound });
 
-const isKept = (message: unknown): message is string => typeof message === 'string' && message.startsWith('{{x:');
+// One implementation answers them all, since a construction may ask for a
+// resolution inside another, which reads what the one around it holds.
+const keeping = kept(REENTRY);
+
+// A construction's message, or the one a `keep-nest-ne` asks a resolution of.
+const isKept = (message: unknown): message is string => typeof message === 'string' && (message.startsWith('{{x:') || message.startsWith('<'));
 
 // The resolutions a case asks for one inside another go through one
 // implementation, so that one whose bound counts them sees each inside the
@@ -157,7 +162,7 @@ const uncounted = renested(false);
 // which a defect may misdeclare but cannot move, and a construction of kept
 // reads by the bound it keeps.
 const answer = ({ id, message, payload, modifiers }: Resolution): Resolved => {
-  if (isKept(message)) return kept(REENTRY)({ id, message, payload, modifiers });
+  if (isKept(message)) return keeping({ id, message, payload, modifiers });
 
   if (isRenested(message)) return uncounted({ id, message, payload, modifiers });
 
@@ -257,14 +262,51 @@ describe('audit', () => {
     };
     const ALL: Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion'];
     // An implementation that keeps a bound of 0, as section 13 lets it.
-    const none = conforming({ reentry: 0, resolve: (input) => isKept(input.message) ? kept(0)(input) : answer(input) });
+    const unkept = kept(0);
+    const none = conforming({ reentry: 0, resolve: (input) => isKept(input.message) ? unkept(input) : answer(input) });
+    // One whose bound counts a resolution asked for inside another, behind an
+    // adapter that says so, with and without a modifier that can keep an input.
+    const counted = resolver({ bound: REENTRY, resolutions: true });
+    const counting = (over: Partial<Adapter> = {}) => conforming({ resolutions: true, resolve: (input) => isKept(input.message) ? counted(input) : answer(input), ...over });
+    const OWN: Generator = 'reentry-own-read-in-a-nested-resolution';
+    const DEFINED: Generator = 'reentry-over-limit-beneath-a-defined-modifier';
 
     expect(reentry(only('reentry-at-limit'))).toEqual({ overstated: 'caught', understated: 'unreachable', negative: 'caught' });
     expect(reentry(only('reentry-over-limit'))).toEqual({ overstated: 'caught', understated: 'caught', negative: 'caught' });
     expect(reentry(only('reentry-refused-not-recorded'))).toEqual({ overstated: 'caught', understated: 'caught', negative: 'caught' });
     expect(reentry(only('reentry-own-reads-free'))).toEqual({ overstated: 'caught', understated: 'unreachable', negative: 'caught' });
     expect(reentry(only('reentry-over-limit-by-a-conversion'))).toEqual({ overstated: 'caught', understated: 'caught', negative: 'caught' });
-    expect(reentry(only('reentry-own-read-in-a-nested-resolution'))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
+    // The two built around a resolution asked for: built from kept reads they
+    // stand a place short of a bound that counts reads alone, so an overstated
+    // bound shows in neither, and an understated one lets the refused read through.
+    expect(reentry(only(OWN))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
+    expect(reentry(only(DEFINED))).toEqual({ overstated: 'unreachable', understated: 'caught', negative: 'caught' });
+    // Built from resolutions, the one whose read is free answers the same
+    // where the resolution is refused, and neither needs an input kept.
+    expect(plan(counting(), { fixtures: only(OWN, DEFINED) }).cases.map((planned) => planned.execute())).toEqual([{ ok: true }, { ok: true }]);
+    expect(reentry(only(OWN), counting())).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
+    expect(reentry(only(DEFINED), counting())).toEqual({ overstated: 'caught', understated: 'caught', negative: 'caught' });
+    expect(reentry(only(DEFINED), counting({ keeps: false }))).toEqual({ overstated: 'caught', understated: 'caught', negative: 'caught' });
+    expect(reentry(only(...ALL), counting({ keeps: false }))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
+    expect(reentry(only(OWN, DEFINED), conforming({ keeps: false }))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
+    // At a stated bound of 1 the modifier that asks sits in the resolution
+    // the case asks for, so the failure a refused resolution leaves it with
+    // is reported there: the one whose read is free then shows an overstated
+    // bound alone, where the adapter observes reports.
+    const refusing = resolver({ bound: 0, resolutions: true });
+    const zero = (observes: boolean) => counting({ reentry: 0, resolve: (input) => {
+      const resolved = isKept(input.message) ? refusing(input) : answer(input);
+
+      return observes ? resolved : { output: resolved.output };
+    } });
+
+    expect(reentry(only(OWN), zero(true))).toEqual({ overstated: 'caught', understated: 'unreachable', negative: 'caught' });
+    expect(reentry(only(OWN), zero(false))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
+    expect(reentry(only(DEFINED), zero(false))).toEqual({ overstated: 'caught', understated: 'unreachable', negative: 'caught' });
+    // Stated one lower, a bound of 1 leaves both out.
+    const single = kept(1);
+
+    expect(reentry(only(DEFINED), conforming({ reentry: 1, resolve: (input) => isKept(input.message) ? single(input) : answer(input) }))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
     expect(reentry(only(...ALL), none)).toEqual({ overstated: 'caught', understated: 'unreachable', negative: 'caught' });
     expect(reentry(only(...ALL), conforming({ reentry: undefined }))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
     expect(reentry(only(...ALL), conforming({ keeps: false }))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
@@ -293,6 +335,19 @@ describe('audit', () => {
     expect(resolutions(conforming({ limits: { ...LIMITS, output: 6 } }))).toEqual({ overstated: 'unreachable', unreadable: 'caught' });
     expect(resolutions(conforming({ levels: ['core'] }))).toEqual({ overstated: 'unreachable', unreadable: 'caught' });
     expect(resolutions(conforming(), [SET[0]])).toEqual({ overstated: 'unreachable', unreadable: 'caught' });
+
+    // The case whose read is refused beneath a modifier of the format is then built
+    // from resolutions that take no place, at any bound above 1: at 1 it is
+    // the same placeholder however it is built.
+    const defined: Fixture[] = [{ name: 'extensions.json', file: { format: 'curly-message-3', level: 'extensions', section: '13', cases: [{ id: 'extensions/defined', description: 'Pins that a modifier of the format is current.', generate: 'reentry-over-limit-beneath-a-defined-modifier' }] } }];
+    const unkept = resolver({ bound: 0 });
+    const single = resolver({ bound: 1 });
+
+    expect(audited(conforming(), defined)['resolutions-overstated']).toMatchObject({ expects: 'fail', observed: 'fail', outcome: 'caught' });
+    expect(resolutions(conforming({ limits: { ...LIMITS, output: 6 } }), defined)).toEqual({ overstated: 'caught', unreadable: 'caught' });
+    expect(resolutions(conforming({ reentry: 0, resolve: (input) => isKept(input.message) ? unkept(input) : answer(input) }), defined)).toEqual({ overstated: 'unreachable', unreadable: 'caught' });
+    expect(resolutions(conforming({ reentry: 1, resolve: (input) => isKept(input.message) ? single(input) : answer(input) }), defined)).toEqual({ overstated: 'unreachable', unreadable: 'caught' });
+    expect(resolutions(conforming({ reentry: undefined }), defined)).toEqual({ overstated: 'unreachable', unreadable: 'caught' });
   });
 
   it('catches an overstated conversion limit only at the bound, and an understated one only past it', () => {

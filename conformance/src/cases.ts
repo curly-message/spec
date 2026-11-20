@@ -1,4 +1,4 @@
-import { RENESTED, behaviours, keeping, renesting } from './behaviours';
+import { DESCEND, RENESTED, behaviours, descending, keeping, renesting } from './behaviours';
 import { decode } from './decode';
 import type { Adapter, Category, ConcreteCase, ExpectedReport, ExposedRequest, Failure, FormatApi, FormatRequest, GeneratedCase, Generator, Limits, Outcome, Report, Resolution, Resolved, Unexpressible } from './types';
 
@@ -150,7 +150,13 @@ const limit = (code: 'nesting-limit' | 'output-limit' | 'read-limit', origin: Ex
 
 // The constructions built from the bound the adapter states on counted reads
 // (section 13) rather than from its limits.
-export const COUNTED: readonly Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion', 'reentry-own-read-in-a-nested-resolution'];
+export const COUNTED: readonly Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion', 'reentry-own-read-in-a-nested-resolution', 'reentry-over-limit-beneath-a-defined-modifier'];
+
+// Those of them that make their read in a resolution a modifier asks for with
+// the bound reached, and are built from resolutions one inside another where
+// the adapter states that its bound counts them, which keeps no input past
+// the call it was handed to.
+export const FRAMED: readonly Generator[] = ['reentry-own-read-in-a-nested-resolution', 'reentry-over-limit-beneath-a-defined-modifier'];
 
 // The construction built from that bound where the adapter states that it
 // counts a resolution asked for inside another, which keeps no input.
@@ -170,6 +176,15 @@ const TAKING = '{{x:taking; default:F}}';
 // A placeholder whose modifier keeps its default unread and asks for a
 // resolution in which the conversion of an answer reads it.
 const KEEP_NEST = '{{x:keep-nest; default:z}}';
+
+// One whose modifier does the same, of a resolution in which that conversion
+// runs while a modifier the format defines produces the option it selected,
+// between brackets. Its default holds another: where the bound counts the
+// resolution, the read of the first default is one past it; where it counts
+// reads alone, that read takes the last place and produces the second
+// placeholder, whose default is then read one past the bound. Either read is
+// refused, and the text is the same.
+const KEEP_NEST_NE = '<{{x:keep-nest-ne; default:{{x:keep-nest-ne; default:z}}}}>';
 
 // Placeholders that each keep their default unread, the default taking the
 // input kept before it. A `take` after them claims the last one kept and reads
@@ -195,6 +210,16 @@ const reentering = (adapter: Adapter, message: string, output: string, keepers: 
   input: { message, payload: { x: '' }, id: ID, modifiers: register({ read: 'default' }, keepers, adapter) },
   expected: { output, reports: [] },
 });
+
+// `inner` resolved with one place fewer taken than the bound lets stand, so
+// that the resolution its modifier asks for takes the last where the bound
+// counts resolutions. Where the adapter states that it does, the places are
+// resolutions one inside another, the innermost of `inner`. Otherwise they
+// are counted reads, the innermost producing `inner`, and the bound may
+// count the resolution or not: the adapter need not say.
+const standing = (adapter: Adapter, bound: number, inner: string, keeper: 'keep-nest' | 'keep-nest-ne', output: string): Prepared => adapter.resolutions === true
+  ? { input: { message: bound > 1 ? DESCEND : inner, payload: { x: '' }, id: ID, modifiers: descending(adapter, bound - 1, inner) }, expected: { output, reports: [] } }
+  : reentering(adapter, bound > 1 ? `${keeps(1, inner)}${keeps(bound - 2)}${TAKE}` : inner, output, { keep: 'keep', take: 'take', first: 'first', taking: 'taking', [keeper]: keeper });
 
 const generators: Record<Generator, (limits: Limits, reentry: number, adapter: Adapter) => Prepared> = {
   'output-at-limit': ({ output: length }) => ({
@@ -302,12 +327,16 @@ const generators: Record<Generator, (limits: Limits, reentry: number, adapter: A
   // One read more, made by the conversion of an answer rather than by a
   // modifier: it is refused, and the conversion goes on with the empty string.
   'reentry-over-limit-by-a-conversion': (_, bound, adapter) => reentering(adapter, refusing(bound, TAKING), bound ? '[empty]' : 'empty', { keep: 'keep', take: 'take', first: 'first', taking: 'taking' }),
-  // The innermost of one counted read fewer than the bound lets stand calls a
-  // modifier that keeps its default and asks for a resolution, where the
-  // conversion of an answer reads that default. The modifier is current
-  // there, so the read is its own, and where the bound counts the resolution
-  // asked for as well, a counted read there would be one past it.
-  'reentry-own-read-in-a-nested-resolution': (_, bound, adapter) => reentering(adapter, bound > 1 ? `${keeps(1, KEEP_NEST)}${keeps(bound - 2)}${TAKE}` : KEEP_NEST, 'z', { 'keep': 'keep', 'take': 'take', 'first': 'first', 'taking': 'taking', 'keep-nest': 'keep-nest' }),
+  // With the bound reached, a modifier keeps its default and asks for a
+  // resolution, where the conversion of an answer reads that default. The
+  // modifier is current there, so the read is its own: a counted read there
+  // would be one past the bound.
+  'reentry-own-read-in-a-nested-resolution': (_, bound, adapter) => standing(adapter, bound, KEEP_NEST, 'keep-nest', 'z'),
+  // The same, with that conversion run while a modifier the format defines
+  // produces the option it selected: that modifier is the current one, so
+  // the read is no modifier's own, is counted one past the bound and is
+  // refused, and the conversion goes on with the empty string.
+  'reentry-over-limit-beneath-a-defined-modifier': (_, bound, adapter) => standing(adapter, bound, KEEP_NEST_NE, 'keep-nest-ne', '<empty>'),
   // One resolution more than the bound lets stand inside the one asked for:
   // it is refused, the modifier that asked fails in the innermost resolution
   // standing, and reports there. Only where the bound is 0 is that the

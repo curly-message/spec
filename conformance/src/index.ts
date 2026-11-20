@@ -1,4 +1,4 @@
-import { COUNTED, RESOLUTIONS, covers, executeConcrete, executeGenerated, renested } from './cases';
+import { COUNTED, FRAMED, RESOLUTIONS, covers, executeConcrete, executeGenerated, renested } from './cases';
 import { defects, mutations, realize } from './defects';
 import { fixtures } from './set';
 import { UNITS, executeTree } from './tree';
@@ -137,7 +137,7 @@ const LATER = ['keep', 'first'];
 const KEEPS = 'The adapter states that a modifier cannot keep an input past its call.';
 
 // The behaviours that ask for a resolution inside another.
-const NESTS = ['nest', 'keep-nest'];
+const NESTS = ['nest', 'keep-nest', 'keep-nest-ne'];
 
 const NESTED = 'The adapter states a bound of 0 on counted reads, so the resolution a modifier asks for inside another may be refused.';
 
@@ -175,13 +175,15 @@ const kept = (c: Case, adapter: Adapter) => {
 
   if (!COUNTED.includes(c.generate)) return undefined;
 
-  if (adapter.keeps === false) return KEEPS;
+  const framed = FRAMED.includes(c.generate);
+
+  if (adapter.keeps === false && !(framed && adapter.resolutions === true)) return KEEPS;
 
   if (adapter.reentry === undefined) return 'The adapter states no bound on counted reads.';
 
   if (c.generate === 'reentry-own-reads-free' && adapter.reentry === 0) return 'The adapter states a bound of 0 on counted reads, so no counted read stands for own reads to be made inside.';
 
-  if (c.generate === 'reentry-own-read-in-a-nested-resolution' && adapter.reentry === 0) return NESTED;
+  if (framed && adapter.reentry === 0) return NESTED;
 
   return undefined;
 };

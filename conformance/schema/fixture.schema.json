@@ -88,7 +88,7 @@
           }
         },
         "keeping": {
-          "description": "Host-defined modifiers to register (section 11.3) over one list of what was kept, each the name of one of the catalogue's behaviours over that list; the runner builds them afresh for each resolution it asks for, and the resolution a nest or a keep-nest among them asks for has the seven behaviours over that same list as its modifiers, under their own names.",
+          "description": "Host-defined modifiers to register (section 11.3) over one list of what was kept, each the name of one of the catalogue's behaviours over that list; the runner builds them afresh for each resolution it asks for, and the resolution a nest, a keep-nest or a keep-nest-ne among them asks for has the eight behaviours over that same list as its modifiers, under their own names.",
           "type": "object",
           "propertyNames": {
             "minLength": 1
@@ -149,6 +149,7 @@
             "reentry-own-reads-free",
             "reentry-over-limit-by-a-conversion",
             "reentry-own-read-in-a-nested-resolution",
+            "reentry-over-limit-beneath-a-defined-modifier",
             "reentry-resolutions-over-limit"
           ]
         }
@@ -181,7 +182,8 @@
         "first",
         "taking",
         "nest",
-        "keep-nest"
+        "keep-nest",
+        "keep-nest-ne"
       ]
     },
     "expected": {
