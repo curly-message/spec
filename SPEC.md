@@ -20,11 +20,17 @@
 > what leaves the messages written today alone: a modifier under a name no
 > earlier revision defined, a conformance level an implementation opts into, and
 > wording that states more precisely what the body already required. The
-> promise has one exception, the one addition outside that list: section 13's
-> bound on the text one serialization writes, which a revision of this document
-> added. A value whose serialization writes more text than the bound an
-> implementation documents is one no conversion can describe, however few nodes
-> it visits, as a value the host's serializer refuses already was.
+> promise has two exceptions, which a revision of this document made. One is
+> the one addition outside that list, section 13's bound on the text one
+> serialization writes: a value whose serialization writes more text than the
+> bound an implementation documents is one no conversion can describe, however
+> few nodes it visits, as a value the host's serializer refuses already was.
+> The other holds on a host no released implementation runs on, one that
+> ends the process at its limit on how deep a call stack goes and gives code
+> neither an identity for a thread of execution nor state kept apart for each:
+> there, a message that reaches itself through host code resolves to its
+> fallback chain only where that code asks through a means the implementation
+> hands it (sections 13 and 14.2).
 >
 > This document states version 3 and nothing else. Three documents beside it
 > carry what it does not, and none of them is part of this specification:
@@ -1666,7 +1672,15 @@ failure the implementation can contain. There an implementation MAY stand in
 for the host's limit with a bound of its own on how many resolutions are in
 progress at once on one thread of execution — a thread, a goroutine or a fiber,
 whatever runs on a call stack of its own — documented with the limits it
-permits. Keeping that count needs to know only which thread of execution asks,
+permits. An implementation MAY take a call stack a library switches to beneath
+the host, which the host does not itself run, as part of the thread of
+execution it runs on, and documents so. A resolution asked for on such a stack
+can then be refused while resolutions are in progress on others of that thread
+of execution, though none is in progress on its own; what is being produced on
+one of them is being produced on that thread of execution; and where calls of
+modifiers on them interleave, which of those that have not returned is current
+is the implementation's to say, and it documents which it takes. Keeping that
+count needs to know only which thread of execution asks,
 and a resolution that reaches itself on one call stack deepens the count as it
 deepens the stack. A resolution asked for on a thread of execution where none
 is in progress is never refused, and returns its string as always. The
@@ -1714,8 +1728,12 @@ for there runs outside any modifier call of its own.
 Two kinds of read are the walk of a resolution. The walk takes a placeholder's
 fallback chain. And while a modifier is current, a read of an option's value or
 of the default of the placeholder that modifier was called for is the walk's,
-whatever code beneath the call makes it, unless an option's value or the default
-of that placeholder is already being produced on that thread of execution. These
+whatever code beneath the call makes it, unless one of that placeholder's
+option values or its default is already being produced on that thread of
+execution. An implementation MAY count such a read as well while one of another
+placeholder's option values or its default, whose production began beneath that
+modifier's call, is in progress on that thread of execution, and documents
+which it does. These
 reads count toward no bound: they cost nesting alone, since one stands inside
 another only as deep as the message nests (section 12).
 
@@ -1733,10 +1751,54 @@ empty string. A read of an option's value or of a default whose own production
 is in progress on the same thread of execution is refused at once the same way,
 whether or not the implementation keeps a bound, a current modifier's read of
 its own placeholder's included. A refused read is not recorded: a later read
-that is not refused produces the text.
+that is not refused produces the text. The one refused read that is recorded is
+the one the end of this section names, which meets a value whose conversion is
+in progress where the bound is kept along a lineage.
 
 A refused read fails nothing: the code that made it is handed the empty string
 and goes on, and what a modifier then answers is taken as any answer is.
+
+A host may end the process at its limit on how deep a call stack goes and give
+code neither an identity for the thread of execution it runs on nor state kept
+apart for each: its language and standard library define nothing that names a
+thread of execution and nothing that holds a value for each, and what the host
+writes for diagnosis, a stack trace among it, defines neither. An implementation
+on such a host cannot know which thread of execution asks, and it keeps the
+bound this section has it keep along a *lineage* in place of a thread of
+execution. An implementation that keeps its bound so MUST hand a means to ask
+for a resolution to the host code it calls: to a host-defined modifier with its
+input (section 11.3), to a reporting handler, to the host's facility for the
+Intl level, and to a value's conversion, for which it defines and documents a
+form of conversion that is handed one, beside the host's own, which takes no
+argument and is handed none. A lineage begins with a resolution asked for
+through no such means, and holds every resolution asked for through a means
+handed out in a resolution it holds, whichever thread of execution asks and
+whether or not that resolution has returned. A read of an option's value or of a
+default is made in the lineage that holds the resolution of its placeholder,
+whichever thread of execution makes it. What this section says of one thread of
+execution it then says of one lineage: the count of resolutions and counted
+reads in progress, its bound, for which this document sets no minimum there
+either, the modifier that is current, and the refusal of a read of text whose
+production is in progress. Where calls of a lineage's modifiers interleave,
+which of those that have not returned is current is the implementation's to say.
+The implementation cannot tell a read made beside a production from one that
+production makes, so a read by host code waits for none: a read of text being
+produced is refused whichever thread of execution makes it, and so is a read
+that meets a value whose conversion is in progress, where it meets it, so that
+of two that read at once, one may be handed the empty string. A read refused
+where it meets such a value reports nothing for that value and, unlike every
+other refused read, is recorded: it is the one production of the text it was
+asked for, the empty string is that text, every later read answers it, and the
+placeholders the read reached before it was refused are reached that once. A
+resolution that begins a lineage is counted with no other and is never refused.
+Host code that asks for a resolution through none of these means, whether or not
+the call it runs in was handed one, has left its lineage, and the recursion it
+makes that way is the host code's to bound, as a chain that leaves a thread of
+execution is: the requirement above does not reach it. It reaches every
+resolution asked for through a means, and an implementation on such a host that
+hands out none of them, or keeps no bound along the lineage, does not meet it
+(section 14.2). The implementation documents the means, the bound, and the
+modifier it takes as current.
 
 Neither bound reaches what a chain does across threads of execution. A chain
 leaves a thread of execution where its host code resolves on one it starts, or
@@ -1900,9 +1962,12 @@ resolution that reaches itself without end (section 13): where the host's limit
 on how deep it will go is one it ends the script or the process at, its memory
 limit among them, section 13's containment still applies, and an implementation
 that sets no bound of its own short of that limit, as section 13 describes
-one, does not meet it. The one exception is what a chain does once it leaves a
-thread of execution, which no one call stack holds: section 13 leaves it to the
-host code that runs it.
+one, does not meet it. The exceptions are what a chain does once it leaves a
+thread of execution, which no one call stack holds, and, where section 13 has an
+implementation count along a lineage and it hands out each means that section
+names, a resolution host code asks for through none of them, whether or not
+the call it runs in was handed one: section 13 leaves both to the host code
+that runs them.
 
 A report names the condition it describes with a **code**, and every code
 declares an **origin**: which of a resolution's inputs the defect is in, and so

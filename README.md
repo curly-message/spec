@@ -33,11 +33,17 @@ The specification is **stable**. Version 3 of the format is settled: within
 `curly-message-3`, what a message resolves to does not change, and an amendment
 that would change it belongs to a later version of the format rather than to
 this one. The promise is about messages: a caller that supplied none wrote
-nothing for the document to settle. It has one exception, which revision 3.1.1
-makes: section 13 of [`SPEC.md`](./SPEC.md) bounds the text one serialization
-writes, and a value whose text passes the bound an implementation documents is
-one no conversion can describe, however few nodes it visits, as a value the
-host's serializer refuses already was. Revisions of the document are tagged in
+nothing for the document to settle. It has two exceptions, which revision 3.1.1 makes. Section 13 of
+[`SPEC.md`](./SPEC.md) bounds the text one serialization writes, and a value
+whose text passes the bound an implementation documents is one no conversion can
+describe, however few nodes it visits, as a value the host's serializer refuses
+already was. And on a host no released implementation runs on, one that ends the
+process at its limit on how deep a call stack goes and gives code neither an
+identity for a thread of execution nor state kept apart for each, a message that
+reaches itself through host code resolves to its fallback chain only where that
+code asks through a means the implementation hands it: asked for through none,
+the recursion is that code's to bound, where 3.1.0 had the implementation
+contain it and no implementation there could. Revisions of the document are tagged in
 this repository, beginning at `v1.0.0`, and [`CHANGELOG.md`](./CHANGELOG.md)
 says what each one changed. `SPEC.md` states version 3 and nothing else, and
 [`MIGRATIONS.md`](./MIGRATIONS.md) is the path from an earlier version of the
