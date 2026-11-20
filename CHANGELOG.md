@@ -7,8 +7,12 @@ leaves the messages written for it alone — a modifier under a name no earlier
 revision defines, a conformance level an implementation opts into, and wording
 that states more precisely what the body already required. That promise is about
 messages: what an implementation answers where there is no message to resolve
-is outside it. It has one exception, which 3.1.1 makes and states: the bound on
-the text one serialization writes.
+is outside it. It has two exceptions, which 3.1.1 makes and states: the bound on
+the text one serialization writes, and, on a host that ends the process at its
+limit on how deep a call stack goes and gives code neither an identity for a
+thread of execution nor state kept apart for each, a resolution that reaches
+itself through host code that asks through none of the means the implementation
+hands it.
 
 The conformance set keeps its own changelog under `conformance/`, and releases
 on its own line: it may release against a document that has not changed, and
@@ -16,7 +20,9 @@ the document may be revised without it moving.
 
 ### 3.1.1 (Unreleased)
 
-Nothing a message resolves to changes, but for one kind of value: one whose
+Nothing a message resolves to changes, but for one kind of value and, on a
+host no released implementation runs on, one kind of recursion, named below. A
+value whose
 serialization writes more text than an implementation permits, though it visits
 fewer nodes than the conversion limit counts, is now one no conversion can
 describe, as one the host's serializer refuses already was, where 3.1.0 had the
@@ -28,7 +34,15 @@ do change what an implementation renders where 3.1.0 settled nothing: a chain
 of reads of inputs that host-defined modifiers kept now stops at a bound the
 implementation keeps, where it went as deep as the host's stack allowed; and an
 entry that refuses to name its keys is now absent, where an implementation
-could convert it as a value by a conversion that never asked for them.
+could convert it as a value by a conversion that never asked for them. And one
+requirement of 3.1.0 is narrowed, on a host no released implementation runs on:
+where the host ends the process at its limit on how deep a call stack goes and
+gives code neither an identity for a thread of execution nor state kept apart
+for each, section 13's containment of a resolution that reaches itself holds
+for every resolution host code asks for through a means the implementation
+hands it, and no longer for one it asks for through none, which no
+implementation there could contain. There, a message that reaches itself that
+way no longer resolves to its fallback chain.
 
 * Section 4 says what the host's JSON serialization holds: no insignificant
   whitespace, as sections 4.1 and 7 write it, and an object's members in the
@@ -126,7 +140,7 @@ could convert it as a value by a conversion that never asked for them.
   those parts up. Where such a chain goes on without end past every bound the
   implementation keeps and the host ends the script or the process as it runs
   out of memory or of threads, the chain is the host code's to bound, and
-  section 14.2 names it as the one exception; an implementation that keeps only
+  section 14.2 names it as an exception; an implementation that keeps only
   the bound on one thread meets the requirement. The document sets no minimum
   for the bound.
 * Section 13 says what a read of an option's value or of a default costs, the
@@ -145,7 +159,8 @@ could convert it as a value by a conversion that never asked for them.
   read past the bound produces nothing and answers the empty string. So does a
   read of what is being produced on the same thread of execution, with or
   without a bound. A refused read is not recorded, so a later read that is not
-  refused produces the text. A refused read fails nothing: the code that made
+  refused produces the text, but for the one the section names where the bound
+  is kept along a lineage. A refused read fails nothing: the code that made
   it is handed the empty string and goes on. An implementation whose host signals its limit as a
   failure it contains may keep the bound on one thread of execution too, and for
   these reads alone; no minimum is set for it. 3.1.0 said nothing of a modifier
@@ -154,6 +169,39 @@ could convert it as a value by a conversion that never asked for them.
   reads at it, where before the text was whatever the host's stack allowed, and
   a read of what is being produced now answers the empty string where it went on
   to the host's limit.
+* Section 13 lets an implementation take a call stack a library switches to
+  beneath the host, which the host does not itself run, as part of the thread of
+  execution it runs on, documented. A resolution asked for on such a stack can
+  then be refused while resolutions are in progress on others of that thread,
+  what is being produced on one is being produced on the thread, and which
+  modifier is current where their calls interleave is the implementation's to
+  say. An implementation cannot see a switch its host knows nothing of, and
+  `RULINGS.md` B.4 records the designs that failed.
+* Section 13 says how the bound is kept on a host that ends the process at its
+  limit on how deep a call stack goes and gives code neither an identity for a
+  thread of execution nor state kept apart for each: along a lineage, one
+  resolution asked for through no means together with every resolution asked
+  for through a means handed out in one of the lineage, whichever thread asks
+  or reads. An implementation that keeps its bound so hands a means to ask to
+  every piece of host code it calls — a modifier, a reporting handler, the
+  Intl facility, a value's conversion in a form it defines beside the host's
+  own — and what the section says of one thread it says there of one lineage.
+  A read by host code waits for no production there: one of text being
+  produced, or one that meets a value being converted, is refused, and the
+  second is the one production of what it read, recorded as the empty string. A
+  resolution that begins a lineage is never refused, and host code that
+  resolves through none of the means, whether or not it was handed one, bounds
+  its own recursion: section 14.2 names it as the second exception, for an
+  implementation that hands out each means, and one there that hands out none
+  or keeps no bound does not conform. `RULINGS.md` B.5 records the designs
+  that failed and why the residue is accepted.
+* Section 13's exception to a modifier's own reads being the walk's names what
+  it meant, one of that placeholder's option values or its default already being
+  produced, where "an option's value or the default of that placeholder" read
+  two ways. An implementation may count such a read as well while one of another
+  placeholder's option values or its default, whose production began beneath the
+  modifier's call, is in progress on the thread, and documents which it does:
+  the document no longer settles that case, and `RULINGS.md` B.6 records why.
 * Section 13 says that the conversion limit bounds the serialization alone,
   and section 4 says it beside the conversions it defines. What the ordinary
   string conversion costs is the value's own type's, a sequence that walks

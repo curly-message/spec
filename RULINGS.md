@@ -575,8 +575,9 @@ selection makes (section 11.5).
 It is a SHOULD rather than a MUST because the words it narrows let a lenient
 host conform: under 3.1.0 an implementation that rendered
 `¤10.00` met every requirement the document states, and within version 3 what
-a message resolves to does not change, but for the one exception the README's
-*Status* names, the bound on the text one serialization writes. A later
+a message resolves to does not change, but for the two exceptions the README's
+*Status* names, the bound on the text one serialization writes and a recursion
+on a host no released implementation runs on. A later
 version of the format makes it
 a MUST, with cases in the conformance set for a malformed locale and a
 missing currency; an implementation that already validates loses nothing by
@@ -633,7 +634,8 @@ every `k` above writes the same `{{x:m}}`, and each is rendered.
 
 A refused read is not recorded. The refusal says where the read was made, not
 what the option's value is, and a record of the empty string would answer a
-later reader that has the room.
+later reader that has the room. B.5 has the one exception, a read that had
+produced text before it was refused.
 
 A refused read answers the empty string, since a read is an accessor and some
 hosts' accessors have no way to fail, and it fails nothing further. A rule that
@@ -666,9 +668,7 @@ chain at it, where before the text was whatever the host's stack allowed. The
 ruling stops at reads of an option's value or of a default. What a request
 answers for a value's conversion or an entry's enumeration that is in progress,
 or for a production on another thread of execution or one suspended part way, is
-not ruled here, and neither is a bound across the process. No case of the
-conformance set pins the bound, since the set's behaviours for a host-defined
-modifier keep nothing between calls and an adapter declares no such bound.
+not ruled here, and neither is a bound across the process.
 
 ---
 
@@ -720,3 +720,156 @@ refuse to be read reports once, naming the message, and the count of a call's
 reports grows with the message and a fixed set of inputs, never with how many
 modifiers a host registered (section 14.3).
 
+## B.4 A call stack the implementation cannot see
+
+**Observed.** Section 13 counts resolutions in progress on one thread of
+execution, "whatever runs on a call stack of its own", and never refuses one
+asked for where none is in progress. A library may switch call stacks beneath a
+host that knows nothing of it: the host runs one thread, and what an
+implementation keeps for a thread it keeps for every stack the library switches
+to on it. On one host, with a bound of 8, eight such stacks each suspended
+inside a resolution made a resolution asked for on a ninth, where none was in
+progress, be refused; on another, what the implementation keeps for a thread is
+shared between such stacks the same way.
+
+**Ruling.** An implementation MAY take a stack a library switches to beneath the
+host as part of the thread of execution it runs on, and documents so (section
+13). A resolution there can then be refused though none is in progress on its
+own stack, what is being produced on one such stack is being produced on the
+thread, and which modifier is current where calls on them interleave is the
+implementation's to say and to document.
+
+Three designs that kept the sentence failed. Asking the library which stack runs
+makes the implementation depend on a library its host does not carry, and models
+that library's internals. Letting an implementation keep its bound along a chain
+of resolutions, one asked for through no modifier's input beginning a chain and
+never refused, made a process death legal: a catalogue entry that includes
+itself through a modifier resolving directly recursed until the host ended the
+process. B.5 takes that design up for the one host that has no other, and says
+what it adds and why this reason gives way there. Counting every resolution in
+progress in the process refuses resolutions on threads the host does run. The
+definition itself stays: a host that runs fibers of its own counts on each.
+
+## B.5 A host with no name for a thread of execution
+
+**Observed.** Keeping the count of section 13 "needs to know only which thread
+of execution asks". One host ends the process at its limit on how deep a call
+stack goes and gives code neither an identity for the thread of execution it
+runs on nor state kept apart for each. The second half is what sets it apart: a
+host that names no thread but keeps a variable for each, as one with a single
+thread of execution for each instance of a module does, counts in that variable
+and needs no name. An implementation there can count only along what it hands
+out: a means to ask for a resolution names the resolution whose host code was
+handed it, so a resolution asked for through it can be counted with that one. A
+resolution asked for any other way carries nothing: from inside the call, one
+that host code beneath a modifier asks for and one a caller asks for on a thread
+of its own are the same call.
+
+**Ruling.** On such a host the bound of section 13 is kept along a lineage: a
+resolution asked for through no means, and every resolution asked for through a
+means handed out in a resolution of the lineage. An implementation that keeps
+its bound so hands a means to every piece of host code it calls — a modifier, a
+reporting handler, the Intl facility, and a value's conversion in a form it
+defines beside the host's own — and what section 13 says of one thread of
+execution it says there of one lineage. A read by host code waits for no
+production, since a read beside a production cannot be told from one beneath it:
+one of text being produced, and one that meets a value being converted, is
+refused whichever thread makes it. One that meets a value being converted
+reports nothing for that value and is the one production of what it read: the
+empty string is recorded, and every later read answers it. Two earlier forms
+failed. One had such a read take the value as one no conversion describes, which
+reported a value that converts as one that does not. The other dropped what the
+read had produced and left it to a later read, so host code that read an option
+a thousand times while a value converted had each placeholder before that value
+reached, reported and charged to the read budget a thousand times, against
+section 14.3's count of reports bounded by the message. A resolution that begins a lineage is never
+refused. An implementation there that hands out no means, or keeps no bound
+along the lineage, does not conform. No other host of an implementation is
+reached: each either signals its limit or keeps state for each thread.
+
+**The residue, and why it is accepted.** Host code that resolves through none of
+the means is counted nowhere, whether or not the call it runs in was handed one,
+and where it recurses that way the host ends the process: section 14.2 names it
+beside the chain that leaves a thread of execution. A value that resolves in the
+host's own conversion, which takes no argument, is such code: its author takes
+the form that is handed a means, or bounds the recursion. Section 13 of 3.1.0
+said of every resolution that reaches itself that reaching the host's limit
+"MUST be contained"; on this host no implementation could meet that as written,
+since the host signals nothing to contain and a bound needs a count. B.4
+rejected a count along what is handed out because it "made a process death
+legal" from a catalogue entry alone. That reason gives way here for two reasons.
+No other count exists on this host: each of the designs below that kept the
+requirement whole is a bend, or refuses resolutions the section says are never
+refused. And a catalogue entry alone does not end the process where every piece
+of host code it reaches asks through the means it is handed, a value's
+conversion in the form that is handed one included; it does where a value
+resolves in the host's own conversion or other host code asks another way, which
+is the kind of choice the section already leaves to host code that starts
+threads. The cost of waiting for nothing is that one of two threads reading at
+once, where producing the text runs host code, may be handed the empty string,
+and where the two met at a value being converted, that is what the option or
+default is for the rest of the resolution; host code that reads it once before
+it starts its threads never meets the refusal.
+
+Five designs failed first. Reading a thread's identity out of the text of a
+stack trace models the internals of a runtime that documents no such identity.
+Counting the implementation's own frames on the stack at each read keeps no
+count, and costs a walk of the stack per read, quadratic in the depth of a
+chain. A first form of this ruling kept the requirement for a direct
+resolution, counted through the modifier's input, and asked of the call stack
+whether host code runs beneath a resolution, bounding those across the process.
+It drew five findings in one round: the two counts multiplied, so an entry
+including itself through the input, whose default converted a value that
+resolved directly, stood about 300 000 resolutions deep and ended the process
+the bound was kept to save; every resolution in the process paid a walk of its
+caller's whole stack while any modifier ran anywhere; and the rules it took to
+place a read or a resolution made on another thread refused two the section
+does not and admitted one it refuses. A second form counted along the
+modifier's input alone and left every other resolution to host code: a lazily
+translated payload value, which is handed no input, resolved the entry that
+names it until the process ended, with no modifier in the message at all. And
+a count of every resolution in progress in the process, kept behind that one,
+refused resolutions under ordinary load, had no lawful answer for a refused
+resolution asked for where none is in progress, and still ended the process
+where each resolution held counted reads of its own, at about 214 levels on a
+stack limited to 256 MiB, a quarter of the host's default.
+
+No released fixture changes, and the cases of kept reads stay conditional on
+the `reentry` an adapter states.
+
+## B.6 An own read beneath a counted read
+
+**Observed.** Section 13 made a read of the current modifier's own option or
+default the walk's "unless an option's value or the default of that placeholder
+is already being produced" on the thread, which reads two ways: nothing of that
+placeholder, or no option's value of any placeholder. Register `k`, which keeps
+its option and answers `k`, and `h`, which reads the option kept and answers it
+in brackets, and let `g` be a value whose conversion reads `h`'s own option `o`
+and answers it in angle brackets:
+
+```notation
+{{x:k; a:{{g}}}}{{x:h; o:O}}     inside as many counted reads as the bound
+    the read of o is the walk's   ->  "k[<O>]"
+    the read of o is counted      ->  "k[<>]"
+```
+
+Implementations answered both ways. B.2 had settled the first reading, "while
+nothing of that placeholder is being produced".
+
+**Ruling.** The base sentence now says so without the ambiguity: the read is the
+walk's unless one of that placeholder's option values or its default is already
+being produced. And an implementation MAY count it as well while one of another
+placeholder's option values or its default, whose production began beneath that
+modifier's call, is in progress on the thread, and documents which it does
+(section 13). Both answers above conform.
+
+The document stops settling the question because no clean design settled it in
+every host. One implementation's module for it took five fixes and one redesign,
+and the finding came back: tracking, for each read, which placeholder's
+production it stands in is state the hosts that hand a modifier plain data do
+not otherwise keep, and the rule that needs none of it — no modifier is current
+while a read made beneath its call produces its text, until a modifier called
+inside it is — gives the second answer. The permission adds counting only, so no
+chain grows by it, and it reaches no read made where nothing began beneath the
+modifier's call: a stack of own reads inside counted reads stays free, and so
+does an own read made in a resolution the modifier asked for.
