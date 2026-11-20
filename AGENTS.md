@@ -225,7 +225,11 @@ change goes through this cycle:
 1. **Design check before code.** For a non-trivial change, a small panel
    argues against the plan before any implementation, above all where it
    leans on behavior it does not own (`Intl`, a runtime, ESLint, a bundler).
-   A flawed design costs more than any code bug a later round catches.
+   A flawed design costs more than any code bug a later round catches. The
+   check ends on a round that raises no objection to the text as it stands.
+   A change made after the last round gets a check of that change alone, not
+   a new round; a place that draws an objection a third time goes up the
+   ladder.
 2. **Develop**, verified as above.
 3. **Review**, its scope picked by the change's risk and by the planned
    issues it touches. Each finding needs a concrete scenario (input → wrong
