@@ -1,4 +1,4 @@
-import { behaviours, keeping } from './behaviours';
+import { RENESTED, behaviours, keeping, renesting } from './behaviours';
 import { decode } from './decode';
 import type { Adapter, Category, ConcreteCase, ExpectedReport, ExposedRequest, Failure, FormatApi, FormatRequest, GeneratedCase, Generator, Limits, Outcome, Report, Resolution, Resolved, Unexpressible } from './types';
 
@@ -150,7 +150,14 @@ const limit = (code: 'nesting-limit' | 'output-limit' | 'read-limit', origin: Ex
 
 // The constructions built from the bound the adapter states on counted reads
 // (section 13) rather than from its limits.
-export const COUNTED: readonly Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion'];
+export const COUNTED: readonly Generator[] = ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion', 'reentry-own-read-in-a-nested-resolution'];
+
+// The construction built from that bound where the adapter states that it
+// counts a resolution asked for inside another, which keeps no input.
+export const RESOLUTIONS: Generator = 'reentry-resolutions-over-limit';
+
+/** The output of that construction at a bound: one resolution more than the bound stands, each writing its brackets. */
+export const renested = (bound: number) => `${'['.repeat(bound + 1)}F${']'.repeat(bound + 1)}`;
 
 // A placeholder that reads the input kept last that no `take` has claimed.
 // Its inline default stands for a `take` that failed, which no case expects.
@@ -159,6 +166,10 @@ const TAKE = '{{x:take; default:F}}';
 // A placeholder whose modifier answers a value that reads the input kept last
 // that no `take` has claimed, as it is converted.
 const TAKING = '{{x:taking; default:F}}';
+
+// A placeholder whose modifier keeps its default unread and asks for a
+// resolution in which the conversion of an answer reads it.
+const KEEP_NEST = '{{x:keep-nest; default:z}}';
 
 // Placeholders that each keep their default unread, the default taking the
 // input kept before it. A `take` after them claims the last one kept and reads
@@ -291,6 +302,20 @@ const generators: Record<Generator, (limits: Limits, reentry: number, adapter: A
   // One read more, made by the conversion of an answer rather than by a
   // modifier: it is refused, and the conversion goes on with the empty string.
   'reentry-over-limit-by-a-conversion': (_, bound, adapter) => reentering(adapter, refusing(bound, TAKING), bound ? '[empty]' : 'empty', { keep: 'keep', take: 'take', first: 'first', taking: 'taking' }),
+  // The innermost of one counted read fewer than the bound lets stand calls a
+  // modifier that keeps its default and asks for a resolution, where the
+  // conversion of an answer reads that default. The modifier is current
+  // there, so the read is its own, and where the bound counts the resolution
+  // asked for as well, a counted read there would be one past it.
+  'reentry-own-read-in-a-nested-resolution': (_, bound, adapter) => reentering(adapter, bound > 1 ? `${keeps(1, KEEP_NEST)}${keeps(bound - 2)}${TAKE}` : KEEP_NEST, 'z', { 'keep': 'keep', 'take': 'take', 'first': 'first', 'taking': 'taking', 'keep-nest': 'keep-nest' }),
+  // One resolution more than the bound lets stand inside the one asked for:
+  // it is refused, the modifier that asked fails in the innermost resolution
+  // standing, and reports there. Only where the bound is 0 is that the
+  // resolution the case asks for.
+  'reentry-resolutions-over-limit': (_, bound, adapter) => ({
+    input: { message: RENESTED, payload: { x: '' }, id: ID, modifiers: { renest: renesting(adapter, bound) } },
+    expected: { output: renested(bound), reports: bound ? [] : [{ code: 'failed-modifier', origin: 'payload', id: ID }] },
+  }),
 };
 
 // Property order is the host's, so a request is compared by its entries and
@@ -444,7 +469,7 @@ export const executeConcrete = (adapter: Adapter, c: ConcreteCase) => execute(ad
 export const executeGenerated = (adapter: Adapter, c: GeneratedCase) => {
   if (!Object.hasOwn(generators, c.generate)) throw new Error(`The case ${c.id} names no construction: ${JSON.stringify(c.generate)}.`);
 
-  if (COUNTED.includes(c.generate) && adapter.reentry === undefined) throw new Error(`The case ${c.id} is built from a bound on counted reads the adapter does not state.`);
+  if ((COUNTED.includes(c.generate) || c.generate === RESOLUTIONS) && adapter.reentry === undefined) throw new Error(`The case ${c.id} is built from a bound on counted reads the adapter does not state.`);
 
   return execute(adapter, generators[c.generate](adapter.limits, adapter.reentry ?? 0, adapter));
 };

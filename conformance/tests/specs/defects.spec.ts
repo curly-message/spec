@@ -3,13 +3,14 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { audit, defects, fixtures, mutations, run, type Adapter, type Audited, type Case, type ConcreteCase, type Defect, type ExpectedNode, type Fixture, type Generator, type Node, type Resolution, type Resolved, type ResolutionFixtureFile } from '@curly-message/conformance';
+import { audit, defects, fixtures, mutations, plan, run, type Adapter, type Audited, type Case, type ConcreteCase, type Defect, type ExpectedNode, type Fixture, type Generator, type Node, type Resolution, type Resolved, type ResolutionFixtureFile } from '@curly-message/conformance';
 import { format } from '../../src/cases';
 import { resolver } from './kept';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
-const LIMITS = { output: 5, read: 7, conversion: 7, nesting: 3 };
+// The output limit holds the brackets of one resolution more than REENTRY.
+const LIMITS = { output: 7, read: 7, conversion: 7, nesting: 3 };
 
 const REQUEST = { api: 'NumberFormat', options: { maximumFractionDigits: 2, useGrouping: false }, input: 1234.5678 } as const;
 
@@ -19,7 +20,8 @@ const REENTRY = 2;
 // One case per thing a defect can reach: an output, an output whose ends are
 // whitespace, a report, two reports the order of which matters, a report
 // carrying a limit, a value at the declared conversion limit and one past it,
-// a locale-dependent request, and each construction of kept reads.
+// a locale-dependent request, each construction of kept reads, and the one of
+// resolutions one inside another.
 const CASES: Record<string, Case> = {
   'a.plain': { id: 'a/plain', description: 'Pins an output.', message: '{{v}}', messageId: 'a.plain', expected: { output: 'x' } },
   'a.spaced': { id: 'a/spaced', description: 'Pins an output whose ends are whitespace.', message: ' {{v}} ', messageId: 'a.spaced', expected: { output: ' x ' } },
@@ -34,6 +36,7 @@ const CASES: Record<string, Case> = {
   'c.refused': { id: 'c/refused', description: 'Pins that a refused read is not recorded.', generate: 'reentry-refused-not-recorded' },
   'c.own': { id: 'c/own', description: 'Pins that own reads count toward no bound.', generate: 'reentry-own-reads-free' },
   'c.conversion': { id: 'c/conversion', description: 'Pins the declared bound on counted reads from past it, by a conversion.', generate: 'reentry-over-limit-by-a-conversion' },
+  'c.renested': { id: 'c/renested', description: 'Pins that the bound counts a resolution asked for inside another.', generate: 'reentry-resolutions-over-limit' },
   'c.converted': { id: 'c/converted', description: 'Pins that a conversion\'s read of a default in production is refused.', message: '{{x:keep-default; default:<{{x:taking; default:F}}>}}', payload: { x: '' }, keeping: { 'keep-default': 'keep-default', taking: 'taking' }, expected: { output: '<empty>' } },
   'c.nested': { id: 'c/nested', description: 'Pins that a nested resolution\'s read of a default in production is refused.', message: '{{x:keep-default; default:<{{x:nest; default:F}}>}}', payload: { x: '' }, keeping: { 'keep-default': 'keep-default', nest: 'nest' }, expected: { output: '<empty>' } },
 };
@@ -119,7 +122,7 @@ const trees: Fixture = {
   },
 };
 
-const SET = [file('core.json', 'core', ['a.plain', 'a.spaced', 'a.report', 'a.order', 'limits', 'conversion', 'conversion.over']), file('intl.json', 'intl', ['b.format']), trees, file('extensions.json', 'extensions', ['c.at', 'c.over', 'c.refused', 'c.own'])];
+const SET = [file('core.json', 'core', ['a.plain', 'a.spaced', 'a.report', 'a.order', 'limits', 'conversion', 'conversion.over']), file('intl.json', 'intl', ['b.format']), trees, file('extensions.json', 'extensions', ['c.at', 'c.over', 'c.refused', 'c.own', 'c.renested'])];
 
 // How many nodes a serialization visits: the root, then every member reached,
 // a shared one counted every time.
@@ -141,11 +144,22 @@ const kept = (bound: number) => resolver({ bound });
 
 const isKept = (message: unknown): message is string => typeof message === 'string' && message.startsWith('{{x:');
 
+// The resolutions a case asks for one inside another go through one
+// implementation, so that one whose bound counts them sees each inside the
+// last. The one behind the adapter counts reads alone.
+const isRenested = (message: unknown) => typeof message === 'string' && message.startsWith('[');
+
+const renested = (counts: boolean) => resolver({ bound: REENTRY, resolutions: counts });
+
+const uncounted = renested(false);
+
 // The implementation answers the conversion case by the limit it enforces,
 // which a defect may misdeclare but cannot move, and a construction of kept
 // reads by the bound it keeps.
 const answer = ({ id, message, payload, modifiers }: Resolution): Resolved => {
   if (isKept(message)) return kept(REENTRY)({ id, message, payload, modifiers });
+
+  if (isRenested(message)) return uncounted({ id, message, payload, modifiers });
 
   const { v, w = '' } = (payload ?? {}) as { v?: unknown; w?: string };
 
@@ -234,7 +248,7 @@ describe('audit', () => {
     expect(entries['claims-negative-reentry']).toMatchObject({ expects: 'error', observed: 'error', outcome: 'caught', section: '13' });
   });
 
-  it('catches an overstated bound on counted reads at every construction of kept reads, and an understated one only past it', () => {
+  it('catches an overstated bound on counted reads at every construction of kept reads that stands at it, and an understated one only past it', () => {
     const only = (...constructions: Generator[]): Fixture[] => [{ name: 'extensions.json', file: { format: 'curly-message-3', level: 'extensions', section: '13', cases: constructions.map((generate) => ({ id: `extensions/${generate}`, description: `Pins the declared bound on counted reads with ${generate}.`, generate })) } }];
     const reentry = (set: Fixture[], adapter = conforming()) => {
       const { 'reentry-limit-overstated': overstated, 'reentry-limit-understated': understated, 'claims-negative-reentry': negative } = outcomes(adapter, set);
@@ -250,11 +264,35 @@ describe('audit', () => {
     expect(reentry(only('reentry-refused-not-recorded'))).toEqual({ overstated: 'caught', understated: 'caught', negative: 'caught' });
     expect(reentry(only('reentry-own-reads-free'))).toEqual({ overstated: 'caught', understated: 'unreachable', negative: 'caught' });
     expect(reentry(only('reentry-over-limit-by-a-conversion'))).toEqual({ overstated: 'caught', understated: 'caught', negative: 'caught' });
+    expect(reentry(only('reentry-own-read-in-a-nested-resolution'))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
     expect(reentry(only(...ALL), none)).toEqual({ overstated: 'caught', understated: 'unreachable', negative: 'caught' });
     expect(reentry(only(...ALL), conforming({ reentry: undefined }))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
     expect(reentry(only(...ALL), conforming({ keeps: false }))).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
     expect(reentry([SET[0]])).toEqual({ overstated: 'unreachable', understated: 'unreachable', negative: 'caught' });
     expect(audit(conforming(), { fixtures: only(...ALL), levels: ['core'] }).filter(({ id }) => id.startsWith('reentry-')).map(({ outcome }) => outcome)).toEqual(['unreachable', 'unreachable']);
+  });
+
+  it('catches a bound stated to count resolutions over an implementation that counts reads alone, and a statement of it that is not true or false', () => {
+    const set = [file('extensions.json', 'extensions', ['c.renested'])];
+    const resolutions = (adapter: Adapter, fixtures = set) => {
+      const { 'resolutions-overstated': overstated, 'claims-non-boolean-resolutions': unreadable } = audited(adapter, fixtures);
+
+      return { overstated: overstated.outcome, unreadable: unreadable.outcome };
+    };
+    // An implementation whose bound counts them, behind an adapter that says so.
+    const counted = renested(true);
+    const counting = conforming({ resolutions: true, resolve: (input) => isRenested(input.message) ? counted(input) : answer(input) });
+
+    expect(audited(conforming(), set)['resolutions-overstated']).toMatchObject({ expects: 'fail', observed: 'fail', outcome: 'caught', section: '13' });
+    expect(audited(conforming(), set)['claims-non-boolean-resolutions']).toMatchObject({ expects: 'error', observed: 'error', outcome: 'caught', section: '13' });
+    // An adapter that states it carries nothing to alter, and neither does
+    // one whose run leaves the case out whatever it states.
+    expect(plan(counting, { fixtures: set }).cases.map((planned) => planned.execute())).toEqual([{ ok: true }]);
+    expect(resolutions(counting)).toEqual({ overstated: 'unreachable', unreadable: 'caught' });
+    expect(resolutions(conforming({ reentry: undefined }))).toEqual({ overstated: 'unreachable', unreadable: 'caught' });
+    expect(resolutions(conforming({ limits: { ...LIMITS, output: 6 } }))).toEqual({ overstated: 'unreachable', unreadable: 'caught' });
+    expect(resolutions(conforming({ levels: ['core'] }))).toEqual({ overstated: 'unreachable', unreadable: 'caught' });
+    expect(resolutions(conforming(), [SET[0]])).toEqual({ overstated: 'unreachable', unreadable: 'caught' });
   });
 
   it('catches an overstated conversion limit only at the bound, and an understated one only past it', () => {

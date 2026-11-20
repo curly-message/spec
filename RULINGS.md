@@ -835,7 +835,9 @@ where each resolution held counted reads of its own, at about 214 levels on a
 stack limited to 256 MiB, a quarter of the host's default.
 
 No released fixture changes, and the cases of kept reads stay conditional on
-the `reentry` an adapter states.
+the `reentry` an adapter states. One construction is added, conditional on an
+adapter's `resolutions`: it pins that a resolution asked for through the means
+is counted, which is this host's only guard.
 
 ## B.6 An own read beneath a counted read
 

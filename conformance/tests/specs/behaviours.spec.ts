@@ -62,7 +62,7 @@ describe('behaviours', () => {
 });
 
 describe('keeping', () => {
-  // An adapter no behaviour but `nest` asks.
+  // An adapter no behaviour but `nest` and `keep-nest` asks.
   const unasked = { resolve: () => {
     throw new Error('Only nest asks the adapter.');
   } };
@@ -152,6 +152,18 @@ describe('keeping', () => {
     expect(kept.nest(input())).toBe('A');
     expect(resolve).toHaveBeenCalledWith({ message: '{{x:take; default:F}}', payload: { x: '' }, modifiers: kept });
     expect(kept.nest(input())).toBe('none');
+  });
+
+  it('keep-nest keeps the default unread, then answers the output of a resolution of a taking it asks the adapter for', () => {
+    const resolve = vi.fn(({ modifiers }: Resolution) => ({ output: String((modifiers as Record<string, (input: ModifierInput) => unknown>).taking(input())) }));
+    const kept = keeping({ resolve });
+    const read = vi.fn(() => 'A');
+
+    expect(kept['keep-nest'](input({ default: read }))).toBe('A');
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(resolve).toHaveBeenCalledWith({ message: '{{x:taking; default:F}}', payload: { x: '' }, modifiers: kept });
+    expect(kept.take(input())).toBe('none');
+    expect(() => keeping(unasked)['keep-nest'](input())).toThrow('Only nest asks the adapter.');
   });
 
   it('nest raises where the resolution it asks for raises or answers no output', () => {

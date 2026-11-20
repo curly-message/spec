@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { covers } from './cases';
+import { RESOLUTIONS, covers, renested } from './cases';
 import { fixtures } from './set';
 import { NAMED, boundaries } from './tree';
 import type { Adapter, Catalogue, Defect, Fixture, FormatRequest, Generator, Level, Mutation, Node, Report, ReportCode, ReportOrigin, Resolved, SpanUnit, Unexpressible } from './types';
@@ -239,8 +239,8 @@ const realizations: Record<Defect, (adapter: Adapter, run?: Run) => Mutation> = 
   // implementation's limit; at it, either limit lets the value through.
   'conversion-limit-understated': converting(-1, ['conversion-over-limit', 'conversion-over-limit-continues']),
 
-  // Every construction built from the bound then asks for one read more than
-  // the implementation lets stand: at the bound it pins what that read
+  // Every construction that stands at the bound then asks for one read more
+  // than the implementation lets stand: at the bound it pins what that read
   // answers, and past it which `take` the refusal reaches.
   'reentry-limit-overstated': reentering(1, ['reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion']),
 
@@ -249,6 +249,19 @@ const realizations: Record<Defect, (adapter: Adapter, run?: Run) => Mutation> = 
   'reentry-limit-understated': reentering(-1, ['reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-over-limit-by-a-conversion']),
 
   'claims-negative-reentry': (adapter) => claiming(adapter, { reentry: -1 }),
+
+  // The construction of resolutions one inside another then runs over an
+  // implementation that refuses none of them. An adapter that states the
+  // claim itself carries nothing to alter, and the case is left out all the
+  // same where it states no bound or its output limit does not hold it.
+  'resolutions-overstated': (adapter, { set, levels }: Run = { set: fixtures(), levels: adapter.levels }) => claiming(
+    adapter,
+    { resolutions: true },
+    () => adapter.resolutions !== true && adapter.reentry !== undefined && renested(adapter.reentry).length <= adapter.limits.output
+      && set.some(({ file }) => file.kind !== 'tree' && levels.includes(file.level) && file.cases.some((c) => 'generate' in c && c.generate === RESOLUTIONS)),
+  ),
+
+  'claims-non-boolean-resolutions': (adapter) => claiming(adapter, { resolutions: 'true' as unknown as boolean }),
 
   'tree-unoffered': (adapter) => claiming(adapter, { cst: undefined }, () => adapter.cst !== undefined),
 

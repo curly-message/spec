@@ -1,4 +1,4 @@
-import { COUNTED, covers, executeConcrete, executeGenerated } from './cases';
+import { COUNTED, RESOLUTIONS, covers, executeConcrete, executeGenerated, renested } from './cases';
 import { defects, mutations, realize } from './defects';
 import { fixtures } from './set';
 import { UNITS, executeTree } from './tree';
@@ -70,11 +70,13 @@ const treeClaim = (adapter: Adapter) => {
 // Section 13 sets no minimum for the bound on counted reads, so 0 is one an
 // implementation may keep; a bound below it, or not a count, is no bound.
 const keptClaims = (adapter: Adapter) => {
-  const { reentry, keeps } = adapter;
+  const { reentry, keeps, resolutions } = adapter;
 
   if (reentry !== undefined && (!Number.isInteger(reentry) || reentry < 0)) throw new Error('The adapter must state its bound on counted reads, reentry, as a non-negative integer.');
 
   if (keeps !== undefined && typeof keeps !== 'boolean') throw new Error('The adapter must state whether a modifier can keep an input past its call, keeps, as true or false.');
+
+  if (resolutions !== undefined && typeof resolutions !== 'boolean') throw new Error('The adapter must state whether its bound counts a resolution asked for inside another, resolutions, as true or false.');
 };
 
 // The adapter's statements about itself, and the levels option, are held to
@@ -134,6 +136,25 @@ const LATER = ['keep', 'first'];
 
 const KEEPS = 'The adapter states that a modifier cannot keep an input past its call.';
 
+// The behaviours that ask for a resolution inside another.
+const NESTS = ['nest', 'keep-nest'];
+
+const NESTED = 'The adapter states a bound of 0 on counted reads, so the resolution a modifier asks for inside another may be refused.';
+
+// The construction of resolutions one inside another keeps no input, so what
+// the adapter states of keeping does not reach it. It measures a bound that
+// counts resolutions, and writes two brackets for each that stands, which
+// the output limit has to hold.
+const counting = (adapter: Adapter) => {
+  if (adapter.reentry === undefined) return 'The adapter states no bound on counted reads.';
+
+  if (adapter.resolutions !== true) return 'The adapter does not state that its bound counts a resolution asked for inside another.';
+
+  if (renested(adapter.reentry).length > adapter.limits.output) return 'The output limit the adapter states does not hold the brackets of as many resolutions as its bound lets stand.';
+
+  return undefined;
+};
+
 // A case built from the bound on counted reads, or one that reads a kept
 // input after the modifier that kept it returned, measures what the adapter
 // stated it does not do, and is left out the way an unclaimed level is. So is
@@ -145,10 +166,12 @@ const kept = (c: Case, adapter: Adapter) => {
 
     if (adapter.keeps === false && registered.some((behaviour) => LATER.includes(behaviour))) return KEEPS;
 
-    if (adapter.reentry === 0 && registered.includes('nest')) return 'The adapter states a bound of 0 on counted reads, so the resolution a modifier asks for inside another may be refused.';
+    if (adapter.reentry === 0 && registered.some((behaviour) => NESTS.includes(behaviour))) return NESTED;
 
     return undefined;
   }
+
+  if (c.generate === RESOLUTIONS) return counting(adapter);
 
   if (!COUNTED.includes(c.generate)) return undefined;
 
@@ -157,6 +180,8 @@ const kept = (c: Case, adapter: Adapter) => {
   if (adapter.reentry === undefined) return 'The adapter states no bound on counted reads.';
 
   if (c.generate === 'reentry-own-reads-free' && adapter.reentry === 0) return 'The adapter states a bound of 0 on counted reads, so no counted read stands for own reads to be made inside.';
+
+  if (c.generate === 'reentry-own-read-in-a-nested-resolution' && adapter.reentry === 0) return NESTED;
 
   return undefined;
 };

@@ -339,8 +339,21 @@ describe('generated cases', () => {
     expect(kept('reentry-own-reads-free', 'z', 1)).toMatchObject({ input: { message: `${keeps(1, own)}${TAKE}` }, outcome: { ok: true } });
   });
 
+  it('reentry-own-read-in-a-nested-resolution keeps a default and asks for a resolution inside one counted read fewer than the bound, and expects the read made there resolved', () => {
+    const { input, outcome } = kept('reentry-own-read-in-a-nested-resolution', 'z', 3);
+    const nest = '{{x:keep-nest; default:z}}';
+
+    expect(input.message).toBe(`${keeps(1, nest)}${keeps(1)}${TAKE}`);
+    expect(Object.keys(input.modifiers ?? {})).toEqual(['read', 'keep', 'take', 'first', 'taking', 'keep-nest']);
+    expect(outcome).toEqual({ ok: true });
+    // An implementation that takes no modifier as current in the resolution asked for refuses the read.
+    expect(kept('reentry-own-read-in-a-nested-resolution', '', 3).outcome).toMatchObject({ ok: false, reason: 'The output differs.', expected: 'z' });
+    expect(kept('reentry-own-read-in-a-nested-resolution', 'z')).toMatchObject({ input: { message: `${keeps(1, nest)}${TAKE}` }, outcome: { ok: true } });
+    expect(kept('reentry-own-read-in-a-nested-resolution', 'z', 1)).toMatchObject({ input: { message: nest }, outcome: { ok: true } });
+  });
+
   it('expects of the constructions of kept reads an output that does not grow with the bound, over a value that reads nothing', () => {
-    const expected = { 'reentry-at-limit': 'none', 'reentry-over-limit': '[empty]', 'reentry-refused-not-recorded': '[empty]none', 'reentry-own-reads-free': 'z', 'reentry-over-limit-by-a-conversion': '[empty]' } as const;
+    const expected = { 'reentry-at-limit': 'none', 'reentry-over-limit': '[empty]', 'reentry-refused-not-recorded': '[empty]none', 'reentry-own-reads-free': 'z', 'reentry-over-limit-by-a-conversion': '[empty]', 'reentry-own-read-in-a-nested-resolution': 'z' } as const;
 
     for (const [generate, output] of Object.entries(expected) as [Generator, string][]) {
       expect(kept(generate, output, 40000)).toMatchObject({ input: { payload: { x: '' } }, outcome: { ok: true } });
@@ -378,5 +391,60 @@ describe('generated cases', () => {
     // A read of a default in production is the written case's to pin.
     expect(failing('in-progress-read')).toEqual(each());
     expect(failing('in-progress-per-resolution')).toEqual(each());
+  });
+
+  // The modifier that asks for a resolution stays current in it. Only an
+  // implementation whose bound counts that resolution as well stands at the
+  // bound there, so only it shows a read counted that should be free.
+  it('passes reentry-own-read-in-a-nested-resolution whether the bound counts the resolution asked for or not, and fails one that counts the read there where it does', () => {
+    const nested = (bound: number, resolutions: boolean, mutant?: Mutant) => build('reentry-own-read-in-a-nested-resolution', resolver({ bound, mutant, resolutions }), { ...limits, nesting: 4 }, bound).outcome.ok;
+    const BOUNDS = [1, 2, 3];
+
+    expect(BOUNDS.map((bound) => nested(bound, false))).toEqual([true, true, true]);
+    expect(BOUNDS.map((bound) => nested(bound, true))).toEqual([true, true, true]);
+    expect(BOUNDS.map((bound) => nested(bound, true, 'current-per-resolution'))).toEqual([false, false, false]);
+    expect(BOUNDS.map((bound) => nested(bound, true, 'own-reads-counted'))).toEqual([false, false, false]);
+    expect(BOUNDS.map((bound) => nested(bound, false, 'current-per-resolution'))).toEqual([true, true, true]);
+    // The other constructions read no kept input in a resolution asked for.
+    expect(BOUNDS.map((bound) => CONSTRUCTIONS.filter((generate) => !reading(bound, 'current-per-resolution')(generate)))).toEqual([[], [], []]);
+  });
+
+  // The construction of resolutions one inside another, through an
+  // implementation whose bound counts them and through one whose bound counts
+  // reads alone, with how many resolutions each was asked for.
+  const renested = (bound: number, counts: boolean, mutant?: Mutant) => {
+    let asked = 0;
+    const resolve = resolver({ bound, mutant, resolutions: counts });
+    const adapter: Adapter = {
+      levels: ['core', 'extensions'],
+      limits: { ...limits, output: 100 },
+      reentry: bound,
+      resolutions: true,
+      resolve: (input) => {
+        asked += 1;
+
+        return resolve(input);
+      },
+    };
+    const [planned] = plan(adapter, { fixtures: [fixture('reentry-resolutions-over-limit')] }).cases;
+
+    return { outcome: planned.execute(), asked };
+  };
+
+  it('passes reentry-resolutions-over-limit where the bound counts a resolution asked for inside another, the innermost reporting only at a bound of 0', () => {
+    for (const bound of [0, 1, 2, 3]) expect(renested(bound, true)).toEqual({ outcome: { ok: true }, asked: bound + 2 });
+
+    expect(renested(2, true, 'bound-short').outcome).toMatchObject({ ok: false, expected: '[[[F]]]', actual: '[[F]]' });
+    expect(renested(2, true, 'bound-long').outcome).toMatchObject({ ok: false, expected: '[[[F]]]', actual: '[[[[unrefused]]]]' });
+  });
+
+  // The behaviour asks for nothing one level past the bound, so an
+  // implementation that refuses no resolution is asked for as many as one
+  // that refuses the last, and fails, however deep its host would have let
+  // it go.
+  it('fails reentry-resolutions-over-limit where the bound counts reads alone, asking for no resolution past the one that shows it', () => {
+    for (const bound of [0, 1, 2, 3]) expect(renested(bound, false)).toMatchObject({ outcome: { ok: false, actual: `${'['.repeat(bound + 2)}unrefused${']'.repeat(bound + 2)}` }, asked: bound + 2 });
+
+    expect(renested(2, true, 'unbounded')).toMatchObject({ outcome: { ok: false, actual: '[[[[unrefused]]]]' }, asked: 4 });
   });
 });

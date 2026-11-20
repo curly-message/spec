@@ -142,7 +142,7 @@ describe('the shipped set', () => {
   it('writes its generated cases as the runner builds them', () => {
     const generated = resolutions.filter((entry): entry is { name: string; c: Extract<Case, { generate: string }> } => 'generate' in entry.c);
 
-    expect(generated.filter(({ c }) => !['output-at-limit', 'output-over-limit', 'output-over-limit-continues', 'read-at-limit', 'read-over-limit', 'conversion-at-limit', 'conversion-over-limit', 'conversion-over-limit-continues', 'nesting-at-limit', 'nesting-over-limit', 'nesting-over-limit-converts', 'nesting-over-limit-reads', 'nesting-over-limit-read-spent', 'nesting-over-limit-unknown-modifier', 'nesting-over-limit-missing-options', 'nesting-chain-over-limit', 'reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-over-limit-by-a-conversion'].includes(c.generate))).toEqual([]);
+    expect(generated.filter(({ c }) => !['output-at-limit', 'output-over-limit', 'output-over-limit-continues', 'read-at-limit', 'read-over-limit', 'conversion-at-limit', 'conversion-over-limit', 'conversion-over-limit-continues', 'nesting-at-limit', 'nesting-over-limit', 'nesting-over-limit-converts', 'nesting-over-limit-reads', 'nesting-over-limit-read-spent', 'nesting-over-limit-unknown-modifier', 'nesting-over-limit-missing-options', 'nesting-chain-over-limit', 'reentry-at-limit', 'reentry-over-limit', 'reentry-refused-not-recorded', 'reentry-own-reads-free', 'reentry-own-read-in-a-nested-resolution', 'reentry-over-limit-by-a-conversion', 'reentry-resolutions-over-limit'].includes(c.generate))).toEqual([]);
   });
 
   // The written cases that register a behaviour over a list of what was kept,

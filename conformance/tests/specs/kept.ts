@@ -4,7 +4,7 @@ import type { ModifierBehaviour, Report, Resolution, Resolved } from '@curly-mes
 // reads them: what a counted read is, the bound it meets, the refusal of a
 // read whose own production is in progress, and the record a read leaves,
 // whether a modifier, the conversion of its answer or a resolution asked for
-// inside another makes the read.
+// inside another makes the read, and which modifier is current there.
 // It reads placeholders of a key, a host-defined modifier and options, and
 // nothing else the format holds; each mutant is one way to read section 13
 // wrongly, for a case to be held to telling it apart.
@@ -20,7 +20,8 @@ export type Mutant =
   | 'in-progress-raises'
   | 'own-reads-counted'
   | 'conversion-refusal-fails'
-  | 'in-progress-per-resolution';
+  | 'in-progress-per-resolution'
+  | 'current-per-resolution';
 
 type Part = string | Placeholder;
 
@@ -104,27 +105,36 @@ type Reading = {
   mutant?: Mutant;
   /** Called where a modifier's input is read after the call it was handed to returned. */
   late?: () => void;
+  /** Whether the bound counts a resolution asked for inside another as well, as section 13 lets it. */
+  resolutions?: boolean;
 };
 
 // What runs innermost beneath the walk: a modifier's call, or the conversion
 // of its answer.
 type Frame = 'call' | 'conversion';
 
-export const resolver = ({ bound, mutant, late }: Reading) => {
+export const resolver = ({ bound, mutant, late, resolutions }: Reading) => {
   const limit = mutant === 'unbounded' ? Infinity : bound + (mutant === 'bound-short' ? -1 : mutant === 'bound-long' ? 1 : 0);
   // The thread of execution's, which a resolution asked for inside another
-  // shares: the counted reads producing their text, and the resolutions in
-  // progress.
+  // shares: the counted reads producing their text, the resolutions in
+  // progress, and the placeholders whose modifiers are in their calls, the
+  // innermost last.
   let counted = 0;
   let active = 0;
+  const current: Placeholder[] = [];
 
   return ({ message, payload, id, modifiers = {} }: Resolution): Resolved => {
     const reports: Report[] = [];
     const values = (payload ?? {}) as Record<string, unknown>;
-    // The placeholders whose modifiers are in their calls, the innermost last.
-    const current: Placeholder[] = [];
     const frames: Frame[] = [];
+    const inside = resolutions && active > 0;
+
+    // A resolution asked for inside another, refused where the bound counts it.
+    if (inside && counted + 1 > limit) throw new Error('A resolution past the bound.');
+
     const level = active += 1;
+
+    counted += inside ? 1 : 0;
 
     // A refused read, made by a conversion where the mutant fails it there.
     const refuse = (refusal: () => string) => {
@@ -158,7 +168,8 @@ export const resolver = ({ bound, mutant, late }: Reading) => {
           });
         }
 
-        const counts = current.at(-1) !== placeholder || production.producing > 0 || mutant === 'own-reads-counted';
+        const own = current.at(-1) === placeholder && (mutant !== 'current-per-resolution' || level === active);
+        const counts = !own || production.producing > 0 || mutant === 'own-reads-counted';
 
         if (counts && counted + 1 > limit) {
           return refuse(() => {
@@ -220,7 +231,7 @@ export const resolver = ({ bound, mutant, late }: Reading) => {
       }
 
       if (failed) {
-        reports.push({ code: 'failed-modifier', origin: 'message', id });
+        reports.push({ code: 'failed-modifier', origin: 'payload', id });
 
         return render(fallback);
       }
@@ -246,6 +257,7 @@ export const resolver = ({ bound, mutant, late }: Reading) => {
       return { output: render(parse(String(message))), reports };
     } finally {
       active = level - 1;
+      counted -= inside ? 1 : 0;
     }
   };
 };
