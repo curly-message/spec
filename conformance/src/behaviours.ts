@@ -35,9 +35,16 @@ class Taking {
   }
 }
 
-// The message `nest` asks a resolution of, and the one `keep-nest` does.
+// The message `nest` asks a resolution of, the one `keep-nest` does, and the
+// one `keep-nest-ne` does, whose `ne` is the format's own: `x` holds the
+// empty string, which differs from `b`, so it selects that option and
+// produces it during its call.
 const NESTED = '{{x:take; default:F}}';
 const NESTED_TAKING = '{{x:taking; default:F}}';
+const NESTED_DEFINED = '{{x:ne; b:{{x:taking; default:F}}}}';
+
+// The message `descend` asks a resolution of while it has further to go.
+export const DESCEND = '{{x:descend; default:F}}';
 
 // The message `renest` asks a resolution of: the one it is registered in.
 export const RENESTED = '[{{x:renest; default:F}}]';
@@ -74,14 +81,11 @@ export const renesting = (adapter: Pick<Adapter, 'resolve'>, bound: number): Mod
   return renest;
 };
 
-/**
- * The behaviours of README.md over one list of what was kept. Each call builds
- * them afresh, so what one resolution kept is read by no other but the one a
- * `nest` or a `keep-nest` among them asks `adapter` for while its call is in
- * progress, handing it these same behaviours: a runner calls it once per
- * resolution it asks for, with the adapter it asks.
- */
-export const keeping = (adapter: Pick<Adapter, 'resolve'>): Record<Keeping, ModifierBehaviour> => {
+// Where a `descend` among the behaviours over one list leads: through `hops`
+// resolutions one inside another, the innermost of them of `inner`.
+type Descent = { hops: number; inner: string };
+
+const over = (adapter: Pick<Adapter, 'resolve'>, descent?: Descent): Record<Keeping, ModifierBehaviour> => {
   const kept: (() => string)[] = [];
   const claimed = new Set<number>();
 
@@ -108,12 +112,26 @@ export const keeping = (adapter: Pick<Adapter, 'resolve'>): Record<Keeping, Modi
   // The output of a resolution of `message` asked of the adapter, over these
   // same behaviours.
   const nested = (message: string) => {
-    const resolved: unknown = adapter.resolve({ message, payload: { x: '' }, modifiers: record });
+    const resolved: unknown = adapter.resolve({ message, payload: { x: '' }, modifiers: registered });
     const output = resolved !== null && typeof resolved === 'object' ? (resolved as { output?: unknown }).output : undefined;
 
     if (typeof output !== 'string') throw new Error('The resolution nest asked for answered no output.');
 
     return output;
+  };
+
+  let descending = 0;
+
+  // With fewer calls in progress than the descent has hops, the next hop;
+  // with as many, the message the descent leads to.
+  const descend = ({ hops, inner }: Descent): ModifierBehaviour => () => {
+    descending += 1;
+
+    try {
+      return nested(descending < hops ? DESCEND : inner);
+    } finally {
+      descending -= 1;
+    }
   };
 
   const record: Record<Keeping, ModifierBehaviour> = {
@@ -136,7 +154,32 @@ export const keeping = (adapter: Pick<Adapter, 'resolve'>): Record<Keeping, Modi
 
       return nested(NESTED_TAKING);
     },
+    'keep-nest-ne': ({ default: read }) => {
+      kept.push(read);
+
+      return nested(NESTED_DEFINED);
+    },
   };
 
-  return record;
+  // What a resolution asked for from here is handed: the behaviours under
+  // their own names, and `descend` beside them where a descent is under way.
+  const registered: Record<string, ModifierBehaviour> = descent ? { ...record, descend: descend(descent) } : record;
+
+  return registered;
 };
+
+/**
+ * The behaviours of README.md over one list of what was kept. Each call builds
+ * them afresh, so what one resolution kept is read by no other but the one a
+ * `nest`, a `keep-nest` or a `keep-nest-ne` among them asks `adapter` for
+ * while its call is in progress, handing it these same behaviours: a runner
+ * calls it once per resolution it asks for, with the adapter it asks.
+ */
+export const keeping = (adapter: Pick<Adapter, 'resolve'>): Record<Keeping, ModifierBehaviour> => over(adapter);
+
+/**
+ * Those behaviours with the `descend` of README.md beside them, which asks
+ * `adapter` for `hops` resolutions one inside another, each handed these same
+ * behaviours and `descend`, the innermost of them of `inner`.
+ */
+export const descending = (adapter: Pick<Adapter, 'resolve'>, hops: number, inner: string) => over(adapter, { hops, inner }) as Record<Keeping | 'descend', ModifierBehaviour>;

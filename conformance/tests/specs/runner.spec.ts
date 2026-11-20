@@ -180,14 +180,15 @@ describe('plan', () => {
     const set = [file('extensions', [
       concrete('c/nested', { keeping: { d: 'keep-default', n: 'nest' } }),
       concrete('c/keep-nested', { keeping: { k: 'keep-nest', t: 'taking' } }),
+      concrete('c/keep-nested-ne', { keeping: { k: 'keep-nest-ne', t: 'taking' } }),
       concrete('c/converted', { keeping: { d: 'keep-default', t: 'taking' } }),
     ], '13')];
     const skipped = (over: Partial<Adapter>) => plan({ ...adapter(echo, ['core', 'extensions']), ...over }, { fixtures: set }).skipped.map(({ id, reason }) => ({ id, reason }));
 
     const reason = 'The adapter states a bound of 0 on counted reads, so the resolution a modifier asks for inside another may be refused.';
 
-    expect(skipped({ reentry: 0 })).toEqual([{ id: 'c/nested', reason }, { id: 'c/keep-nested', reason }]);
-    expect(skipped({ reentry: 0, keeps: false })).toEqual([{ id: 'c/nested', reason }, { id: 'c/keep-nested', reason }]);
+    expect(skipped({ reentry: 0 })).toEqual([{ id: 'c/nested', reason }, { id: 'c/keep-nested', reason }, { id: 'c/keep-nested-ne', reason }]);
+    expect(skipped({ reentry: 0, keeps: false })).toEqual([{ id: 'c/nested', reason }, { id: 'c/keep-nested', reason }, { id: 'c/keep-nested-ne', reason }]);
     expect(skipped({ reentry: 1 })).toEqual([]);
     expect(skipped({})).toEqual([]);
     expect(skipped({ keeps: false })).toEqual([]);

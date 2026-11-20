@@ -5,8 +5,8 @@ import type { ModifierBehaviour, Report, Resolution, Resolved } from '@curly-mes
 // read whose own production is in progress, and the record a read leaves,
 // whether a modifier, the conversion of its answer or a resolution asked for
 // inside another makes the read, and which modifier is current there.
-// It reads placeholders of a key, a host-defined modifier and options, and
-// nothing else the format holds; each mutant is one way to read section 13
+// It reads placeholders of a key, a host-defined modifier or the format's
+// own `ne`, and options, and nothing else the format holds; each mutant is one way to read section 13
 // wrongly, for a case to be held to telling it apart.
 
 export type Mutant =
@@ -21,7 +21,8 @@ export type Mutant =
   | 'own-reads-counted'
   | 'conversion-refusal-fails'
   | 'in-progress-per-resolution'
-  | 'current-per-resolution';
+  | 'current-per-resolution'
+  | 'defined-not-current';
 
 type Part = string | Placeholder;
 
@@ -200,6 +201,22 @@ export const resolver = ({ bound, mutant, late, resolutions }: Reading) => {
 
     const resolve = (placeholder: Placeholder): string => {
       const { key, modifier, options, fallback } = placeholder;
+
+      // The format's own comparison, current while it produces the option it
+      // selected, as a host-defined modifier is while it runs.
+      if (modifier === 'ne') {
+        const selected = Object.hasOwn(values, key) ? options.find((option) => option.key !== String(values[key])) : undefined;
+
+        if (!selected) return render(fallback);
+
+        if (mutant !== 'defined-not-current') current.push(placeholder);
+
+        try {
+          return render(selected.value);
+        } finally {
+          if (mutant !== 'defined-not-current') current.pop();
+        }
+      }
 
       if (modifier !== undefined && !Object.hasOwn(modifiers, modifier)) {
         reports.push({ code: 'unknown-modifier', origin: 'message', id });

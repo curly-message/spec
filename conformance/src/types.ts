@@ -56,13 +56,14 @@ export type Behaviour = 'upper' | 'echo' | 'empty' | 'nothing' | 'raise' | 'defa
  * The names of the catalogue's behaviours over one list of what host-defined
  * modifiers kept (section 11.3): the ones that keep an input, the ones that
  * read it in a later call, `taking`, whose answer reads it as it is
- * converted, and `nest` and `keep-nest`, which ask for a resolution that
- * reads it; README.md states each. They share that list with the resolution
- * they are registered for and with the one a `nest` or a `keep-nest` among
- * them asks for while it is in progress, so `keeping` builds them afresh for
- * each resolution a runner asks for.
+ * converted, and `nest`, `keep-nest` and `keep-nest-ne`, which ask for a
+ * resolution that reads it; README.md states each. They share that list with
+ * the resolution they are registered for and with the one a `nest`, a
+ * `keep-nest` or a `keep-nest-ne` among them asks for while it is in
+ * progress, so `keeping` builds them afresh for each resolution a runner asks
+ * for.
  */
-export type Keeping = 'keep' | 'keep-default' | 'take' | 'first' | 'taking' | 'nest' | 'keep-nest';
+export type Keeping = 'keep' | 'keep-default' | 'take' | 'first' | 'taking' | 'nest' | 'keep-nest' | 'keep-nest-ne';
 
 /**
  * One resolution's inputs, decoded into host values: the four inputs of
@@ -176,7 +177,9 @@ export type Adapter = {
    * its bound along a lineage does: stated as `true`, the case built from it
    * runs, and `resolve` answers no output, or raises, for a resolution the
    * implementation refused. Left out or `false`, the statement is not made
-   * and that case is left out.
+   * and that case is left out. The two cases built around a resolution a
+   * modifier asks for stand at the bound by resolutions where it is stated,
+   * and then run whatever `keeps` states; they stand by kept reads otherwise.
    */
   resolutions?: boolean;
   /**
@@ -288,7 +291,7 @@ export type ConcreteCase = {
   expected: Expected;
 };
 
-export type Generator = 'output-at-limit' | 'output-over-limit' | 'output-over-limit-continues' | 'read-at-limit' | 'read-over-limit' | 'conversion-at-limit' | 'conversion-over-limit' | 'conversion-over-limit-continues' | 'nesting-at-limit' | 'nesting-over-limit' | 'nesting-over-limit-converts' | 'nesting-over-limit-reads' | 'nesting-over-limit-read-spent' | 'nesting-over-limit-unknown-modifier' | 'nesting-over-limit-missing-options' | 'nesting-chain-over-limit' | 'reentry-at-limit' | 'reentry-over-limit' | 'reentry-refused-not-recorded' | 'reentry-own-reads-free' | 'reentry-own-read-in-a-nested-resolution' | 'reentry-over-limit-by-a-conversion' | 'reentry-resolutions-over-limit';
+export type Generator = 'output-at-limit' | 'output-over-limit' | 'output-over-limit-continues' | 'read-at-limit' | 'read-over-limit' | 'conversion-at-limit' | 'conversion-over-limit' | 'conversion-over-limit-continues' | 'nesting-at-limit' | 'nesting-over-limit' | 'nesting-over-limit-converts' | 'nesting-over-limit-reads' | 'nesting-over-limit-read-spent' | 'nesting-over-limit-unknown-modifier' | 'nesting-over-limit-missing-options' | 'nesting-chain-over-limit' | 'reentry-at-limit' | 'reentry-over-limit' | 'reentry-refused-not-recorded' | 'reentry-own-reads-free' | 'reentry-own-read-in-a-nested-resolution' | 'reentry-over-limit-by-a-conversion' | 'reentry-over-limit-beneath-a-defined-modifier' | 'reentry-resolutions-over-limit';
 
 /** A case the runner builds from the adapter's limits, or from the bound it states on counted reads. */
 export type GeneratedCase = {
