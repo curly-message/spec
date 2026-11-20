@@ -233,7 +233,11 @@ change goes through this cycle:
    finding is **blocking** or a **note**. Blocking: a wrong result or report,
    a raise or state that outlives a call, a cost nothing bounds, a type that
    breaks a consumer, a false statement in a document. Anything else is a
-   note: a missing test, wording, a time within its spread. Every
+   note: a missing test, wording, a time within its spread. A cost that
+   grows with a value outside the message is measured beside what the
+   released parser pays for the same scenario: it is blocking where it is an
+   order of magnitude above that, and a note within it, and a bound the
+   document lacks gets an issue (§3). Every
    round also reviews **performance** against the base branch, at runtime and
    in the type checker: what the change adds to a hot path, what it retains
    and whether that stays bounded, what it adds to the consumer's bundle, and
@@ -251,7 +255,10 @@ change goes through this cycle:
    defect (§6).
 6. **Review the fix.** Each round of fixups for blocking findings gets a
    review of its own delta, not of the design again, and the rounds go on
-   until one confirms nothing blocking. Notes are fixed in the same PR, in
+   until one confirms nothing blocking. A round is reviewed once every run
+   on its head finished and passed: a head red on a runtime or an OS the fix
+   was not run on is the fix's to finish, not a finding of its review. Notes
+   are fixed in the same PR, in
    one batch, verified as any commit is (above), and start no round; a note
    whose fix changes what the code does is a fix like any other and gets its
    round. Findings that keep coming back in one place or of one kind mean
@@ -326,8 +333,12 @@ single implementation meets it.
 - **Work across implementations runs in waves.** Each implementation's
   runner is first brought up to the set as `spec`'s `main` holds it, since a
   case a runner cannot read tells nothing of the package. Each then runs
-  that set and gets one review round, and its findings are recorded, not
-  fixed. They are then settled together, the
+  that set and gets one review round. A finding a case of the set fails,
+  whose fix is clean, is fixed at once; one the set does not pin, or one
+  that touches the document, is recorded, not fixed. A blocking finding no
+  fixture can pin is checked once in every other implementation before it is
+  settled, so that it does not come back one implementation at a time. The
+  recorded findings are then settled together, the
   document and the set change once, the parser follows, then the other
   implementations, and the set and a review of the wave's delta verify it.
   Each wave reports its blocking findings per implementation and per section
