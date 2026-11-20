@@ -254,11 +254,10 @@ change goes through this cycle:
    until one confirms nothing blocking. Notes are fixed in the same PR, in
    one batch, verified as any commit is (above), and start no round; a note
    whose fix changes what the code does is a fix like any other and gets its
-   round. When a third round still confirms something blocking, the work
-   stops there: the findings are read together and reported to the user with
-   the choices they leave — findings that keep coming back in one place or
-   of one kind mean the design is wrong there — and no fourth round starts
-   without the user's answer. A round that touches only prose gets a
+   round. Findings that keep coming back in one place or of one kind mean
+   the design is wrong there: such a place is not patched a third time, it
+   goes up the ladder of *Where a finding is settled* below, which ends
+   without waiting on the user. A round that touches only prose gets a
    self-check instead: each changed statement is checked against the code,
    or reproduced, on every version it claims to hold for.
 7. **Run it where it is used** when a change touches how a package meets
@@ -278,6 +277,66 @@ each review round and what it found, the run where it is used (or why it does
 not apply), CI — and names any step not run, the notes left as they are with
 the reason for each, and every issue the PR opened (§3) with why it was not
 fixed in the PR.
+
+### Where a finding is settled
+
+**Clean code comes first.** A finding is settled where its fix is clean. One
+that no clean fix in a package settles is a defect of the document, though a
+single implementation meets it.
+
+- **Pin it first.** A blocking finding gets the case that reproduces it
+  before its fix: a fixture of the conformance set where a message and its
+  data show it, a test of the package otherwise. A finding no case can pin
+  is one about prose: it takes the self-check of step 6 and starts no round.
+- **A bend is not written.** A fix is a bend where it emulates what another
+  host does and its own language has no counterpart for, models the
+  internals of a library or a runtime, needs a paragraph to justify (§12),
+  or guards more than the code it guards does. A fix that would be one goes
+  up the ladder instead. A bend that neither `SPEC.md` nor a fixture forces
+  is no finding against the document: the package drops it, or the case
+  that forces it joins the set first.
+- **The ladder.** A place is a section of `SPEC.md` or a module of a
+  package. A module's findings are counted per PR and a section's across
+  every PR of one revision of the document, whatever the rounds are called.
+  1. **Fix it in the package**, where the fix is clean — twice in one place
+     at most.
+  2. **Redesign the place in the package** on its third blocking finding, or
+     on a fix that would be a bend: every finding the place drew is read
+     together, and two or three designs go through the design check of
+     step 1.
+  3. **Change the document** where no design is clean. The designs that
+     failed are the change's justification, and its PR names them.
+  4. **Narrow the document** where a finding comes back after that:
+     `SPEC.md` stops settling the question and leaves it to the
+     implementation, which documents its bound or its reading, and the
+     cases that pinned it become conditional on what an adapter states.
+     Nothing follows this step, so every place ends.
+- **`SPEC.md` changes on that justification and no other.** A change to it
+  comes from step 3 or 4, or from a message two implementations resolve
+  differently, with the fixture that pins it. What a released implementation
+  resolves a message to stays as it is (§ Architecture), and the changes of
+  one wave land as one revision. Wording nobody misread and a case no caller
+  can meet change nothing.
+- **A conflict is settled in this order**, and the answer is recorded in
+  `RULINGS.md` with its reason: a fixture of the released set, where it pins
+  the format (one that pins a single host's behavior is rewritten so that
+  every host can pass it and the released parser still does); an earlier
+  ruling; what the released parser resolves; what most implementations do;
+  the reading that prescribes least.
+- **Work across implementations runs in waves.** Each implementation's
+  runner is first brought up to the set as `spec`'s `main` holds it, since a
+  case a runner cannot read tells nothing of the package. Each then runs
+  that set and gets one review round, and its findings are recorded, not
+  fixed. They are then settled together, the
+  document and the set change once, the parser follows, then the other
+  implementations, and the set and a review of the wave's delta verify it.
+  Each wave reports its blocking findings per implementation and per section
+  of `SPEC.md`, and the fixtures it changed; the waves go on until one
+  confirms nothing blocking, and the release plan follows.
+- **The user keeps what cannot be taken back**: a merge, a publish, a change
+  to a released public surface, an invariant. Each reaches them with its
+  choices, the evidence and a recommendation. Everything else the ladder
+  settles, and its PR and `RULINGS.md` say how, for the user to read after.
 
 ### Benchmarks
 
