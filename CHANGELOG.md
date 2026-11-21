@@ -209,6 +209,15 @@ way no longer resolves to its fallback chain.
   the text it writes is value text the read and output limits count, and only
   a value the application built reaches it, since a payload decoded from JSON
   holds plain values.
+* Section 13 says that no limit of it counts the work an implementation does
+  on what a modifier is handed before the modifier answers: removing the
+  padding around an option's value or an inline default, converting an option
+  key to a number, reading a property as one and composing the props from
+  their layers. The section sets no limit for that work and no minimum for
+  one; bounding it is the implementation's, by how it does the work, and it
+  documents what that work grows with, and no bound it keeps there changes
+  what a placeholder resolves to. 3.1.0 did not say whose that cost is, and
+  `RULINGS.md` B.7 records why no limit is added.
 * Section 9 says where section 13's bounds and the message errors fall among a
   placeholder's steps: the read limit is tested first, so a placeholder
   reached with the budget spent resolves to the empty string however deeply it

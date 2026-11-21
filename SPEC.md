@@ -1635,6 +1635,22 @@ decoding produces for an object and an array is plain (section 4), so only a
 value the application built reaches it, and the application bounds what its own
 types cost.
 
+Nor does any limit of this section count the work an implementation does on
+what a modifier is handed before the modifier answers: removing the padding
+around an option's value or an inline default (section 8), converting an option
+key to a number (section 11.1), reading a property as one and composing the
+props from their layers (section 11.2). That work grows with the text or the
+layers it is done on, and a message can ask for it at each of its placeholders.
+An option's value and an inline
+default are bounded by the message they were read from; props are the caller's,
+and a wrapper's are the payload's, which a caller does not pass untrusted where
+a wrapper is recognized (section 14.1). What the work costs is no part of what
+a placeholder resolves to, so this section sets no limit for it and no minimum
+for one, and no bound an implementation keeps on it changes what a placeholder
+resolves to. Bounding it is the implementation's, by how it does that work, and
+the implementation documents what the work grows with. What section 14.1
+requires of deriving a message stands beside this.
+
 A resolution may begin while another is running: a host-defined modifier
 (section 11.3), a reporting handler (section 14.3) and any host code a
 conversion runs (section 4) all reach the implementation, and any of them may
