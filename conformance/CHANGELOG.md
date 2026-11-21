@@ -324,7 +324,7 @@ of an input a modifier kept. Nothing a message resolves to changes.
   `reentry-over-limit-beneath-a-defined-modifier` also
   at 0, and at 0 the written case that registers `nest` as well, and every case that reads a kept input after its modifier returned
   where the adapter states `keeps` as `false`; RUNNER.md gives both as the
-  sixth and seventh reasons a case is left out, and states what the set
+  seventh and eighth reasons a case is left out, and states what the set
   assumes of a bound across the process, which no adapter statement covers. The set's tests hold every written case
   that reads a kept input after its modifier returned to registering `keep` or
   `first`, which is how a runner tells it.
