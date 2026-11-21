@@ -141,8 +141,11 @@ way no longer resolves to its fallback chain.
   implementation keeps and the host ends the script or the process as it runs
   out of memory or of threads, the chain is the host code's to bound, and
   section 14.2 names it as an exception; an implementation that keeps only
-  the bound on one thread meets the requirement. The document sets no minimum
-  for the bound.
+  the bound on one thread meets the requirement. That is no change to what a
+  message resolves to: 3.1.0 had an implementation contain the host reaching
+  its limit on how deep one call stack goes, which no part of such a chain
+  reaches, and said nothing of a host that runs out of memory or of threads.
+  The document sets no minimum for the bound.
 * Section 13 says what a read of an option's value or of a default costs, the
   default being an inline one or one the payload declares. During a resolution
   each is produced at most once, and a later read answers the text recorded. A
