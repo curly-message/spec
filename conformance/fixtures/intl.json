@@ -1460,6 +1460,94 @@
       }
     },
     {
+      "id": "intl/date-hour-cycle-in-a-style",
+      "description": "date hands its hourCycle to the request beside a timeStyle, where it decides the day period over the locale's own.",
+      "section": "11.2",
+      "message": "{{d:date}}",
+      "payload": {
+        "d": 1709643900000
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC",
+          "timeStyle": "short",
+          "hourCycle": "h23"
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "DateTimeFormat",
+          "options": {
+            "timeZone": "UTC",
+            "timeStyle": "short",
+            "hourCycle": "h23"
+          },
+          "input": 1709643900000
+        }
+      }
+    },
+    {
+      "id": "intl/date-hour12-in-components",
+      "description": "date hands its hour12 to the request beside the components it names, where it decides the day period over the locale's own.",
+      "section": "11.2",
+      "message": "{{d:date}}",
+      "payload": {
+        "d": 1709643900000
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC",
+          "hour": "numeric",
+          "minute": "2-digit",
+          "hour12": false
+        }
+      },
+      "locale": "en",
+      "expected": {
+        "format": {
+          "api": "DateTimeFormat",
+          "options": {
+            "timeZone": "UTC",
+            "hour": "numeric",
+            "minute": "2-digit",
+            "hour12": false
+          },
+          "input": 1709643900000
+        }
+      }
+    },
+    {
+      "id": "intl/date-hour-cycle-in-components",
+      "description": "date hands its hourCycle to the request beside the components it names, where a twelve-hour cycle writes a day period the locale's own omits.",
+      "section": "11.2",
+      "message": "{{d:date}}",
+      "payload": {
+        "d": 1709643900000
+      },
+      "props": {
+        "date": {
+          "timeZone": "UTC",
+          "hour": "numeric",
+          "minute": "2-digit",
+          "hourCycle": "h12"
+        }
+      },
+      "locale": "en-GB",
+      "expected": {
+        "format": {
+          "api": "DateTimeFormat",
+          "options": {
+            "timeZone": "UTC",
+            "hour": "numeric",
+            "minute": "2-digit",
+            "hourCycle": "h12"
+          },
+          "input": 1709643900000
+        }
+      }
+    },
+    {
       "id": "intl/ago-layers-compose",
       "description": "ago composes its properties per property over the implementation defaults, the section's numeric beneath them.",
       "section": "11.2",
