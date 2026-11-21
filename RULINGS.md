@@ -875,3 +875,45 @@ inside it is — gives the second answer. The permission adds counting only, so 
 chain grows by it, and it reaches no read made where nothing began beneath the
 modifier's call: a stack of own reads inside counted reads stays free, and so
 does an own read made in a resolution the modifier asked for.
+
+## B.7 The work done on what a modifier is handed
+
+**Observed.** Section 13 bounds a resolution by its output, its reads, its
+conversions, its nesting and the resolutions in progress at once. None of them
+counts the work done on an option's value, a default or the props before a
+modifier answers, and that work grows with their length. Three implementations
+each met it in a different place; the first two were measured on a 1 MB input,
+the first beside the released parser:
+
+```notation
+one option value of 1 MB of U+00A0 padding, one placeholder
+    one implementation                ->  6.7 to 10.5 ms
+    the released parser               ->  0.40 ms
+
+minimumFractionDigits of 1 MB, number and plural read 100 times, ICU Intl level
+    one implementation                ->  430 to 450 ms, converted at each request
+
+props that alternate between two wrappers
+    one implementation                ->  composed from their layers at each placeholder
+```
+
+Nothing any of them resolves differs: the cost is the whole of the difference.
+
+**Ruling.** Section 13 says that no limit of it counts this work, sets no limit
+for it and no minimum for one, and leaves bounding it to the implementation, by
+how it does the work, and it documents what that work grows with. No bound an
+implementation keeps there changes what a placeholder resolves to.
+
+Two designs that would have bounded it in the document were set aside. Charging
+the length of what a modifier is handed to the read budget, or giving it a
+limit of its own, makes a placeholder that resolves today resolve to the empty
+string once the budget is spent, which changes what a released resolution
+answers and so belongs to a later version of the format. Requiring the work be
+done once for a resolution prescribes a record of every padded text and every
+composed layer to each implementation, and the one whose padding stayed an
+order of magnitude above the released parser had already been redesigned once
+for it: every design measured that removed the rest was either a workaround for
+its host or moved the cost to the common shapes. The cost is also no answer a
+case could hold an implementation to, so no fixture is added and none changes:
+the conformance set pins what a message resolves to, and a time is not
+asserted.
