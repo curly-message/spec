@@ -153,6 +153,17 @@ of an input a modifier kept. Nothing a message resolves to changes.
   `intl/ago-negative-under-half-second` pins the sign: a delta of -499 under
   `numeric: 'always'` asks for `[-0.0, "second"]`, written so that a decoder
   reading `-0` as an integer keeps the sign. RUNNER.md says so.
+* Three cases pin that `date` hands `hourCycle` and `hour12` to its request
+  (section 11.2). No case named either, so an implementation that dropped
+  them, or read them onto its facility so that the day period stayed the
+  locale's own, passed the set. `intl/date-hour-cycle-in-a-style` asks `en`
+  for `timeStyle: 'short'` with `hourCycle: 'h23'`, a twenty-four-hour time
+  where the locale writes a twelve-hour one; `intl/date-hour12-in-components`
+  asks `en` for `hour` and `minute` with `hour12: false`; and
+  `intl/date-hour-cycle-in-components` asks `en-GB`, whose own cycle has no
+  day period, for them with `hourCycle: 'h12'`. Each states its request, so an
+  adapter whose facility cannot express either property states it under
+  `unexpressible` and has the case left out.
 * The defect `tree-unit-changed` declares a unit other than the adapter's own.
   It declared code points whatever the adapter counted in, which alters
   nothing for an adapter counting code points, so on such a host the audit
