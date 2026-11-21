@@ -237,7 +237,7 @@ way no longer resolves to its fallback chain.
   serialization is not abandoned while it has visited fewer than 100 000 nodes
   and written fewer than 100 000 characters, in the unit the output limit
   counts, and one that reaches either limit the implementation imposes is a
-  conversion that cannot describe the value. This is the one change of this
+  conversion that cannot describe the value. This is one of the two changes of this
   revision to what a message resolves to: 3.1.0 bounded only the nodes, so an
   implementation serialized a value of fewer than 100 000 nodes however much
   text it wrote, unless the host's serializer refused it, and one whose bound
