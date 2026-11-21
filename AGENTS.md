@@ -24,7 +24,7 @@ edits in any of its repositories.
 | Repository | Packages | Role |
 |------------|----------|------|
 | [`spec`](https://github.com/curly-message/spec) | `SPEC.md`, `CST.md`; `@curly-message/conformance` (`conformance/`); the site (`site/`, private) | the format: the normative document, the conformance set every implementation runs, and the public site with the playground; hosts the **shared issue tracker** |
-| [`parsers`](https://github.com/curly-message/parsers) | `@curly-message/parser` (`js/`) | the implementations, one directory per language, each a standalone package with no root manifest |
+| [`parsers`](https://github.com/curly-message/parsers) | `@curly-message/parser` (`js/`); unreleased: `github.com/curly-message/parsers/go` (`go/`), `curly-message-parser` (`rust/`), `curly-message` (`python/`), `curly-message/parser` (`php/`) | the implementations, one directory per language, each a standalone package with no root manifest |
 | [`parser-php`](https://github.com/curly-message/parser-php) | `curly-message/parser` for Composer | the tree of `parsers`' `php/`, which Packagist reads at a repository's root: written by `parsers`' publish workflow and by nothing else, tagged `vX.Y.Z` |
 | [`lint`](https://github.com/curly-message/lint) | `@curly-message/lint` (`lint/`), `@curly-message/eslint-plugin` (`eslint-plugin/`) | npm workspaces: the linter library and the `curly-lint` command, and the ESLint plugin over them |
 
