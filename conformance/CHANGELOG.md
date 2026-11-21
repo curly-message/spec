@@ -1,6 +1,6 @@
 # Changelog
 
-### 4.2.0 (Unreleased)
+## 4.2.0
 
 The set gains constructions at the limits: a chain of inline defaults nested
 far past the nesting limit, which an implementation resolves however deeply it
