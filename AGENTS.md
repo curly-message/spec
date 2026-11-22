@@ -146,7 +146,12 @@ name.
    — is never hand-edited and never committed. Generated source that a
    package format serves from the repository's tree (a Go module, a Composer
    package) is the exception: it is committed, never hand-edited, and CI
-   regenerates it and fails where it differs.
+   regenerates it and fails where it differs. A tool's built artifact that a
+   registry serves only from a repository's tree is the second exception: it
+   is committed to a repository that the tool's publish workflow alone writes
+   to, built from a tag, with its digest in that release's notes, and never
+   to a repository that holds source. The parser and the conformance set ship
+   as source in every language.
 
 ---
 
