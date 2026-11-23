@@ -1,5 +1,8 @@
 # @curly-message/conformance
 
+[![npm](https://img.shields.io/npm/v/@curly-message/conformance)](https://www.npmjs.com/package/@curly-message/conformance)
+[![tests](https://github.com/curly-message/spec/actions/workflows/tests-conformance.yml/badge.svg?branch=main)](https://github.com/curly-message/spec/actions/workflows/tests-conformance.yml)
+
 The conformance set of the [Curly Message Format](../SPEC.md): fixtures that
 an implementation in any language is measured against, and a JavaScript runner
 that drives one through the adapter of section 14.3.
