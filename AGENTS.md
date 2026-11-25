@@ -26,7 +26,7 @@ edits in any of its repositories.
 | [`spec`](https://github.com/curly-message/spec) | `SPEC.md`, `CST.md`; `@curly-message/conformance` (`conformance/`); the site (`site/`, private) | the format: the normative document, the conformance set every implementation runs, and the public site with the playground; hosts the **shared issue tracker** |
 | [`parsers`](https://github.com/curly-message/parsers) | `@curly-message/parser` (`js/`); as prereleases: `github.com/curly-message/parsers/go` (`go/`), `curly-message-parser` (`rust/`), `curly-message` (`python/`), `curly-message/parser` (`php/`) | the implementations, one directory per language, each a standalone package with no root manifest |
 | [`parser-php`](https://github.com/curly-message/parser-php) | `curly-message/parser` for Composer | the tree of `parsers`' `php/`, which Packagist reads at a repository's root: written by `parsers`' publish workflow and by nothing else, tagged `vX.Y.Z` |
-| [`lint`](https://github.com/curly-message/lint) | unreleased: `@curly-message/lint` (`lint/`), `@curly-message/eslint-plugin` (`eslint-plugin/`), `curly-message-lint` (`rust/`) | npm workspaces: the linter library and the `curly-lint` command, and the ESLint plugin over them; beside them, the same rules and command as a Rust crate |
+| [`lint`](https://github.com/curly-message/lint) | unreleased: `@curly-message/lint` (`lint/`), `@curly-message/eslint-plugin` (`eslint-plugin/`), `curly-message-lint` (`rust/`) | the linter as a Rust crate, its rules and the `curly-lint` command; beside it, npm workspaces: the library and the command over that crate compiled to WebAssembly, and the ESLint plugin over them |
 
 Issues for every repository of the family live in
 [`curly-message/spec`](https://github.com/curly-message/spec/issues); `parsers`
@@ -85,10 +85,12 @@ Repository map:
   (`conformance-<version>.zip`, attached to each release of the set with its
   digest in the release notes) or fetches it when its tests run, pinned by
   that digest and checked against it before it is read.
-- `@curly-message/lint` takes the parser as a **peer dependency**, so a project
-  lints with the parser it resolves with, and carries the current parser as a
-  `devDependency` to build and test against. `@curly-message/eslint-plugin`
-  **pins** the linter **exactly**: both release from one repository, together.
+- `curly-message-lint` depends on `curly-message-parser`, the Rust parser.
+  `@curly-message/lint` runs that crate compiled to WebAssembly, built into
+  the package, so it carries its parser and has **no dependency** on
+  `@curly-message/parser`; the conformance set's tree cases hold every parser
+  to one tree. `@curly-message/eslint-plugin` **pins** the linter
+  **exactly**: both release from one repository, together.
 - The site pins the parser through its lockfile; the playground runs that
   release.
 - A peer range is **widened, never narrowed**: narrowing fails a project still
@@ -435,7 +437,8 @@ released after its dependent forces another release of the dependent.
   bump, the checks below, each publish and each document update. It is
   ordered so that no package is published twice.
 - **Leaves first.** The document's revision, then the conformance set, then
-  the parser, then the linter, then the ESLint plugin, then the site. A
+  the parsers, then the linter, whose crate and npm package both build on the
+  Rust parser, then the ESLint plugin, then the site. A
   package is not published while a package it depends on holds an unreleased
   change or a planned fix it needs, unless the user deferred that fix by name.
 - **Bump the family first.** Every range a package holds on the family
