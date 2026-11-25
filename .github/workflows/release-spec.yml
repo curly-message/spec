@@ -65,10 +65,6 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           grep -Eqx '[0-9]+\.[0-9]+\.[0-9]+' <<< "$VERSION" || { echo "::error::'$VERSION' is not a major.minor.patch revision."; exit 1; }
-          if git ls-remote --exit-code origin "refs/tags/v$VERSION" > /dev/null; then
-            echo "::error::v$VERSION is already tagged."
-            exit 1
-          fi
           format=$(sed -n 's/^| Versioned identifier | `curly-message-\([0-9]\{1,\}\)` |$/\1/p' SPEC.md)
           [ -n "$format" ] || { echo "::error::SPEC.md names no versioned identifier to read v$VERSION against."; exit 1; }
           [ "${VERSION%%.*}" = "$format" ] || { echo "::error::SPEC.md specifies curly-message-$format; v$VERSION would name version ${VERSION%%.*} of the format."; exit 1; }
@@ -77,6 +73,12 @@ jobs:
           # one and not the others.
           heading='### ([0-9]+\.[0-9]+\.[0-9]+) \(Unreleased\)'
           sections=$(grep -cE "^$heading$" CHANGELOG.md) || sections=0
+          # The release commit closes the section, so a revision tagged
+          # already reads none: its run is what finishes it.
+          if [ "$sections" = 0 ] && [ -n "$(git ls-remote --tags origin "refs/tags/v$VERSION")" ]; then
+            echo "::error::v$VERSION is tagged already. Where its release stopped, re-run the failed jobs of the run that tagged it."
+            exit 1
+          fi
           [ "$sections" = 1 ] || { echo "::error::CHANGELOG.md holds $sections sections headed '### <major.minor.patch> (Unreleased)'; a revision reads exactly one."; exit 1; }
           declared=$(sed -nE "s/^$heading$/\1/p" CHANGELOG.md)
           [ "$declared" = "$VERSION" ] || { echo "::error::CHANGELOG.md's pending section names $declared, and this run was dispatched as $VERSION. Release what the section names, or rewrite its heading."; exit 1; }
@@ -85,6 +87,9 @@ jobs:
 
       # One atomic push carries the commit and the tag: either both land or
       # neither, and --follow-tags would have left a lightweight tag behind.
+      # Where the tag is on origin already, a re-run of this job finishes the
+      # release it names: the commit made here holds the tagged tree, and the
+      # steps after this one run on the tagged commit with nothing pushed.
       - name: Commit, tag and push
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
@@ -95,14 +100,42 @@ jobs:
           git config user.name "$APP[bot]"
           git config user.email "$id+$APP[bot]@users.noreply.github.com"
           git commit --all --message "chore: release the specification as $VERSION"
-          git tag --annotate --message "Curly Message Format $VERSION" "v$VERSION"
-          git push --atomic origin main "v$VERSION"
+          prefix=v
+          tag="$prefix$VERSION"
+          tags=$(git ls-remote --tags origin "refs/tags/$prefix*")
+          versions=$(sed -n "s|^[0-9a-f]*[[:space:]]refs/tags/$prefix\([^^]*\)$|\1|p" <<< "$tags")
+          if ! grep -qxF "$VERSION" <<< "$versions"; then
+            git tag --annotate --message "Curly Message Format $VERSION" "$tag"
+            git push --atomic origin main "$tag"
+          else
+            git fetch --no-tags --depth=1 origin "refs/tags/$tag:refs/tags/$tag"
+            [ "$(git rev-parse "$tag^{tree}")" = "$(git rev-parse 'HEAD^{tree}')" ] || { echo "::error::$tag holds another release than the one this run commits."; exit 1; }
+            # A stable release is held to the stable releases alone, and a
+            # prerelease to every release. A `~` makes sort -V read a
+            # prerelease before its release.
+            compared=$versions
+            case "$VERSION" in *-*|*rc*) ;; *) compared=$(sed -E '/-|rc/d' <<< "$versions") ;; esac
+            newest=$({ echo "$compared"; echo "$VERSION"; } | sed -E 's/-|rc/~&/' | sort -V | tail -n 1)
+            [ "${newest//\~/}" = "$VERSION" ] || { echo "::error::$prefix${newest//\~/} is tagged after $tag, and a release is finished before the next one is released."; exit 1; }
+            git reset --soft "$tag^{commit}"
+            echo "::notice::$tag holds this release already, so the run finishes it from there and pushes nothing."
+          fi
 
-      # The release notes are the changelog section the revision just named.
+      # The release notes are the changelog section the revision just named. A
+      # published release passes.
       - name: Publish the GitHub release
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           VERSION: ${{ steps.revision.outputs.version }}
         run: |
+          tag="v$VERSION"
+          if ! release=$(gh release view "$tag" --json isDraft 2> "$RUNNER_TEMP/release.err"); then
+            grep -qx 'release not found' "$RUNNER_TEMP/release.err" || { cat "$RUNNER_TEMP/release.err" >&2; exit 1; }
+          fi
+          if [ -n "$release" ]; then
+            [ "$(jq -r .isDraft <<< "$release")" = false ] || { echo "::error::The GitHub release $tag is a draft, which this workflow does not leave: publish or delete it, then re-run."; exit 1; }
+            echo "::notice::The GitHub release $tag is published already."
+            exit 0
+          fi
           awk -v heading="## $VERSION" '$0 == heading { on = 1; next } /^## / { on = 0 } on' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
-          gh release create "v$VERSION" --verify-tag --title "Curly Message Format $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
+          gh release create "$tag" --verify-tag --title "Curly Message Format $VERSION" --notes-file "$RUNNER_TEMP/notes.md"

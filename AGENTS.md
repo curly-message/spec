@@ -463,7 +463,11 @@ released after its dependent forces another release of the dependent.
 - **Every package is benchmarked** before it is published (see above).
 - **Publishing:** one package per workflow run, by the registry's trusted
   publishing where it has one, with `release` as the publisher's
-  environment.
+  environment. A run that stops once its tag is pushed is finished by
+  re-running its failed jobs before the package releases again: they find
+  the tag holding the same tree, push nothing, and publish only what the
+  registry and GitHub lack. A PHP package's run is finished through its
+  workflow's `mirror` input instead.
   - **Tags** are namespaced by package directory, `<dir>-vX.Y.Z`
     (`js-v3.1.1`, `conformance-v4.1.0`, `lint-v1.0.0`). A Go module's is
     `<dir>/vX.Y.Z` (`go/v1.0.0`, a nested module's `go/intl/v1.0.0`): the go
@@ -792,7 +796,8 @@ Its CI:
   publisher's environment; `BENCH.md` written into the release commit; a
   GitHub release per package tag; and, after the tests, three jobs —
   `version`, `build` and `release` — so that of them only `build` runs a
-  dependency's code and only `release` holds the credentials.
+  dependency's code and only `release` holds the credentials; and a re-run
+  of its failed jobs finishes a release that stopped after its tag was pushed.
 - Repository settings: rebase merges only; issues off, pointing to the shared
   tracker; the release App's client ID as the `APP_CLIENT_ID` variable, and its
   private key as the `APP_PRIVATE_KEY` secret of a `release` environment that
