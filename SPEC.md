@@ -517,9 +517,15 @@ member of `whitespace` escapes that way, the line terminators among them, so
 line terminator into a placeholder (section 6, note 1).
 
 Escaping is defined at the level of the message **string**, not at the level of
-the file that carries it. A message stored in JSON must additionally satisfy
-JSON's own escaping rules, so a single format-level backslash is written as two
-characters in a JSON source file:
+the file that carries it. Whatever carries a message — a JSON string, a scalar
+of another notation, a string literal in source — has spellings of its own, and
+the message is the string that carrier's own reader yields, once it has read its
+escapes, joined its lines and dropped what it drops. The format adds nothing to
+that reading and takes nothing from it: a character the carrier removes or
+rewrites never reaches the message, and a character the message needs is written
+as the carrier asks for it. JSON is one such carrier. A message stored in it
+must additionally satisfy JSON's own escaping rules, so a single format-level
+backslash is written as two characters in a JSON source file:
 
 | Intent | In the message string | In a JSON catalogue |
 | --- | --- | --- |
