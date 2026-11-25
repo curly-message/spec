@@ -52,7 +52,8 @@ can recurse, and holds the pieces to the message and to eight boxes deep (see
 It tests [`grammar/`](../grammar) as well, which has no package of its own
 and is held to this one's colouring: `tests/grammar.test.mjs` tokenises every
 message of the conformance set with the TextMate grammar, as an editor would,
-and compares the result with what `highlight.js` draws
+alone and written into a JSON and a YAML document, and compares the result
+with what `highlight.js` draws
 ([`grammar/README.md`](../grammar/README.md) says how). The grammars it
 injects into are the ones an editor ships, kept as fixtures in
 [`tests/grammars/`](./tests/grammars) under their own licences.

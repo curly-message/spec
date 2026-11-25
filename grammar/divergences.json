@@ -2,17 +2,31 @@
   "classes": [
     {
       "id": "nesting",
-      "carriers": ["raw", "json"],
+      "carriers": ["raw", "json", "yaml-double", "yaml-single", "yaml-plain", "yaml-block"],
       "where": "A placeholder that holds placeholders more than 8 deep, itself counted.",
       "grammar": "Draws what such a placeholder writes itself as text, its escape sequences excepted, and every placeholder in it that nests 8 deep or less as the placeholder it is.",
       "reason": "The proof that a placeholder is complete is a regular expression, which cannot follow nesting to any depth, so it is unrolled to the depth every implementation resolves (SPEC.md, section 13)."
     },
     {
       "id": "trailing-backslash",
-      "carriers": ["raw"],
+      "carriers": ["raw", "yaml-block"],
       "where": "A message whose last character is a backslash with nothing left to consume.",
       "grammar": "Draws that backslash as an escape sequence that cancels.",
       "reason": "A TextMate tokenizer reads a line at a time and ends every line it reads with a line feed, the last included, so the end of a message cannot be told from a backslash before a line feed, which is an escape sequence (SPEC.md, section 7)."
+    },
+    {
+      "id": "folded-placeholder",
+      "carriers": ["yaml-double", "yaml-single", "yaml-plain", "yaml-block"],
+      "where": "A placeholder that a line break of the document stands in, in a scalar written over several lines: one YAML folds into a space or a line feed of the message, or one a double-quoted scalar escapes into nothing. Of block scalars only a folded one (`>`) has it, a line break of a literal one (`|`) being a line feed of the message, which no placeholder holds.",
+      "grammar": "Draws what such a placeholder writes itself as text, its escape sequences excepted, and every placeholder in it that is written on one line as the placeholder it is.",
+      "reason": "A TextMate tokenizer reads a line of the document at a time, and the proof that a placeholder is complete reads no further than the line it starts on. The message has no line terminator there, so the placeholder is one, written on lines the proof cannot join."
+    },
+    {
+      "id": "folded-escape",
+      "carriers": ["yaml-double", "yaml-single", "yaml-plain"],
+      "where": "An escape sequence whose backslash ends a line of the document, or stands before nothing but the blanks that end it, which YAML drops, in a double-quoted, single-quoted or plain scalar written over several lines: the character it consumes is the space the line break folds into, or stands on the next line behind a line break a double-quoted scalar escapes into nothing.",
+      "grammar": "Draws the backslash as text, and the character it consumes as text where that stands on the next line.",
+      "reason": "A TextMate tokenizer reads a line of the document at a time, so no rule sees the backslash and what it consumes together, and a backslash that ends a line is no escape sequence in these scalars, where a line break is not a line feed of the message. A block scalar is spared: its rules read a backslash before a line break as the escape sequence it is in a literal one, and a folded one's space is consumed as a line feed would be."
     }
   ]
 }

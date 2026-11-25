@@ -25,6 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { cst } from '@curly-message/parser';
 import oniguruma from 'vscode-oniguruma';
 import textmate from 'vscode-textmate';
+import { parseDocument } from 'yaml';
 import { carriers, DEPTH, grammar, injection } from '../../grammar/grammar.mjs';
 import { highlight } from '../highlight.js';
 
@@ -69,9 +70,12 @@ const hostOf = (root, grammars) => {
   return tokenizerOf(root, Object.fromEntries([...grammars, ...injected].map((built) => [built.scopeName, built])), injected.map((built) => built.scopeName));
 };
 
+const YAML = ['yaml', 'yaml-1.0', 'yaml-1.1', 'yaml-1.2', 'yaml-1.3', 'yaml-embedded'].map((name) => shipped(`yaml/${name}.tmLanguage.json`));
+
 const TOKENIZERS = {
   raw: await tokenizerOf(grammar().scopeName, { [grammar().scopeName]: grammar() }),
   json: await hostOf('source.json', [shipped('json/JSON.tmLanguage.json')]),
+  yaml: await hostOf('source.yaml', YAML),
 };
 
 // The class the site draws each scope as. A character in a placeholder that
@@ -140,7 +144,9 @@ const bySite = (message) => {
  * messages are in a class is a fact about a message's tree, which JSON cannot
  * state, so the predicate is here, under the class's id: it rewrites the
  * site's colouring into what the grammar is said to draw, and says whether it
- * rewrote anything. */
+ * rewrote anything. A class that comes of how a document is cut into lines
+ * reads `lines`: for each UTF-16 unit of the message the line of its document
+ * it is written on, or null where what writes it holds a line break. */
 
 // How many placeholders deep a node nests, itself counted where it is one.
 const depths = new WeakMap();
@@ -150,20 +156,27 @@ const depth = (node) => {
   return depths.get(node);
 };
 
+// Whether what a node holds is written on more than one line.
+const broken = (node, lines) => new Set(lines.slice(node.start, node.end)).size > 1;
+
+// A placeholder the grammar does not recognise is drawn as text, but for its
+// escape sequences and for the placeholders in it that the grammar does.
+const losing = (loses) => (message, colours, lines) => {
+  let met = false;
+  const walk = (node, lost) => {
+    if (node.type === 'placeholder') lost = loses(node, lines);
+    if (node.nodes) for (const child of node.nodes) walk(child, lost);
+    else if (lost && node.type !== 'escape') colours.fill('ink-text', node.start, node.end);
+    met ||= lost;
+  };
+
+  walk(cst(message), false);
+
+  return met;
+};
+
 const DIVERGE = {
-  nesting: (message, colours) => {
-    let met = false;
-    const walk = (node, lost) => {
-      if (node.type === 'placeholder') lost = depth(node) > DEPTH;
-      if (node.nodes) for (const child of node.nodes) walk(child, lost);
-      else if (lost && node.type !== 'escape') colours.fill('ink-text', node.start, node.end);
-      met ||= lost;
-    };
-
-    walk(cst(message), false);
-
-    return met;
-  },
+  nesting: losing((node) => depth(node) > DEPTH),
   'trailing-backslash': (message, colours) => {
     const met = message.endsWith('\\') && colours.at(-1) === 'ink-text';
 
@@ -171,13 +184,28 @@ const DIVERGE = {
 
     return met;
   },
+  'folded-placeholder': losing(broken),
+  'folded-escape': (message, colours, lines) => {
+    let met = false;
+    const walk = (node) => {
+      if (node.nodes) node.nodes.forEach(walk);
+      else if (node.type === 'escape' && broken(node, lines)) {
+        colours.fill('ink-text', node.start, node.end);
+        met = true;
+      }
+    };
+
+    walk(cst(message));
+
+    return met;
+  },
 };
 
 // What the grammar is said to draw of a message a carrier holds, and the
 // classes the message is in there.
-const stated = (message, carrier) => {
+const stated = (message, carrier, lines) => {
   const colours = bySite(message);
-  const met = classes.filter(({ id, carriers: held }) => held.includes(carrier) && DIVERGE[id](message, colours)).map(({ id }) => id);
+  const met = classes.filter(({ id, carriers: held }) => held.includes(carrier) && DIVERGE[id](message, colours, lines)).map(({ id }) => id);
 
   return { colours, met };
 };
@@ -185,8 +213,8 @@ const stated = (message, carrier) => {
 // Holds what a tokenizer drew of a message to what the grammar is said to
 // draw of it, and says which classes the message is in. A unit the tokenizer
 // was handed no character for is held to nothing.
-const hold = (got, message, carrier, shown = message) => {
-  const want = stated(message, carrier);
+const hold = (got, message, carrier, shown = message, lines = []) => {
+  const want = stated(message, carrier, lines);
   const seen = (colours) => colours.map((colour, at) => got[at] && colour);
 
   assert.deepEqual(got, seen(want.colours), JSON.stringify(shown));
@@ -210,28 +238,40 @@ const hold = (got, message, carrier, shown = message) => {
 // written otherwise a pair.
 const pieces = (spelling) => spelling.flatMap((piece) => (typeof piece === 'string' ? piece.split('').map((unit) => [unit, unit]) : [piece]));
 
+const breaks = (text) => text.split(/\r\n|\r|\n/).length - 1;
+
 // The text a spelling writes, and for each UTF-16 unit of its message the
-// units of that text it was written as.
+// units of that text it was written as and the line they stand on.
 const written = (spelling, before) => {
   let source = before;
+  let line = breaks(before);
   const map = [];
+  const lines = [];
 
   for (const [piece, text] of pieces(spelling)) {
-    for (let unit = 0; unit < piece.length; unit++) map.push([source.length, source.length + text.length]);
+    for (let unit = 0; unit < piece.length; unit++) {
+      map.push([source.length, source.length + text.length]);
+      lines.push(breaks(text) ? null : line);
+    }
     source += text;
+    line += breaks(text);
   }
 
-  return { message: pieces(spelling).map(([piece]) => piece).join(''), source, map };
+  return { message: pieces(spelling).map(([piece]) => piece).join(''), source, map, lines };
 };
 
 // A class per UTF-16 unit of a message, as a tokenizer draws the document
 // that holds it. One character of the message is one colour, however many
-// characters spell it.
+// characters spell it, and a character written with a line break, which an
+// editor draws no part of, has none.
 const through = (tokenizer, document, map) => {
   const colours = draw(tokenizer, document);
 
   return map.map(([from, to]) => {
-    assert.deepEqual(new Set(colours.slice(from, to)).size, 1, `${JSON.stringify(document)} at ${from}`);
+    const held = new Set(colours.slice(from, to));
+
+    if (held.has(null)) return null;
+    assert.deepEqual(held.size, 1, `${JSON.stringify(document)} at ${from}`);
 
     return colours[from];
   });
@@ -271,6 +311,140 @@ const inJson = (spelling) => {
   assert.equal(JSON.parse(document).k, message, document);
 
   return { message, document, map };
+};
+
+/* A scalar of a YAML document, each of the four ways YAML writes one. An
+ * encoder refuses the message it does not write that way, which is null
+ * here, and what it does not refuse the YAML parser has to read back. */
+
+// What a YAML document holds as itself (YAML 1.2.2, production 1).
+const PRINTABLE = /^[\t\n\r\x20-\x7E\x85\xA0-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]*$/u;
+
+// The escape sequences of a double-quoted scalar that name a character.
+const YAML_NAMED = {
+  '\0': ['\\0'], '\x07': ['\\a'], '\b': ['\\b'], '\t': ['\\t', '\\\t'], '\n': ['\\n'], '\v': ['\\v'], '\f': ['\\f'], '\r': ['\\r'], '\x1B': ['\\e'],
+  ' ': ['\\ '], '"': ['\\"'], '/': ['\\/'], '\\': ['\\\\'], '\x85': ['\\N'], '\xA0': ['\\_'], '\u2028': ['\\L'], '\u2029': ['\\P'],
+};
+
+// The ones that give its code, which only the four-digit one can pair into a
+// character outside the Basic Multilingual Plane.
+const numbered = (unit, upper) => {
+  const code = unit.charCodeAt(0);
+  const digits = (width) => code.toString(16).padStart(width, '0')[upper ? 'toUpperCase' : 'toLowerCase']();
+
+  return [...(code < 0x100 ? [`\\x${digits(2)}`] : []), `\\u${digits(4)}`, ...(code >= 0xD800 && code <= 0xDFFF ? [] : [`\\U${digits(8)}`])];
+};
+
+// Whether a double-quoted scalar may hold a character as itself.
+const bare = (char) => PRINTABLE.test(char) && !'"\\\n\r'.includes(char);
+
+const quoted = (spelling) => ({ before: 'k: "', spelling, after: '"' });
+
+// The blanks a line may end on, which YAML drops from every scalar but a
+// block one.
+const ENDS = ['', ' ', '\t', '  ', ' \t'];
+
+// A message written over several lines, as a scalar folds them: a space
+// between two characters that are no blanks as a line break, and a run of
+// line feeds as one line break more. What follows a line break is not `#`,
+// which would open a comment, and what precedes one is not `:`, which would
+// end a key.
+const folds = (message, next, { spell = (char) => char, feeds = true, ends = ENDS } = {}) => {
+  const units = Array.from(message);
+  const stands = (char) => char !== undefined && !/[ \t\n]/.test(char);
+
+  return units.map((unit, at) => {
+    const end = `${ends[next(ends.length)]}\n`;
+
+    if (unit === ' ' && stands(units[at - 1]) && units[at - 1] !== ':' && stands(units[at + 1]) && units[at + 1] !== '#' && !next(3)) return [unit, `${end}  `];
+    if (unit === '\n' && feeds) return [unit, units[at - 1] === '\n' ? '\n  ' : `${end}\n  `];
+
+    return [unit, spell(unit)];
+  });
+};
+
+// Whether a message's line feeds stand where `folds` can write them: in runs
+// between two characters that are no blanks.
+const foldable = (message) => PRINTABLE.test(message) && !/\r|^\n|\n$|[ \t:]\n|\n[ \t#]/.test(message);
+
+// What a plain scalar cannot be: empty, or read as other than the text of a
+// scalar, for an indicator or a blank where one may not stand, the end of the
+// scalar before its end, a value that is no string.
+const UNPLAIN = /^$|^[ \t\-?:,[\]{}#&*!|>'"%@`]|[ \t]$|[ \t]#|:[ \t\n]|:$|^(?:~|null|true|false|[-+.\d].*)$/i;
+
+const YAML_SPELLINGS = {
+  // The shortest way, every character by its code, and each character one of
+  // the ways the scalar has for it. Nothing is refused: what YAML does not
+  // print has a code.
+  'yaml-double': [
+    (message) => quoted(Array.from(message, (char) => [char, bare(char) ? char : (YAML_NAMED[char]?.[0] ?? numbered(char, true)[0])])),
+    (message) =>
+      quoted(Array.from({ length: message.length }, (_, at) => {
+        const ways = numbered(message[at], at % 2);
+
+        return [message[at], ways[at % ways.length]];
+      })),
+    (message, next) =>
+      quoted(Array.from({ length: message.length }, (_, at) => {
+        const unit = message[at];
+        const ways = [...numbered(unit, false), ...numbered(unit, true), ...(YAML_NAMED[unit] ?? [])];
+
+        if (bare(unit)) ways.push(unit, unit, unit);
+
+        return [unit, ways[next(ways.length)]];
+      })),
+    (message, next) => quoted(folds(message, next, { spell: (char) => (bare(char) ? char : (YAML_NAMED[char]?.[0] ?? numbered(char, true)[0])), feeds: false })),
+  ],
+  // No escape sequence, so nothing YAML does not print, and a line break only
+  // where a fold leaves one. On one line, then over several.
+  'yaml-single': [
+    (message) =>
+      PRINTABLE.test(message) && !/[\n\r]/.test(message) ? { before: 'k: \'', spelling: Array.from(message, (char) => [char, char === '\'' ? '\'\'' : char]), after: '\'' } : null,
+    (message, next) => (foldable(message) ? { before: 'k: \'', spelling: folds(message, next, { spell: (char) => (char === '\'' ? '\'\'' : char) }), after: '\'' } : null),
+  ],
+  // The same, and nothing a plain scalar cannot be. The second ends on what
+  // may follow a plain scalar on its line.
+  'yaml-plain': [
+    (message) => (PRINTABLE.test(message) && !/[\n\r]/.test(message) && !UNPLAIN.test(message) ? { before: 'k: ', spelling: [message] } : null),
+    (message, next) =>
+      foldable(message) && !UNPLAIN.test(message) ? { before: 'k: ', spelling: folds(message, next), after: [...ENDS, '  # note', '\t#'][next(ENDS.length + 2)] } : null,
+  ],
+  // A literal one, whose lines are the message's behind an indentation, with
+  // the line feeds the message ends on kept; the same with the indentation
+  // left for YAML to read off the first line that is not empty; and a folded
+  // one, which keeps the blanks its lines end on. A carriage return would end
+  // a line too, the parser reads a last line of blanks alone as empty, and a
+  // folded one keeps the line break before a line that opens on a blank.
+  'yaml-block': [
+    (message) =>
+      PRINTABLE.test(message) && !/\r|(?:^|\n)[ \t]+$/.test(message)
+        ? { before: `k: |2${message.endsWith('\n') ? '+' : '-'}\n  `, spelling: Array.from(message, (char) => [char, char === '\n' ? '\n  ' : char]) }
+        : null,
+    (message) =>
+      PRINTABLE.test(message) && !/\r|(?:^|\n)[ \t]+$|^\n*[ \t]/.test(message)
+        ? { before: `k: |${message.endsWith('\n') ? '+' : '-'}\n  `, spelling: Array.from(message, (char) => [char, char === '\n' ? '\n  ' : char]) }
+        : null,
+    (message, next) => (foldable(message) && !/^[ \t]/.test(message) ? { before: 'k: >2-\n  ', spelling: folds(message, next, { ends: [''] }) } : null),
+  ],
+};
+
+// A plain scalar cannot open on a brace, so a message is held there after a
+// word.
+const WORDED = { 'yaml-plain': (message) => `Say ${message}` };
+
+// The least share of the conformance set's messages each way of writing has
+// to hold, so that an encoder that refuses too much fails.
+const SHARE = { 'yaml-double': 1, 'yaml-single': 0.95, 'yaml-plain': 0.9, 'yaml-block': 0.95 };
+
+const inYaml = ({ before, spelling, after = '' }) => {
+  const { message, source, map, lines } = written(spelling, before);
+  const document = `${source}${after}`;
+  const read = parseDocument(document);
+
+  assert.deepEqual([...read.errors, ...read.warnings], [], JSON.stringify(document));
+  assert.equal(read.toJS().k, message, JSON.stringify(document));
+
+  return { message, document, map, lines };
 };
 
 /* The messages ------------------------------------------------------------- */
@@ -395,7 +569,7 @@ test('draws every message as the site does, but for the divergences stated', () 
   // A set read wrong would hold nothing to compare.
   assert.ok(held.length > 400, `${held.length} messages read from the conformance set`);
 
-  const met = Object.fromEntries(classes.map(({ id }) => [id, 0]));
+  const met = Object.fromEntries(classes.filter(({ carriers: among }) => among.includes('raw')).map(({ id }) => [id, 0]));
 
   for (const message of [...held, ...WRITTEN, ...random(5000, READ), ...random(5000, LINES)])
     for (const id of hold(draw(TOKENIZERS.raw, message), message, 'raw')) met[id]++;
@@ -472,6 +646,138 @@ test('draws nothing in a JSON string that holds no value', () => {
   assert.deepEqual(colours.slice(document.indexOf('{{d'), document.indexOf('"]')), ['ink-brace', 'ink-brace', 'ink-key', 'ink-brace', 'ink-brace']);
 });
 
+// A line break of the document that is a space of the message, as every
+// scalar but a literal one folds it.
+const FOLD = [' ', '\n  '];
+
+// The same behind blanks that end the line, which YAML drops from every
+// scalar but a block one.
+const DROPPED = [' ', ' \t\n  '];
+
+// Documents written by hand. What only a scalar written over several lines
+// can do to a message: a placeholder or an escape sequence that a fold runs
+// through, and beside each the one a fold leaves whole. And what a scalar's
+// own way of writing a character does to one the format reads.
+const YAML_WRITTEN = {
+  'yaml-double': [
+    [['{', '\\x7b'], ['{', '\\u007B'], 'a', ['}', '\\U0000007d'], '}'],
+    ['{{a', ['\n', '\\n'], 'b}}'],
+    ['{{a', ['\u2028', '\\L'], 'b}}'],
+    ['{{a', ['\t', '\\\t'], [':', '\\x3a'], 'm', ['\u00A0', '\\_'], '}}'],
+    [['\\', '\\\\'], ['\u{1F600}', '\\ud83d\\ude00'], 'x'],
+    ['{{a', ['"', '\\"'], '}}'],
+    ['x', ['\\', '\\x5C']],
+    ['{{a;', FOLD, 'b:c}}'],
+    ['{{a;', ['', '\\\n  '], 'b:c}}'],
+    ['{{a;', ['', '\\\n  '], ['\n', '\\n'], 'b:c}}'],
+    [['{', '\\x7b'], '{a; b:{{c}}', FOLD, '}}'],
+    ['{{a; b:{{c;', FOLD, 'd:e}} }}'],
+    ['x', ['\\', '\\\\'], FOLD, 'y'],
+    ['x', ['\\', '\\\\'], ['', '\\\n  '], ':y'],
+    ['{{a', ['\\', '\\x5c'], FOLD, 'b}}'],
+    ['{{a}} and', FOLD, '{{b}}', ['\\', '\\\\'], ':'],
+    ['x', ['\\', '\\\\'], DROPPED, 'y'],
+    ['{{a', ['\\', '\\\\'], DROPPED, 'b}}'],
+    ['{{a}} ', ['\\', '\\\\'], DROPPED, '{{b}}'],
+    ['{{a}}', ['\n', '\n\n  '], '{{b}}'],
+  ].map(quoted),
+  'yaml-single': [
+    ['{{a;b:it', ['\'', '\'\''], 's}}'],
+    ['{{', ['\'', '\'\''], '}} x\\', ['\'', '\'\''], 'y'],
+    ['{{a;', FOLD, 'b:c}}'],
+    ['{{a;', FOLD, 'b:it', ['\'', '\'\''], 's}}'],
+    ['{{a; b:{{c}}', FOLD, '}}'],
+    ['{{a; b:{{c;', FOLD, 'd:e}} }}'],
+    ['x\\', FOLD, 'y'],
+    ['{{a\\', FOLD, 'b}}'],
+    ['{{a}} and', FOLD, '{{b}}\\:'],
+    ['x\\', DROPPED, 'y'],
+    ['{{a\\', DROPPED, 'b}}'],
+    ['{{a}} \\', DROPPED, '{{b}}'],
+    ['{{a}}', ['\n', '\n\n  '], '{{b}}'],
+  ].map((spelling) => ({ before: 'k: \'', spelling, after: '\'' })),
+  'yaml-plain': [
+    ['Hi {{a;', FOLD, 'b:c}} there'],
+    ['Hi {{a; b:{{c}}', FOLD, '}}'],
+    ['Hi {{a; b:{{c;', FOLD, 'd:e}} }}'],
+    ['x\\', FOLD, 'y'],
+    ['Hi {{a\\', FOLD, 'b}}'],
+    ['Hi {{a}} and', FOLD, '{{b}}\\:x'],
+    ['x\\', DROPPED, 'y'],
+    ['Hi {{a\\', DROPPED, 'b}}'],
+    ['Hi {{a}} \\', DROPPED, '{{b}}'],
+    ['Hi {{a}}', ['\n', '\n\n  '], '{{b}}'],
+  ].map((spelling) => ({ before: 'k: ', spelling })).concat(
+    // A backslash that ends the scalar, before blanks that are none of it.
+    [' ', '\t', ' \t ', '  # note', '\t#', ' \nl: y'].flatMap((after) => [{ before: 'k: ', spelling: ['x\\'], after }, { before: 'k: ', spelling: ['Hi {{name}} \\'], after }]),
+  ),
+  // A folded block scalar is a block scalar to the host's grammar, so the
+  // rules of a literal one read it.
+  'yaml-block': [
+    ['{{a;', FOLD, 'b:c}}'],
+    ['{{a; b:{{c}}', FOLD, '}}'],
+    ['{{a; b:{{c;', FOLD, 'd:e}} }}'],
+    ['x\\', FOLD, 'y'],
+    ['{{a\\', FOLD, 'b}}'],
+    ['{{a}} and', FOLD, '{{b}}\\:'],
+    ['{{a}}', ['\n', '\n\n  '], '{{b}}'],
+    ['x\\ \t', FOLD, 'y'],
+    ['{{a}} \\  ', ['\n', '\n\n  '], '{{b}}'],
+    ['x\\'],
+  ].map((spelling) => ({ before: 'k: >2-\n  ', spelling })),
+};
+
+test('draws every message a YAML scalar holds as the site does, but for the divergences stated', () => {
+  const next = chooser();
+  const held = fixtures();
+  const messages = [...held, ...WRITTEN, ...random(2000, READ), ...random(2000, LINES)];
+
+  for (const [carrier, spellers] of Object.entries(YAML_SPELLINGS)) {
+    const met = Object.fromEntries(classes.filter(({ carriers: among }) => among.includes(carrier)).map(({ id }) => [id, 0]));
+    const worded = WORDED[carrier] ?? ((message) => message);
+    const spelled = (message) => spellers.map((spell) => spell(message, next)).filter(Boolean);
+    const share = held.filter((message) => spelled(worded(message)).length).length / held.length;
+
+    assert.ok(share >= SHARE[carrier], `${carrier} holds ${share} of the conformance set's messages`);
+
+    for (const put of [...YAML_WRITTEN[carrier], ...[...messages, ...messages.map(worded)].flatMap(spelled)]) {
+      const { message, document, map, lines } = inYaml(put);
+
+      for (const id of hold(through(TOKENIZERS.yaml, document, map), message, carrier, document, lines)) met[id]++;
+    }
+
+    for (const [id, count] of Object.entries(met)) assert.ok(count > 0, `no message met the class ${id} in ${carrier}`);
+  }
+});
+
+test('draws nothing in a YAML document but in a scalar that is a value', () => {
+  // A key, plain or quoted; a plain scalar of a flow collection, which a
+  // brace ends; a comment; and a plain scalar that ends, at a blank before
+  // `#` or at a colon before a blank, inside what would be a placeholder.
+  const none = [
+    'a {{b}}: 1',
+    '"{{a}} \\\\: b": 1',
+    '\'{{a}} \\: b\': 1',
+    'k: [x {{a}} y]',
+    '# {{a}} \\:',
+    'k: Hi {{v; a:x #y}} z',
+    'k: Hi {{v; a:x\t#y}} z',
+    'k: Hi {{v; a: A}} z',
+    'k: Hi {{v:\tm}} z',
+    'k: x\\ #{{a}}',
+    'k: Hi {{v; a:x\\ #y}}',
+  ];
+
+  for (const document of none) assert.deepEqual(new Set(draw(TOKENIZERS.yaml, document)), new Set(['ink-text']), document);
+
+  const document = 'k: Hi {{a}} # {{b}}\n"l": "{{c}}"\n\'m\': \'{{d}}\'\nn: [x, "{{e}}"]';
+  const colours = draw(TOKENIZERS.yaml, document);
+  const placeholder = ['ink-brace', 'ink-brace', 'ink-key', 'ink-brace', 'ink-brace'];
+
+  for (const key of 'acde') assert.deepEqual(colours.slice(document.indexOf(`{{${key}`), document.indexOf(`{{${key}`) + 5), placeholder, key);
+  assert.equal(colours.filter((colour) => colour === 'ink-key').length, 4);
+});
+
 /* Cost ------------------------------------------------------------------------
  *
  * An editor tokenises on every keystroke, and the text is whatever a
@@ -502,10 +808,32 @@ const SHAPES = {
   'text alone': (n) => 'x'.repeat(n),
 };
 
-// A line as each carrier writes it, the shape its message.
-const LINES_OF = {
-  raw: (message) => message,
-  json: (message) => inJson(JSON_SPELLINGS.shortest(message)).document,
+// A document as each carrier writes it, the shape its message, the tokenizer
+// that reads it and the sizes it is read at. In a YAML scalar a shape stands
+// behind a word and before a stop, since a plain one cannot open on a brace
+// or end on a colon. The YAML grammar itself, with nothing injected, reads a
+// long run of blanks in a time that grows with its square, so its documents
+// are shorter.
+const SIZES = [2500, 5000, 10000, 20000];
+const DOCUMENTS = {
+  raw: { read: TOKENIZERS.raw, sizes: SIZES, write: (message) => message },
+  json: { read: TOKENIZERS.json, sizes: SIZES, write: (message) => inJson(JSON_SPELLINGS.shortest(message)).document },
+  ...Object.fromEntries(Object.entries(YAML_SPELLINGS).map(([carrier, [spell]]) => [
+    carrier,
+    { read: TOKENIZERS.yaml, sizes: [1250, 2500], write: (message) => inYaml(spell(`Say ${message}.`)).document },
+  ])),
+};
+
+// The YAML grammar with nothing injected, whose searches are its own cost.
+const YAML_ALONE = await tokenizerOf('source.yaml', Object.fromEntries(YAML.map((built) => [built.scopeName, built])));
+
+const searched = (tokenizer, document) => {
+  let stack = textmate.INITIAL;
+
+  searches = 0;
+  for (const line of document.split('\n')) stack = tokenizer.tokenizeLine(line, stack, 0).ruleStack;
+
+  return searches;
 };
 
 // A search ends the line or matches a rule. A rule that matches takes a
@@ -514,15 +842,23 @@ const LINES_OF = {
 // that may take none ends a value the same way. So a line is searched twice
 // for each character at most, the line feed the tokenizer ends it with
 // included, and once more to find nothing left.
+//
+// The YAML grammar's rules are not held to that, being its own. Inside a
+// placeholder only the format's rules are searched, as in a message; outside
+// one each step searches the host's rules and those of the one carrier whose
+// scalar it is in, so the rules add a search to each the host makes. A line
+// of a YAML document is therefore held to the same bound beside twice what
+// the host takes of the document with nothing injected.
 test('searches a line no more than twice for each character', () => {
-  for (const [carrier, write] of Object.entries(LINES_OF))
+  for (const [carrier, { read, sizes, write }] of Object.entries(DOCUMENTS))
     for (const [name, shape] of Object.entries(SHAPES))
-      for (const size of [2500, 5000, 10000, 20000]) {
-        const line = write(shape(size));
+      for (const size of sizes) {
+        const document = write(shape(size));
+        const lines = document.split('\n');
+        const most = lines.reduce((sum, line) => sum + 2 * (line.length + 1) + 1, 0) + (read === TOKENIZERS.yaml ? 2 * searched(YAML_ALONE, document) : 0);
+        const took = searched(read, document);
 
-        searches = 0;
-        TOKENIZERS[carrier].tokenizeLine(line, textmate.INITIAL, 0);
-        assert.ok(searches <= 2 * (line.length + 1) + 1, `${carrier}, ${name}, ${line.length} characters: ${searches} searches`);
+        assert.ok(took <= most, `${carrier}, ${name}, ${document.length} characters: ${took} searches`);
       }
 });
 

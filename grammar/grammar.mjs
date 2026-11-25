@@ -42,6 +42,7 @@ const BLANK = [0x09, 0x0B, 0x0C, 0x20, 0xA0, 0x1680, ...Array.from({ length: 11 
 const LINE = [0x0A, 0x0D, 0x2028, 0x2029];
 
 const either = (patterns) => `(?:${patterns.join('|')})`;
+const among = (codes) => `[${codes.map((code) => `\\x{${code.toString(16).toUpperCase()}}`).join('')}]`;
 
 // A code as the digits of an escape sequence, in either case.
 const digits = (code, width) =>
@@ -61,13 +62,13 @@ const digit = '[0-9a-fA-F]';
 const escaping = ({ bare, numeric, named, any }) => {
   const lead = '\\\\';
   const spelt = (codes) => {
-    const own = codes.filter(bare).map((code) => `\\x{${code.toString(16).toUpperCase()}}`);
+    const own = codes.filter(bare);
     const by = (code) => [
       ...numeric.filter(([, width]) => code < 16 ** width).map(([letter, width]) => `${lead}${letter}${digits(code, width)}`),
       ...Object.entries(named).filter(([, names]) => names === code).map(([name]) => `${lead}${name}`),
     ];
 
-    return either([...(own.length ? [`[${own.join('')}]`] : []), ...codes.flatMap(by)]);
+    return either([...(own.length ? [among(own)] : []), ...codes.flatMap(by)]);
   };
   const line = spelt(LINE);
 
@@ -102,6 +103,81 @@ export const json = {
   }),
 };
 
+// What a YAML document's scalars have in common. A scalar that runs over
+// several lines is folded: a line break of the document is a space of the
+// message, or nothing of it, and the tokenizer hands the rules one line of the
+// document at a time. So but for a block scalar, whose lines are the
+// message's, a line feed of the document is no character of the message
+// here, and neither ends a part nor is consumed by a backslash. Nor are the
+// blanks that end a line characters of it: YAML drops them, which `dropped`
+// says, so a backslash before them consumes none.
+const yaml = { host: 'source.yaml' };
+const trailing = '[ \\t]++\\n';
+// A quoted scalar that is a key of a mapping is no value.
+const value = (scalar) => `${scalar} - entity.name.tag.yaml`;
+const folded = '[\\x{2028}\\x{2029}]';
+
+/** A double-quoted scalar of a YAML document. */
+export const yamlDouble = {
+  id: 'yaml-double',
+  ...yaml,
+  within: value('string.quoted.double.yaml'),
+  dropped: trailing,
+  ...escaping({
+    bare: (code) => ![0x0A, 0x0D, 0x22, 0x5C].includes(code),
+    numeric: [['x', 2], ['u', 4], ['U', 8]],
+    named: {
+      '\\\\': 0x5C, 0: 0x00, a: 0x07, b: 0x08, t: 0x09, '\\t': 0x09, n: 0x0A, v: 0x0B, f: 0x0C, r: 0x0D,
+      e: 0x1B, ' ': 0x20, '"': 0x22, '/': 0x2F, N: 0x85, _: 0xA0, L: 0x2028, P: 0x2029,
+    },
+    any: (lead) => either([
+      pair(lead),
+      `${lead}x${digit.repeat(2)}`,
+      `${lead}u${digit.repeat(4)}`,
+      `${lead}U${digit.repeat(8)}`,
+      `${lead}[0abt\\tnvfre "/\\\\N_LP]`,
+      '[^"\\\\\\n\\r]',
+    ]),
+  }),
+};
+
+/** A single-quoted scalar of a YAML document, which writes a quote twice. */
+export const yamlSingle = {
+  ...raw,
+  id: 'yaml-single',
+  ...yaml,
+  within: value('string.quoted.single.yaml'),
+  char: `(?:''|[^'\\n\\r\\x{2028}\\x{2029}])`,
+  line: folded,
+  dropped: trailing,
+};
+
+/**
+ * A plain scalar of a YAML document that is a value of a block collection.
+ * A blank before `#` and a colon before a blank end the scalar wherever they
+ * stand, so neither is a character of a message it holds.
+ */
+export const yamlPlain = {
+  ...raw,
+  id: 'yaml-plain',
+  ...yaml,
+  within: 'string.unquoted.plain.out.yaml',
+  char: '(?:(?![ \\t]#|:[ \\t\\n])[^\\n\\r\\x{2028}\\x{2029}])',
+  colon: '(?::(?![ \\t\\n]))',
+  blank: `(?:[ \\t](?!#)|${among(BLANK.filter((code) => code !== 0x09 && code !== 0x20))})`,
+  line: folded,
+  // The blanks before a comment end the scalar as those that end the line do.
+  dropped: '[ \\t]++[#\\n]',
+};
+
+/** A block scalar of a YAML document, whose lines are the message's. */
+export const yamlBlock = {
+  ...raw,
+  id: 'yaml-block',
+  ...yaml,
+  within: 'string.unquoted.block.yaml',
+};
+
 // Every repetition is possessive: each boundary of a placeholder is forced by
 // a character class (section 6, note 7), so nothing a repetition took is ever
 // given back, and a search that fails does so in one pass.
@@ -127,7 +203,9 @@ const complete = (table) => {
 };
 
 const rules = (table) => {
-  const { char, backslash, open, close, colon, semicolon, blank, line } = table;
+  const { char, backslash, open, close, colon, semicolon, blank, line, dropped } = table;
+  // A backslash with a character of the message behind it.
+  const lead = dropped ? `${backslash}(?!${dropped})` : backslash;
   const closing = `${close}${close}`;
   const afterName = `${colon}|${semicolon}|${closing}`;
   const afterValue = `${semicolon}|${closing}`;
@@ -182,8 +260,8 @@ const rules = (table) => {
     repository: {
       escape: {
         patterns: [
-          { match: `${backslash}(?:${colon}|${semicolon}|${open}|${close}|${backslash}|${blank}|${line})`, name: scope('constant.character.escape') },
-          { match: `${backslash}(?!${line})${char}`, name: scope('meta.escape.inert') },
+          { match: `${lead}(?:${colon}|${semicolon}|${open}|${close}|${backslash}|${blank}|${line})`, name: scope('constant.character.escape') },
+          { match: `${lead}(?!${line})${char}`, name: scope('meta.escape.inert') },
         ],
       },
       placeholder: placeholder(`(?=${complete(table)})`),
@@ -218,7 +296,7 @@ export const injection = (table, within = table.within) => ({
 });
 
 /** Every carrier, by its id. */
-export const carriers = { raw, json };
+export const carriers = Object.fromEntries([raw, json, yamlDouble, yamlSingle, yamlPlain, yamlBlock].map((table) => [table.id, table]));
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const id = process.argv[2] ?? raw.id;
