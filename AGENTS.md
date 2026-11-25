@@ -55,7 +55,7 @@ Commands, run from the package directory:
 | `npm ci` | install from the lockfile |
 | `npm test` | `conformance/`: build, typecheck the source and the shipped declarations, lint, then the suite against the source and against the build; `site/`: build, then read the pages back, and hold the grammar of `grammar/` to the site's colouring |
 | `npm run test:bun`, `npm run test:deno` | `conformance/`: build, then the suite on Bun or Deno — what the runtime legs of CI run |
-| `npm run bench` | `conformance/`, `site/`: build, then the benchmark (`bench/rows.mjs`); the site's drives the playground in Chromium |
+| `npm run bench` | `conformance/`, `site/`: build, then the benchmark (`bench/rows.mjs`); the site's drives the playground in Chromium and times the grammar |
 | `npm run bench -- --compare <dir>` | `conformance/`, `site/`: the same, beside the package checked out and built at `<dir>` — what `bench.yml` runs on a PR, called by `bench-conformance.yml` or `bench-site.yml` |
 | `npm run lint:fix` | `conformance/`: fix what the formatting contract reports |
 | `npm run manifest` | `conformance/`: rewrite `index.json` from the fixtures |
