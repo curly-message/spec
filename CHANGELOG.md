@@ -20,7 +20,14 @@ the document may be revised without it moving.
 
 ### 3.1.2 (Unreleased)
 
-Nothing a message resolves to changes, and `SPEC.md` is as 3.1.1 left it.
+Nothing a message resolves to changes.
+
+* Section 7 says for every carrier what it said for JSON: the message is the
+  string the carrier's own reader yields, after that carrier's escapes, line
+  joins and trimming, and the format adds nothing to that reading. The JSON
+  table stays, as one carrier's example.
+* `CST.md` section 4 says a span counts the message, not the source a carrier
+  spells it with.
 
 * `CST.md` section 2 says the tree is settled: implementations in three string
   units, UTF-16, UTF-8 and code points, offer it, so a node name or an

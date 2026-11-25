@@ -109,6 +109,10 @@ of this document says what that leaves out.
 
 Every node carries a **span**: a half-open range `[start, end)` over the
 message, where `0` is the start of the message and `end` may equal `start`.
+The message is the string a carrier's reader yielded (`SPEC.md`, section 7),
+not the source that spells it: a span counts nothing of a carrier's own escapes
+or line joins, and a consumer that wants a place in a file maps a span through
+the reader that produced the message.
 
 The unit is whatever an implementation's string type is indexed by, so that a
 caller can slice the message it already holds. An implementation MUST state
