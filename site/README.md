@@ -25,7 +25,7 @@ changes the site.
 ```sh
 npm ci
 npm run build     # -> _site/
-npm test          # builds, then reads the pages back
+npm test          # builds, then reads the pages back; tests the grammar
 ```
 
 `build.mjs` is the whole generator: it renders the markdown with
@@ -49,8 +49,15 @@ going unchecked. The suite also colours a message nested deeper than a call
 can recurse, and holds the pieces to the message and to eight boxes deep (see
 *Colour*).
 
+It tests [`grammar/`](../grammar) as well, which has no package of its own
+and is held to this one's colouring: `tests/grammar.test.mjs` tokenises every
+message of the conformance set with the TextMate grammar, as an editor would,
+and compares the result with what `highlight.js` draws
+([`grammar/README.md`](../grammar/README.md) says how).
+
 The **Site tests** workflow (`.github/workflows/tests-site.yml`) runs them on
-every push to a pull request that touches one of the sources above, and by hand
+every push to a pull request that touches one of the sources above, the
+grammar or the conformance set's fixtures, and by hand
 on any branch. The **Site** workflow runs the same tests before it deploys, but
 only on `main`, which is too late to keep a change from being merged.
 

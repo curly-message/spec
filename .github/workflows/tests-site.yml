@@ -15,6 +15,10 @@ on:
       - conformance/README.md
       - conformance/RUNNER.md
       - brand/**
+      # The suite holds the grammar to the site's colouring, over every message
+      # of the conformance set.
+      - grammar/**
+      - conformance/fixtures/**
       - .github/workflows/tests-site.yml
   workflow_dispatch:
 
