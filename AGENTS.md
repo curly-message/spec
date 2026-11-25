@@ -544,13 +544,22 @@ released after its dependent forces another release of the dependent.
   touches, on the head merged with its base as it stands then. A branch with
   no PR runs them by hand (`workflow_dispatch`). Keep it narrowly scoped;
   link out-of-scope follow-ups (§3) under `## Notes`.
+- **A stack is for PRs of several commits each, on related topics.** Work
+  too large for one PR is cut where its topics part, and what one commit
+  holds joins the PR nearest its topic as a commit (§6): it is not split off
+  into a PR of its own, but for a finding along the way (§3).
 - **A PR built on another is stacked natively, never by a mention.** A PR
   that needs another open PR of its repository — its code, or only that it
   merges first — starts on that PR's branch, targets it, and is linked with
   it as a native GitHub
   [stack](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-stacked-pull-requests).
   A sentence in its body is not a stack: it shows no stack map and holds no
-  merge order. The first PR on another creates the stack from the two
+  merge order. The agent that opens the PR links the stack itself, in the
+  step that opens it and without asking, and never leaves the link to the
+  user. Where its GitHub tools hold no stack operation, it makes the link
+  with `gh` on the endpoints below, though its environment keeps `gh` to
+  other uses: the user allows `gh` for a stack's link, and for nothing
+  else by this rule. The first PR on another creates the stack from the two
   (`gh stack link <below> <own>`, or `POST /repos/{owner}/{repo}/stacks`
   with the PR numbers bottom first), and each later one is added on top
   (`gh stack link <stack> <own>`, or `POST .../stacks/{number}/add`). A
