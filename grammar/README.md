@@ -17,21 +17,56 @@ The grammar is built, not written, and the JSON it builds is not committed:
 
 ```sh
 node grammar/grammar.mjs > curly-message.tmLanguage.json
+node grammar/grammar.mjs json > curly-message.injection.json.tmLanguage.json
 ```
+
+The argument is a carrier's id, and each carrier below has one. With none it
+builds `raw`; with a word that is no carrier's it writes the ids to standard
+error and exits 2.
 
 `grammar.mjs` needs nothing but Node, and exports what it prints:
 
 ```js
-import { grammar } from './grammar.mjs';
+import { carriers, grammar, injection } from './grammar.mjs';
 
 grammar(); // { name, scopeName: 'text.curly-message', patterns, repository }
+injection(carriers.json); // { name, scopeName, injectionSelector, patterns, repository }
 ```
 
-The rules are written once, over a table that says how a carrier spells each
-character the format reads: a brace, a colon, a backslash, a blank, a line
-terminator. `grammar(table)` builds the grammar of that carrier. One table
-ships, `raw`: a file, or a line, whose whole text is a message, every
-character spelled as itself.
+## Carriers
+
+A message reaches an editor inside a carrier: a file of its own, or a string
+of a JSON document. A carrier spells the characters of the message its own
+way, and a parser reads the message the carrier decodes to, so the rules are
+written once, over a table that says how a carrier spells each character the
+format reads: a brace, a colon, a semicolon, a backslash, a blank, a line
+terminator, and any character at all. A carrier is a table:
+
+| Carrier | Scope name | What it is |
+| --- | --- | --- |
+| `raw` | `text.curly-message` | a file, or a line, whose whole text is a message, every character spelled as itself |
+| `json` | `curly-message.injection.json` | a string of a JSON document, each character as itself or as any escape sequence JSON has for it |
+
+So `"\u007b{name}}"` is drawn as the placeholder it decodes to, and
+`"{{a\nb}}"`, which decodes to braces around a line feed, as the text it is.
+The colon of `"{{a\\:b}}"` is drawn as cancelled, because the two
+backslashes are one in the message.
+
+`grammar(table)` builds a grammar that stands alone, which is what `raw` is
+for. `injection(table)` builds one an editor injects into another grammar:
+`table.host` names that grammar, which the injection has to be registered
+for (VS Code's `injectTo`), and the injection's selector says which of the
+host's scopes its rules run in. The rules take priority over the host's own
+there (`L:`), since both have a rule for a backslash, and are kept out of a
+placeholder they opened themselves.
+
+`injection(table, within)` takes that selector's scopes as a parameter. The
+default, `table.within`, is the widest sound one: the string values of a JSON
+document, and not its property names. A document's grammar cannot say which
+documents hold messages, nor which of their strings do, so the default colours
+every `{{...}}` in every string value of every document the host grammar
+colours. Which files those are, and whether a narrower selector suits them,
+is for whoever ships the grammar in an editor to decide.
 
 ## Scopes
 
@@ -59,13 +94,14 @@ has a scope of its own, inside the part it pads or beside it, so that it can
 be told from the whitespace a part keeps.
 
 Outside a placeholder only escape sequences are scoped; the rest of the
-message is `text` alone.
+message is `text` alone. An injected grammar has no `text`: what it does not
+scope keeps the scopes the host gave the string.
 
 ## Divergences
 
 [`divergences.json`](./divergences.json) names each class of message the
 grammar draws otherwise than a parser reads it, with where it happens, what
-the grammar draws there and why. For the raw carrier there are two:
+the grammar draws there and why, and which carriers it happens in:
 
 - **`nesting`.** A placeholder is recognised only once it is known to be
   complete, and a regular expression cannot follow nesting to any depth, so
@@ -73,10 +109,13 @@ the grammar draws there and why. For the raw carrier there are two:
   resolves (`SPEC.md`, section 13). A placeholder that holds placeholders more
   than 8 deep, itself counted, is the one lost: what it writes itself is drawn
   as text, its escape sequences excepted, and every placeholder in it that
-  nests 8 deep or less is drawn as the placeholder it is.
+  nests 8 deep or less is drawn as the placeholder it is. Every carrier has
+  it.
 - **`trailing-backslash`.** A tokenizer reads a line at a time and ends each
   with a line feed, so a backslash that ends the message, which is text, is
-  drawn as the escape sequence a backslash before a line feed is.
+  drawn as the escape sequence a backslash before a line feed is. Only the raw
+  carrier has it: a JSON string writes a line feed as an escape sequence, and
+  ends on a quote.
 
 The test holds the list both ways: a message in a class is drawn exactly as
 the class says, and a message in none is drawn as the site draws it. Which
@@ -88,10 +127,11 @@ the test fails where the two lists of ids differ.
 
 A tokenizer gives up on a line it finds too long: VS Code tokenises none past
 20,000 characters by default (`editor.maxTokenizationLineLength`), and draws
-such a line uncoloured. No rule here changes that. Up to that length the
-grammar reads a line in one pass: every repetition in it is possessive, and
-the test holds each expression to that, and holds the searches a line takes
-to twice its characters.
+such a line uncoloured, which is every message of a catalogue written as one
+line. No rule here changes that. Up to that length the grammar reads a line
+in one pass: every repetition in it is possessive, and the test holds each
+expression to that, and holds the searches a line takes to twice its
+characters.
 
 ## Tests
 
@@ -102,3 +142,11 @@ with: every message of the conformance set, and a set written to break a
 scanner, tokenised by `vscode-textmate` over `vscode-oniguruma` a line at a
 time, as an editor cuts lines, and compared with the site's colouring one
 UTF-16 unit at a time.
+
+A carrier is tested on the same messages, each written into a document the
+ways the carrier can spell it, by an encoder that records where it put each
+character and whose output the carrier's own parser has to read back as the
+message. The document is tokenised by the grammar VS Code ships for it
+([`site/tests/grammars/`](../site/tests/grammars)) with the injection
+registered, and the colours are read back through the encoder's map and
+compared with the site's colouring of the message.

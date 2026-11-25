@@ -8,9 +8,15 @@
 // is tokenised as an editor tokenises it and compared with the site's
 // colouring, character for character. Where the two differ, the difference
 // is one `grammar/divergences.json` names, and is exactly what it says.
+//
+// A message in a carrier is held to the same colouring: the message is
+// written as the carrier spells it, by an encoder that knows where it put
+// each character and that the carrier's own parser is held to, and the
+// colours the host's grammar and the injected rules give the document are
+// read back through that map.
 
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
@@ -19,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { cst } from '@curly-message/parser';
 import oniguruma from 'vscode-oniguruma';
 import textmate from 'vscode-textmate';
-import { DEPTH, grammar } from '../../grammar/grammar.mjs';
+import { carriers, DEPTH, grammar, injection } from '../../grammar/grammar.mjs';
 import { highlight } from '../highlight.js';
 
 const repo = fileURLToPath(new URL('../..', import.meta.url));
@@ -41,11 +47,32 @@ const scanner = (patterns) => {
     dispose: () => inner.dispose(),
   };
 };
-const registry = new textmate.Registry({
-  onigLib: Promise.resolve({ createOnigScanner: scanner, createOnigString: (text) => new oniguruma.OnigString(text) }),
-  loadGrammar: async () => grammar(),
-});
-const tokenizer = await registry.loadGrammar(grammar().scopeName);
+const onigLib = Promise.resolve({ createOnigScanner: scanner, createOnigString: (text) => new oniguruma.OnigString(text) });
+
+// The tokenizer of the grammar named `root`, among `grammars` by their scope
+// names, with the grammars named in `injected` injected into it.
+const tokenizerOf = (root, grammars, injected = []) =>
+  new textmate.Registry({
+    onigLib,
+    loadGrammar: async (name) => grammars[name] ?? null,
+    getInjections: (name) => (name === root ? injected : undefined),
+  }).loadGrammar(root);
+
+// A grammar an editor ships, as `tests/grammars/` holds it.
+const shipped = (path) => JSON.parse(readFileSync(new URL(`./grammars/${path}`, import.meta.url), 'utf8'));
+
+// A host's tokenizer with every grammar its carriers inject, as an extension
+// would register them.
+const hostOf = (root, grammars) => {
+  const injected = Object.values(carriers).filter((table) => table.host === root).map((table) => injection(table));
+
+  return tokenizerOf(root, Object.fromEntries([...grammars, ...injected].map((built) => [built.scopeName, built])), injected.map((built) => built.scopeName));
+};
+
+const TOKENIZERS = {
+  raw: await tokenizerOf(grammar().scopeName, { [grammar().scopeName]: grammar() }),
+  json: await hostOf('source.json', [shipped('json/JSON.tmLanguage.json')]),
+};
 
 // The class the site draws each scope as. A character in a placeholder that
 // no rule read falls to the placeholder's own scope, which the site has no
@@ -62,19 +89,20 @@ const CLASSES = {
   'meta.escape.inert.curly-message': 'ink-escape ink-inert',
   'meta.padding.curly-message': 'ink-text',
   'meta.placeholder.curly-message': 'unread',
-  'text.curly-message': 'ink-text',
 };
 
-const drawn = (scopes) => CLASSES[scopes.findLast((name) => Object.hasOwn(CLASSES, name))];
+// What no rule of the format scoped is text, in a message and in a host's
+// string alike.
+const drawn = (scopes) => CLASSES[scopes.findLast((name) => Object.hasOwn(CLASSES, name))] ?? 'ink-text';
 
-// A class per UTF-16 unit, as the grammar draws the message. An editor hands
-// the tokenizer a line at a time, cut at each line feed, carriage return or
-// pair of them, and draws none of the three, so they have no class here.
-const byGrammar = (message) => {
+// A class per UTF-16 unit, as a tokenizer draws a text. An editor hands the
+// tokenizer a line at a time, cut at each line feed, carriage return or pair
+// of them, and draws none of the three, so they have no class here.
+const draw = (tokenizer, text) => {
   const out = [];
   let stack = textmate.INITIAL;
 
-  for (const line of message.split(/(\r\n|\r|\n)/)) {
+  for (const line of text.split(/(\r\n|\r|\n)/)) {
     if (/^[\r\n]/.test(line)) {
       out.push(...Array.from(line, () => null));
       continue;
@@ -100,7 +128,7 @@ const bySite = (message) => {
 
     if (Array.isArray(piece)) stack.push(...piece.toReversed());
     else if (piece.nodes) stack.push(piece.nodes);
-    else for (let unit = 0; unit < piece.text.length; unit++) out.push('\r\n'.includes(piece.text[unit]) ? null : piece.cls);
+    else for (let unit = 0; unit < piece.text.length; unit++) out.push(piece.cls);
   }
 
   return out;
@@ -145,12 +173,104 @@ const DIVERGE = {
   },
 };
 
-// What the grammar is said to draw, and the classes the message is in.
-const stated = (message) => {
+// What the grammar is said to draw of a message a carrier holds, and the
+// classes the message is in there.
+const stated = (message, carrier) => {
   const colours = bySite(message);
-  const met = classes.filter(({ id }) => DIVERGE[id](message, colours)).map(({ id }) => id);
+  const met = classes.filter(({ id, carriers: held }) => held.includes(carrier) && DIVERGE[id](message, colours)).map(({ id }) => id);
 
   return { colours, met };
+};
+
+// Holds what a tokenizer drew of a message to what the grammar is said to
+// draw of it, and says which classes the message is in. A unit the tokenizer
+// was handed no character for is held to nothing.
+const hold = (got, message, carrier, shown = message) => {
+  const want = stated(message, carrier);
+  const seen = (colours) => colours.map((colour, at) => got[at] && colour);
+
+  assert.deepEqual(got, seen(want.colours), JSON.stringify(shown));
+  // A message in a class differs from the site as the class says, and one in
+  // none does not differ: `want` is the site's colouring until a class
+  // rewrites it.
+  if (want.met.length) assert.notDeepEqual(seen(want.colours), seen(bySite(message)), JSON.stringify(shown));
+
+  return want.met;
+};
+
+/* The carriers ---------------------------------------------------------------
+ *
+ * A spelling is a message cut into pieces, each with the text a carrier
+ * writes it as, so where each character of the message stands in the
+ * document is known by construction and no decoder is written. The carrier's
+ * own parser is then asked what the document holds, which is the message or
+ * the spelling is wrong. */
+
+// A run of characters each written as itself is a string, and a piece
+// written otherwise a pair.
+const pieces = (spelling) => spelling.flatMap((piece) => (typeof piece === 'string' ? piece.split('').map((unit) => [unit, unit]) : [piece]));
+
+// The text a spelling writes, and for each UTF-16 unit of its message the
+// units of that text it was written as.
+const written = (spelling, before) => {
+  let source = before;
+  const map = [];
+
+  for (const [piece, text] of pieces(spelling)) {
+    for (let unit = 0; unit < piece.length; unit++) map.push([source.length, source.length + text.length]);
+    source += text;
+  }
+
+  return { message: pieces(spelling).map(([piece]) => piece).join(''), source, map };
+};
+
+// A class per UTF-16 unit of a message, as a tokenizer draws the document
+// that holds it. One character of the message is one colour, however many
+// characters spell it.
+const through = (tokenizer, document, map) => {
+  const colours = draw(tokenizer, document);
+
+  return map.map(([from, to]) => {
+    assert.deepEqual(new Set(colours.slice(from, to)).size, 1, `${JSON.stringify(document)} at ${from}`);
+
+    return colours[from];
+  });
+};
+
+const escaped = (unit, upper) => `\\u${unit.charCodeAt(0).toString(16).padStart(4, '0')[upper ? 'toUpperCase' : 'toLowerCase']()}`;
+
+// A fixed sequence of choices, so a run that fails fails again.
+const chooser = () => {
+  let seed = 12345;
+
+  return (below) => (seed = (seed * 1103515245 + 12345) % 2147483648) % below;
+};
+
+// A message as a JSON string may write it: the shortest way, every character
+// as an escape sequence, and each character one of the ways JSON has for it.
+const JSON_SHORT = { '\b': '\\b', '\t': '\\t', '\n': '\\n', '\f': '\\f', '\r': '\\r', '"': '\\"', '\\': '\\\\', '/': '\\/' };
+const JSON_SPELLINGS = {
+  shortest: (message) => Array.from(message, (char) => [char, JSON.stringify(char).slice(1, -1)]),
+  escaped: (message) => Array.from({ length: message.length }, (_, at) => [message[at], escaped(message[at], at % 2)]),
+  mixed: (message, next) =>
+    Array.from({ length: message.length }, (_, at) => {
+      const unit = message[at];
+      const ways = [escaped(unit, false), escaped(unit, true)];
+
+      if (JSON_SHORT[unit]) ways.push(JSON_SHORT[unit]);
+      if (unit >= ' ' && unit !== '"' && unit !== '\\' && !(unit >= '\uD800' && unit <= '\uDFFF')) ways.push(unit, unit);
+
+      return [unit, ways[next(ways.length)]];
+    }),
+};
+
+const inJson = (spelling) => {
+  const { message, source, map } = written(spelling, '{"k": "');
+  const document = `${source}"}`;
+
+  assert.equal(JSON.parse(document).k, message, document);
+
+  return { message, document, map };
 };
 
 /* The messages ------------------------------------------------------------- */
@@ -277,18 +397,79 @@ test('draws every message as the site does, but for the divergences stated', () 
 
   const met = Object.fromEntries(classes.map(({ id }) => [id, 0]));
 
-  for (const message of [...held, ...WRITTEN, ...random(5000, READ), ...random(5000, LINES)]) {
-    const want = stated(message);
-
-    assert.deepEqual(byGrammar(message), want.colours, JSON.stringify(message));
-    // A message in a class differs from the site as the class says, and one
-    // in none does not differ: `want` is the site's colouring until a class
-    // rewrites it.
-    if (want.met.length) assert.notDeepEqual(want.colours, bySite(message), JSON.stringify(message));
-    for (const id of want.met) met[id]++;
-  }
+  for (const message of [...held, ...WRITTEN, ...random(5000, READ), ...random(5000, LINES)])
+    for (const id of hold(draw(TOKENIZERS.raw, message), message, 'raw')) met[id]++;
 
   for (const [id, count] of Object.entries(met)) assert.ok(count > 0, `no message met the class ${id}`);
+});
+
+// What a carrier's escape sequences can do to a message: write a character
+// the format reads, so that what is no placeholder as written is one as read,
+// and the other way about.
+const JSON_WRITTEN = [
+  [['{', '\\u007b'], '{name}}'],
+  ['{', ['{', '\\u007B'], 'name}}'],
+  [['{{', '\\u007b\\u007b'], 'name', ['}}', '\\u007d\\u007D']],
+  ['{{name}', ['}', '\\u007d']],
+  ['{{a', [':', '\\u003a'], 'b}}'],
+  ['{{a', [';', '\\u003b'], 'b', [':', '\\u003A'], 'c}}'],
+  [['\\', '\\u005c'], '{{a}}'],
+  [['\\', '\\\\'], '{{a}}'],
+  [['\\\\', '\\u005C\\\\'], '{{a}}'],
+  ['{{a', ['\\', '\\u005c'], '}}}'],
+  ['{{a', ['\\', '\\\\'], [':', '\\u003a'], 'b}}'],
+  ['{{a', ['\n', '\\n'], 'b}}'],
+  ['{{a', ['\n', '\\u000a'], 'b}}'],
+  ['{{a', ['\r', '\\r'], 'b}}'],
+  ['{{a', ['\u2028', '\\u2028'], 'b}}'],
+  ['{{a\u2029b}}'],
+  ['{{a}}', ['\n', '\\n'], '{{b}}'],
+  ['{{a;b:{{c}}', ['\n', '\\n'], '}}'],
+  ['x', ['\\', '\\\\'], ['\n', '\\n'], 'y'],
+  ['x', ['\\', '\\\\'], ['\n', '\\u000A'], 'y'],
+  ['{{a', ['\t', '\\t'], 'b', ['\t', '\\u0009'], '}}'],
+  ['{{', [' ', '\\u0020'], 'a', ['\u00A0', '\\u00a0'], ['\f', '\\f'], '}}'],
+  ['{{a;b:', ['\u3000', '\\u3000'], 'c', ['\uFEFF', '\\ufeff'], '}}'],
+  [['\\', '\\\\'], [' ', '\\u0020'], 'x'],
+  [['\\', '\\\\'], ['\t', '\\t'], 'x'],
+  ['{{a', ['"', '\\"'], 'b}}'],
+  ['{{a', ['\\', '\\\\'], ['"', '\\"'], 'b}}'],
+  ['{{a;b:', ['"', '\\"'], 'q', ['"', '\\"'], '}}'],
+  ['{{a/b', ['/', '\\/'], 'c}}'],
+  ['{{', ['\u{1F600}', '\\ud83d\\ude00'], '}}'],
+  [['\\', '\\\\'], ['\u{1F600}', '\\uD83D\\uDE00'], 'x'],
+  [['\\', '\\\\'], '\u{1F600}x'],
+  ['{{a', ['\uD83D', '\\ud83d'], '}}'],
+  ['x', ['\\', '\\\\']],
+  ['{{a', ['\\', '\\u005c']],
+  ['{{a', ['\b', '\\b'], '}}'],
+];
+
+test('draws every message a JSON string holds as the site does, however it is spelled', () => {
+  const next = chooser();
+  const met = { nesting: 0 };
+  const spellings = [
+    ...JSON_WRITTEN,
+    ...[...fixtures(), ...WRITTEN, ...random(2000, READ), ...random(2000, LINES)].flatMap((message) =>
+      Object.values(JSON_SPELLINGS).map((spell) => spell(message, next)),
+    ),
+  ];
+
+  for (const spelling of spellings) {
+    const { message, document, map } = inJson(spelling);
+
+    for (const id of hold(through(TOKENIZERS.json, document, map), message, 'json', document)) met[id]++;
+  }
+
+  assert.ok(met.nesting > 0, 'no message met the class nesting');
+});
+
+test('draws nothing in a JSON string that holds no value', () => {
+  const document = '{"{{a}} \\\\: b": 1, "c": ["{{d}}"]}';
+  const colours = draw(TOKENIZERS.json, document);
+
+  assert.deepEqual(new Set(colours.slice(0, document.indexOf('": 1'))), new Set(['ink-text']));
+  assert.deepEqual(colours.slice(document.indexOf('{{d'), document.indexOf('"]')), ['ink-brace', 'ink-brace', 'ink-key', 'ink-brace', 'ink-brace']);
 });
 
 /* Cost ------------------------------------------------------------------------
@@ -321,20 +502,28 @@ const SHAPES = {
   'text alone': (n) => 'x'.repeat(n),
 };
 
+// A line as each carrier writes it, the shape its message.
+const LINES_OF = {
+  raw: (message) => message,
+  json: (message) => inJson(JSON_SPELLINGS.shortest(message)).document,
+};
+
 // A search ends the line or matches a rule. A rule that matches takes a
 // character at least, but for the end of an option or of a value, which takes
-// none and follows a beginning that took one. So a line is searched twice for
-// each character at most, the line feed the tokenizer ends it with included,
-// and once more to find nothing left.
+// none and follows a beginning that took one; the JSON grammar's one rule
+// that may take none ends a value the same way. So a line is searched twice
+// for each character at most, the line feed the tokenizer ends it with
+// included, and once more to find nothing left.
 test('searches a line no more than twice for each character', () => {
-  for (const [name, shape] of Object.entries(SHAPES))
-    for (const size of [2500, 5000, 10000, 20000]) {
-      const line = shape(size);
+  for (const [carrier, write] of Object.entries(LINES_OF))
+    for (const [name, shape] of Object.entries(SHAPES))
+      for (const size of [2500, 5000, 10000, 20000]) {
+        const line = write(shape(size));
 
-      searches = 0;
-      tokenizer.tokenizeLine(line, textmate.INITIAL, 0);
-      assert.ok(searches <= 2 * (line.length + 1) + 1, `${name}, ${line.length} characters: ${searches} searches`);
-    }
+        searches = 0;
+        TOKENIZERS[carrier].tokenizeLine(line, textmate.INITIAL, 0);
+        assert.ok(searches <= 2 * (line.length + 1) + 1, `${carrier}, ${name}, ${line.length} characters: ${searches} searches`);
+      }
 });
 
 // Every expression the grammar holds.
@@ -377,9 +566,9 @@ const atoms = (source) => {
 const inside = (group) => group.slice(group.match(/^\((?:\?(?:<?[=!]|:))?/)[0].length, -1);
 
 test('builds expressions that give nothing back', () => {
-  const built = expressions(grammar());
+  const built = Object.values(carriers).flatMap((table) => expressions(table.host ? injection(table) : grammar(table)));
 
-  assert.ok(built.length > 10, `${built.length} expressions read from the grammar`);
+  assert.ok(built.length > 10 * Object.keys(carriers).length, `${built.length} expressions read from the grammars`);
 
   // Every repetition is possessive, at every level, so a search that fails
   // has read what it read once.
@@ -413,7 +602,15 @@ test('builds expressions that give nothing back', () => {
 });
 
 test('writes the grammar it builds when it is run', () => {
-  const written = execFileSync(process.execPath, [join(repo, 'grammar/grammar.mjs')], { encoding: 'utf8' });
+  const run = (...carrier) => JSON.parse(execFileSync(process.execPath, [join(repo, 'grammar/grammar.mjs'), ...carrier], { encoding: 'utf8' }));
 
-  assert.deepEqual(JSON.parse(written), grammar());
+  assert.deepEqual(run(), grammar());
+  for (const table of Object.values(carriers)) assert.deepEqual(run(table.id), table.host ? injection(table) : grammar(table));
+
+  for (const id of ['yaml', 'toString']) {
+    const { status, stdout, stderr } = spawnSync(process.execPath, [join(repo, 'grammar/grammar.mjs'), id], { encoding: 'utf8' });
+
+    assert.deepEqual([status, stdout], [2, ''], id);
+    assert.equal(stderr, `No carrier \`${id}\`: the carriers are ${Object.keys(carriers).join(', ')}.\n`);
+  }
 });

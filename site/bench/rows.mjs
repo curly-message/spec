@@ -1,5 +1,5 @@
 // The rows `bench/harness.mjs` measures, each on the build in `_site/` but
-// the grammar's, which is built from `grammar/` as the row starts.
+// the grammars', which are built from `grammar/` as their rows start.
 import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -8,9 +8,12 @@ import { extname } from 'node:path';
 import { chromium } from 'playwright-core';
 import oniguruma from 'vscode-oniguruma';
 import textmate from 'vscode-textmate';
-import { grammar } from '../../grammar/grammar.mjs';
+import { carriers, grammar, injection } from '../../grammar/grammar.mjs';
 
 const SITE = new URL('../_site/', import.meta.url);
+
+// A process loads the scanner's module once, whichever rows it measures.
+let loaded;
 const PLACEHOLDERS = 2000;
 
 const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml' };
@@ -91,23 +94,31 @@ const close = async () => {
   for (const handle of held.splice(0).reverse()) await handle.close();
 };
 
-// The grammar tokenising the message the keystroke row types into, as one
-// line, by the tokenizer an editor runs it on.
-const tokenise = async () => {
-  await oniguruma.loadWASM(readFileSync(createRequire(import.meta.url).resolve('vscode-oniguruma/release/onig.wasm')));
+// The message the keystroke row types into, tokenised as one line by the
+// tokenizer an editor runs a grammar on: the grammar of a message alone, or
+// the one injected into the grammar VS Code ships for a JSON document, which
+// writes that message as a string.
+const tokenise = (json) => async () => {
+  await (loaded ??= oniguruma.loadWASM(readFileSync(createRequire(import.meta.url).resolve('vscode-oniguruma/release/onig.wasm'))));
 
+  const built = json ? injection(carriers.json) : grammar();
+  const host = json ? JSON.parse(readFileSync(new URL('../tests/grammars/json/JSON.tmLanguage.json', import.meta.url), 'utf8')) : built;
   const registry = new textmate.Registry({
     onigLib: Promise.resolve({
       createOnigScanner: (patterns) => new oniguruma.OnigScanner(patterns),
       createOnigString: (text) => new oniguruma.OnigString(text),
     }),
-    loadGrammar: async () => grammar(),
+    loadGrammar: async (name) => (name === host.scopeName ? host : built),
+    getInjections: (name) => (json && name === host.scopeName ? [built.scopeName] : undefined),
   });
-  const tokenizer = await registry.loadGrammar(grammar().scopeName);
-  const line = '{{a; x:y}}'.repeat(PLACEHOLDERS);
+  const tokenizer = await registry.loadGrammar(host.scopeName);
+  const message = '{{a; x:y}}'.repeat(PLACEHOLDERS);
+  const line = json ? JSON.stringify({ k: message }) : message;
 
   return () => {
-    if (tokenizer.tokenizeLine(line, textmate.INITIAL, 0).tokens.length < PLACEHOLDERS) throw new Error('the grammar read no placeholder');
+    const keys = tokenizer.tokenizeLine(line, textmate.INITIAL, 0).tokens.filter(({ scopes }) => scopes.includes('variable.other.key.curly-message'));
+
+    if (keys.length !== PLACEHOLDERS) throw new Error(`the grammar read ${keys.length} placeholders`);
   };
 };
 
@@ -119,5 +130,6 @@ export default [
   { name: 'playground/highlight.js', kind: 'size', run: () => size('playground/highlight.js') },
   { name: 'playground/parser.js', kind: 'size', run: () => size('playground/parser.js') },
   { name: `playground: one keystroke over ${PLACEHOLDERS.toLocaleString('en-US')} placeholders`, kind: 'time', run: keystroke, close },
-  { name: `grammar: ${PLACEHOLDERS.toLocaleString('en-US')} placeholders tokenised`, kind: 'time', run: tokenise },
+  { name: `grammar: ${PLACEHOLDERS.toLocaleString('en-US')} placeholders tokenised`, kind: 'time', run: tokenise(false) },
+  { name: `grammar: ${PLACEHOLDERS.toLocaleString('en-US')} placeholders tokenised in a JSON string`, kind: 'time', run: tokenise(true) },
 ];

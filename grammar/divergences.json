@@ -2,7 +2,7 @@
   "classes": [
     {
       "id": "nesting",
-      "carriers": ["raw"],
+      "carriers": ["raw", "json"],
       "where": "A placeholder that holds placeholders more than 8 deep, itself counted.",
       "grammar": "Draws what such a placeholder writes itself as text, its escape sequences excepted, and every placeholder in it that nests 8 deep or less as the placeholder it is.",
       "reason": "The proof that a placeholder is complete is a regular expression, which cannot follow nesting to any depth, so it is unrolled to the depth every implementation resolves (SPEC.md, section 13)."

@@ -75,7 +75,8 @@ Repository map:
 | `conformance/RUNNER.md`, `conformance/defects.json` | what a runner in another language is held to, and the deliberately wrong adapters it is audited against |
 | `site/` | the site's generator, its two own pages and the playground |
 | `site/bench/` | the rows of the site's benchmark, and its copies of the harness and of `check/` |
-| `grammar/` | the TextMate grammar's builder and the divergences it states, tested from `site/` |
+| `grammar/` | the TextMate grammars' builder, one grammar per carrier of a message, and the divergences it states, tested from `site/` |
+| `site/tests/grammars/` | the grammars an editor ships, vendored unchanged as fixtures the suite injects into, under their own licences |
 | `brand/` | the marks, under their own terms |
 
 ### Dependencies across the family

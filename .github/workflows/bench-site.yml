@@ -6,9 +6,12 @@ on:
       - site/**
       - '!site/**/*.md'
       - '!site/tests/**'
+      # The grammar's rows tokenise with the grammars an editor ships.
+      - site/tests/grammars/**
+      - '!site/tests/grammars/**/*.md'
       # The favicon and every page's masthead are drawn from these marks.
       - brand/*.svg
-      # The grammar's row is built from these.
+      # The grammar's rows are built from these.
       - grammar/**
       - '!grammar/**/*.md'
       - .github/workflows/bench-site.yml

@@ -53,7 +53,9 @@ It tests [`grammar/`](../grammar) as well, which has no package of its own
 and is held to this one's colouring: `tests/grammar.test.mjs` tokenises every
 message of the conformance set with the TextMate grammar, as an editor would,
 and compares the result with what `highlight.js` draws
-([`grammar/README.md`](../grammar/README.md) says how).
+([`grammar/README.md`](../grammar/README.md) says how). The grammars it
+injects into are the ones an editor ships, kept as fixtures in
+[`tests/grammars/`](./tests/grammars) under their own licences.
 
 The **Site tests** workflow (`.github/workflows/tests-site.yml`) runs them on
 every push to a pull request that touches one of the sources above, the
@@ -170,7 +172,8 @@ resolution and the layout the browser does for them, in Chromium through the
 network is not timed, and an error the page throws fails the row rather than
 timing a keystroke that stopped short. One more row times the grammar of
 [`grammar/`](../grammar) tokenising that message as one line, on the tokenizer
-the suite tests it with. `bench/harness.mjs` is the family's harness, the
+the suite tests it with, and another the same message as a string of a JSON
+document, where every character the format reads has several spellings. `bench/harness.mjs` is the family's harness, the
 same file as `conformance/`'s.
 
 A keystroke's cost is not something any count shows: a layout that grows with
