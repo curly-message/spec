@@ -1,9 +1,14 @@
-// The rows `bench/harness.mjs` measures, each on the build in `_site/`.
+// The rows `bench/harness.mjs` measures, each on the build in `_site/` but
+// the grammar's, which is built from `grammar/` as the row starts.
 import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
+import { createRequire } from 'node:module';
 import { extname } from 'node:path';
 import { chromium } from 'playwright-core';
+import oniguruma from 'vscode-oniguruma';
+import textmate from 'vscode-textmate';
+import { grammar } from '../../grammar/grammar.mjs';
 
 const SITE = new URL('../_site/', import.meta.url);
 const PLACEHOLDERS = 2000;
@@ -86,6 +91,26 @@ const close = async () => {
   for (const handle of held.splice(0).reverse()) await handle.close();
 };
 
+// The grammar tokenising the message the keystroke row types into, as one
+// line, by the tokenizer an editor runs it on.
+const tokenise = async () => {
+  await oniguruma.loadWASM(readFileSync(createRequire(import.meta.url).resolve('vscode-oniguruma/release/onig.wasm')));
+
+  const registry = new textmate.Registry({
+    onigLib: Promise.resolve({
+      createOnigScanner: (patterns) => new oniguruma.OnigScanner(patterns),
+      createOnigString: (text) => new oniguruma.OnigString(text),
+    }),
+    loadGrammar: async () => grammar(),
+  });
+  const tokenizer = await registry.loadGrammar(grammar().scopeName);
+  const line = '{{a; x:y}}'.repeat(PLACEHOLDERS);
+
+  return () => {
+    if (tokenizer.tokenizeLine(line, textmate.INITIAL, 0).tokens.length < PLACEHOLDERS) throw new Error('the grammar read no placeholder');
+  };
+};
+
 export default [
   { name: 'playground/index.html', kind: 'size', run: () => size('playground/index.html') },
   { name: 'favicon.svg', kind: 'size', run: () => size('favicon.svg') },
@@ -94,4 +119,5 @@ export default [
   { name: 'playground/highlight.js', kind: 'size', run: () => size('playground/highlight.js') },
   { name: 'playground/parser.js', kind: 'size', run: () => size('playground/parser.js') },
   { name: `playground: one keystroke over ${PLACEHOLDERS.toLocaleString('en-US')} placeholders`, kind: 'time', run: keystroke, close },
+  { name: `grammar: ${PLACEHOLDERS.toLocaleString('en-US')} placeholders tokenised`, kind: 'time', run: tokenise },
 ];

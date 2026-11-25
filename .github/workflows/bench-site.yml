@@ -8,6 +8,9 @@ on:
       - '!site/tests/**'
       # The favicon and every page's masthead are drawn from these marks.
       - brand/*.svg
+      # The grammar's row is built from these.
+      - grammar/**
+      - '!grammar/**/*.md'
       - .github/workflows/bench-site.yml
       - .github/workflows/bench.yml
 
