@@ -18,6 +18,7 @@ The grammar is built, not written, and the JSON it builds is not committed:
 ```sh
 node grammar/grammar.mjs > curly-message.tmLanguage.json
 node grammar/grammar.mjs json > curly-message.injection.json.tmLanguage.json
+node grammar/grammar.mjs yaml-plain > curly-message.injection.yaml-plain.tmLanguage.json
 ```
 
 The argument is a carrier's id, and each carrier below has one. With none it
@@ -35,8 +36,8 @@ injection(carriers.json); // { name, scopeName, injectionSelector, patterns, rep
 
 ## Carriers
 
-A message reaches an editor inside a carrier: a file of its own, or a string
-of a JSON document. A carrier spells the characters of the message its own
+A message reaches an editor inside a carrier: a file of its own, a string of a
+JSON document, or a scalar of a YAML one. A carrier spells the characters of the message its own
 way, and a parser reads the message the carrier decodes to, so the rules are
 written once, over a table that says how a carrier spells each character the
 format reads: a brace, a colon, a semicolon, a backslash, a blank, a line
@@ -46,6 +47,10 @@ terminator, and any character at all. A carrier is a table:
 | --- | --- | --- |
 | `raw` | `text.curly-message` | a file, or a line, whose whole text is a message, every character spelled as itself |
 | `json` | `curly-message.injection.json` | a string of a JSON document, each character as itself or as any escape sequence JSON has for it |
+| `yaml-double` | `curly-message.injection.yaml-double` | a double-quoted scalar of a YAML document, each character as itself or as any escape sequence YAML has for it: `\x7b`, `\u007b`, `\U0000007b`, `\t`, `\_`, `\L` |
+| `yaml-single` | `curly-message.injection.yaml-single` | a single-quoted scalar, every character as itself but a quote, written twice |
+| `yaml-plain` | `curly-message.injection.yaml-plain` | a plain scalar, every character as itself, which ends at a blank before `#` and at a colon before a blank |
+| `yaml-block` | `curly-message.injection.yaml-block` | a block scalar, literal (`\|`) or folded (`>`), every character as itself |
 
 So `"\u007b{name}}"` is drawn as the placeholder it decodes to, and
 `"{{a\nb}}"`, which decodes to braces around a line feed, as the text it is.
@@ -67,6 +72,43 @@ documents hold messages, nor which of their strings do, so the default colours
 every `{{...}}` in every string value of every document the host grammar
 colours. Which files those are, and whether a narrower selector suits them,
 is for whoever ships the grammar in an editor to decide.
+
+### YAML
+
+A YAML document writes a scalar four ways, the host's grammar gives each a
+scope of its own, and each spells a message differently, so each is a carrier
+and all four are registered for `source.yaml`. Their default selectors take
+the scalars that are values: a quoted scalar that is not a key, and a plain
+scalar of a block collection (`string.unquoted.plain.out.yaml`). A plain
+scalar of a flow collection is left alone, since a brace there is a
+mapping's. A block scalar that is a key (`? |`) has the scope of one that is
+a value in the host's grammar, so it is drawn as a value is.
+
+In a plain scalar the rules read what YAML reads. `k: Hi {{v; a: A}}` is no
+scalar that holds a placeholder but an error, a colon before a blank being a
+key's, and `k: Hi {{v; a:x #y}}` ends at the blank before `#`; neither is
+drawn. A plain scalar cannot open on a brace either, so `k: {{name}}` is a
+flow mapping to YAML and to the host's grammar, and is not drawn.
+
+A scalar written over several lines is folded, but for a literal block one: a
+line break of the document is a space of the message, a line feed of it, or
+nothing. A tokenizer reads a line of the document at a time, so what a fold
+runs through is not recognised (see *Divergences*); a message on one line,
+which a catalogue's mostly are, is not concerned.
+
+The blanks a line of the document ends on are no characters of the message,
+but in a block scalar: YAML drops them, and with them those before a comment
+that ends a plain scalar. So the backslash of `k: x\` before such blanks
+consumes nothing and is drawn as text, as the backslash that ends the message
+it is.
+
+**`{{` is not the format's alone in YAML.** A GitHub Actions workflow writes
+`${{ github.ref }}`, a Helm chart `{{ .Values.name }}`, an Ansible playbook
+`"{{ item }}"`, and nothing in a document says which of them it is. Injected
+into every YAML document, the rules draw those as placeholders. The grammar
+does not guess: whoever ships it decides which documents it is injected into,
+by a language of their own for catalogues, by the files the injection is
+registered for, or by a narrower `within`.
 
 ## Scopes
 
@@ -113,9 +155,26 @@ the grammar draws there and why, and which carriers it happens in:
   it.
 - **`trailing-backslash`.** A tokenizer reads a line at a time and ends each
   with a line feed, so a backslash that ends the message, which is text, is
-  drawn as the escape sequence a backslash before a line feed is. Only the raw
-  carrier has it: a JSON string writes a line feed as an escape sequence, and
-  ends on a quote.
+  drawn as the escape sequence a backslash before a line feed is. The raw
+  carrier and a YAML block scalar have it, whose lines are the message's. A
+  JSON string writes a line feed as an escape sequence and ends on a quote,
+  and in the other YAML scalars a line break of the document is no line feed
+  of the message, so their rules consume none.
+- **`folded-placeholder`.** In a YAML scalar written over several lines, a
+  placeholder that a line break of the document stands in is one the proof
+  cannot read to its end, since it reads one line: `'{{name;` and
+  `one:x}}'` on two lines are the placeholder `{{name; one:x}}`, drawn as
+  text. Its escape sequences and the placeholders in it that stand on one
+  line are drawn as what they are. Every YAML carrier has it, a block scalar
+  only where it is folded (`>`).
+- **`folded-escape`.** In the same scalars, a backslash that ends a line of
+  the document, or stands before nothing but the blanks that end it, which
+  YAML drops, consumes the space the line break folds into, or the character
+  that opens the next line behind a line break a double-quoted scalar escapes.
+  No rule sees both, so the backslash is drawn as text. The double-quoted,
+  single-quoted and plain scalars have it, and a block scalar does not: there
+  a backslash before a line break is drawn as an escape sequence, which it is
+  whether the break is a line feed or folds into a space.
 
 The test holds the list both ways: a message in a class is drawn exactly as
 the class says, and a message in none is drawn as the site draws it. Which
@@ -131,7 +190,8 @@ such a line uncoloured, which is every message of a catalogue written as one
 line. No rule here changes that. Up to that length the grammar reads a line
 in one pass: every repetition in it is possessive, and the test holds each
 expression to that, and holds the searches a line takes to twice its
-characters.
+characters, beside those the host's grammar makes of a YAML document, which
+are its own.
 
 ## Tests
 
@@ -150,3 +210,14 @@ message. The document is tokenised by the grammar VS Code ships for it
 ([`site/tests/grammars/`](../site/tests/grammars)) with the injection
 registered, and the colours are read back through the encoder's map and
 compared with the site's colouring of the message.
+
+`JSON.parse` reads a JSON document back, and the `yaml` package a YAML one.
+A YAML encoder refuses the message it does not write: one its scalar cannot
+hold — a character YAML does not print in a single-quoted one, a plain one
+that would open on a brace — and, where it folds a single-quoted or a plain
+scalar, some the scalar can hold, such as one that ends in a line feed. The
+test fails where one refuses more of the conformance set's messages than the
+share it states. Each scalar is written on one line and over
+several, a block one literal and folded, and the others with blanks that end
+their lines. What a fold does to a placeholder and to an escape sequence is
+pinned besides by documents written by hand.
