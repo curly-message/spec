@@ -107,8 +107,9 @@ how it is built and what it needs.
 A revision of the document is cut from `main` by the **Specification release**
 workflow (`.github/workflows/release-spec.yml`, started by hand). A document has
 no manifest to bump, so it takes the revision as `major.minor.patch` and reads
-it back against the document: a revision already tagged is refused, and so is
-one whose major is not the version of the format `SPEC.md` specifies. It runs
+it back against the document: one whose major is not the version of the
+format `SPEC.md` specifies is refused, and so is one whose tag holds other
+files than the run commits. It runs
 the conformance set — which is what holds every section a fixture cites to a
 heading of the document — turns the changelog's pending section into the
 revision's, commits, tags (`v2.0.0`), pushes, and publishes a GitHub release
@@ -116,6 +117,15 @@ carrying that changelog section. That section names the revision it will be
 cut as — `### 2.0.0 (Unreleased)` — so a revision is settled in the commit
 that writes the section rather than in the dispatch: a run dispatched as
 anything else is refused, and so is a changelog that holds no such section.
+
+A run that stops after its tag exists is finished by re-running its failed
+jobs, before the next revision is cut and within the 30 days GitHub allows a
+re-run: the job makes the same commit, finds it tagged, pushes nothing and
+publishes the GitHub release unless it is published already. A run that stops
+before its tag exists is dispatched again with the same revision. A revision
+that cannot be finished this way — a defect in the workflow's own steps after
+the push, or a run past that window — has no GitHub release, and the next
+revision is cut.
 
 The document's line and the conformance set's are separate: the set may release
 against a document that has not changed, and the document may be revised
@@ -158,6 +168,19 @@ installs, builds and benchmarks with no credential that can push or publish,
 and the last takes that build as files. Of the three, only the second runs a
 dependency's code, and only the last holds the credentials, in the `release`
 environment.
+
+A release that stops after its tag exists is finished by **Re-run failed
+jobs** on its run, before any further release of the package and within 30
+days of the run or the build artifact's retention, whichever ends first: the
+re-run reuses the run's version and build, makes the same commit, finds it
+tagged, pushes nothing, and publishes to npm and to GitHub what is not there
+yet. Re-running all jobs does not finish it, since a new build writes another
+benchmark than the tag holds. A release that stops before its tag exists is
+dispatched again, and cuts the same version. A publish that fails saying the
+version is published already, right after npm took it, is re-run once more. A
+release that cannot be finished this way — a defect in the workflow's own
+steps after the push, or a run past that window — stays as far as it got, its
+tag and whatever npm took, and the next version is released.
 
 The commit, the tag and the release, of the set and of the document alike,
 are made as a GitHub App, whose client ID and private key the repository holds
