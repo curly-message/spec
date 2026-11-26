@@ -24,7 +24,7 @@ edits in any of its repositories.
 | Repository | Packages | Role |
 |------------|----------|------|
 | [`spec`](https://github.com/curly-message/spec) | `SPEC.md`, `CST.md`; `@curly-message/conformance` (`conformance/`); the site (`site/`, private) | the format: the normative document, the conformance set every implementation runs, and the public site with the playground; hosts the **shared issue tracker** |
-| [`parsers`](https://github.com/curly-message/parsers) | `@curly-message/parser` (`js/`); as prereleases: `github.com/curly-message/parsers/go` (`go/`), `curly-message-parser` (`rust/`), `curly-message` (`python/`), `curly-message/parser` (`php/`) | the implementations, one directory per language, each a standalone package with no root manifest |
+| [`parsers`](https://github.com/curly-message/parsers) | `@curly-message/parser` (`js/`), `github.com/curly-message/parsers/go` (`go/`), `curly-message-parser` (`rust/`), `curly-message` (`python/`), `curly-message/parser` (`php/`) | the implementations, one directory per language, each a standalone package with no root manifest |
 | [`parser-php`](https://github.com/curly-message/parser-php) | `curly-message/parser` for Composer | the tree of `parsers`' `php/`, which Packagist reads at a repository's root: written by `parsers`' publish workflow and by nothing else, tagged `vX.Y.Z` |
 | [`lint`](https://github.com/curly-message/lint) | as prereleases: `@curly-message/lint` (`lint/`), `@curly-message/eslint-plugin` (`eslint-plugin/`), `curly-message-lint` (`rust/`) | the linter as a Rust crate, its rules and the `curly-lint` command; beside it, npm workspaces: the library and the command over that crate compiled to WebAssembly, and the ESLint plugin over them |
 
