@@ -157,7 +157,9 @@ name.
    registry serves only from a repository's tree is the second exception: it
    is committed to a repository that the tool's publish workflow alone writes
    to, built from a tag, with its digest in that release's notes, and never
-   to a repository that holds source. The parser and the conformance set ship
+   to a repository that source is written in: beside the artifact it holds
+   only files copied unchanged from that tag, among them the launcher that
+   runs it. The parser and the conformance set ship
    as source in every language.
 
 ---
@@ -476,7 +478,9 @@ released after its dependent forces another release of the dependent.
     (`js-v3.1.1`, `conformance-v4.1.0`, `lint-v1.0.0`). A Go module's is
     `<dir>/vX.Y.Z` (`go/v1.0.0`, a nested module's `go/intl/v1.0.0`): the go
     command reads a version only from a tag prefixed with the module's
-    directory. Packagist reads only a repository's root `composer.json` and
+    directory; a module served from a mirror is tagged `vX.Y.Z` there and
+    `<dir>-vX.Y.Z` here, as a PHP package is. Packagist reads only a
+    repository's root `composer.json` and
     tags Composer parses as versions (`v1.0.0`, never `php-v1.0.0`), so a PHP
     package is released through a repository it is the root of, tagged
     `vX.Y.Z`.
