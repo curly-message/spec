@@ -198,8 +198,9 @@ Eight reasons leave a case out, and no others:
 * It is `reentry-resolutions-over-limit`, and the adapter states no `reentry` or
   does not state `resolutions` as `true`: an implementation whose bound counts
   reads alone lets resolutions stand as deep as its host allows. It is left out
-  as well where the output limit the adapter states is less than `2 * (reentry +
-  1) + 1`, the brackets of the resolutions that stand and the text they hold.
+  as well where the output limit the adapter states is less than
+  `2 * (reentry + 1) + 1`, the brackets of the resolutions that stand and the
+  text they hold.
   What the adapter states of `keeps` does not reach it: it keeps no input.
 * It is one of the seven constructions of kept reads, and the adapter states no
   `reentry`: each is built from that bound, and an implementation that keeps
