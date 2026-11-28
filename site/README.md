@@ -25,7 +25,7 @@ changes the site.
 ```sh
 npm ci
 npm run build     # -> _site/
-npm test          # builds, then reads the pages back; tests the grammar
+npm test          # builds, then reads the pages back
 ```
 
 `build.mjs` is the whole generator: it renders the markdown with
@@ -49,18 +49,8 @@ going unchecked. The suite also colours a message nested deeper than a call
 can recurse, and holds the pieces to the message and to eight boxes deep (see
 *Colour*).
 
-It tests [`grammar/`](../grammar) as well, which has no package of its own
-and is held to this one's colouring: `tests/grammar.test.mjs` tokenises every
-message of the conformance set with the TextMate grammar, as an editor would,
-alone and written into a JSON and a YAML document, and compares the result
-with what `highlight.js` draws
-([`grammar/README.md`](../grammar/README.md) says how). The grammars it
-injects into are the ones an editor ships, kept as fixtures in
-[`tests/grammars/`](./tests/grammars) under their own licences.
-
 The **Site tests** workflow (`.github/workflows/tests-site.yml`) runs them on
-every push to a pull request that touches one of the sources above, the
-grammar or the conformance set's fixtures, and by hand
+every push to a pull request that touches one of the sources above, and by hand
 on any branch. The **Site** workflow runs the same tests before it deploys, but
 only on `main`, which is too late to keep a change from being merged.
 
@@ -171,18 +161,15 @@ holding a message of 2 000 placeholders — the parse, the colouring, the
 resolution and the layout the browser does for them, in Chromium through the
 `playwright-core` the lockfile pins. The fonts are not fetched, so the
 network is not timed, and an error the page throws fails the row rather than
-timing a keystroke that stopped short. One more row times the grammar of
-[`grammar/`](../grammar) tokenising that message as one line, on the tokenizer
-the suite tests it with, and another the same message as a string of a JSON
-document, where every character the format reads has several spellings. `bench/harness.mjs` is the family's harness, the
-same file as `conformance/`'s.
+timing a keystroke that stopped short. `bench/harness.mjs` is the family's
+harness, the same file as `conformance/`'s.
 
 A keystroke's cost is not something any count shows: a layout that grows with
 the square of the placeholders takes as many passes, over as many boxes, as one
 that grows with them. So it is a time, and a time is never asserted: the
 **Site benchmark** workflow (`.github/workflows/bench-site.yml`) measures a PR
-that touches the site, the marks in [`brand/`](../brand) its pages draw or
-the grammar, beside its base, and a keystroke slower beyond the spread is flagged in the
+that touches the site, or the marks in [`brand/`](../brand) its pages draw,
+beside its base, and a keystroke slower beyond the spread is flagged in the
 table it posts on the PR, for review, rather than failing it. Run locally, the
 benchmark needs the browser that version of `playwright-core` drives:
 `npx playwright-core install chromium-headless-shell`.

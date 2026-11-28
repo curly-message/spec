@@ -29,10 +29,11 @@ edits in any of its repositories.
 | [`lint`](https://github.com/curly-message/lint) | `@curly-message/lint` (`lint/`), `@curly-message/eslint-plugin` (`eslint-plugin/`), `curly-message-lint` (`rust/`), `curly-message-lint` on PyPI (`python/`), `github.com/curly-message/lint-go` (`go/`), `curly-message/lint` for Composer (`php/`) | the linter as a Rust crate, its rules and the `curly-lint` command; beside it, npm workspaces: the library and the command over that crate compiled to WebAssembly, and the ESLint plugin over them; and the crate's command as a native program, in a Python wheel per platform, behind a launcher in a Go module and behind one in a Composer package |
 | [`lint-go`](https://github.com/curly-message/lint-go) | `github.com/curly-message/lint-go` for the go command | the tree of `lint`'s `go/` with the native command of each platform, which the go command reads at a repository's root: written by `lint`'s publish workflow and by nothing else, tagged `vX.Y.Z` |
 | [`lint-php`](https://github.com/curly-message/lint-php) | `curly-message/lint` for Composer | the tree of `lint`'s `php/` with the native command of each platform, which Packagist reads at a repository's root: written by `lint`'s publish workflow and by nothing else, tagged `vX.Y.Z` |
+| [`editors`](https://github.com/curly-message/editors) | `curly-message.curly-message-format` for VS Code, on the VS Marketplace and Open VSX (`vscode/`) | editor support: the TextMate grammars of a message and their injections into JSON and YAML |
 
 Issues for every repository of the family live in
-[`curly-message/spec`](https://github.com/curly-message/spec/issues); `parsers`
-and `lint` take pull requests only, and `parser-php`, `lint-go` and
+[`curly-message/spec`](https://github.com/curly-message/spec/issues); `parsers`,
+`lint` and `editors` take pull requests only, and `parser-php`, `lint-go` and
 `lint-php` take neither: a change to the parser's PHP package is a pull
 request to `parsers`, and one to the linter's Go module or its Composer
 package a pull request to `lint`.
@@ -57,9 +58,9 @@ Commands, run from the package directory:
 | Command | What it does |
 |---------|--------------|
 | `npm ci` | install from the lockfile |
-| `npm test` | `conformance/`: build, typecheck the source and the shipped declarations, lint, then the suite against the source and against the build; `site/`: build, then read the pages back, and hold the grammar of `grammar/` to the site's colouring |
+| `npm test` | `conformance/`: build, typecheck the source and the shipped declarations, lint, then the suite against the source and against the build; `site/`: build, then read the pages back |
 | `npm run test:bun`, `npm run test:deno` | `conformance/`: build, then the suite on Bun or Deno — what the runtime legs of CI run |
-| `npm run bench` | `conformance/`, `site/`: build, then the benchmark (`bench/rows.mjs`); the site's drives the playground in Chromium and times the grammar |
+| `npm run bench` | `conformance/`, `site/`: build, then the benchmark (`bench/rows.mjs`); the site's drives the playground in Chromium |
 | `npm run bench -- --compare <dir>` | `conformance/`, `site/`: the same, beside the package checked out and built at `<dir>` — what `bench.yml` runs on a PR, called by `bench-conformance.yml` or `bench-site.yml` |
 | `npm run lint:fix` | `conformance/`: fix what the formatting contract reports |
 | `npm run manifest` | `conformance/`: rewrite `index.json` from the fixtures |
@@ -79,8 +80,6 @@ Repository map:
 | `conformance/RUNNER.md`, `conformance/defects.json` | what a runner in another language is held to, and the deliberately wrong adapters it is audited against |
 | `site/` | the site's generator, its two own pages and the playground |
 | `site/bench/` | the rows of the site's benchmark, and its copies of the harness and of `check/` |
-| `grammar/` | the TextMate grammars' builder, one grammar per carrier of a message, and the divergences it states, tested from `site/` |
-| `site/tests/grammars/` | the grammars an editor ships, vendored unchanged as fixtures the suite injects into, under their own licences |
 | `brand/` | the marks, under their own terms |
 
 ### Dependencies across the family
@@ -102,6 +101,9 @@ Repository map:
   carries. `github.com/curly-message/lint-go` carries the command the same
   way and requires no module, and `curly-message/lint` for Composer does and
   requires no package.
+- `curly-message.curly-message-format` tests against `@curly-message/parser`
+  and `@curly-message/conformance` as exact `devDependencies`: its suite holds
+  the grammar to the parser's tree over the set's messages.
 - The site pins the parser through its lockfile; the playground runs that
   release.
 - A peer range is **widened, never narrowed**: narrowing fails a project still
@@ -452,7 +454,8 @@ released after its dependent forces another release of the dependent.
 - **Leaves first.** The document's revision, then the conformance set, then
   the parsers, then the linter, whose crate and npm package both build on the
   Rust parser, then the ESLint plugin and the linter's Python package, Go
-  module and Composer package, which carry the crate, then the site. A
+  module and Composer package, which carry the crate, and the VS Code
+  extension, which tests against the parser and the set, then the site. A
   package is not published while a package it depends on holds an unreleased
   change or a planned fix it needs, unless the user deferred that fix by name.
 - **Bump the family first.** Every range a package holds on the family
@@ -464,10 +467,11 @@ released after its dependent forces another release of the dependent.
   go through what the registry will serve — the tarball of
   `npm pack --dry-run`, the wheel and sdist the package's own build writes,
   `cargo package --list`, the module zip the Go proxy builds from the tag,
-  the archive of the tag Packagist serves — with the README, which is the
-  registry's page, and the docs it links to. Each statement describes the
-  version being published and each link resolves. A mismatch is fixed before
-  the publish, never in the next release.
+  the archive of the tag Packagist serves, the `.vsix` the extension's build
+  writes — with the README, which is the registry's page, and the docs it
+  links to. Each statement describes the version being published and each
+  link resolves. A mismatch is fixed before the publish, never in the next
+  release.
 - **Every package is shown in use.** The playground shows the parser, and a
   release that adds to what a message can say shows it there; the parser's
   suite runs the conformance set; the linter and the plugin are shown by the
@@ -493,7 +497,10 @@ released after its dependent forces another release of the dependent.
   - **Prereleases** take each registry's spelling: npm `X.Y.Z-next.N` under
     the `next` dist-tag, crates.io `X.Y.Z-next.N`, Go `vX.Y.Z-next.N`, PyPI
     `X.Y.ZrcN` (PEP 440), Composer `X.Y.Z-RC.N`. A registry with no
-    dist-tags has only the spelling to set a prerelease apart.
+    dist-tags has only the spelling to set a prerelease apart. The VS
+    Marketplace and Open VSX take plain `X.Y.Z`, so a VS Code extension's
+    prerelease is an odd minor (`0.1.0`, `1.1.2`), its `.vsix` packaged with
+    `--pre-release`, and a release an even one.
   - **A new package's first version:** on npm and crates.io, published by
     hand (`--tag next` on npm), then its trusted publisher is set to the
     workflow. On PyPI, by the workflow through a pending publisher
@@ -502,13 +509,23 @@ released after its dependent forces another release of the dependent.
     top-level workflow. Go and Packagist have no publish step: the
     workflow's tag is the release, and Packagist is registered once by hand
     with its GitHub hook. The Go proxy records a version on its first fetch
-    for good; a bad one is retracted by a later release, never removed.
+    for good; a bad one is retracted by a later release, never removed. The
+    VS Marketplace is published to by the workflow through a
+    trusted-publishing policy on the publisher. Open VSX registers a trusted
+    publisher only for an extension it holds, so its first version is
+    uploaded by hand from the run's build artifact, checked against the
+    digest the build logged, and the workflow publishes the later ones.
 - **Close the loop.** After a publish, confirm the version on its registry
   (`npm view`; PyPI's JSON API, `pypi.org/pypi/<name>/<version>/json`; the
   crates.io API, `crates.io/api/v1/crates/<name>/<version>`; the Go proxy's
   `<module>/@v/list`, and the hash `go mod download -json` reports against
   the one the build computed; Packagist's `p2` metadata,
-  `repo.packagist.org/p2/<vendor>/<name>.json`) and update what follows it —
+  `repo.packagist.org/p2/<vendor>/<name>.json`; the VS Marketplace's
+  gallery query,
+  `marketplace.visualstudio.com/_apis/public/gallery/extensionquery`, which
+  lists the versions it holds, and Open VSX's
+  `open-vsx.org/api/<namespace>/<name>/<version>`, whose `files.download` is
+  held to the digest in the release's notes) and update what follows it —
   the ranges and pins above, the site's lockfile, the other repositories'
   lockfiles — as part of the same plan.
 
@@ -810,7 +827,9 @@ Its CI:
   publisher's environment; `BENCH.md` written into the release commit; a
   GitHub release per package tag; and, after the tests, three jobs —
   `version`, `build` and `release` — so that of them only `build` runs a
-  dependency's code and only `release` holds the credentials; and a re-run
+  dependency's code and only `release` holds the credentials (but where a
+  registry is published to only through its own tool: `editors`' `release`
+  runs `@vscode/vsce` and `ovsx`, as its `AGENTS.md` says); and a re-run
   of its failed jobs finishes a release that stopped after its tag was pushed.
 - Repository settings: rebase merges only; issues off, pointing to the shared
   tracker; the release App's client ID as the `APP_CLIENT_ID` variable, and its

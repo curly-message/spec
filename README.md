@@ -69,7 +69,6 @@ Contents:
 | [`CHANGELOG.md`](./CHANGELOG.md) | Per revision | Every revision of the specification and what it changed |
 | [`MIGRATIONS.md`](./MIGRATIONS.md) | Per version of the format | The path from one version of the format to the next: what each step changes, what it costs a message or a payload, and what to do about it |
 | [`RULINGS.md`](./RULINGS.md) | Historical | Why the rules read as they do: each behavior of the pre-3.0 implementation the format was specified against, and each outcome the hosts of version 3 were found to differ on where the document left it to them, with the ruling that resolved it. It specifies nothing — every ruling is already stated in the body of `SPEC.md` |
-| [`grammar/`](./grammar) | Unreleased | TextMate grammars for a message, for an editor that colours before anything has parsed, one for a message alone and one to inject into each carrier it knows, a JSON string and the four scalars of a YAML document: built by a script from one set of rules, held by a test to the site's colouring over every message of the conformance set, with the messages it draws otherwise named and tested. Its scopes are not yet frozen |
 | [`brand/`](./brand) | Stable | The visual identity: the icon and the wordmark as SVGs, and the palette they are used in, under [their own terms](./brand/LICENSE) |
 | [`site/`](./site) | Stable | Source of the format's public site: six pages rendered from the markdown already in this repository, plus a playground that runs the reference implementation in the browser, deployed to GitHub Pages by the **Site** workflow |
 | [`AGENTS.md`](./AGENTS.md) | Per change | How the family's repositories are worked on: the rules every one of them follows, and what is particular to this one. Issues for every repository of the family are filed [here](https://github.com/curly-message/spec/issues) |
@@ -89,6 +88,13 @@ the JavaScript implementation in the
 released on npm. It is a reference rather than the definition — an
 implementation in any language that satisfies section 2 conforms, whether or
 not it shares any code with it.
+
+## Editor support
+
+The TextMate grammars that colour a message in an editor, alone and in the
+strings of a JSON document and the scalars of a YAML catalogue, live in the
+[curly-message/editors](https://github.com/curly-message/editors) repository,
+with the VS Code extension that registers them.
 
 ## The site
 
