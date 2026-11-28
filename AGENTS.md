@@ -26,14 +26,16 @@ edits in any of its repositories.
 | [`spec`](https://github.com/curly-message/spec) | `SPEC.md`, `CST.md`; `@curly-message/conformance` (`conformance/`); the site (`site/`, private) | the format: the normative document, the conformance set every implementation runs, and the public site with the playground; hosts the **shared issue tracker** |
 | [`parsers`](https://github.com/curly-message/parsers) | `@curly-message/parser` (`js/`), `github.com/curly-message/parsers/go` (`go/`), `curly-message-parser` (`rust/`), `curly-message-parser` (`python/`), `curly-message/parser` (`php/`) | the implementations, one directory per language, each a standalone package with no root manifest |
 | [`parser-php`](https://github.com/curly-message/parser-php) | `curly-message/parser` for Composer | the tree of `parsers`' `php/`, which Packagist reads at a repository's root: written by `parsers`' publish workflow and by nothing else, tagged `vX.Y.Z` |
-| [`lint`](https://github.com/curly-message/lint) | `@curly-message/lint` (`lint/`), `@curly-message/eslint-plugin` (`eslint-plugin/`), `curly-message-lint` (`rust/`), `curly-message-lint` on PyPI (`python/`), `github.com/curly-message/lint-go` (`go/`) | the linter as a Rust crate, its rules and the `curly-lint` command; beside it, npm workspaces: the library and the command over that crate compiled to WebAssembly, and the ESLint plugin over them; and the crate's command as a native program, in a Python wheel per platform and behind a launcher in a Go module |
+| [`lint`](https://github.com/curly-message/lint) | `@curly-message/lint` (`lint/`), `@curly-message/eslint-plugin` (`eslint-plugin/`), `curly-message-lint` (`rust/`), `curly-message-lint` on PyPI (`python/`), `github.com/curly-message/lint-go` (`go/`), `curly-message/lint` for Composer (`php/`) | the linter as a Rust crate, its rules and the `curly-lint` command; beside it, npm workspaces: the library and the command over that crate compiled to WebAssembly, and the ESLint plugin over them; and the crate's command as a native program, in a Python wheel per platform, behind a launcher in a Go module and behind one in a Composer package |
 | [`lint-go`](https://github.com/curly-message/lint-go) | `github.com/curly-message/lint-go` for the go command | the tree of `lint`'s `go/` with the native command of each platform, which the go command reads at a repository's root: written by `lint`'s publish workflow and by nothing else, tagged `vX.Y.Z` |
+| [`lint-php`](https://github.com/curly-message/lint-php) | `curly-message/lint` for Composer | the tree of `lint`'s `php/` with the native command of each platform, which Packagist reads at a repository's root: written by `lint`'s publish workflow and by nothing else, tagged `vX.Y.Z` |
 
 Issues for every repository of the family live in
 [`curly-message/spec`](https://github.com/curly-message/spec/issues); `parsers`
-and `lint` take pull requests only, and `parser-php` and `lint-go` take
-neither: a change to the PHP package is a pull request to `parsers`, and one
-to the linter's Go module a pull request to `lint`.
+and `lint` take pull requests only, and `parser-php`, `lint-go` and
+`lint-php` take neither: a change to the parser's PHP package is a pull
+request to `parsers`, and one to the linter's Go module or its Composer
+package a pull request to `lint`.
 
 ### This repository
 
@@ -98,7 +100,8 @@ Repository map:
   on PyPI is built from the crate in its repository's tree and depends on no
   package: its README and changelog name the crate release each version
   carries. `github.com/curly-message/lint-go` carries the command the same
-  way and requires no module.
+  way and requires no module, and `curly-message/lint` for Composer does and
+  requires no package.
 - The site pins the parser through its lockfile; the playground runs that
   release.
 - A peer range is **widened, never narrowed**: narrowing fails a project still
@@ -448,8 +451,8 @@ released after its dependent forces another release of the dependent.
   ordered so that no package is published twice.
 - **Leaves first.** The document's revision, then the conformance set, then
   the parsers, then the linter, whose crate and npm package both build on the
-  Rust parser, then the ESLint plugin and the linter's Python package and Go
-  module, which carry the crate, then the site. A
+  Rust parser, then the ESLint plugin and the linter's Python package, Go
+  module and Composer package, which carry the crate, then the site. A
   package is not published while a package it depends on holds an unreleased
   change or a planned fix it needs, unless the user deferred that fix by name.
 - **Bump the family first.** Every range a package holds on the family
@@ -475,7 +478,7 @@ released after its dependent forces another release of the dependent.
   environment. A run that stops once its tag is pushed is finished by
   re-running its failed jobs before the package releases again: they find
   the tag holding the same tree, push nothing, and publish only what the
-  registry and GitHub lack. A PHP package's run is finished through its
+  registry and GitHub lack. The PHP parser's run is finished through its
   workflow's `mirror` input instead.
   - **Tags** are namespaced by package directory, `<dir>-vX.Y.Z`
     (`js-v3.1.1`, `conformance-v4.1.0`, `lint-v1.0.0`). A Go module's is
